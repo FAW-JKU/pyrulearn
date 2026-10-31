@@ -1,6 +1,10 @@
+import itertools
 import math
+import warnings
 
 import numpy as np
+import pytest
+from pyrulearn import heuristics as H
 from pyrulearn.data import DataSpec
 from pyrulearn.data import HorizontalBitmapRepresentation
 from pyrulearn.rule import Rule
@@ -39,6 +43,8 @@ from pyrulearn.heuristics import (
 )
 
 
+# -- heuristics --------------------------------------------------------
+
 def test_precision_and_laplace_and_support_and_accuracy():
     stats = RuleStats(tp=3, fp=0, fn=3, tn=4)  # pure, small coverage; n_pos=6, n_neg=4
     assert stats.n_pos == 6 and stats.n_neg == 4
@@ -53,9 +59,6 @@ def test_precision_and_laplace_and_support_and_accuracy():
     assert abs(Laplace().score(stats2) - 5 / 9) < 1e-12
     assert abs(Support().score(stats2) - 0.7) < 1e-12
     assert abs(Accuracy().score(stats2) - 0.5) < 1e-12
-
-
-def test_precision_handles_zero_coverage():
     stats = RuleStats(tp=0, fp=0, fn=6, tn=4)
     assert Precision().score(stats) == 0.0
 
@@ -114,9 +117,6 @@ def test_wracc_score():
     # covered=7, p0=0.6 -> (7/10) * (4/7 - 0.6)
     expected = (7 / 10) * (4 / 7 - 0.6)
     assert abs(WRAcc().score(stats2) - expected) < 1e-12
-
-
-def test_wracc_zero_guards():
     assert WRAcc().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == 0.0
     assert WRAcc().score(RuleStats(tp=0, fp=0, fn=0, tn=0)) == 0.0
 
@@ -133,9 +133,6 @@ def test_youden_j_and_linear_cost_rates():
     # YoudenJ is exactly LinearCostRates(cost_ratio=1.0)
     assert YoudenJ().score(stats) == LinearCostRates(cost_ratio=1.0).score(stats)
     assert abs(LinearCostRates(cost_ratio=2.0).score(stats) - (-0.8333333333333334)) < 1e-9
-
-
-def test_youden_j_zero_class_guards():
     assert YoudenJ().score(RuleStats(tp=0, fp=0, fn=0, tn=6)) == 0.0  # n_pos=0
     assert YoudenJ().score(RuleStats(tp=0, fp=0, fn=6, tn=0)) == 0.0  # n_neg=0
     assert LinearCostRates().score(RuleStats(tp=0, fp=0, fn=0, tn=6)) == 0.0
@@ -213,51 +210,12 @@ def test_fbeta_isometrics_are_a_pencil_through_fp_axis():
         assert abs(h(fp1, tp1) - h(fp2, tp2)) < 1e-9
 
 
-def test_rule_stats_universal_and_empty():
-    universal = RuleStats.universal(n_pos=6, n_neg=4)
-    assert (universal.tp, universal.fp, universal.fn, universal.tn) == (6, 4, 0, 0)
-    assert universal.n_pos == 6 and universal.n_neg == 4
-    assert Precision().score(universal) == 6 / 10  # covers everyone -> precision = prior
-
-    empty = RuleStats.empty(n_pos=6, n_neg=4)
-    assert (empty.tp, empty.fp, empty.fn, empty.tn) == (0, 0, 6, 4)
-    assert empty.n_pos == 6 and empty.n_neg == 4
-
-    # the universal rule is the natural FoilGain baseline: gain of the
-    # universal rule relative to itself is exactly zero
-    child = RuleStats(tp=6, fp=4, fn=0, tn=0)
-    assert FoilGain().score(child, universal) == 0.0
-
-
 def test_length_penalized_reads_length():
     stats = RuleStats(tp=3, fp=0, fn=3, tn=4, length=1)
     penalized = LengthPenalized(Precision(), penalty=0.05)
     assert abs(penalized.score(stats) - 0.95) < 1e-12
     # a heuristic that ignores length is unaffected by it
     assert Precision().score(stats) == Precision().score(RuleStats(tp=3, fp=0, fn=3, tn=4, length=99))
-
-
-def test_foil_gain():
-    parent = RuleStats(tp=10, fp=10, fn=0, tn=0)     # precision 0.5
-    child = RuleStats(tp=6, fp=1, fn=4, tn=9)  # precision 6/7
-    expected = 6 * (math.log2(6 / 7) - math.log2(10 / 20))
-    assert abs(FoilGain().score(child, parent) - expected) < 1e-6
-
-
-def test_foil_gain_raises_without_parent():
-    stats = RuleStats(tp=6, fp=1, fn=4, tn=9)
-    try:
-        FoilGain().score(stats)
-        assert False, "expected TypeError"
-    except TypeError:
-        pass
-
-
-def test_foil_gain_zero_guards():
-    parent = RuleStats(tp=10, fp=10, fn=0, tn=0)
-    assert FoilGain().score(RuleStats(tp=0, fp=5, fn=10, tn=5), parent) == 0.0
-    child = RuleStats(tp=6, fp=1, fn=4, tn=9)
-    assert FoilGain().score(child, RuleStats(tp=0, fp=0, fn=10, tn=10)) == 0.0
 
 
 def test_correlation_extremes_and_uncorrelated():
@@ -272,9 +230,6 @@ def test_correlation_extremes_and_uncorrelated():
     # coverage proportional to the prior (3:2 pos:neg, same as covered) -> uncorrelated
     uncorrelated = RuleStats(tp=3, fp=2, fn=3, tn=2)
     assert abs(Correlation().score(uncorrelated) - 0.0) < 1e-12
-
-
-def test_correlation_zero_denominator_guard():
     # never covers anything -> (tp+fp) term is 0 -> denominator 0
     assert Correlation().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == 0.0
     # covers everything -> (fp+tn) and (fn+tn) terms are 0 -> denominator 0
@@ -293,9 +248,6 @@ def test_chi_square_matches_hand_computed_value_and_correlation_relation():
     yates = ChiSquare(yates_correction=True).score(stats)
     assert abs(yates - 3.5164835164835164) < 1e-9
     assert yates < uncorrected  # Yates' correction is strictly more conservative here
-
-
-def test_chi_square_zero_denominator_guard():
     assert ChiSquare().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == 0.0
     assert ChiSquare().score(RuleStats(tp=6, fp=4, fn=0, tn=0)) == 0.0
 
@@ -320,9 +272,6 @@ def test_entropy_pure_and_even_split():
     assert abs(Entropy().score(RuleStats(tp=5, fp=5, fn=0, tn=0)) - (-1.0)) < 1e-12
     # intermediate case, hand-verified: p=3/4 -> -H(3/4) ~= -0.8112781
     assert abs(Entropy().score(RuleStats(tp=3, fp=1, fn=0, tn=0)) - (-0.8112781244591328)) < 1e-9
-
-
-def test_entropy_zero_coverage_guard():
     assert Entropy().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == -1.0
 
 
@@ -332,9 +281,6 @@ def test_likelihood_ratio_matches_hand_computed_value():
     # against a direct G-statistic computation
     stats = RuleStats(tp=6, fp=1, fn=4, tn=9)
     assert abs(LikelihoodRatio().score(stats) - 3.9624320718015067) < 1e-9
-
-
-def test_likelihood_ratio_guards():
     # zero coverage -> 0.0
     assert LikelihoodRatio().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == 0.0
     # degenerate prior (no negatives at all in the dataset) -> 0.0
@@ -344,14 +290,44 @@ def test_likelihood_ratio_guards():
     assert abs(LikelihoodRatio().score(stats)) < 1e-9
 
 
-def test_rule_stats_from_rule_and_score_rule():
+def test_rule_heuristic_is_abstract():
+    try:
+        RuleHeuristic()
+        assert False, "expected TypeError (can't instantiate an ABC)"
+    except TypeError:
+        pass
+
+
+# -- RuleStats ---------------------------------------------------------
+
+def _two_feature_data():
     X = np.array([
-        [1, 1], [1, 1], [1, 0], [0, 1], [0, 1], [0, 0],  # positives
-        [0, 1], [0, 1], [0, 1], [0, 0],                   # negatives
+        [1, 1], [1, 1], [1, 0], [0, 1], [0, 1], [0, 0],  # positives (rows 0-5)
+        [0, 1], [0, 1], [0, 1], [0, 0],                   # negatives (rows 6-9)
     ], dtype=bool)
     y = np.array(["pos"] * 6 + ["neg"] * 4)
     ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
+    return HorizontalBitmapRepresentation(ds, X, y), ds
+
+
+def test_rule_stats_universal_and_empty():
+    universal = RuleStats.universal(n_pos=6, n_neg=4)
+    assert (universal.tp, universal.fp, universal.fn, universal.tn) == (6, 4, 0, 0)
+    assert universal.n_pos == 6 and universal.n_neg == 4
+    assert Precision().score(universal) == 6 / 10  # covers everyone -> precision = prior
+
+    empty = RuleStats.empty(n_pos=6, n_neg=4)
+    assert (empty.tp, empty.fp, empty.fn, empty.tn) == (0, 0, 6, 4)
+    assert empty.n_pos == 6 and empty.n_neg == 4
+
+    # the universal rule is the natural FoilGain baseline: gain of the
+    # universal rule relative to itself is exactly zero
+    child = RuleStats(tp=6, fp=4, fn=0, tn=0)
+    assert FoilGain().score(child, universal) == 0.0
+
+
+def test_rule_stats_from_rule_and_score_rule():
+    rep, ds = _two_feature_data()
 
     rule_a = Rule.from_pos_neg(pos=[0], target="pos", dataspec=ds)  # a=True: rows 0,1,2 -> all pos
     stats = RuleStats.from_rule(rule_a, rep)
@@ -363,25 +339,20 @@ def test_rule_stats_from_rule_and_score_rule():
     assert (stats_b.tp, stats_b.fp) == (4, 3)
 
 
-def test_rule_stats_from_rule_with_parent():
-    X = np.array([
-        [1, 1], [1, 1], [1, 0], [0, 1], [0, 1], [0, 0],  # positives
-        [0, 1], [0, 1], [0, 1], [0, 0],                   # negatives
-    ], dtype=bool)
-    y = np.array(["pos"] * 6 + ["neg"] * 4)
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
+def test_rule_stats_from_rule_with_example_mask():
+    rep, ds = _two_feature_data()
 
-    parent_rule = Rule.from_pos_neg(pos=[1], target="pos", dataspec=ds)  # b=True
-    child_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # a=True AND b=True
+    rule_a = Rule.from_pos_neg(pos=[0], target="pos", dataspec=ds)  # a=True: rows 0,1,2
+    full_stats = RuleStats.from_rule(rule_a, rep)
+    assert (full_stats.tp, full_stats.fp, full_stats.fn, full_stats.tn) == (3, 0, 3, 4)
 
-    stats = RuleStats.from_rule(child_rule, rep)
-    parent_stats = RuleStats.from_rule(parent_rule, rep)
-    assert (parent_stats.tp, parent_stats.fp) == (4, 3)  # parent_rule's own coverage
-    assert (stats.tp, stats.fp) == (2, 0)  # a=True AND b=True: rows 0,1 -> both pos
-
-    gain = FoilGain().score(stats, parent_stats)
-    assert gain > 0  # the refinement strictly increased precision (0.571 -> 1.0)
+    # exclude row 2 (a covered positive -> drops tp) and row 6 (an uncovered
+    # negative -> drops tn); everything else stays exactly as in full_stats
+    mask = np.ones(10, dtype=bool)
+    mask[[2, 6]] = False
+    masked_stats = RuleStats.from_rule(rule_a, rep, example_mask=mask)
+    assert (masked_stats.tp, masked_stats.fp, masked_stats.fn, masked_stats.tn) == (2, 0, 3, 3)
+    assert masked_stats.tp + masked_stats.fp + masked_stats.fn + masked_stats.tn == mask.sum()
 
 
 def test_from_rule_raises_without_labels_or_target():
@@ -406,27 +377,7 @@ def test_from_rule_raises_without_labels_or_target():
         pass
 
 
-def test_rule_stats_from_rule_with_example_mask():
-    X = np.array([
-        [1, 1], [1, 1], [1, 0], [0, 1], [0, 1], [0, 0],  # positives (rows 0-5)
-        [0, 1], [0, 1], [0, 1], [0, 0],                   # negatives (rows 6-9)
-    ], dtype=bool)
-    y = np.array(["pos"] * 6 + ["neg"] * 4)
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-
-    rule_a = Rule.from_pos_neg(pos=[0], target="pos", dataspec=ds)  # a=True: rows 0,1,2
-    full_stats = RuleStats.from_rule(rule_a, rep)
-    assert (full_stats.tp, full_stats.fp, full_stats.fn, full_stats.tn) == (3, 0, 3, 4)
-
-    # exclude row 2 (a covered positive -> drops tp) and row 6 (an uncovered
-    # negative -> drops tn); everything else stays exactly as in full_stats
-    mask = np.ones(10, dtype=bool)
-    mask[[2, 6]] = False
-    masked_stats = RuleStats.from_rule(rule_a, rep, example_mask=mask)
-    assert (masked_stats.tp, masked_stats.fp, masked_stats.fn, masked_stats.tn) == (2, 0, 3, 3)
-    assert masked_stats.tp + masked_stats.fp + masked_stats.fn + masked_stats.tn == mask.sum()
-
+# -- LEF and MinimalLength ---------------------------------------------
 
 def test_minimal_length_scores_negated_length_and_breaks_lef_ties_toward_shorter_rules():
     assert MinimalLength().score(RuleStats(tp=5, fp=0, fn=0, tn=0, length=1)) == -1
@@ -483,10 +434,24 @@ def test_lef_works_with_beam_search():
     assert isinstance(best, Rule)
 
 
-def test_rule_heuristic_is_abstract():
+# -- gain heuristics ---------------------------------------------------
+
+def test_foil_gain():
+    parent = RuleStats(tp=10, fp=10, fn=0, tn=0)     # precision 0.5
+    child = RuleStats(tp=6, fp=1, fn=4, tn=9)  # precision 6/7
+    expected = 6 * (math.log2(6 / 7) - math.log2(10 / 20))
+    assert abs(FoilGain().score(child, parent) - expected) < 1e-6
+    parent = RuleStats(tp=10, fp=10, fn=0, tn=0)
+    assert FoilGain().score(RuleStats(tp=0, fp=5, fn=10, tn=5), parent) == 0.0
+    child = RuleStats(tp=6, fp=1, fn=4, tn=9)
+    assert FoilGain().score(child, RuleStats(tp=0, fp=0, fn=10, tn=10)) == 0.0
+
+
+def test_foil_gain_raises_without_parent():
+    stats = RuleStats(tp=6, fp=1, fn=4, tn=9)
     try:
-        RuleHeuristic()
-        assert False, "expected TypeError (can't instantiate an ABC)"
+        FoilGain().score(stats)
+        assert False, "expected TypeError"
     except TypeError:
         pass
 
@@ -498,21 +463,18 @@ def test_foil_gain_is_a_gain_heuristic():
 
 
 def test_gain_heuristic_score_rule_needs_parent_rule():
-    X = np.array([
-        [1, 1], [1, 1], [1, 0], [0, 1], [0, 1], [0, 0],  # positives
-        [0, 1], [0, 1], [0, 1], [0, 0],                   # negatives
-    ], dtype=bool)
-    y = np.array(["pos"] * 6 + ["neg"] * 4)
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
+    rep, ds = _two_feature_data()
 
     parent_rule = Rule.from_pos_neg(pos=[1], target="pos", dataspec=ds)  # b=True
     child_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # a=True AND b=True
 
-    gain = FoilGain().score_rule(child_rule, rep, parent_rule=parent_rule)
     stats = RuleStats.from_rule(child_rule, rep)
     parent_stats = RuleStats.from_rule(parent_rule, rep)
+    assert (parent_stats.tp, parent_stats.fp) == (4, 3)  # b=True
+    assert (stats.tp, stats.fp) == (2, 0)                # a=True AND b=True: rows 0,1 -> both pos
+    gain = FoilGain().score_rule(child_rule, rep, parent_rule=parent_rule)
     assert gain == FoilGain().score(stats, parent_stats)
+    assert gain > 0  # the refinement increased precision (0.571 -> 1.0)
 
     try:
         FoilGain().score_rule(child_rule, rep)
@@ -528,21 +490,11 @@ def test_delta_gain_is_the_wrapped_heuristics_own_difference():
     expected = Laplace().score(stats) - Laplace().score(parent_stats)
     assert dg.score(stats, parent_stats) == expected
     assert isinstance(dg, GainHeuristic)
-
-
-def test_delta_gain_zero_for_a_rule_scored_against_itself():
     stats = RuleStats(tp=4, fp=2, fn=6, tn=8)
     assert DeltaGain(Accuracy()).score(stats, stats) == 0.0
 
 
-# -------------------------------------------------- batch_score vs. score
-
-import itertools  # noqa: E402
-import warnings  # noqa: E402
-
-import pytest  # noqa: E402
-from pyrulearn import heuristics as H  # noqa: E402
-
+# -- batch_score vs. score ---------------------------------------------
 
 def _grid():
     """Every combination of small counts -- zeros included, so each
@@ -645,7 +597,7 @@ def test_correlation_and_chi_square_take_a_rounding_error_below_zero_as_zero():
     assert scores[0] == 0.0 and scores[1] == pytest.approx(Correlation().score(RuleStats(tp=2.0, fp=1.0, fn=1.0, tn=2.0)))
 
 
-# ------------------------------------------- bounds on the refinements
+# -- bounds on the refinements -----------------------------------------
 
 def test_default_bound_is_the_tp_0_projection():
     stats = RuleStats(tp=4, fp=3, fn=6, tn=7, length=2)
