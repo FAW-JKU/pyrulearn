@@ -56,13 +56,11 @@ def test_parse_rules_reads_the_rule_set_block():
     assert conds == [("f0", "1"), ("f3", "0")]
     assert target == "pos"
     assert parsed[2][1] == "neg"
-    print("_parse_rules extracts one (conditions, target) tuple per rule line: OK")
 
 
 def test_parse_ignores_non_rule_lines():
     noisy = "garbage\n" + EG_OUTPUT + "\nNumber of rules: 3\nsome trailing text\n"
     assert len(_parse_rules(noisy)) == 3
-    print("LORDImporter._parse_rules ignores everything that isn't a rule line: OK")
 
 
 def test_import_binds_to_given_spec_and_maps_zero_to_the_negation_feature():
@@ -75,7 +73,6 @@ def test_import_binds_to_given_spec_and_maps_zero_to_the_negation_feature():
     assert set(r0.pos) == {ds.feature_index("f0"), ds.feature_index("not f3")}
     r2 = rules.rules[2]  # (f0=0)
     assert set(r2.pos) == {ds.feature_index("not f0")}
-    print("LORDImporter: (f=1) -> positive literal, (f=0) -> literal on the paired negation feature: OK")
 
 
 def test_provenance_tagged():
@@ -83,14 +80,12 @@ def test_provenance_tagged():
     for r in rules.rules:
         assert r.provenance.source == "LORD (Huynh, Fürnkranz & Beck, 2023)"
         assert r.provenance.learner == "LORDImporter"
-    print("LORD import provenance tagged on every rule: OK")
 
 
 def test_infer_dataspec_treats_binary_attrs_as_boolean():
     ds = LORDImporter().infer_dataspec(EG_OUTPUT)
     # f0/f2/f3 seen with values in {0,1} -> boolean, each paired with a negation
     assert set(ds.feature_names) == {"f0", "not f0", "f2", "not f2", "f3", "not f3"}
-    print("LORDImporter.infer_dataspec: {0,1}-valued attributes become Boolean features: OK")
 
 
 def test_infer_dataspec_treats_multivalued_attrs_as_nominal():
@@ -98,13 +93,11 @@ def test_infer_dataspec_treats_multivalued_attrs_as_nominal():
     ds = rules.rules[0].dataspec
     assert {"color=red", "color=blue", "size=big"} <= set(ds.feature_names)
     assert set(rules.rules[0].pos) == {ds.feature_index("color=red"), ds.feature_index("size=big")}
-    print("LORDImporter: attributes with non-{0,1} values are imported as nominal equality features: OK")
 
 
 def test_disjunctive_selector_raises_clearly():
     with pytest.raises(ValueError, match="disjunctive"):
         _parse_rules("IF (f0=1||f0=2) THEN (Class=pos)\t(p=1, n=0, heuristic_value=0.5)")
-    print("LORDImporter raises a clear error on a disjunctive selector (not supported yet): OK")
 
 
 def test_end_to_end_predict_is_best_rule_wins():
@@ -128,7 +121,6 @@ def test_end_to_end_predict_is_best_rule_wins():
 
     preds = np.asarray(rules.predict(rep))  # RuleSet.predict defaults to HeuristicMaxCombiner (measured stats)
     assert list(preds) == ["pos", "pos", "pos", "neg", "pos"]
-    print("LORD RuleSet predicts by highest-heuristic covering rule, default class otherwise: OK")
 
 
 def test_placeholder_features_bind_by_position_not_name():
@@ -190,4 +182,3 @@ def test_run_lord_end_to_end():
     rules.default_prediction = "neg"
     acc = float(np.mean(np.asarray(rules.predict(rep)) == y))
     assert acc > 0.8
-    print(f"run_lord end-to-end: LORD learned {len(rules.rules)} rules, train acc {acc:.3f}: OK")

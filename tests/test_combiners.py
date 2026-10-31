@@ -41,7 +41,6 @@ def test_combiner_instances_are_what_predict_takes():
     for name in ("max", "list", "not_a_real_strategy"):       # names aren't components
         with pytest.raises(ValueError, match="RuleCombiner"):
             rs.predict(data_rep, combiner=name)
-    print("combiner shortcuts and RuleCombiner instances interchangeable: OK")
 
 
 def test_heuristic_max_combiner_scores_from_measured_stats():
@@ -65,7 +64,6 @@ def test_heuristic_max_combiner_scores_from_measured_stats():
     assert list(rs.predict(test_rep, combiner=HeuristicMaxCombiner(Laplace()))) == ["pos"]  # via r_a, not r_b
     # a non-Laplace heuristic (Precision) agrees here too, just to show it's pluggable
     assert list(rs.predict(test_rep, combiner=HeuristicMaxCombiner(Precision()))) == ["pos"]
-    print("HeuristicMaxCombiner scores from measured stats: OK")
 
 
 def test_heuristic_vote_combiner_forest_like_scenario():
@@ -107,7 +105,6 @@ def test_heuristic_vote_combiner_forest_like_scenario():
     # outweighs tree1/tree2's noisy 0.25 each on both examples, flipping both
     preds_weighted = forest.predict(data_rep, combiner=HeuristicVoteCombiner(Precision()))
     assert list(preds_weighted) == ["no", "yes"]
-    print("HeuristicVoteCombiner, scored from measured stats, flips both examples: OK")
 
 
 def test_distribution_combiners_micro_vs_macro_genuinely_diverge():
@@ -138,7 +135,6 @@ def test_distribution_combiners_micro_vs_macro_genuinely_diverge():
     # macro: normalize each rule first -- yes=0.8+0.1=0.9, no=0.2+0.9=1.1 -> flips
     assert list(rs.predict(test_rep, combiner=MacroVoteCombiner())) == ["no"]
     assert list(rs.predict(test_rep, combiner=MacroMaxCombiner())) == ["no"]
-    print("Micro vs Macro distribution combiners genuinely diverge: OK")
 
 
 def test_heuristic_combiner_raises_without_stats_on_a_genuine_disagreement():
@@ -162,7 +158,6 @@ def test_heuristic_combiner_raises_without_stats_on_a_genuine_disagreement():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "stats" in str(e)
-    print("HeuristicMaxCombiner/HeuristicVoteCombiner raise on an unannotated genuine disagreement: OK")
 
 
 def test_distribution_combiner_raises_without_stats_on_a_genuine_disagreement():
@@ -178,7 +173,6 @@ def test_distribution_combiner_raises_without_stats_on_a_genuine_disagreement():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "stats" in str(e)
-    print("DistributionCombiner raises on an unannotated genuine disagreement: OK")
 
 
 def test_a_trivial_single_target_never_needs_stats():
@@ -194,7 +188,6 @@ def test_a_trivial_single_target_never_needs_stats():
     assert list(rs.predict(data_rep, combiner=HeuristicMaxCombiner())) == ["pos"]
     assert list(rs.predict(data_rep, combiner=HeuristicVoteCombiner())) == ["pos"]
     assert list(rs.predict(data_rep, combiner=MacroVoteCombiner())) == ["pos"]
-    print("A unanimous covering block never needs stats, from either combiner family: OK")
 
 
 def test_combiner_bases_are_abstract():
@@ -204,7 +197,6 @@ def test_combiner_bases_are_abstract():
             assert False, f"expected TypeError instantiating {cls.__name__}"
         except TypeError:
             pass
-    print("RuleCombiner/HeuristicCombiner/DistributionCombiner are all abstract: OK")
 
 
 def test_count_vote_combiner_is_the_vote_shortcut():
@@ -218,7 +210,6 @@ def test_count_vote_combiner_is_the_vote_shortcut():
 
     assert list(rs.predict(data_rep, combiner=CountVoteCombiner())) == ["x"]
     assert list(rs.predict(data_rep, combiner=CountVoteCombiner())) == ["x"]
-    print("CountVoteCombiner is exactly the 'vote' shortcut: OK")
 
 
 def test_heuristic_vote_combiner_flips_a_noisy_majority():
@@ -251,7 +242,6 @@ def test_heuristic_vote_combiner_flips_a_noisy_majority():
     st_noisy1 = rs.rules[1].stats().confusion.rule_stats("neg")
     assert abs(Precision().score(st_noisy1) - 1 / 3) < 1e-12
     assert list(rs.predict(test_rep, combiner=HeuristicVoteCombiner(Precision()))) == ["pos"]
-    print("HeuristicVoteCombiner(Precision()), scored from measured stats, flips a noisy majority: OK")
 
 
 # -- ties: never by rule position ------------------------------------------
@@ -318,21 +308,3 @@ def test_every_combiner_describes_itself():
     }
     assert HeuristicMaxCombiner(FBeta(beta=2.0)).describe() == "max FBeta(beta=2.0)"
     assert HeuristicVoteCombiner(Precision()).describe() == "vote weighted by Precision"
-
-
-if __name__ == "__main__":
-    test_combiner_shortcuts_and_instances_are_interchangeable()
-    test_heuristic_max_combiner_scores_from_measured_stats()
-    test_heuristic_vote_combiner_forest_like_scenario()
-    test_distribution_combiners_micro_vs_macro_genuinely_diverge()
-    test_heuristic_combiner_raises_without_stats_on_a_genuine_disagreement()
-    test_distribution_combiner_raises_without_stats_on_a_genuine_disagreement()
-    test_a_trivial_single_target_never_needs_stats()
-    test_combiner_bases_are_abstract()
-    test_count_vote_combiner_is_the_vote_shortcut()
-    test_heuristic_vote_combiner_flips_a_noisy_majority()
-    test_max_ties_vote_among_the_tied_top_rules()
-    test_remaining_ties_go_to_training_frequency_then_label_order()
-    test_distribution_combiner_ties_use_the_same_fallback()
-    test_every_combiner_describes_itself()
-    print("\nAll tests passed.")

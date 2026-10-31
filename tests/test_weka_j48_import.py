@@ -146,7 +146,6 @@ def test_parses_real_j48_output_as_disjoint_ruleset():
         "color=blue", "color=green", "color=red",
         "color!=blue", "color!=green", "color!=red",
     }
-    print("Real J48 output parses as a DisjointRuleSet with the right structure: OK")
 
 
 def test_confusion_matrix_trap_line_is_not_misparsed():
@@ -160,7 +159,6 @@ def test_confusion_matrix_trap_line_is_not_misparsed():
     assert len(rules_full_dump.rules) == len(rules_isolated.rules) == 5
     assert sorted(r.to_string("logic") for r in rules_full_dump.rules) == \
         sorted(r.to_string("logic") for r in rules_isolated.rules)
-    print("Confusion matrix's 'a = pos'-like line is not misparsed as a tree node: OK")
 
 
 def test_multiway_nominal_split_parses_correctly():
@@ -171,7 +169,6 @@ def test_multiway_nominal_split_parses_correctly():
     assert any("color = green" in s for s in logic_strs)
     assert any("color = blue" in s for s in logic_strs)
     assert any("color = red" in s for s in logic_strs)
-    print("A 3-way nominal split (color = red/green/blue) parses correctly: OK")
 
 
 def test_provenance_tagged_on_rules():
@@ -179,7 +176,6 @@ def test_provenance_tagged_on_rules():
     for r in rules.rules:
         assert r.provenance.source == "weka.classifiers.trees.J48"
         assert r.provenance.learner == "J48Importer"
-    print("J48 import provenance tagged on every rule: OK")
 
 
 def test_end_to_end_predict_matches_weka_exactly_and_is_disjoint_exhaustive():
@@ -207,7 +203,6 @@ def test_end_to_end_predict_matches_weka_exactly_and_is_disjoint_exhaustive():
     # construction -- confirmed, not just assumed from the DisjointRuleSet type
     assert rules.is_disjoint(rep)
     assert rules.is_exhaustive(rep)
-    print("RuleList.predict matches J48's tree logic exactly, and leaves are disjoint/exhaustive: OK")
 
 
 def test_deep_tree_with_multilevel_backtracking():
@@ -235,7 +230,6 @@ def test_deep_tree_with_multilevel_backtracking():
     assert accuracy == pytest.approx(0.757, abs=1e-3)
     assert rules.is_disjoint(rep)
     assert rules.is_exhaustive(rep)
-    print("Deep (33-leaf) J48 tree parses and predicts correctly, matching Weka's reported accuracy: OK")
 
 
 def test_reuses_dataspec_across_multiple_parse_calls():
@@ -244,21 +238,18 @@ def test_reuses_dataspec_across_multiple_parse_calls():
     rules = importer.parse(REAL_J48_TREE_ONLY)
     assert importer.dataspec is ds
     assert rules.rules[0].dataspec is ds
-    print("J48Importer(dataspec=...) reuses a pre-built DataSpec instead of discovering its own: OK")
 
 
 def test_raises_without_header():
     text = "income <= 19992: pos (40.0/1.0)\n"
     with pytest.raises(ValueError, match="J48"):
         J48Importer().parse(text)
-    print("J48Importer raises a clear error when the 'J48 ... tree' header is missing: OK")
 
 
 def test_raises_when_no_leaves_found():
     text = "J48 pruned tree\n------------------\n\nincome <= 19992\n"
     with pytest.raises(ValueError, match="no leaves"):
         J48Importer().parse(text)
-    print("J48Importer raises a clear error when the tree has no leaves: OK")
 
 
 # Captured verbatim from a real weka.jar 3.8.7 run (a fold where no
@@ -299,7 +290,6 @@ def test_single_leaf_tree_parses_as_one_unconditional_rule():
     assert rule.rule.conditions == ()
     assert rule.target == "1"
     assert importer.dataspec.feature_names == []
-    print("A single-leaf (no-split) J48 tree parses as one unconditional rule: OK")
 
 
 MULTIWORD_LABEL_TREE = """J48 pruned tree
@@ -323,19 +313,3 @@ def test_multiword_class_labels_are_kept():
     rules = J48Importer().parse(MULTIWORD_LABEL_TREE)
     assert sorted(r.target for r in rules.rules) == [
         "build wind float", "containers", "vehic wind non-float"]
-    print("Multi-word J48 class labels are kept: OK")
-
-
-if __name__ == "__main__":
-    test_multiword_class_labels_are_kept()
-    test_parses_real_j48_output_as_disjoint_ruleset()
-    test_confusion_matrix_trap_line_is_not_misparsed()
-    test_multiway_nominal_split_parses_correctly()
-    test_provenance_tagged_on_rules()
-    test_end_to_end_predict_matches_weka_exactly_and_is_disjoint_exhaustive()
-    test_deep_tree_with_multilevel_backtracking()
-    test_reuses_dataspec_across_multiple_parse_calls()
-    test_raises_without_header()
-    test_raises_when_no_leaves_found()
-    test_single_leaf_tree_parses_as_one_unconditional_rule()
-    print("\nAll tests passed.")

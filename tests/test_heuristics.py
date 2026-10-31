@@ -53,13 +53,11 @@ def test_precision_and_laplace_and_support_and_accuracy():
     assert abs(Laplace().score(stats2) - 5 / 9) < 1e-12
     assert abs(Support().score(stats2) - 0.7) < 1e-12
     assert abs(Accuracy().score(stats2) - 0.5) < 1e-12
-    print("precision/laplace/support/accuracy: OK")
 
 
 def test_precision_handles_zero_coverage():
     stats = RuleStats(tp=0, fp=0, fn=6, tn=4)
     assert Precision().score(stats) == 0.0
-    print("precision zero-coverage guard: OK")
 
 
 def test_tpminusfp_ranks_identically_to_accuracy():
@@ -73,7 +71,6 @@ def test_tpminusfp_ranks_identically_to_accuracy():
     assert CoverageDifference().score(stats_b) == 1  # tp - fp = 4 - 3
     # exactly LinearCost(cost_ratio=1.0)
     assert CoverageDifference().score(stats_a) == LinearCost(cost_ratio=1.0).score(stats_a)
-    print("CoverageDifference ranks identically to Accuracy, equals LinearCost(1.0): OK")
 
 
 def test_mestimate_generalizes_precision_and_uses_prior():
@@ -82,7 +79,6 @@ def test_mestimate_generalizes_precision_and_uses_prior():
     assert abs(MEstimate(2).score(stats) - 4.2 / 5) < 1e-12
     # as m grows, the score is pulled toward the prior p0 (0.6)
     assert abs(MEstimate(1_000_000).score(stats) - 0.6) < 1e-3
-    print("MEstimate generalizes Precision, pulled toward prior as m grows: OK")
 
 
 def test_generalized_mestimate_matches_mestimate_at_matching_cost():
@@ -91,7 +87,6 @@ def test_generalized_mestimate_matches_mestimate_at_matching_cost():
     assert GeneralizedMEstimate(2, cost=p0).score(stats) == MEstimate(2).score(stats)
     # a cost far from the prior gives a different score than MEstimate
     assert GeneralizedMEstimate(2, cost=0.9).score(stats) != MEstimate(2).score(stats)
-    print("GeneralizedMEstimate matches MEstimate when cost=p0: OK")
 
 
 def test_generalized_mestimate_isometrics_are_a_pencil():
@@ -108,7 +103,6 @@ def test_generalized_mestimate_isometrics_are_a_pencil():
         tp1 = pivot_tp + slope * (fp1 - pivot_fp)
         tp2 = pivot_tp + slope * (fp2 - pivot_fp)
         assert abs(h(fp1, tp1) - h(fp2, tp2)) < 1e-9
-    print("GeneralizedMEstimate isometrics are a pencil through (-m(1-cost), -m*cost): OK")
 
 
 def test_wracc_score():
@@ -120,20 +114,17 @@ def test_wracc_score():
     # covered=7, p0=0.6 -> (7/10) * (4/7 - 0.6)
     expected = (7 / 10) * (4 / 7 - 0.6)
     assert abs(WRAcc().score(stats2) - expected) < 1e-12
-    print("WRAcc score: OK")
 
 
 def test_wracc_zero_guards():
     assert WRAcc().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == 0.0
     assert WRAcc().score(RuleStats(tp=0, fp=0, fn=0, tn=0)) == 0.0
-    print("WRAcc zero-coverage/zero-population guards: OK")
 
 
 def test_linear_cost():
     stats = RuleStats(tp=4, fp=3, fn=2, tn=1)
     assert LinearCost().score(stats) == 1.0        # default cost_ratio=1: 4 - 1*3
     assert LinearCost(cost_ratio=2.0).score(stats) == -2.0  # 4 - 2*3
-    print("LinearCost score: OK")
 
 
 def test_youden_j_and_linear_cost_rates():
@@ -142,14 +133,12 @@ def test_youden_j_and_linear_cost_rates():
     # YoudenJ is exactly LinearCostRates(cost_ratio=1.0)
     assert YoudenJ().score(stats) == LinearCostRates(cost_ratio=1.0).score(stats)
     assert abs(LinearCostRates(cost_ratio=2.0).score(stats) - (-0.8333333333333334)) < 1e-9
-    print("YoudenJ / LinearCostRates: OK")
 
 
 def test_youden_j_zero_class_guards():
     assert YoudenJ().score(RuleStats(tp=0, fp=0, fn=0, tn=6)) == 0.0  # n_pos=0
     assert YoudenJ().score(RuleStats(tp=0, fp=0, fn=6, tn=0)) == 0.0  # n_neg=0
     assert LinearCostRates().score(RuleStats(tp=0, fp=0, fn=0, tn=6)) == 0.0
-    print("YoudenJ/LinearCostRates zero-class guards: OK")
 
 
 def test_covered_positives_and_negatives_heuristics():
@@ -160,7 +149,6 @@ def test_covered_positives_and_negatives_heuristics():
     # CoveredPositives, and vice versa
     assert CoveredPositives().score(RuleStats(tp=4, fp=100, fn=2, tn=1)) == 4
     assert CoveredNegatives().score(RuleStats(tp=100, fp=3, fn=2, tn=1)) == -3
-    print("CoveredPositives/CoveredNegatives heuristics: OK")
 
 
 def test_uncovered_positives_and_negatives_heuristics():
@@ -171,7 +159,6 @@ def test_uncovered_positives_and_negatives_heuristics():
     # UncoveredPositives, and vice versa
     assert UncoveredPositives().score(RuleStats(tp=100, fp=3, fn=2, tn=1)) == -2
     assert UncoveredNegatives().score(RuleStats(tp=4, fp=100, fn=2, tn=1)) == 1
-    print("UncoveredPositives/UncoveredNegatives heuristics: OK")
 
 
 def test_coverage_heuristic():
@@ -179,7 +166,6 @@ def test_coverage_heuristic():
     assert Coverage().score(stats) == 7
     # unnormalized Support, same relationship CoverageDifference has to Accuracy
     assert abs(Coverage().score(stats) - Support().score(stats) * (stats.n_pos + stats.n_neg)) < 1e-12
-    print("Coverage heuristic: OK")
 
 
 def test_g_heuristic_values_and_zero_guard():
@@ -189,14 +175,12 @@ def test_g_heuristic_values_and_zero_guard():
     assert GHeuristic(5).score(stats) == 0.5
     # zero coverage and zero g together -> guarded, not a ZeroDivisionError
     assert GHeuristic(0).score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == 0.0
-    print("GHeuristic values and zero guard: OK")
 
 
 def test_recall_heuristic():
     stats = RuleStats(tp=4, fp=3, fn=2, tn=1)  # n_pos=6
     assert abs(Recall().score(stats) - 4 / 6) < 1e-12
     assert Recall().score(RuleStats(tp=0, fp=0, fn=0, tn=0)) == 0.0
-    print("Recall heuristic: OK")
 
 
 def test_fbeta_heuristic():
@@ -208,7 +192,6 @@ def test_fbeta_heuristic():
     assert FBeta(beta=0.0).score(stats) == p  # beta=0 collapses to precision
     assert FBeta(beta=1.0).score(stats) == expected_f1
     assert FBeta().score(RuleStats(tp=0, fp=0, fn=0, tn=0)) == 0.0
-    print("FBeta heuristic: OK")
 
 
 def test_fbeta_isometrics_are_a_pencil_through_fp_axis():
@@ -228,7 +211,6 @@ def test_fbeta_isometrics_are_a_pencil_through_fp_axis():
         tp1 = slope * (fp1 - pivot_fp)
         tp2 = slope * (fp2 - pivot_fp)
         assert abs(h(fp1, tp1) - h(fp2, tp2)) < 1e-9
-    print("FBeta isometrics are a pencil through the fp-axis: OK")
 
 
 def test_rule_stats_universal_and_empty():
@@ -245,7 +227,6 @@ def test_rule_stats_universal_and_empty():
     # universal rule relative to itself is exactly zero
     child = RuleStats(tp=6, fp=4, fn=0, tn=0)
     assert FoilGain().score(child, universal) == 0.0
-    print("RuleStats.universal/empty: OK")
 
 
 def test_length_penalized_reads_length():
@@ -254,7 +235,6 @@ def test_length_penalized_reads_length():
     assert abs(penalized.score(stats) - 0.95) < 1e-12
     # a heuristic that ignores length is unaffected by it
     assert Precision().score(stats) == Precision().score(RuleStats(tp=3, fp=0, fn=3, tn=4, length=99))
-    print("LengthPenalized reads RuleStats.length: OK")
 
 
 def test_foil_gain():
@@ -262,7 +242,6 @@ def test_foil_gain():
     child = RuleStats(tp=6, fp=1, fn=4, tn=9)  # precision 6/7
     expected = 6 * (math.log2(6 / 7) - math.log2(10 / 20))
     assert abs(FoilGain().score(child, parent) - expected) < 1e-6
-    print("FoilGain score: OK")
 
 
 def test_foil_gain_raises_without_parent():
@@ -272,7 +251,6 @@ def test_foil_gain_raises_without_parent():
         assert False, "expected TypeError"
     except TypeError:
         pass
-    print("FoilGain raises without parent (score() requires parent_stats): OK")
 
 
 def test_foil_gain_zero_guards():
@@ -280,7 +258,6 @@ def test_foil_gain_zero_guards():
     assert FoilGain().score(RuleStats(tp=0, fp=5, fn=10, tn=5), parent) == 0.0
     child = RuleStats(tp=6, fp=1, fn=4, tn=9)
     assert FoilGain().score(child, RuleStats(tp=0, fp=0, fn=10, tn=10)) == 0.0
-    print("FoilGain zero-tp guards: OK")
 
 
 def test_correlation_extremes_and_uncorrelated():
@@ -295,7 +272,6 @@ def test_correlation_extremes_and_uncorrelated():
     # coverage proportional to the prior (3:2 pos:neg, same as covered) -> uncorrelated
     uncorrelated = RuleStats(tp=3, fp=2, fn=3, tn=2)
     assert abs(Correlation().score(uncorrelated) - 0.0) < 1e-12
-    print("Correlation extremes (+1/-1) and uncorrelated (0): OK")
 
 
 def test_correlation_zero_denominator_guard():
@@ -303,7 +279,6 @@ def test_correlation_zero_denominator_guard():
     assert Correlation().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == 0.0
     # covers everything -> (fp+tn) and (fn+tn) terms are 0 -> denominator 0
     assert Correlation().score(RuleStats(tp=6, fp=4, fn=0, tn=0)) == 0.0
-    print("Correlation zero-denominator guard: OK")
 
 
 def test_chi_square_matches_hand_computed_value_and_correlation_relation():
@@ -318,13 +293,11 @@ def test_chi_square_matches_hand_computed_value_and_correlation_relation():
     yates = ChiSquare(yates_correction=True).score(stats)
     assert abs(yates - 3.5164835164835164) < 1e-9
     assert yates < uncorrected  # Yates' correction is strictly more conservative here
-    print("ChiSquare matches hand-computed values, uncorrected == n * Correlation**2: OK")
 
 
 def test_chi_square_zero_denominator_guard():
     assert ChiSquare().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == 0.0
     assert ChiSquare().score(RuleStats(tp=6, fp=4, fn=0, tn=0)) == 0.0
-    print("ChiSquare zero-denominator guard: OK")
 
 
 def test_chi_square_yates_correction_floors_at_zero():
@@ -337,7 +310,6 @@ def test_chi_square_yates_correction_floors_at_zero():
     stats = RuleStats(tp=1, fp=1, fn=1, tn=1)
     assert ChiSquare(yates_correction=False).score(stats) == 0.0
     assert ChiSquare(yates_correction=True).score(stats) == 0.0
-    print("ChiSquare Yates correction floors the corrected difference at 0, never inflates it: OK")
 
 
 def test_entropy_pure_and_even_split():
@@ -348,12 +320,10 @@ def test_entropy_pure_and_even_split():
     assert abs(Entropy().score(RuleStats(tp=5, fp=5, fn=0, tn=0)) - (-1.0)) < 1e-12
     # intermediate case, hand-verified: p=3/4 -> -H(3/4) ~= -0.8112781
     assert abs(Entropy().score(RuleStats(tp=3, fp=1, fn=0, tn=0)) - (-0.8112781244591328)) < 1e-9
-    print("Entropy pure/even-split/intermediate: OK")
 
 
 def test_entropy_zero_coverage_guard():
     assert Entropy().score(RuleStats(tp=0, fp=0, fn=6, tn=4)) == -1.0
-    print("Entropy zero-coverage guard (worst case): OK")
 
 
 def test_likelihood_ratio_matches_hand_computed_value():
@@ -362,7 +332,6 @@ def test_likelihood_ratio_matches_hand_computed_value():
     # against a direct G-statistic computation
     stats = RuleStats(tp=6, fp=1, fn=4, tn=9)
     assert abs(LikelihoodRatio().score(stats) - 3.9624320718015067) < 1e-9
-    print("LikelihoodRatio matches hand-computed G-statistic: OK")
 
 
 def test_likelihood_ratio_guards():
@@ -373,7 +342,6 @@ def test_likelihood_ratio_guards():
     # a rule matching the prior exactly contributes no evidence -> ~0.0
     stats = RuleStats(tp=5, fp=5, fn=5, tn=5)  # p0=0.5, covered 5/5, exactly as expected
     assert abs(LikelihoodRatio().score(stats)) < 1e-9
-    print("LikelihoodRatio guards (zero coverage, degenerate prior, matches-prior): OK")
 
 
 def test_rule_stats_from_rule_and_score_rule():
@@ -393,7 +361,6 @@ def test_rule_stats_from_rule_and_score_rule():
     rule_b = Rule.from_pos_neg(pos=[1], target="pos", dataspec=ds)  # b=True: rows 0,1,3,4,6,7,8
     stats_b = RuleStats.from_rule(rule_b, rep)
     assert (stats_b.tp, stats_b.fp) == (4, 3)
-    print("RuleStats.from_rule / score_rule: OK")
 
 
 def test_rule_stats_from_rule_with_parent():
@@ -415,7 +382,6 @@ def test_rule_stats_from_rule_with_parent():
 
     gain = FoilGain().score(stats, parent_stats)
     assert gain > 0  # the refinement strictly increased precision (0.571 -> 1.0)
-    print("FoilGain.score(stats, parent_stats) via two separate from_rule calls: OK")
 
 
 def test_from_rule_raises_without_labels_or_target():
@@ -438,7 +404,6 @@ def test_from_rule_raises_without_labels_or_target():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("from_rule raises without labels/positive_class: OK")
 
 
 def test_rule_stats_from_rule_with_example_mask():
@@ -461,7 +426,6 @@ def test_rule_stats_from_rule_with_example_mask():
     masked_stats = RuleStats.from_rule(rule_a, rep, example_mask=mask)
     assert (masked_stats.tp, masked_stats.fp, masked_stats.fn, masked_stats.tn) == (2, 0, 3, 3)
     assert masked_stats.tp + masked_stats.fp + masked_stats.fn + masked_stats.tn == mask.sum()
-    print("RuleStats.from_rule(example_mask=...) restricts counts to masked-in rows: OK")
 
 
 def test_minimal_length_scores_negated_length_and_breaks_lef_ties_toward_shorter_rules():
@@ -473,14 +437,12 @@ def test_minimal_length_scores_negated_length_and_breaks_lef_ties_toward_shorter
     long = RuleStats(tp=5, fp=1, fn=0, tn=9, length=5)
     lef = LEF(CoveredPositives(), CoveredNegatives(), MinimalLength())
     assert lef.score(short) > lef.score(long)  # tie on tp and fp -> shorter rule wins
-    print("MinimalLength = -length, and breaks a LEF tie toward the more general rule: OK")
 
 
 def test_lef_score_returns_tuple_of_constituent_scores():
     stats = RuleStats(tp=3, fp=1, fn=1, tn=3)
     lef = LEF(Accuracy(), Precision())
     assert lef.score(stats) == (Accuracy().score(stats), Precision().score(stats))
-    print("LEF.score returns the tuple of each constituent heuristic's own score: OK")
 
 
 def test_lef_lexicographic_tie_breaking():
@@ -499,7 +461,6 @@ def test_lef_lexicographic_tie_breaking():
     assert lef.score(b) > lef.score(a)
     # a differing primary always wins outright, regardless of the secondary
     assert lef.score(c) > lef.score(b) > lef.score(a)
-    print("LEF ranks by the first heuristic, falling back to later ones only on a tie: OK")
 
 
 def test_lef_works_with_beam_search():
@@ -520,7 +481,6 @@ def test_lef_works_with_beam_search():
     # special-casing needed in BeamSearch itself for this to work
     best = BeamSearch(beam_width=3).search(rep, "pos", LEF(Accuracy(), Precision()), initial)
     assert isinstance(best, Rule)
-    print("LEF works as BeamSearch's heuristic with no changes needed there: OK")
 
 
 def test_rule_heuristic_is_abstract():
@@ -529,14 +489,12 @@ def test_rule_heuristic_is_abstract():
         assert False, "expected TypeError (can't instantiate an ABC)"
     except TypeError:
         pass
-    print("RuleHeuristic is abstract: OK")
 
 
 def test_foil_gain_is_a_gain_heuristic():
     assert isinstance(FoilGain(), GainHeuristic)
     assert isinstance(FoilGain(), RuleHeuristic)
     assert not isinstance(Laplace(), GainHeuristic)
-    print("FoilGain is a GainHeuristic; an ordinary heuristic like Laplace isn't: OK")
 
 
 def test_gain_heuristic_score_rule_needs_parent_rule():
@@ -561,7 +519,6 @@ def test_gain_heuristic_score_rule_needs_parent_rule():
         assert False, "expected ValueError without parent_rule"
     except ValueError:
         pass
-    print("GainHeuristic.score_rule needs parent_rule, matching the two-call equivalent: OK")
 
 
 def test_delta_gain_is_the_wrapped_heuristics_own_difference():
@@ -571,13 +528,11 @@ def test_delta_gain_is_the_wrapped_heuristics_own_difference():
     expected = Laplace().score(stats) - Laplace().score(parent_stats)
     assert dg.score(stats, parent_stats) == expected
     assert isinstance(dg, GainHeuristic)
-    print("DeltaGain(base).score == base.score(stats) - base.score(parent_stats): OK")
 
 
 def test_delta_gain_zero_for_a_rule_scored_against_itself():
     stats = RuleStats(tp=4, fp=2, fn=6, tn=8)
     assert DeltaGain(Accuracy()).score(stats, stats) == 0.0
-    print("DeltaGain of a rule against itself is exactly zero: OK")
 
 
 # -------------------------------------------------- batch_score vs. score
@@ -676,47 +631,6 @@ def test_batch_score_of_one_scalar_stats_is_zero_dimensional():
         assert np.ndim(v) == 0 and float(v) == pytest.approx(h.score(s), rel=1e-12)
 
 
-if __name__ == "__main__":
-    test_precision_and_laplace_and_support_and_accuracy()
-    test_precision_handles_zero_coverage()
-    test_tpminusfp_ranks_identically_to_accuracy()
-    test_mestimate_generalizes_precision_and_uses_prior()
-    test_wracc_score()
-    test_wracc_zero_guards()
-    test_linear_cost()
-    test_tpr_minus_fpr_and_linear_cost_ratio()
-    test_tpr_minus_fpr_zero_class_guards()
-    test_covered_positives_and_negatives_heuristics()
-    test_uncovered_positives_and_negatives_heuristics()
-    test_coverage_heuristic()
-    test_g_estimate_values_and_zero_guard()
-    test_g_estimate_ranks_like_precision_at_g_zero()
-    test_rule_stats_universal_and_empty()
-    test_length_penalized_reads_length()
-    test_foil_gain()
-    test_foil_gain_raises_without_parent()
-    test_foil_gain_zero_guards()
-    test_correlation_extremes_and_uncorrelated()
-    test_correlation_zero_denominator_guard()
-    test_entropy_pure_and_even_split()
-    test_entropy_zero_coverage_guard()
-    test_likelihood_ratio_matches_hand_computed_value()
-    test_likelihood_ratio_guards()
-    test_rule_stats_from_rule_and_score_rule()
-    test_rule_stats_from_rule_with_parent()
-    test_from_rule_raises_without_labels_or_target()
-    test_rule_stats_from_rule_with_example_mask()
-    test_lef_score_returns_tuple_of_constituent_scores()
-    test_lef_lexicographic_tie_breaking()
-    test_lef_works_with_beam_search()
-    test_rule_heuristic_is_abstract()
-    test_foil_gain_is_a_gain_heuristic()
-    test_gain_heuristic_score_rule_needs_parent_rule()
-    test_delta_gain_is_the_wrapped_heuristics_own_difference()
-    test_delta_gain_zero_for_a_rule_scored_against_itself()
-    print("\nAll tests passed.")
-
-
 def test_correlation_and_chi_square_take_a_rounding_error_below_zero_as_zero():
     # fractional row weights: with no positives at all, fn = P - tp can come out a hair below 0,
     # and with it the factor tp + fn under the root
@@ -738,7 +652,6 @@ def test_default_bound_is_the_tp_0_projection():
     assert H.Laplace().bound(stats) == H.Laplace().score(RuleStats(tp=4, fp=0, fn=6, tn=10, length=2))
     penalized = H.LengthPenalized(LikelihoodRatio(), 0.5)
     assert abs(penalized.bound(stats) - (LikelihoodRatio().bound(stats) - 1.0)) < 1e-12
-    print("the default bound is the (tp, 0) projection; LengthPenalized wraps its base's: OK")
 
 
 def test_likelihood_ratio_bound_covers_every_refinement():
@@ -758,4 +671,3 @@ def test_likelihood_ratio_bound_covers_every_refinement():
     batch = RuleStats(tp=np.array([1, 5]), fp=np.array([9, 0]), fn=np.array([9, 5]), tn=np.array([21, 30]))
     assert np.allclose(lr.batch_bound(batch), [lr.bound(H.RuleStats(tp=1, fp=9, fn=9, tn=21)),
                                                lr.bound(H.RuleStats(tp=5, fp=0, fn=5, tn=30))])
-    print("LikelihoodRatio's bound is the maximum over every refinement: OK")

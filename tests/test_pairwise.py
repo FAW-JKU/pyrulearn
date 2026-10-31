@@ -138,11 +138,3 @@ def test_filter_and_remap_recurse_into_members():
     assert np.array_equal(np.asarray(remapped.predict(
         HorizontalBitmapRepresentation(ds2, np.array([[1, 0, 0], [0, 1, 1]], dtype=bool), None))),
         np.array(["a", "b"], dtype=object))
-
-
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"{name}: OK")
-    print("\nAll tests passed.")

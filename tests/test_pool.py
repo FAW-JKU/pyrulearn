@@ -33,7 +33,6 @@ def test_mined_pool_is_a_lazy_flat_rule_set_that_builds_nothing_until_looked_at(
     assert isinstance(pool.rules, RuleView)
     assert len(pool.rules) > 50
     assert len(pool._cache) == 0          # nothing built yet, however many rules there are
-    print(f"the mined pool ({len(pool.rules)} rules) is a PooledRuleSet with 0 rules built: OK")
 
 
 def test_indexing_builds_once_and_keeps_one_persistent_object():
@@ -46,7 +45,6 @@ def test_indexing_builds_once_and_keeps_one_persistent_object():
     assert pool.rules[3].weight == 0.5
     with pytest.raises(IndexError):
         pool.rules[len(pool.rules)]
-    print("pool.rules[i] is built once and cached as one persistent object; slices are views: OK")
 
 
 def test_iter_transient_builds_equal_rules_without_caching():
@@ -55,7 +53,6 @@ def test_iter_transient_builds_equal_rules_without_caching():
     assert len(pool._cache) == 0
     assert _sig(first) == _sig(pool.rules)           # (this second pass caches, the first did not)
     assert first[0] is not pool.rules[0] and _sig([first[0]]) == _sig([pool.rules[0]])
-    print("iter_transient() yields equal rules without filling the cache: OK")
 
 
 def test_vectorized_precedence_order_equals_sorting_the_built_rules():
@@ -65,7 +62,6 @@ def test_vectorized_precedence_order_equals_sorting_the_built_rules():
     assert isinstance(fast, RuleView) and len(pool._cache) == 0     # sorted without building anything
     slow = sort_by_measured_precedence(list(pool.rules))            # the generic path, on real rules
     assert _sig(fast) == _sig(slow)
-    print(f"precedence_sorted() over {len(fast)} pooled rules == sorting the built rules, nothing built: OK")
 
 
 def test_for_target_targets_and_head_per_target():
@@ -83,7 +79,6 @@ def test_for_target_targets_and_head_per_target():
         if seen[r.target] <= 4:
             expected.append(r)
     assert _sig(capped) == _sig(expected)
-    print("for_target/targets/head_per_target agree with the plain-list equivalents: OK")
 
 
 def test_filter_returns_a_pool_and_add_is_unsupported():
@@ -93,7 +88,6 @@ def test_filter_returns_a_pool_and_add_is_unsupported():
     assert len(only_x.rules) == len(pool.rules.for_target("x"))
     with pytest.raises(TypeError, match="columnar"):
         pool.add(pool.rules[0])
-    print("filter() gives another PooledRuleSet; add() is refused: OK")
 
 
 def test_a_pooled_set_predicts_like_the_equivalent_eager_flat_rule_set_and_converts():
@@ -102,7 +96,6 @@ def test_a_pooled_set_predicts_like_the_equivalent_eager_flat_rule_set_and_conve
     eager = FlatRuleSet(list(pool.rules), default_prediction=pool.default_prediction)
     assert list(pool.predict(data)) == list(eager.predict(data))
     assert isinstance(convert(pool, DecisionList), DecisionList)       # via the FlatRuleSet converter (MRO)
-    print("a PooledRuleSet predicts like the eager FlatRuleSet and converts to a DecisionList: OK")
 
 
 def test_distillers_give_identical_models_from_a_pooled_or_an_eager_pool():
@@ -119,7 +112,6 @@ def test_distillers_give_identical_models_from_a_pooled_or_an_eager_pool():
     kw = dict(rule_cutoff=8, optimizer=GreedySelection(), tune_lambdas=False, lambda_weights=(0.2, 0.2, 0.2, 0.2, 1, 1, 2))
     ids_p, ids_e = IDS(rules=pool, **kw).fit(data), IDS(rules=eager, **kw).fit(data)
     assert _sig(ids_p.rules) == _sig(ids_e.rules)
-    print("CBA, CMAR and IDS give identical models from a lazy pool and from the equivalent eager list: OK")
 
 
 def test_cba_over_a_lazy_pool_builds_only_what_it_scans():
@@ -129,4 +121,3 @@ def test_cba_over_a_lazy_pool_builds_only_what_it_scans():
     # coverage_select streams (iter_transient), so the pool's own cache stays empty even though
     # the pool holds hundreds of rules
     assert len(pool._cache) == 0
-    print("CBA-CB over a lazy pool leaves the pool's rule cache empty: OK")

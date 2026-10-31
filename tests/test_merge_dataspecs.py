@@ -17,7 +17,6 @@ def test_merge_numeric_union():
         "age>=20", "age>=25", "age>=30", "age>=40",
         "age<20", "age<25", "age<30", "age<40",
     }
-    print("merge numeric union: OK")
 
 
 def test_merge_nominal_union():
@@ -34,7 +33,6 @@ def test_merge_nominal_union():
         "color=red", "color=green", "color=blue",
         "color!=red", "color!=green", "color!=blue",
     }
-    print("merge nominal union: OK")
 
 
 def test_merge_one_sided_attribute():
@@ -49,7 +47,6 @@ def test_merge_one_sided_attribute():
 
     merged = merge_dataspecs(ds_a, ds_b).build()
     assert set(merged.feature_names) == {"smoker", "not smoker", "age>=30", "age<30"}
-    print("merge one-sided attribute: OK")
 
 
 def test_merge_boolean():
@@ -63,7 +60,6 @@ def test_merge_boolean():
 
     merged = merge_dataspecs(ds_a, ds_b).build()
     assert merged.feature_names == ["smoker", "not smoker"]
-    print("merge boolean: OK")
 
 
 def test_merge_type_conflict_raises():
@@ -80,7 +76,6 @@ def test_merge_type_conflict_raises():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("merge type conflict raises: OK")
 
 
 def test_merge_hierarchical_identical_ok():
@@ -97,7 +92,6 @@ def test_merge_hierarchical_identical_ok():
     assert set(merged.feature_names) == {
         "region=Europe", "region=France", "region=Germany", "region=Asia",
     }
-    print("merge identical hierarchy: OK")
 
 
 def test_merge_hierarchical_mismatch_raises():
@@ -114,7 +108,6 @@ def test_merge_hierarchical_mismatch_raises():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("merge hierarchy mismatch raises: OK")
 
 
 def test_merge_carries_over_missing_name_and_values():
@@ -130,7 +123,6 @@ def test_merge_carries_over_missing_name_and_values():
     assert "color=<missing>" in merged.feature_names
     assert merged.attributes["color"].missing_name == "<missing>"
     assert merged.attributes["color"].missing_values == ("?",)
-    print("merge carries over missing_name/missing_values: OK")
 
 
 def test_merge_conflicting_missing_name_raises():
@@ -147,7 +139,6 @@ def test_merge_conflicting_missing_name_raises():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("merge conflicting missing_name raises: OK")
 
 
 def test_merge_relational_identical_ok_and_mismatch_raises():
@@ -179,7 +170,6 @@ def test_merge_relational_identical_ok_and_mismatch_raises():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("merge relational identical/mismatch: OK")
 
 
 def test_merge_binary_attributes():
@@ -218,19 +208,3 @@ def test_remap_inequality_onto_binary_becomes_the_other_value():
     b.add_nominal("x", ["a", "b", "c"])
     wide = b.build()
     assert [wide.feature_name(l.feature) for l in rule.remap(wide).conditions] == ["x!=a"]
-
-
-if __name__ == "__main__":
-    test_merge_numeric_union()
-    test_merge_nominal_union()
-    test_merge_one_sided_attribute()
-    test_merge_boolean()
-    test_merge_type_conflict_raises()
-    test_merge_hierarchical_identical_ok()
-    test_merge_hierarchical_mismatch_raises()
-    test_merge_carries_over_missing_name_and_values()
-    test_merge_conflicting_missing_name_raises()
-    test_merge_relational_identical_ok_and_mismatch_raises()
-    test_merge_binary_attributes()
-    test_remap_inequality_onto_binary_becomes_the_other_value()
-    print("\nAll tests passed.")

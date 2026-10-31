@@ -70,7 +70,6 @@ def test_coverage_matches_boolean(rep_cls, negation):
     for rule in _random_rules(ds, rng, n_rules=500):
         assert np.array_equal(brep.coverage(rule), rep.coverage(rule)), rule
     assert rep.coverage(Rule([], target="pos", dataspec=ds)).all()  # empty rule covers all
-    print(f"{rep_cls.__name__} coverage == packed coverage, 500 rules (negation={negation}): OK")
 
 
 @pytest.mark.parametrize("rep_cls", ALT_REPS)
@@ -80,7 +79,6 @@ def test_features_of_and_X_match(rep_cls):
     assert np.array_equal(rep.X, brep.X)
     for i in range(brep.n_samples):
         assert np.array_equal(rep.features_of(i), brep.features_of(i))
-    print(f"{rep_cls.__name__} features_of / X reconstruction match Boolean: OK")
 
 
 @pytest.mark.parametrize("rep_cls", ALT_REPS)
@@ -93,7 +91,6 @@ def test_example_mask_counts_match(rep_cls):
         sb = RuleStats.from_rule(rule, brep, "pos", example_mask=mask)
         sr = RuleStats.from_rule(rule, rep, "pos", example_mask=mask)
         assert (sb.tp, sb.fp, sb.fn, sb.tn) == (sr.tp, sr.fp, sr.fn, sr.tn), rule
-    print(f"{rep_cls.__name__} RuleStats(example_mask=) identical (grow/prune splits carry through): OK")
 
 
 @pytest.mark.parametrize("negation", [False, True])
@@ -118,8 +115,6 @@ def test_seco_learners_identical_across_representations(negation):
         assert np.array_equal(pb, np.asarray(rn.predict(nrep)))
         assert np.array_equal(pb, np.asarray(rp.predict(pprep)))
         assert np.array_equal(pb, np.asarray(rs.predict(srep)))
-    print(f"CN2/PFoil/PFossil/AQR/PyLORD identical: Boolean == NList == PrePostNList == Sparse "
-          f"(negation={negation}): OK")
 
 
 @pytest.mark.parametrize("cls", [ENDER, DenseENDER])
@@ -179,7 +174,6 @@ def test_seco_learners_identical_on_wide_data():
         pb = np.asarray(rb.predict(brep))
         assert np.array_equal(pb, np.asarray(rn.predict(nrep)))
         assert np.array_equal(pb, np.asarray(rp.predict(pprep)))
-    print("CN2/PFoil/PFossil/AQR/PyLORD identical on wide (k=150) data: OK")
 
 
 @pytest.mark.parametrize("rep_cls", ALT_REPS)
@@ -207,7 +201,6 @@ def test_ruleclassifier_coverage_methods_match_boolean(rep_cls):
         db, dx = cb.default_rule.evaluate(brep), cx.default_rule.evaluate(rep)
         assert db.confusion.labels == dx.confusion.labels and \
             np.array_equal(db.confusion.counts, dx.confusion.counts)
-    print(f"RuleModel coverage methods: {rep_cls.__name__} == Boolean: OK")
 
 
 @pytest.mark.parametrize("rep_cls", ALL_REPS)
@@ -227,7 +220,6 @@ def test_select_rows_subsets_and_stays_the_same_type(rep_cls):
     rng = np.random.default_rng(0)
     for rule in _random_rules(ds, rng, n_rules=50, max_len=4):
         assert np.array_equal(sub.coverage(rule), brep.coverage(rule)[mask])
-    print(f"{rep_cls.__name__}.select_rows: subsets, same type, coverage consistent: OK")
 
 
 def _masks(n, y, rng):
@@ -276,7 +268,6 @@ def test_nlist_subset_derived_from_the_tree_matches_a_rebuilt_one(rep_cls, negat
     once = rep_cls(ds, X[y == "pos"][::2], y[y == "pos"][::2], weights=weights[y == "pos"][::2])
     assert np.array_equal(np.asarray(nested.X), np.asarray(once.X))
     assert all(np.array_equal(nested.coverage(r), once.coverage(r)) for r in rules)
-    print(f"{rep_cls.__name__}: subsets derived from the tree match rebuilt ones: OK")
 
 
 @pytest.mark.parametrize("rep_cls", [NListRepresentation, PrePostNListRepresentation])
@@ -319,7 +310,6 @@ def test_constructors_mirror_boolean(rep_cls):
     from_df = rep_cls.from_dataframe(df, label_col="label")
     assert np.array_equal(from_df.X, X)
     assert list(from_df.y) == list(y)
-    print(f"{rep_cls.__name__}.from_xy / from_dataframe mirror Boolean: OK")
 
 
 @pytest.mark.parametrize("rep_cls", ALL_REPS)
@@ -332,7 +322,6 @@ def test_from_scipy_accepts_a_sparse_matrix(rep_cls):
     assert np.array_equal(rep.X, X)
     rule = Rule([0, 2], target="a", dataspec=ds)
     assert np.array_equal(rep.coverage(rule), X[:, 0] & X[:, 2])
-    print(f"{rep_cls.__name__}.from_scipy accepts a scipy.sparse matrix: OK")
 
 
 @pytest.mark.parametrize("rep_cls", ALT_REPS)
@@ -344,7 +333,6 @@ def test_all_zero_row_and_shape_guard(rep_cls):
     assert rep.coverage(Rule([0], target="p", dataspec=ds)).tolist() == [False, True, False]
     with pytest.raises(ValueError):
         rep_cls(ds, np.zeros((3, 5), dtype=bool))
-    print(f"{rep_cls.__name__} handles an all-zero row and guards the column count: OK")
 
 
 @pytest.mark.parametrize("rep_cls", ALL_REPS)
@@ -368,7 +356,6 @@ def test_incremental_cover_matches_rulestats(rep_cls, use_mask):
         full_cov = brep.coverage(rule)
         want_rows = full_cov if mask is None else (full_cov & mask)
         assert np.array_equal(rep.cover_rows(handle), want_rows)
-    print(f"{rep_cls.__name__} incremental cover matches RuleStats.from_rule (mask={use_mask}): OK")
 
 
 @pytest.mark.parametrize("rep_cls", [NListRepresentation, PrePostNListRepresentation])
@@ -416,8 +403,6 @@ def test_nlist_incremental_cover_on_wide_varied_frequency_data(rep_cls):
 
     if orig_reanchor is not None:
         assert branch_counts["interval"] > 0 and branch_counts["bitmask"] > 0
-    print(f"{rep_cls.__name__} incremental cover matches RuleStats.from_rule on wide, "
-          f"varied-frequency data: OK")
 
 
 def test_nlist_tree_is_more_compact_than_the_dense_matrix():
@@ -426,7 +411,6 @@ def test_nlist_tree_is_more_compact_than_the_dense_matrix():
     nrep = NListRepresentation.from_boolean(brep)
     n_nodes = len(nrep._words)
     assert n_nodes < brep.n_samples * brep.spec.n_features
-    print(f"N-list PPC-tree: {n_nodes} nodes < {brep.n_samples * brep.spec.n_features} matrix cells: OK")
 
 
 def test_sparse_is_the_nlist_without_the_tree():
@@ -440,7 +424,6 @@ def test_sparse_is_the_nlist_without_the_tree():
         cov = brep.coverage(rule)
         assert np.array_equal(cov, srep.coverage(rule))
         assert np.array_equal(cov, nrep.coverage(rule))
-    print("Sparse (vertical tid-lists) == N-list (tree-compressed tid-lists) == Boolean: OK")
 
 
 # -- negation toggles ------------------------------------------------
@@ -467,7 +450,6 @@ def test_without_then_with_negations_round_trips(rep_cls):
     r_pos = Rule([pos.spec.feature_index("a")], target="pos", dataspec=pos.spec)
     r_neg = Rule([bneg.spec.feature_index("a")], target="pos", dataspec=bneg.spec)
     assert np.array_equal(pos.coverage(r_pos), bneg.coverage(r_neg))
-    print(f"{rep_cls.__name__}: without_negations -> with_negations round-trips: OK")
 
 
 @pytest.mark.parametrize("rep_cls", ALL_REPS)
@@ -476,7 +458,6 @@ def test_without_negations_is_identity_without_negation_features(rep_cls):
     X = rng.random((100, 4)) < 0.5
     rep = rep_cls(_pos_spec(list("abcd")), X, None)
     assert rep.without_negations() is rep
-    print(f"{rep_cls.__name__}.without_negations() is a no-op when there's nothing to drop: OK")
 
 
 def test_negation_toggle_gives_every_learner_the_same_rules_as_a_native_build():
@@ -494,7 +475,6 @@ def test_negation_toggle_gives_every_learner_the_same_rules_as_a_native_build():
         b = {(r.pos, r.target) for r in make().fit(toggled_pos).rules}
         # feature indices line up because without_negations keeps names/order
         assert a == b
-    print("without_negations() reproduces a from-scratch negation=False build for the learners: OK")
 
 
 def test_preference_order_and_default_representation(monkeypatch):

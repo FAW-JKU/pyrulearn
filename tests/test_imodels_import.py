@@ -64,7 +64,6 @@ def test_imports_as_rulelist_and_matches_model_predictions():
     model_preds = np.asarray(model.predict(np.asarray(rep.X).astype(int)))
     rule_preds = np.asarray(rules.predict(rep))
     assert np.array_equal(model_preds, rule_preds)
-    print("IModBayesianRuleList imports as RuleList and matches model predictions exactly: OK")
 
 
 def test_rule_targets_follow_probability_not_position():
@@ -87,7 +86,6 @@ def test_rule_targets_follow_probability_not_position():
     # i.e. some theta is below 0.5, so target != "always pos_class" trivially
     assert any(t < 0.5 for t in model.theta), "expected a negative-predicting rule to exercise the inversion"
     assert any(t > 0.5 for t in model.theta), "expected a positive-predicting rule too"
-    print("BRL rule targets follow their posterior probability, not list position: OK")
 
 
 def test_only_positive_literals():
@@ -101,7 +99,6 @@ def test_only_positive_literals():
         # importer has no neg path at all (FP-growth "present item" sets)
         assert all(isinstance(lit, Literal) for lit in r.conditions)
         assert sorted(lit.feature for lit in r.conditions) == list(r.pos)
-    print("BRL imported rules contain only positive literals: OK")
 
 
 def test_provenance_tagged_on_rules_and_default():
@@ -110,7 +107,6 @@ def test_provenance_tagged_on_rules_and_default():
     for r in list(rules.rules) + [rules.default_rule]:
         assert r.provenance.source == "imodels.BayesianRuleListClassifier"
         assert r.provenance.learner == "BayesianRuleListImporter"
-    print("BRL import provenance tagged on every rule incl. the default: OK")
 
 
 def test_raises_on_feature_count_mismatch():
@@ -124,7 +120,6 @@ def test_raises_on_feature_count_mismatch():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "features" in str(e)
-    print("BayesianRuleListImporter raises on feature-count mismatch: OK")
 
 
 def test_nominal_attributes_via_build_dataspec_one_hot():
@@ -153,7 +148,6 @@ def test_nominal_attributes_via_build_dataspec_one_hot():
     # name "cat=red"/"cat!=red")
     rendered = " ".join(r.to_string("logic") for r in rules.rules)
     assert "cat = " in rendered or "cat ≠ " in rendered
-    print("Nominal attributes work via build_dataspec's one-hot encoding: OK")
 
 
 def test_multiclass_target_raises():
@@ -170,7 +164,6 @@ def test_multiclass_target_raises():
         assert False, "expected ValueError for 3-class y"
     except ValueError as e:
         assert "binary" in str(e).lower()
-    print("IModBayesianRuleList surfaces imodels' own binary-only error: OK")
 
 
 def test_imports_as_ruleset_and_matches_model_predictions():
@@ -192,7 +185,6 @@ def test_imports_as_ruleset_and_matches_model_predictions():
     model_preds = np.where(raw_preds == 1, model.classes_[1], model.classes_[0])
     rule_preds = np.asarray(rules.predict(rep))
     assert np.array_equal(model_preds, rule_preds)
-    print("IModBayesianRuleSet imports as RuleSet and matches model predictions exactly: OK")
 
 
 def test_all_rules_target_positive_class_default_targets_negative():
@@ -203,7 +195,6 @@ def test_all_rules_target_positive_class_default_targets_negative():
 
     assert all(r.target == pos_class for r in rules.rules)
     assert rules.default_rule.target == neg_class
-    print("BRS rules all target the positive class, default targets the negative: OK")
 
 
 def test_negative_literals_parsed_correctly():
@@ -229,7 +220,6 @@ def test_negative_literals_parsed_correctly():
     assert {lit.feature for lit in r1.conditions} == {ds.feature_index("f2")}
     assert r0.target == "pos" and r1.target == "pos"
     assert rules.default_rule.target == "neg"
-    print("BRS negative ('_neg'-suffixed) literals parsed correctly: OK")
 
 
 def test_brs_provenance_tagged_on_rules_and_default():
@@ -238,7 +228,6 @@ def test_brs_provenance_tagged_on_rules_and_default():
     for r in list(rules.rules) + [rules.default_rule]:
         assert r.provenance.source == "imodels.BayesianRuleSetClassifier"
         assert r.provenance.learner == "BayesianRuleSetImporter"
-    print("BRS import provenance tagged on every rule incl. the default: OK")
 
 
 def test_brs_raises_on_feature_count_mismatch():
@@ -250,7 +239,6 @@ def test_brs_raises_on_feature_count_mismatch():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "features" in str(e)
-    print("BayesianRuleSetImporter raises on feature-count mismatch: OK")
 
 
 def test_brs_fit_external_rejects_non_boolean_input():
@@ -264,7 +252,6 @@ def test_brs_fit_external_rejects_non_boolean_input():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "boolean" in str(e).lower()
-    print("IModBayesianRuleSet.fit_external rejects non-Boolean input with a clear error: OK")
 
 
 def test_brs_fit_external_rejects_multiclass_target():
@@ -278,7 +265,6 @@ def test_brs_fit_external_rejects_multiclass_target():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "binary" in str(e).lower()
-    print("IModBayesianRuleSet.fit_external rejects multi-class targets with a clear error: OK")
 
 
 def test_brs_nominal_attributes_via_build_dataspec_one_hot():
@@ -333,26 +319,6 @@ def test_brs_nominal_attributes_via_build_dataspec_one_hot():
     # cat!=green" -- both are valid, genuine BRS output, rendered as "cat = "
     # / "cat ≠ " respectively -- so accept either form
     assert "cat = " in rendered or "cat ≠ " in rendered
-    print("BRS nominal attributes work via build_dataspec's one-hot encoding: OK")
-
-
-if __name__ == "__main__":
-    test_imports_as_rulelist_and_matches_model_predictions()
-    test_rule_targets_follow_probability_not_position()
-    test_only_positive_literals()
-    test_provenance_tagged_on_rules_and_default()
-    test_raises_on_feature_count_mismatch()
-    test_nominal_attributes_via_build_dataspec_one_hot()
-    test_multiclass_target_raises()
-    test_imports_as_ruleset_and_matches_model_predictions()
-    test_all_rules_target_positive_class_default_targets_negative()
-    test_negative_literals_parsed_correctly()
-    test_brs_provenance_tagged_on_rules_and_default()
-    test_brs_raises_on_feature_count_mismatch()
-    test_brs_fit_external_rejects_non_boolean_input()
-    test_brs_fit_external_rejects_multiclass_target()
-    test_brs_nominal_attributes_via_build_dataspec_one_hot()
-    print("\nAll tests passed.")
 
 
 # ------------------------------------------------------------------ RuleFit
@@ -452,4 +418,3 @@ def test_imodels_slipper_predicts_the_first_class_for_string_labels_but_the_lear
     assert model.labels == ["bad", "good"]
     assert np.mean(np.asarray(model.predict(data)) == data.y) > 0.7
     assert all(r.provenance.source == "imodels.SlipperClassifier" for r in model.rules)
-

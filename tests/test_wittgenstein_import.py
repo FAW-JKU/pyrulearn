@@ -64,7 +64,6 @@ def test_learner_matches_importer_and_wittgenstein_predict(learner_cls, importer
     preds = learned.predict(rep)
     wpreds = np.where(wmodel.predict(rep.X, feature_names=rep.spec.feature_names), "pos", "neg")
     assert np.array_equal(preds, wpreds)
-    print(f"{learner_cls.__name__} matches {importer_cls.__name__} and wittgenstein's own predict(): OK")
 
 
 def test_fit_raises_on_more_than_two_classes_even_with_neg_class():
@@ -90,7 +89,6 @@ def test_fit_raises_on_more_than_two_classes_even_with_neg_class():
         assert False, "neg_class= should not bypass the multi-class guard"
     except ValueError:
         pass
-    print("IREP/WittRIPPER raise on >2 classes even with neg_class given: OK")
 
 
 def test_missing_labels_raises():
@@ -104,7 +102,6 @@ def test_missing_labels_raises():
         assert False, "expected ValueError for missing labels"
     except ValueError:
         pass
-    print("IREP/WittRIPPER raise without labels: OK")
 
 
 def test_numeric_and_nominal_attributes_via_build_dataspec():
@@ -135,7 +132,6 @@ def test_numeric_and_nominal_attributes_via_build_dataspec():
     # e.g. "num_feat >= 0.36", not just a bare feature name
     rendered = " ".join(r.to_string("logic") for r in rules.rules)
     assert "num_feat" in rendered or "cat_feat" in rendered
-    print("Numeric/nominal attributes convert correctly via build_dataspec/binarize: OK")
 
 
 def test_parse_numeric_cond_value():
@@ -151,7 +147,6 @@ def test_parse_numeric_cond_value():
     assert _parse_numeric_cond_value(">1.32") == [(1.32, False)]  # x>1.32, exclusive
     assert _parse_numeric_cond_value("<-1.28") == [(-1.28, True)]  # x<=-1.28, inclusive
     assert _parse_numeric_cond_value("red") is None  # a genuine nominal category, not a bin
-    print("_parse_numeric_cond_value handles range/unbounded/non-numeric: OK")
 
 
 @pytest.mark.parametrize("learner_cls,importer_cls", [
@@ -194,7 +189,6 @@ def test_infer_dataspec_parses_wittgensteins_own_bins_workflow_2(learner_cls, im
     preds = rules.predict(rep)
     wpreds = np.where(model.predict(df.to_numpy(), feature_names=names), "pos", "neg")
     assert np.array_equal(preds, wpreds)
-    print(f"{learner_cls.__name__} workflow-2 infer_dataspec parses wittgenstein's own bins correctly: OK")
 
 
 def test_imported_rules_match_wittgenstein_exactly_at_bin_boundaries():
@@ -232,7 +226,6 @@ def test_imported_rules_match_wittgenstein_exactly_at_bin_boundaries():
         f"mismatch at bin boundary values {boundary_values}: "
         f"imported={list(preds)} vs wittgenstein={list(wpreds)}"
     )
-    print("Imported rules match wittgenstein exactly at bin boundary values: OK")
 
 
 def test_import_model_without_feature_names_still_raises_on_nonboolean():
@@ -251,21 +244,3 @@ def test_import_model_without_feature_names_still_raises_on_nonboolean():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "feature_names" in str(e)
-    print("import_model without feature_names= still raises on non-Boolean Cond.val: OK")
-
-
-if __name__ == "__main__":
-    for learner_cls, importer_cls, wclass in [
-        (WittIREP, IREPImporter, wittgenstein.IREP),
-        (WittRIPPER, RIPPERImporter, wittgenstein.RIPPER),
-    ]:
-        test_learner_matches_importer_and_wittgenstein_predict(learner_cls, importer_cls, wclass)
-    test_fit_raises_on_more_than_two_classes_even_with_neg_class()
-    test_missing_labels_raises()
-    test_numeric_and_nominal_attributes_via_build_dataspec()
-    test_parse_numeric_cond_value()
-    for learner_cls, importer_cls in [(WittRIPPER, RIPPERImporter), (WittIREP, IREPImporter)]:
-        test_infer_dataspec_parses_wittgensteins_own_bins_workflow_2(learner_cls, importer_cls)
-    test_imported_rules_match_wittgenstein_exactly_at_bin_boundaries()
-    test_import_model_without_feature_names_still_raises_on_nonboolean()
-    print("\nAll tests passed.")

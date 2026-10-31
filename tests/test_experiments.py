@@ -171,7 +171,6 @@ def test_cache_key_is_stable_for_learners_built_from_components():
     assert key(PFossil(random_state=0)) == key(PFossil(random_state=0))
     assert key(PFossil(random_state=0)) != key(PFossil(random_state=0, correlation_threshold=0.2))
     assert key(PFossil(random_state=0)) != key(PFossil(random_state=0), rep=HorizontalBitmapRepresentation)
-    print("run_cv's cache key is the same for equal, separately built learners: OK")
 
 
 def _sleep_then_return(seconds: float) -> str:

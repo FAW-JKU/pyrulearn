@@ -220,7 +220,6 @@ def test_invalid_method_and_loss_combinations_are_refused():
         ENDER(loss="logistic")                     # names aren't components
 
 
-
 def test_ender_l2_regularization_shrinks_the_weights():
     data = _data()
     plain = ENDER(n_rules=20, method=Newton(), subsample=0.5, random_state=0).fit(data)
@@ -277,7 +276,6 @@ def test_optimal_rule_boosting_rejects_bad_input():
         DenseORB().fit(three)
     with pytest.raises(ValueError):
         DenseORB(search="beam")
-
 
 
 def _best_gain_brute_force(X, g, h, reg, sign=None, max_len=3):

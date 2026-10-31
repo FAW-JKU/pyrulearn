@@ -34,7 +34,6 @@ def test_aspect_ratio():
     assert abs(ax.get_box_aspect() - 0.5) < 1e-9  # within range, unclamped
 
     plt.close("all")
-    print("aspect ratio: OK")
 
 
 def test_normalized_coverage_space_is_always_square():
@@ -47,7 +46,6 @@ def test_normalized_coverage_space_is_always_square():
     # non-normalized still reflects the true (skewed) ratio under "rectangular"
     space = CoverageSpace(n_pos=5, n_neg=500, normalized=False, aspect="rectangular")
     assert abs(space.ax.get_box_aspect() - (5 / 500)) < 1e-9
-    print("normalized CoverageSpace is always a square, unaffected by skew: OK")
 
 
 def test_coverage_space_plot_ruleset_uses_raw_counts():
@@ -69,7 +67,6 @@ def test_coverage_space_plot_ruleset_uses_raw_counts():
     offsets = ax.collections[0].get_offsets()
     assert list(offsets[:, 0]) == list(expected[:, 0])
     assert list(offsets[:, 1]) == list(expected[:, 1])
-    print("coverage_space_plot RuleSet raw counts: OK")
 
 
 def test_coverage_space_plot_rulelist_cumulative_path():
@@ -95,7 +92,6 @@ def test_coverage_space_plot_rulelist_cumulative_path():
     assert list(offsets[:, 1]) == list(expected[:, 1])
     assert offsets[0, 0] == 0 and offsets[0, 1] == 0
     assert len(ax.texts) == len(expected) - 1  # one arrow annotation per step
-    print("coverage_space_plot RuleList cumulative path (arrows): OK")
 
 
 def test_upper_hull():
@@ -106,7 +102,6 @@ def test_upper_hull():
     pts = np.array([[0, 0], [0, 4], [4, 4], [4, 0], [2, 2]])
     upper = _upper_hull(pts)
     assert [tuple(p) for p in upper] == [(0, 0), (0, 4), (4, 4)]
-    print("_upper_hull: OK")
 
 
 def test_coverage_space_plot_show_convex_hull():
@@ -131,7 +126,6 @@ def test_coverage_space_plot_show_convex_hull():
     assert points[0] == (0, 0) and points[-1] == (0, 0)  # closed back to the origin
     assert (2, 0) in points  # goes via (N, 0) -- not a bare diagonal back to (0,0)
     assert "AUC=" in hull_lines[0].get_label()
-    print("coverage_space_plot convex hull option: OK")
 
 
 def test_convex_hull_restricted_to_same_target():
@@ -162,7 +156,6 @@ def test_convex_hull_restricted_to_same_target():
     ax = coverage_space_plot(rs, rep, positive_class="pos", show_refinements=False, show_convex_hull=True)
     hull_line = next(l for l in ax.get_lines() if l.get_label().startswith("convex hull"))
     assert f"{auc_pos:.3f}" in hull_line.get_label()
-    print("convex hull restricted to same-target rules: OK")
 
 
 def test_coverage_space_auc_no_matching_rules_is_random_baseline():
@@ -175,7 +168,6 @@ def test_coverage_space_auc_no_matching_rules_is_random_baseline():
 
     auc = coverage_space_auc(rs, rep, "pos")
     assert abs(auc - 0.5) < 1e-9  # no pos-target rules -> trivial (0,0)-(N,P) hull
-    print("coverage_space_auc with no matching rules: OK")
 
 
 def test_ruleset_to_rulelist():
@@ -195,7 +187,6 @@ def test_ruleset_to_rulelist():
     rl = rs.to_rulelist()
     assert isinstance(rl, DecisionList)
     assert [r.target for r in rl] == ["b", "c", "a"]  # descending Laplace: 0.8, 0.75, 0.667
-    print("RuleSet.to_rulelist: OK")
 
 
 def _covering_fixture():
@@ -234,7 +225,6 @@ def test_sort_rules_by_laplace_length_heuristic_and_callable():
         assert False
     except ValueError:
         pass
-    print("sort_rules by None(Laplace) / MinimalLength / heuristic / callable: OK")
 
 
 def test_rule_refinement_path_monotonic_and_endpoints():
@@ -262,7 +252,6 @@ def test_rule_refinement_path_monotonic_and_endpoints():
         int(np.sum(cov & (y != "pos"))), int(np.sum(cov & (y == "pos"))),
     )
     assert all(path[i][0] >= path[i + 1][0] and path[i][1] >= path[i + 1][1] for i in range(len(path) - 1))
-    print("rule_refinement_path monotonic + endpoints: OK")
 
 
 def test_rule_refinement_defaults_positive_class_to_rule_target():
@@ -293,7 +282,6 @@ def test_rule_refinement_defaults_positive_class_to_rule_target():
 
     ax = rule_refinement_plot(r, rep)
     assert "'neg'" in ax.get_ylabel()
-    print("rule_refinement defaults positive_class to rule.target: OK")
 
 
 def test_coverage_space_default_dims():
@@ -301,7 +289,6 @@ def test_coverage_space_default_dims():
     assert space.n_pos < space.n_neg  # smaller value on the Pos axis
     assert space.n_pos == CoverageSpace.DEFAULT_N_POS == 100
     assert space.n_neg == CoverageSpace.DEFAULT_N_NEG == 160
-    print("CoverageSpace default dimensions: OK")
 
 
 def test_coverage_space_requires_both_dims_or_neither():
@@ -317,7 +304,6 @@ def test_coverage_space_requires_both_dims_or_neither():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("CoverageSpace requires both n_pos/n_neg or neither: OK")
 
 
 def test_coverage_space_show_labels_defaults_to_whether_dims_were_given():
@@ -348,7 +334,6 @@ def test_coverage_space_show_labels_defaults_to_whether_dims_were_given():
     assert [t.get_text() for t in forced_off.ax.get_xticklabels()] == ["0", "N"]
     forced_on = CoverageSpace(show_labels=True)
     assert forced_on.ax.get_xlabel() == f"negatives covered (of {CoverageSpace.DEFAULT_N_NEG})"
-    print("CoverageSpace.show_labels defaults to whether n_pos/n_neg were given: OK")
 
 
 def test_coverage_space_has_light_minor_grid():
@@ -357,7 +342,6 @@ def test_coverage_space_has_light_minor_grid():
     for space in (CoverageSpace(), CoverageSpace(n_pos=10, n_neg=20), CoverageSpace(normalized=True)):
         assert isinstance(space.ax.xaxis.get_minor_locator(), AutoMinorLocator)
         assert isinstance(space.ax.yaxis.get_minor_locator(), AutoMinorLocator)
-    print("CoverageSpace always sets up a light minor-tick grid: OK")
 
 
 def test_coverage_space_grid_cells_are_square_not_flat_5x5():
@@ -373,7 +357,6 @@ def test_coverage_space_grid_cells_are_square_not_flat_5x5():
     roc_space = CoverageSpace(normalized=True)
     assert roc_space.ax.xaxis.get_minor_locator().ndivs == 5
     assert roc_space.ax.yaxis.get_minor_locator().ndivs == 5
-    print("CoverageSpace grid cells are square (extent-proportional divisions), not flat 5x5: OK")
 
 
 def test_plot_isometrics_skips_clabel_when_show_labels_false():
@@ -385,7 +368,6 @@ def test_plot_isometrics_skips_clabel_when_show_labels_false():
     space2 = CoverageSpace(n_pos=10, n_neg=16)  # real dims -> show_labels True
     Precision().plot_isometrics(space=space2, levels=5)
     assert len(space2.ax.texts) > 0
-    print("plot_isometrics respects CoverageSpace.show_labels: OK")
 
 
 def test_coverage_space_from_data_matches_data():
@@ -394,7 +376,6 @@ def test_coverage_space_from_data_matches_data():
     rep = HorizontalBitmapRepresentation(DataSpec(["a", "b"]), X, y)
     space = CoverageSpace.from_data(rep, "pos")
     assert space.n_pos == 2 and space.n_neg == 2
-    print("CoverageSpace.from_data sizes to real data: OK")
 
 
 def test_coverage_space_normalized_scatter_gives_rates():
@@ -406,7 +387,6 @@ def test_coverage_space_normalized_scatter_gives_rates():
     assert list(offsets[:, 0]) == [1.0, 0.5, 0.0]
     assert list(offsets[:, 1]) == [1.0, 0.5, 0.0]
     assert space.ax.get_xlabel() == "FPR" and space.ax.get_ylabel() == "TPR"
-    print("CoverageSpace(normalized=True) scatter uses FPR/TPR: OK")
 
 
 def test_coverage_space_plot_ruleset_delegates_and_matches_standalone():
@@ -426,7 +406,6 @@ def test_coverage_space_plot_ruleset_delegates_and_matches_standalone():
     expected = rs.coverage_space(rep, "pos")
     assert list(offsets[:, 0]) == list(expected[:, 0])
     assert list(offsets[:, 1]) == list(expected[:, 1])
-    print("CoverageSpace.plot_ruleset usable standalone, matches raw coverage: OK")
 
 
 def test_plot_isometrics_returns_coverage_space_with_contour():
@@ -438,7 +417,6 @@ def test_plot_isometrics_returns_coverage_space_with_contour():
     assert len(space.ax.collections) > 0
     # default (arbitrary) dims -> show_labels defaults False -> no clabel text
     assert len(space.ax.texts) == 0
-    print("RuleHeuristic.plot_isometrics returns a CoverageSpace with drawn contours: OK")
 
 
 def test_plot_isometrics_sized_to_representation_and_layerable():
@@ -462,7 +440,6 @@ def test_plot_isometrics_sized_to_representation_and_layerable():
     assert len(space.ax.collections) > n_collections_before
     expected = rs.coverage_space(rep, "pos")
     assert list(offsets[:, 0]) == list(expected[:, 0])
-    print("plot_isometrics(space=...) sizes to given space and stays layerable: OK")
 
 
 def test_plot_isometrics_filled_skips_clabel():
@@ -471,7 +448,6 @@ def test_plot_isometrics_filled_skips_clabel():
     Precision().plot_isometrics(space=space, levels=5, filled=True)
     # filled contours (contourf) aren't clabel'd -- no new text artists
     assert len(space.ax.texts) == n_texts_before
-    print("plot_isometrics(filled=True) skips clabel: OK")
 
 
 def test_plot_isometrics_raises_for_foil_gain_without_parent():
@@ -483,7 +459,6 @@ def test_plot_isometrics_raises_for_foil_gain_without_parent():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("plot_isometrics raises for FoilGain without parent=: OK")
 
 
 def test_plot_isometrics_with_parent_makes_foil_gain_plottable():
@@ -495,7 +470,6 @@ def test_plot_isometrics_with_parent_makes_foil_gain_plottable():
     result = FoilGain().plot_isometrics(space=space, levels=5, parent=universal)
     assert result is space
     assert len(space.ax.collections) > n_collections_before
-    print("plot_isometrics(parent=...) makes FoilGain plottable: OK")
 
 
 def test_plot_isometric_through_point_marks_the_point():
@@ -507,7 +481,6 @@ def test_plot_isometric_through_point_marks_the_point():
     assert len(space.ax.collections) == n_collections_before + 2
     marker_offsets = space.ax.collections[-1].get_offsets()
     assert list(marker_offsets[0]) == [4, 6]
-    print("plot_isometric_through_point marks the given point: OK")
 
 
 def test_plot_isometric_through_point_mark_point_false_skips_marker():
@@ -515,7 +488,6 @@ def test_plot_isometric_through_point_mark_point_false_skips_marker():
     n_collections_before = len(space.ax.collections)
     Precision().plot_isometric_through_point(4, 6, space=space, mark_point=False)
     assert len(space.ax.collections) == n_collections_before + 1  # contour only
-    print("plot_isometric_through_point(mark_point=False) skips the marker: OK")
 
 
 def test_plot_isometric_through_rule_uses_rule_coverage_and_real_dims():
@@ -533,7 +505,6 @@ def test_plot_isometric_through_rule_uses_rule_coverage_and_real_dims():
     assert space.n_pos == 6 and space.n_neg == 4
     marker_offsets = space.ax.collections[-1].get_offsets()
     assert list(marker_offsets[0]) == [0, 3]  # fp=0, tp=3
-    print("plot_isometric_through_rule uses the rule's own coverage, sized to real data: OK")
 
 
 def test_plot_isometric_through_rule_raises_without_positive_class():
@@ -546,8 +517,6 @@ def test_plot_isometric_through_rule_raises_without_positive_class():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("plot_isometric_through_rule raises without positive_class (or a Rule with a target): OK")
-    print("plot_isometrics(filled=True) skips clabel: OK")
 
 
 def test_order_by_precision():
@@ -571,7 +540,6 @@ def test_order_by_precision():
     assert [lit.feature for lit in ordered.conditions] == [1, 0]
     # same rule, just reordered -- coverage is unaffected
     assert ordered.pos == r.pos
-    print("order_by_precision: OK")
 
 
 # ------------------------------------------------------------- ConfusionMatrix ---
@@ -583,7 +551,6 @@ def test_confusion_matrix_from_predictions_basic():
     assert cm.labels == ["a", "b", "c"]
     assert cm.n_total == 5
     assert cm.accuracy == 4 / 5   # only row 1 (true a, predicted b) is wrong
-    print("ConfusionMatrix.from_predictions builds the right counts and accuracy: OK")
 
 
 def test_confusion_matrix_rule_stats_differs_by_label_not_just_relabeled():
@@ -597,7 +564,6 @@ def test_confusion_matrix_rule_stats_differs_by_label_not_just_relabeled():
     assert (rs_a.tp, rs_a.fp, rs_a.fn, rs_a.tn) == (2, 0, 1, 2)
     assert (rs_b.tp, rs_b.fp, rs_b.fn, rs_b.tn) == (2, 1, 0, 2)
     assert rs_a.tp == rs_b.tn and rs_a.tn == rs_b.tp  # mirror, not identical
-    print("ConfusionMatrix.rule_stats gives a genuinely different RuleStats per label: OK")
 
 
 def test_confusion_matrix_abstained_predictions_get_their_own_bucket():
@@ -609,14 +575,12 @@ def test_confusion_matrix_abstained_predictions_get_their_own_bucket():
     assert cm.accuracy == 2 / 3
     rs_a = cm.rule_stats("a")
     assert rs_a.tp == 1 and rs_a.fn == 1   # the abstained "a" row is a false negative for "a"
-    print("ConfusionMatrix routes a None prediction to its own ABSTAIN bucket: OK")
 
 
 def test_confusion_matrix_labels_outside_the_given_set_are_folded_in():
     cm = ConfusionMatrix.from_predictions(["a", "b", "z"], ["a", "b", "z"], labels=["a", "b"])
     assert "z" in cm.labels
     assert cm.n_total == 3
-    print("ConfusionMatrix folds in a true/predicted label outside the given labels=: OK")
 
 
 # ----------------------------------------------------------------- ModelStats ---
@@ -632,38 +596,3 @@ def test_model_stats_lives_alongside_rulestats_and_confusionmatrix():
     assert "accuracy" in repr(st)
     st_no_confusion = ModelStats(n_rows=3, confusion=None, n_rules=2, n_conditions=4)
     assert "accuracy" not in repr(st_no_confusion)
-    print("ModelStats constructible directly, alongside RuleStats/ConfusionMatrix: OK")
-
-
-if __name__ == "__main__":
-    test_aspect_ratio()
-    test_coverage_space_plot_ruleset_uses_raw_counts()
-    test_coverage_space_plot_rulelist_cumulative_path()
-    test_upper_hull()
-    test_coverage_space_plot_show_convex_hull()
-    test_convex_hull_restricted_to_same_target()
-    test_coverage_space_auc_no_matching_rules_is_random_baseline()
-    test_ruleset_to_rulelist()
-    test_rule_refinement_path_monotonic_and_endpoints()
-    test_rule_refinement_defaults_positive_class_to_rule_target()
-    test_normalized_coverage_space_is_always_square()
-    test_coverage_space_default_dims()
-    test_coverage_space_requires_both_dims_or_neither()
-    test_coverage_space_show_labels_defaults_to_whether_dims_were_given()
-    test_coverage_space_has_light_minor_grid()
-    test_coverage_space_grid_cells_are_square_not_flat_5x5()
-    test_plot_isometrics_skips_clabel_when_show_labels_false()
-    test_coverage_space_from_data_matches_data()
-    test_coverage_space_normalized_scatter_gives_rates()
-    test_coverage_space_plot_ruleset_delegates_and_matches_standalone()
-    test_plot_isometrics_returns_coverage_space_with_contour()
-    test_plot_isometrics_sized_to_representation_and_layerable()
-    test_plot_isometrics_filled_skips_clabel()
-    test_plot_isometrics_raises_for_foil_gain_without_parent()
-    test_plot_isometrics_with_parent_makes_foil_gain_plottable()
-    test_plot_isometric_through_point_marks_the_point()
-    test_plot_isometric_through_point_mark_point_false_skips_marker()
-    test_plot_isometric_through_rule_uses_rule_coverage_and_real_dims()
-    test_plot_isometric_through_rule_raises_without_positive_class()
-    test_order_by_precision()
-    print("\nAll tests passed.")

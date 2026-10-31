@@ -26,7 +26,6 @@ def test_stamp_rule_provenance_gives_each_rule_its_own_instance():
     same_object = importer._stamp_rule_provenance([already], tag="x")[0]
     assert same_object is already
     assert same_object.provenance.params == {"tag": "x"}
-    print("_stamp_rule_provenance wraps + gives each rule a fresh Provenance instance: OK")
 
 
 def test_from_sklearn_tree_returns_disjoint_ruleset():
@@ -54,7 +53,6 @@ def test_from_sklearn_tree_returns_disjoint_ruleset():
     assert rules.rules[0].provenance.learner == "SklearnTreeImporter"
     assert rules.rules[0].provenance.source == "sklearn.tree.DecisionTreeClassifier"
     assert len({id(r.provenance) for r in rules.rules}) == len(rules.rules)  # one instance each, not shared
-    print("from_sklearn_tree returns a genuinely disjoint, exhaustive DisjointRuleSet: OK")
 
 
 def test_sklearn_tree_importer_binds_to_given_dataspec_and_tags_provenance():
@@ -83,7 +81,6 @@ def test_sklearn_tree_importer_binds_to_given_dataspec_and_tags_provenance():
         assert r.provenance.source == "sklearn.tree.DecisionTreeClassifier"
         assert r.provenance.learner == "SklearnTreeImporter"
         assert r.provenance.params["max_depth"] == 3
-    print("SklearnTreeImporter binds to given dataspec + tags provenance: OK")
 
 
 def test_sklearn_tree_importer_raises_on_feature_count_mismatch():
@@ -101,7 +98,6 @@ def test_sklearn_tree_importer_raises_on_feature_count_mismatch():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "features" in str(e)
-    print("SklearnTreeImporter raises on feature-count mismatch: OK")
 
 
 def test_sklearn_tree_infer_dataspec_matches_tree_exactly_on_raw_data():
@@ -135,7 +131,6 @@ def test_sklearn_tree_infer_dataspec_matches_tree_exactly_on_raw_data():
     tree_preds = clf.predict(X)
     rule_preds = rules.predict(rep)
     assert np.array_equal(tree_preds, rule_preds)
-    print("SklearnTreeImporter.infer_dataspec matches the tree exactly on raw data: OK")
 
 
 def test_random_forest_infer_dataspec_unions_thresholds_across_trees():
@@ -159,7 +154,6 @@ def test_random_forest_infer_dataspec_unions_thresholds_across_trees():
         len(SklearnTreeImporter().import_model(t, ds, feature_names=names)) for t in rf.estimators_
     )
     assert len(rules) == expected_total
-    print("RandomForestImporter.infer_dataspec unions thresholds across trees, stays faithful: OK")
 
 
 def test_random_forest_importer_returns_single_ruleset():
@@ -203,7 +197,6 @@ def test_random_forest_importer_returns_single_ruleset():
 
     rules2 = from_random_forest(rf, dataspec=ds)
     assert isinstance(rules2, FlatRuleSet)
-    print("RandomForestImporter returns a single combined, exhaustive FlatRuleSet: OK")
 
 
 def test_random_forest_import_model_with_data_gives_every_leaf_measured_stats():
@@ -239,7 +232,6 @@ def test_random_forest_import_model_with_data_gives_every_leaf_measured_stats():
     preds_micro = rules.predict(rep, combiner=MicroVoteCombiner())
     preds_macro = rules.predict(rep, combiner=MacroVoteCombiner())
     assert set(preds_micro) <= {"pos", "neg"} and set(preds_macro) <= {"pos", "neg"}
-    print("RandomForestImporter's data= gives every leaf measured stats for DistributionCombiner: OK")
 
 
 def test_tree_learners_on_the_fit_switcher():
@@ -277,7 +269,6 @@ def test_tree_learners_on_the_fit_switcher():
         assert len(indices) == 1          # one tree per member
         assert indices.isdisjoint(seen_indices)
         seen_indices |= indices
-    print("SKLDecisionTree/SKLRandomForest on the fit switcher: OK")
 
 
 def test_sklearn_tree_importer_stamps_stats_only_when_data_is_given():
@@ -300,7 +291,6 @@ def test_sklearn_tree_importer_stamps_stats_only_when_data_is_given():
         expected = RuleStats.from_rule(r.rule, rep, r.target)
         got = r.stats().confusion.rule_stats(r.target)
         assert (got.tp, got.fp, got.fn, got.tn) == (expected.tp, expected.fp, expected.fn, expected.tn)
-    print("SklearnTreeImporter stamps rule stats only when the fit() round trip gives it data: OK")
 
 
 def test_prettify_threshold_finds_the_coarsest_value_in_the_real_data_gap():
@@ -317,7 +307,6 @@ def test_prettify_threshold_finds_the_coarsest_value_in_the_real_data_gap():
     tight_unique = np.array([15.1458, 15.14581])
     tight = prettify_threshold(15.145805, tight_unique)
     assert 15.1458 < tight < 15.14581
-    print("prettify_threshold: OK")
 
 
 def test_tree_thresholds_prettifies_without_changing_the_partition():
@@ -336,20 +325,3 @@ def test_tree_thresholds_prettifies_without_changing_the_partition():
     # the prettified threshold partitions this column exactly like the
     # raw midpoint would -- rounding changed nothing but the display
     assert np.array_equal(values >= thresholds[0], values >= raw_midpoint)
-    print("tree_thresholds prettification: OK")
-
-
-if __name__ == "__main__":
-    test_stamp_rule_provenance_gives_each_rule_its_own_instance()
-    test_from_sklearn_tree_returns_disjoint_ruleset()
-    test_sklearn_tree_importer_binds_to_given_dataspec_and_tags_provenance()
-    test_sklearn_tree_importer_raises_on_feature_count_mismatch()
-    test_sklearn_tree_infer_dataspec_matches_tree_exactly_on_raw_data()
-    test_random_forest_infer_dataspec_unions_thresholds_across_trees()
-    test_random_forest_importer_returns_single_ruleset()
-    test_random_forest_import_model_with_data_gives_every_leaf_measured_stats()
-    test_tree_learners_on_the_fit_switcher()
-    test_sklearn_tree_importer_stamps_stats_only_when_data_is_given()
-    test_prettify_threshold_finds_the_coarsest_value_in_the_real_data_gap()
-    test_tree_thresholds_prettifies_without_changing_the_partition()
-    print("\nAll tests passed.")

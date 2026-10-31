@@ -309,7 +309,6 @@ def test_flat_rules_filter_and_remap_carry_container_and_rule_provenance():
     assert remapped.rules[0].provenance is prov_a         # per-rule: carried across the rebuild
     assert remapped.rules[1].provenance is prov_b
     assert remapped.rules[0].dataspec is ds2              # actually remapped, not just copied
-    print("FlatRuleSet.filter/remap carry both container- and rule-level provenance: OK")
 
 
 def test_concept_model_filter_and_remap_carry_provenance():
@@ -322,7 +321,6 @@ def test_concept_model_filter_and_remap_carry_provenance():
     remapped = cm.remap(ds2)
     assert remapped.provenance is cm.provenance
     assert remapped.rules[0].provenance is prov_a
-    print("ConceptModel.filter/remap carry provenance: OK")
 
 
 def test_single_rule_filter_and_remap_carry_provenance():
@@ -337,7 +335,6 @@ def test_single_rule_filter_and_remap_carry_provenance():
     remapped = ra.remap(ds2)
     assert remapped is not ra                             # remap always rebuilds
     assert remapped.provenance is prov_a
-    print("SingleRule.filter/remap carry provenance: OK")
 
 
 def test_concept_indexed_filter_and_remap_carry_provenance():
@@ -353,7 +350,6 @@ def test_concept_indexed_filter_and_remap_carry_provenance():
     cascade.provenance = Provenance(learner="OrderedOneVsRest", params={})
     assert cascade.filter("a").provenance is cascade.provenance
     assert cascade.remap(ds2).provenance is cascade.provenance
-    print("ConceptSet/ConceptCascade filter/remap carry provenance: OK")
 
 
 def test_composite_filter_and_remap_carry_provenance():
@@ -364,7 +360,6 @@ def test_composite_filter_and_remap_carry_provenance():
     ds2 = DataSpec(["p", "q", "r"])
     assert ens.filter("a").provenance is ens.provenance
     assert ens.remap(ds2).provenance is ens.provenance
-    print("CompositeModel (EnsembleModel) filter/remap carry provenance: OK")
 
 
 def test_converters_carry_provenance():
@@ -385,7 +380,6 @@ def test_converters_carry_provenance():
     cascade = ConceptCascade([ConceptModel([ra], label="a"), ConceptModel([rb], label="b")])
     cascade.provenance = Provenance(learner="OrderedOneVsRest", params={})
     assert conceptcascade_to_decision_list(cascade).provenance is cascade.provenance
-    print("Every model->model converter carries provenance across: OK")
 
 
 # ---------------------------------------------------- SingleRule containers ---
@@ -1008,8 +1002,6 @@ def test_to_string_prints_the_full_distribution_only_for_a_distributioncombiner(
     text = fs.to_string(fmt="prolog")
     assert "% classes:" not in text
     assert "dog(X) :- barks(X).  % (14/2)" in text
-    print("to_string shows the full class distribution + legend only for a "
-          "DistributionCombiner, plain (tp/fp) otherwise: OK")
 
 
 def test_to_string_skips_the_distribution_for_a_binary_problem_even_with_a_distributioncombiner():
@@ -1024,8 +1016,6 @@ def test_to_string_skips_the_distribution_for_a_binary_problem_even_with_a_distr
     text = fs.to_string(fmt="prolog")
     assert "% classes:" not in text
     assert "dog(X) :- barks(X).  % (5/0)" in text
-    print("Binary problems skip the distribution bracket/legend even under a "
-          "DistributionCombiner -- it would just be (tp/fp) reordered: OK")
 
 
 def test_to_string_singlerule_default_never_prints_the_distribution():
@@ -1036,7 +1026,6 @@ def test_to_string_singlerule_default_never_prints_the_distribution():
     text = sr.to_string(fmt="prolog")
     assert "% classes:" not in text
     assert text == "dog(X) :- barks(X).  % (14/2)"
-    print("A standalone SingleRule defaults to plain (tp/fp), never a distribution: OK")
 
 
 def test_to_string_show_distribution_forces_the_choice_either_way():
@@ -1067,8 +1056,6 @@ def test_to_string_show_distribution_forces_the_choice_either_way():
     text = binary_fs.to_string(fmt="prolog", show_distribution=True)
     assert "% classes: [cat, dog]" in text
     assert "dog(X) :- barks(X).  % [0, 5]" in text  # cat=0, dog=5, class order [cat, dog]
-    print("show_distribution=True/False forces the vector on or off regardless of "
-          "the model's own combiner or class count: OK")
 
 
 def test_to_string_show_classes_is_independent_of_show_distribution():
@@ -1084,8 +1071,6 @@ def test_to_string_show_classes_is_independent_of_show_distribution():
     text = fs.to_string(fmt="prolog", show_classes=False)
     assert "% classes:" not in text
     assert "dog(X) :- barks(X).  % [1, 1, 14]" in text  # the vector itself is untouched
-    print("show_classes independently forces the legend on or off, regardless of "
-          "whether any rule is actually showing a distribution vector: OK")
 
 
 def _three_class_fixture_data():
@@ -1138,8 +1123,6 @@ def test_pairwisemodel_to_string_forces_each_pairs_own_two_classes_by_default():
     # cat_bird's *same* rule, over cat+bird rows -- the one bird row with
     # a=1 is a false positive there -- 2/1
     assert "cat(X) :- a(X).  % (2/1)" in text
-    print("PairwiseModel.to_string forces each pair's own two-class legend and "
-          "shows accuracy_vote's per-pair member weight: OK")
 
 
 def test_pairwise_weighted_vote_heuristic_is_configurable_and_printed():
@@ -1181,8 +1164,6 @@ def test_pairwisemodel_to_string_show_classes_false_suppresses_everything():
     pw = PairwiseModel([("cat", "dog", cat_dog), ("cat", "bird", cat_bird), ("dog", "bird", dog_bird)])
     text = pw.to_string(fmt="prolog", show_classes=False)
     assert "% classes:" not in text
-    print("PairwiseModel.to_string's show_classes=False suppresses the top-level "
-          "and every per-pair legend: OK")
 
 
 def test_ensemblemodel_to_string_shows_member_weights_and_top_level_legend():
@@ -1204,8 +1185,6 @@ def test_ensemblemodel_to_string_shows_member_weights_and_top_level_legend():
     # cat's rule (a=1 -> cat) over all 6 training rows also covers the a=1
     # bird row as a false positive
     assert "cat(X) :- a(X).  % (2/1)" in text
-    print("EnsembleModel.to_string shows each member's own weight, its stored "
-          "stats, and a top-level classes legend: OK")
 
 
 def test_ensemble_vote_ties_never_depend_on_member_order():
@@ -1313,11 +1292,3 @@ def test_covered_by_on_a_decision_list_and_with_no_default():
     cb = dl.covered_by(data)  # singleton blocks -- no scoring needed, no stats required
     assert [r.target for r in cb[0]] == ["B", "A"]   # first-match B predicted -> its block first
     assert cb[1] == []                                # nothing covers, no default rule
-
-
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"{name}: OK")
-    print("\nAll model tests passed.")

@@ -97,7 +97,6 @@ def test_parses_real_part_output_as_rulelist():
         "age>39.0", "income>20373.0", "income>20292.0", "income>19992.0",
         "color!=blue", "color!=green",
     }
-    print("Real PART output parses as a RuleList with the right structure: OK")
 
 
 def test_parsing_ignores_everything_but_rule_blocks():
@@ -110,7 +109,6 @@ def test_parsing_ignores_everything_but_rule_blocks():
     assert len(a.rules) == len(b.rules) == 4
     assert [r.target for r in a.rules] == [r.target for r in b.rules]
     assert a.default_rule.target == b.default_rule.target == "pos"
-    print("Full raw Weka console dump parses the same as the isolated rule blocks: OK")
 
 
 def test_multi_condition_and_continuation_parses_correctly():
@@ -122,7 +120,6 @@ def test_multi_condition_and_continuation_parses_correctly():
     assert ds.feature_index("income>19992.0") in feats  # income > 19992 == NOT(income<=19992)
     assert ds.feature_index("color=green") in feats
     assert len(r0.conditions) == 2
-    print("Multi-line 'AND'-continued PART conditions parse correctly: OK")
 
 
 def test_provenance_tagged_on_rules_and_default():
@@ -130,7 +127,6 @@ def test_provenance_tagged_on_rules_and_default():
     for r in list(rules.rules) + [rules.default_rule]:
         assert r.provenance.source == "weka.classifiers.rules.PART"
         assert r.provenance.learner == "PARTImporter"
-    print("PART import provenance tagged on every rule incl. the default: OK")
 
 
 def test_end_to_end_predict_matches_weka_exactly():
@@ -156,7 +152,6 @@ def test_end_to_end_predict_matches_weka_exactly():
     assert np.array_equal(preds, expected)
     accuracy = (preds == df["label"].to_numpy()).mean()
     assert accuracy == pytest.approx(0.955, abs=1e-3)
-    print("RuleList.predict matches PART's rule logic exactly and Weka's own reported accuracy: OK")
 
 
 def test_le_operator_form_also_parses_correctly():
@@ -184,7 +179,6 @@ def test_le_operator_form_also_parses_correctly():
     feats0 = set(rules.rules[0].pos)
     assert ds.feature_index("age<=30.0") in feats0  # plain positive literal, not negated
     assert ds.feature_index("color=red") in feats0
-    print("PART's '<=' condition form parses correctly too: OK")
 
 
 def test_reuses_dataspec_across_multiple_parse_calls():
@@ -193,7 +187,6 @@ def test_reuses_dataspec_across_multiple_parse_calls():
     rules = importer.parse(REAL_PART_RULES_ONLY)
     assert importer.dataspec is ds
     assert rules.rules[0].dataspec is ds
-    print("PARTImporter(dataspec=...) reuses a pre-built DataSpec instead of discovering its own: OK")
 
 
 def test_raises_on_multiple_default_rules():
@@ -206,7 +199,6 @@ def test_raises_on_multiple_default_rules():
     """
     with pytest.raises(ValueError, match="more than one"):
         PARTImporter().parse(text)
-    print("PARTImporter raises on more than one condition-less rule block: OK")
 
 
 def test_raises_on_missing_and_continuation():
@@ -217,24 +209,8 @@ def test_raises_on_missing_and_continuation():
     """
     with pytest.raises(ValueError, match="AND"):
         PARTImporter().parse(text)
-    print("PARTImporter raises a clear error on a missing 'AND' continuation: OK")
 
 
 def test_raises_when_no_rule_blocks_found():
     with pytest.raises(ValueError, match="no PART rule blocks"):
         PARTImporter().parse("nothing resembling a PART rule here\n")
-    print("PARTImporter raises a clear error when no rule blocks are found: OK")
-
-
-if __name__ == "__main__":
-    test_parses_real_part_output_as_rulelist()
-    test_parsing_ignores_everything_but_rule_blocks()
-    test_multi_condition_and_continuation_parses_correctly()
-    test_provenance_tagged_on_rules_and_default()
-    test_end_to_end_predict_matches_weka_exactly()
-    test_le_operator_form_also_parses_correctly()
-    test_reuses_dataspec_across_multiple_parse_calls()
-    test_raises_on_multiple_default_rules()
-    test_raises_on_missing_and_continuation()
-    test_raises_when_no_rule_blocks_found()
-    print("\nAll tests passed.")

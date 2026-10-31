@@ -203,11 +203,3 @@ def test_every_decomposition_gives_its_default_rule_training_stats():
         assert rs.tp == int(np.sum(y == dr.target)) and rs.tp + rs.fp == data.n_samples
         default_line = m.to_string(fmt="prolog").split("% default")[-1]
         assert "% (" in default_line or "% [" in default_line, model.__name__  # (tp/fp), or CN2's distribution
-
-
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"{name}: OK")
-    print("\nAll multiclass tests passed.")

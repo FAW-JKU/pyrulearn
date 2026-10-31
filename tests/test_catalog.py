@@ -157,20 +157,3 @@ def test_prepare_applies_the_curated_fixes():
 def test_prepare_frame_keeps_degenerate_columns_when_asked():
     df = pd.DataFrame({"const": [1, 1], "y": ["a", "b"]})
     assert list(prepare_frame(df, "y", drop_degenerate=False).columns) == ["const", "y"]
-
-
-if __name__ == "__main__":
-    c = Catalog.default()
-    test_shipped_catalog_is_consistent(c)
-    test_shipped_catalog_round_trips(c)
-    test_shipped_catalog_covers_every_category(c)
-    test_categories_follow_the_counts()
-    test_select_combines_axes_with_and_and_values_with_or()
-    test_parse_sorts_words_onto_their_axis()
-    test_select_n_picks_a_reproducible_random_subset(c)
-    test_parse_takes_a_number_for_a_random_pick()
-    test_select_by_names_keeps_the_given_order()
-    test_summary_takes_the_same_criteria_as_select()
-    test_prepare_applies_the_curated_fixes()
-    test_prepare_frame_keeps_degenerate_columns_when_asked()
-    print("All tests passed.")

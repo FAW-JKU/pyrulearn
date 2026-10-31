@@ -83,7 +83,6 @@ def test_parses_real_jrip_output_as_rulelist():
         "age>=41.0", "age<41.0", "color=red", "color!=red",
         "income<=19992.0", "income>19992.0",
     }
-    print("Real JRip output parses as a RuleList with the right structure: OK")
 
 
 def test_parsing_ignores_everything_but_rule_lines():
@@ -95,7 +94,6 @@ def test_parsing_ignores_everything_but_rule_lines():
     assert len(a.rules) == len(b.rules) == 2
     assert [r.target for r in a.rules] == [r.target for r in b.rules]
     assert a.default_rule.target == b.default_rule.target == "neg"
-    print("Full raw Weka console dump parses the same as the isolated rule block: OK")
 
 
 def test_provenance_tagged_on_rules_and_default():
@@ -103,7 +101,6 @@ def test_provenance_tagged_on_rules_and_default():
     for r in list(rules.rules) + [rules.default_rule]:
         assert r.provenance.source == "weka.classifiers.rules.JRip"
         assert r.provenance.learner == "JRipImporter"
-    print("JRip import provenance tagged on every rule incl. the default: OK")
 
 
 def test_end_to_end_predict_matches_weka_exactly():
@@ -129,7 +126,6 @@ def test_end_to_end_predict_matches_weka_exactly():
     assert np.array_equal(preds, expected)
     accuracy = (preds == df["label"].to_numpy()).mean()
     assert accuracy == pytest.approx(0.955, abs=1e-3)
-    print("RuleList.predict matches JRip's rule logic exactly and Weka's own reported accuracy: OK")
 
 
 def test_le_feature_binarizes_directly_from_raw_column():
@@ -143,7 +139,6 @@ def test_le_feature_binarizes_directly_from_raw_column():
     X = binarize(ds, df)  # would raise if this were still the atomic-feature workaround
     le_idx = ds.feature_index("income<=19992.0")
     assert np.array_equal(X[:, le_idx], (df["income"] <= 19992).to_numpy())
-    print("<=/> features binarize directly from the raw numeric column: OK")
 
 
 def test_numeric_operators_all_four_forms_and_multiclass():
@@ -182,7 +177,6 @@ def test_numeric_operators_all_four_forms_and_multiclass():
     rep = HorizontalBitmapRepresentation(ds, X, np.array(["?"] * 4))
     preds = list(rules.predict(rep))
     assert preds == ["young", "old", "mid", "mid"]
-    print("All four numeric operator forms and multi-class targets work correctly: OK")
 
 
 def test_class_values_with_spaces_parse():
@@ -200,7 +194,6 @@ def test_class_values_with_spaces_parse():
         "vehic wind float", "build wind non-float",
     ]
     assert rules.default_rule.target == "headlamps"
-    print("JRip class values containing spaces parse as a single target label: OK")
 
 
 def test_reuses_dataspec_across_multiple_parse_calls():
@@ -212,7 +205,6 @@ def test_reuses_dataspec_across_multiple_parse_calls():
     rules = importer.parse(REAL_JRIP_RULES_ONLY)
     assert importer.dataspec is ds
     assert rules.rules[0].dataspec is ds
-    print("JRipImporter(dataspec=...) reuses a pre-built DataSpec instead of discovering its own: OK")
 
 
 def test_raises_on_multiple_default_rules():
@@ -223,14 +215,12 @@ def test_raises_on_multiple_default_rules():
     """
     with pytest.raises(ValueError, match="more than one"):
         JRipImporter().parse(text)
-    print("JRipImporter raises on more than one condition-less rule line: OK")
 
 
 def test_raises_on_unparseable_condition():
     text = "(a ~ x) => label=pos (5.0/0.0)"
     with pytest.raises(ValueError, match="couldn't parse condition"):
         JRipImporter().parse(text)
-    print("JRipImporter raises a clear error on an unrecognized condition operator: OK")
 
 
 JRIP_INEQUALITY_RULES = """(color = blue) => label=neg (10.0/0.0)
@@ -247,18 +237,3 @@ def test_inequality_on_a_value_list_seen_only_in_the_rules_still_covers_unseen_v
     rep = HorizontalBitmapRepresentation(ds, binarize(ds, pd.DataFrame({"color": ["red", "green"]})),
                                     np.array(["pos", "neg"]))
     assert list(model.predict(rep)) == ["pos", "neg"]
-
-
-if __name__ == "__main__":
-    test_parses_real_jrip_output_as_rulelist()
-    test_parsing_ignores_everything_but_rule_lines()
-    test_provenance_tagged_on_rules_and_default()
-    test_end_to_end_predict_matches_weka_exactly()
-    test_le_feature_binarizes_directly_from_raw_column()
-    test_numeric_operators_all_four_forms_and_multiclass()
-    test_class_values_with_spaces_parse()
-    test_reuses_dataspec_across_multiple_parse_calls()
-    test_raises_on_multiple_default_rules()
-    test_raises_on_unparseable_condition()
-    test_inequality_on_a_value_list_seen_only_in_the_rules_still_covers_unseen_values()
-    print("\nAll tests passed.")

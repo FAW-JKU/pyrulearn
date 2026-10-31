@@ -39,7 +39,6 @@ def test_pyarc_cba_fit_returns_a_decision_list_matching_the_native_cba_on_a_hand
     assert [r.conditions[0].feature for r in external.rules] == [0]
     assert external.default_prediction == "b"
     assert list(external.predict(data)) == list(native.predict(data))
-    print("PArcCBA and the native CBA agree on the hand-worked dataset: OK")
 
 
 def test_pyarc_cba_stamps_provenance_and_measured_stats():
@@ -49,7 +48,6 @@ def test_pyarc_cba_stamps_provenance_and_measured_stats():
     assert model.provenance.params["max_len"] == 1
     assert all(r.stats() is not None for r in model.rules)          # annotated by the fit round trip
     assert all(r.provenance.source == "pyarc.CBA" for r in model.rules)
-    print("PArcCBA stamps learner provenance, per-rule source, and training stats: OK")
 
 
 def test_importer_reproduces_a_fitted_pyarc_models_own_predictions():
@@ -66,7 +64,6 @@ def test_importer_reproduces_a_fitted_pyarc_models_own_predictions():
     data = _rep(X, y)
     imported = PyarcCBAImporter().import_model(raw, data.spec, data=data)
     assert list(imported.predict(data)) == list(raw.predict(txn))
-    print("PyarcCBAImporter reproduces the fitted pyarc model's predictions exactly: OK")
 
 
 def test_pyarc_cba_agrees_with_the_native_cba_on_a_multiclass_problem_with_negation():
@@ -81,7 +78,6 @@ def test_pyarc_cba_agrees_with_the_native_cba_on_a_multiclass_problem_with_negat
     acc_nat = float(np.mean(np.asarray(native.predict(data)) == y))
     assert acc_ext > 0.9 and acc_nat > 0.9
     assert abs(acc_ext - acc_nat) < 0.03, (acc_ext, acc_nat)
-    print(f"PArcCBA (acc {acc_ext:.3f}) and native CBA (acc {acc_nat:.3f}) agree on a 3-class problem: OK")
 
 
 def test_max_len_means_the_rule_body_length_not_pyarcs_class_inclusive_maxlen():
@@ -92,10 +88,8 @@ def test_max_len_means_the_rule_body_length_not_pyarcs_class_inclusive_maxlen():
     for L in (1, 2):
         model = PArcCBA(min_support=0.02, max_len=L).fit(data)
         assert max(len(r.conditions) for r in model.rules) <= L
-    print("PArcCBA(max_len=L) bounds the rule body at L (pyarc's maxlen=L+1 handled internally): OK")
 
 
 def test_importer_rejects_an_unfitted_model():
     with pytest.raises(ValueError, match="not fitted"):
         PyarcCBAImporter().import_model(PyarcRawCBA(), DataSpec(["a", "b"]))
-    print("PyarcCBAImporter rejects an unfitted pyarc model: OK")

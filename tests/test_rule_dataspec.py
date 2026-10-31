@@ -26,7 +26,6 @@ def test_coverage_matches_brute_force():
         assert np.array_equal(r.covers_data_packed(rep), expected)
         for i in range(0, n, 37):
             assert r.covers(X[i].tolist()) == bool(expected[i])
-    print("coverage matches brute force: OK")
 
 
 def test_ordering():
@@ -47,7 +46,6 @@ def test_ordering():
     r_reordered = r_unordered.reorder([not_diabetic, ds.feature_index("age_gt_30"), ds.feature_index("smoker")])
     assert r_reordered.ordered is True
     assert r_reordered.to_string("logic") == "¬diabetic ∧ age_gt_30 ∧ smoker → risk"
-    print("ordering behavior: OK")
 
 
 def test_output_formats():
@@ -66,7 +64,6 @@ def test_output_formats():
     assert r_nods.to_string("pattern") == "1 0 1"
     assert repr(r_nods) == "Rule(rule(X) :- f0(X), f2(X).)"
     assert r_nods.to_string() == "rule(X) :- f0(X), f2(X)."
-    print("output formats: OK")
 
 
 def test_prolog_format_quotes_non_atom_targets():
@@ -81,7 +78,6 @@ def test_prolog_format_quotes_non_atom_targets():
     assert r_lower.to_string("prolog") == "survived(X) :- f0(X)."
     r_none = Rule([0], n_features=1)
     assert r_none.to_string("prolog") == "rule(X) :- f0(X)."
-    print("prolog format atom quoting: OK")
 
 
 def test_pretty_prolog_puts_each_condition_on_its_own_indented_line():
@@ -111,7 +107,6 @@ def test_pattern_format_truncates_long_vectors_unless_pretty():
     tokens = full.split()
     assert len(tokens) == n + 5
     assert [i for i, t in enumerate(tokens) if t == "1"] == [0, n]
-    print("pattern format truncation: OK")
 
 
 def test_prolog_format_gives_each_condition_its_own_variable():
@@ -134,7 +129,6 @@ def test_prolog_format_gives_each_condition_its_own_variable():
     # a single such condition still gets numbered, for consistency
     r_one = Rule([age_idx.negative[30]], target="pos", dataspec=ds)
     assert r_one.to_string("prolog") == "pos(X) :- age(X, V1), V1 < 30."
-    print("prolog format per-condition variables: OK")
 
 
 def test_default_fmt_configuration():
@@ -162,7 +156,6 @@ def test_default_fmt_configuration():
         assert r_logic.to_string() == "f0 ∧ f1 → pos"
     finally:
         Rule.DEFAULT_FORMAT = "prolog"
-    print("default_fmt configuration: OK")
 
 
 def test_boolean_representation_and_dedup():
@@ -174,7 +167,6 @@ def test_boolean_representation_and_dedup():
     # duplicate condition on the same feature collapses silently, first position kept
     r = Rule([Literal(0), Literal(1), Literal(0)], dataspec=ds)
     assert r.conditions == (Literal(0), Literal(1))
-    print("HorizontalBitmapRepresentation + dedup: OK")
 
 
 def test_rule_remap_by_feature_name():
@@ -193,7 +185,6 @@ def test_rule_remap_by_feature_name():
     )))
     assert {new_ds.feature_name(i) for i in remapped.pos} == \
            {old_ds.feature_name(i) for i in r.pos}
-    print("Rule.remap by feature name: OK")
 
 
 def test_rule_remap_raises_on_unmatched_feature():
@@ -204,7 +195,6 @@ def test_rule_remap_raises_on_unmatched_feature():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "smoker" in str(e)
-    print("Rule.remap raises on unmatched feature name: OK")
 
 
 def test_rule_remap_raises_without_dataspec():
@@ -214,7 +204,6 @@ def test_rule_remap_raises_without_dataspec():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("Rule.remap raises without a source dataspec: OK")
 
 
 def test_generalize_and_is_more_specific():
@@ -230,7 +219,6 @@ def test_generalize_and_is_more_specific():
     assert g.is_more_general(r1)
     assert g.is_more_general(r2)
     assert not r1.is_more_general(g)
-    print("generalize/is_more_specific/is_more_general: OK")
 
 
 def test_is_more_specific_ignores_target_by_default():
@@ -241,7 +229,6 @@ def test_is_more_specific_ignores_target_by_default():
     assert r2.is_more_general(r1)
     assert not r1.is_more_specific(r2, include_target=True)
     assert not r2.is_more_general(r1, include_target=True)
-    print("is_more_specific/is_more_general ignore target by default: OK")
 
 
 def test_incomparable_rules_are_neither_more_specific_nor_more_general():
@@ -252,7 +239,6 @@ def test_incomparable_rules_are_neither_more_specific_nor_more_general():
     assert not r1.is_more_general(r2)
     assert not r2.is_more_specific(r1)
     assert not r2.is_more_general(r1)
-    print("incomparable rules: is_more_specific/is_more_general both False: OK")
 
 
 def test_rule_comparison_operators():
@@ -278,7 +264,6 @@ def test_rule_comparison_operators():
     assert not (general >= incomparable)
 
     assert specific.__le__(5) is NotImplemented
-    print("Rule comparison operators: OK")
 
 
 def test_specialize_no_dataspec_tries_every_feature():
@@ -289,7 +274,6 @@ def test_specialize_no_dataspec_tries_every_feature():
         assert child.length() == 1
         feat = child.conditions[0].feature
         assert mask == frozenset({0, 1, 2}) - {feat}
-    print("specialize with no dataspec: one child per feature, mask drops just itself: OK")
 
 
 def test_specialize_default_mask_excludes_already_used_features():
@@ -300,7 +284,6 @@ def test_specialize_default_mask_excludes_already_used_features():
     assert used == {1, 2}
     for _, mask in children:
         assert 0 not in mask
-    print("specialize's default mask excludes features already in the rule: OK")
 
 
 def test_specialize_explicit_mask_restricts_candidates():
@@ -309,7 +292,6 @@ def test_specialize_explicit_mask_restricts_candidates():
     children = r.specialize(ds, mask=frozenset({1}))
     assert {child.conditions[0].feature for child, _ in children} == {1}
     assert len(children) == 1
-    print("specialize honors an explicitly passed mask: OK")
 
 
 def test_specialize_prunes_redundant_threshold_chain_conditions():
@@ -323,7 +305,6 @@ def test_specialize_prunes_redundant_threshold_chain_conditions():
     _, mask = match[0]
     # age>=40 implies age>=30 and age>=20 -- re-offering either is redundant
     assert idx[40] not in mask and idx[30] not in mask and idx[20] not in mask
-    print("specialize masks out threshold conditions implied by a stronger one: OK")
 
 
 def test_specialize_prunes_contradictory_nominal_conditions():
@@ -341,14 +322,6 @@ def test_specialize_prunes_contradictory_nominal_conditions():
     # forcing green as a candidate: green contradicts red, so no child is produced
     forced = child.specialize(ds, mask=frozenset({idx["green"]}))
     assert forced == []
-    print("specialize masks out nominal siblings and rejects genuine contradictions when forced: OK")
-
-
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-    print("\nAll tests passed.")
 
 
 def _color_spec():
@@ -365,7 +338,7 @@ def test_pretty_shows_several_negations_on_one_attribute_as_a_value_set():
     assert two.to_string(fmt="conditions", pretty=True) == "color ∉ {red, blue}, smoker"
     assert two.to_string(fmt="conditions", ascii=True, pretty=True) == "color not in {red, blue}, smoker"
     assert two.to_string(fmt="prolog", pretty=True) == (
-        "t(X) :-\n    color(X, V1), \+ member(V1, [red, blue]),\n    smoker(X).")
+        "t(X) :-\n    color(X, V1), \\+ member(V1, [red, blue]),\n    smoker(X).")
     assert two.length() == 3                                   # only the display changes
     three = Rule([neq["red"], neq["blue"], neq["black"]], target="t", dataspec=spec)
     assert three.to_string(fmt="logic", pretty=True) == "color ∈ {green, white} → t"   # the shorter form

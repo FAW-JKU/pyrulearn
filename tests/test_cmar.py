@@ -36,7 +36,6 @@ def test_cmar_drops_an_insignificant_car_that_would_pass_cbas_confidence_bar():
                 significance_threshold=3.841).fit(rep)
     used_features = {lit.feature for r in model.rules for lit in r.conditions}
     assert used_features == {1}
-    print("CMAR drops an insignificant-but-confident CAR via the chi-square gate: OK")
 
 
 def test_cmar_significance_threshold_is_configurable():
@@ -52,7 +51,6 @@ def test_cmar_significance_threshold_is_configurable():
     model = CMAR(min_support=0.01, min_confidence=0.5, max_len=1,
                 significance_threshold=50.0).fit(rep)
     assert len(model.rules) == 0
-    print("CMAR's significance_threshold is configurable, up to excluding everything: OK")
 
 
 def _separable_multiclass(n=200, seed=0):
@@ -81,8 +79,6 @@ def test_cmar_fit_uses_a_heuristic_vote_combiner_weighted_by_chi_square():
     preds = np.asarray(model.predict(rep))
     acc = float(np.mean(preds == y))
     assert acc > 0.6, f"CMAR training accuracy only {acc:.3f}"
-    print(f"CMAR().fit returns a FlatRuleSet combined via HeuristicVoteCombiner(ChiSquare()), "
-          f"train acc={acc:.3f}: OK")
 
 
 def test_cmar_target_class_returns_a_concept_model():
@@ -90,13 +86,11 @@ def test_cmar_target_class_returns_a_concept_model():
     model = CMAR(min_support=0.02, min_confidence=0.5, target_class="x").fit(rep)
     assert isinstance(model, ConceptModel)
     assert all(r.target == "x" for r in model.rules)
-    print("CMAR(target_class=...) returns a single-class ConceptModel: OK")
 
 
 def test_cmar_produces_the_decomposition_types_too():
     caps = CMAR().produces()
     assert {FlatRuleSet, ConceptSet, ConceptCascade, PairwiseModel} <= caps
-    print(f"CMAR().produces() includes the DecomposingLearner types: {sorted(t.__name__ for t in caps)}: OK")
 
 
 def test_cmar_auto_converts_a_boolean_representation_transparently():
@@ -104,14 +98,12 @@ def test_cmar_auto_converts_a_boolean_representation_transparently():
     assert not isinstance(rep, NListRepresentation)
     model = CMAR(min_support=0.05, min_confidence=0.5, max_len=2).fit(rep)
     assert isinstance(model, FlatRuleSet)
-    print("CMAR.fit auto-converts a plain HorizontalBitmapRepresentation without the caller doing it: OK")
 
 
 def test_cmar_raises_a_clear_error_past_the_auto_convert_threshold():
     rep, raw, y = _separable_multiclass(n=60)
     with pytest.raises(ValueError, match="max_auto_convert_cells"):
         CMAR(max_auto_convert_cells=1).fit(rep)
-    print("CMAR.fit raises past max_auto_convert_cells instead of silently converting: OK")
 
 
 def test_cmar_prune_drops_a_rule_that_correctly_classifies_nothing_new():
@@ -132,7 +124,6 @@ def test_cmar_prune_drops_a_rule_that_correctly_classifies_nothing_new():
 
     kept = CMAR()._prune(rules, data, ChiSquare())
     assert [r.conditions[0].feature for r in kept] == [1]
-    print("CMAR._prune drops a same-class rule that correctly classifies nothing new: OK")
 
 
 # -- CMAR consuming an externally-supplied rule pool (rules=) ----------------
@@ -146,7 +137,6 @@ def test_cmar_with_an_externally_supplied_rules_pool_skips_mining_entirely():
     model = CMAR(rules=pool, min_support=0.9, min_confidence=0.99).fit(rep)
     assert isinstance(model, FlatRuleSet)
     assert len(model.rules) > 0
-    print("CMAR(rules=...) compresses an externally-supplied pool without mining: OK")
 
 
 def test_cmar_random_forest_rules_round_trip():
@@ -167,11 +157,3 @@ def test_cmar_random_forest_rules_round_trip():
     assert isinstance(model, FlatRuleSet)
     preds = np.asarray(model.predict(data))
     assert preds.shape == y.shape
-    print(f"CMAR(rules=from_random_forest(...)) round-trips end to end ({len(model.rules)} rules): OK")
-
-
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-    print("\nAll tests passed.")

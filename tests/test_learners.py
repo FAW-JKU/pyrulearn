@@ -107,14 +107,6 @@ def test_external_learner_provenance_carries_the_source_library():
     assert m.provenance.params["max_depth"] == 2
 
 
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"{name}: OK")
-    print("\nAll learner tests passed.")
-
-
 def test_external_learners_are_prefixed_and_old_names_are_gone():
     from pyrulearn.interfaces import imodels, lord, sklearn, weka, wittgenstein
     from pyrulearn.learners.boosting import Slipper

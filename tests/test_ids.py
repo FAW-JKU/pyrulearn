@@ -62,8 +62,6 @@ def test_objective_matches_hand_computed_values_including_the_normalization():
     # objective, not a bug -- exactly why it fits lambdas by coordinate
     # ascent instead of shipping default weights at all.
     assert empty > one > both
-    print(f"IDS objective matches hand-computed values (empty={empty:.4f}, single={one:.4f}, "
-          f"both={both:.4f}): OK")
 
 
 def test_greedy_select_adds_both_rules_once_weights_favor_recall():
@@ -75,7 +73,6 @@ def test_greedy_select_adds_both_rules_once_weights_favor_recall():
     weights = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
     kept = _greedy_select(candidates, classes, n=4, s_size=2, lmax=1, weights=weights)
     assert kept == {0, 1}
-    print("IDS greedy selection adds every non-overlapping correct rule once recall dominates: OK")
 
 
 def test_greedy_select_stays_empty_under_naive_equal_weights():
@@ -85,7 +82,6 @@ def test_greedy_select_stays_empty_under_naive_equal_weights():
     # matches the hand-computed comparison above: the empty set already
     # beats either single rule, so greedy never adds anything.
     assert kept == set()
-    print("IDS greedy selection stays empty under naive equal weights, matching the hand-computed optimum: OK")
 
 
 def test_candidates_from_rules_caps_per_class_at_rule_cutoff():
@@ -103,7 +99,6 @@ def test_candidates_from_rules_caps_per_class_at_rule_cutoff():
     capped = _candidates_from_rules(rules, nlist, rule_cutoff=3)
     assert len(capped) <= 3 * 2  # at most 3 per class, 2 classes
     assert len(capped) < len(uncapped)
-    print(f"_candidates_from_rules respects rule_cutoff ({len(capped)} of {len(uncapped)} kept): OK")
 
 
 def _separable_multiclass(n=250, seed=0):
@@ -144,8 +139,6 @@ def test_ids_fit_returns_a_flat_rule_set_with_an_f1_tie_break_combiner():
     acc = float(np.mean(preds == y))
     baseline = float(np.mean(y == max(set(y.tolist()), key=list(y).count)))
     assert acc >= baseline, f"IDS train accuracy {acc:.3f} did not beat the majority baseline {baseline:.3f}"
-    print(f"IDS().fit returns a FlatRuleSet combined via HeuristicMaxCombiner(FBeta()), "
-          f"train acc={acc:.3f} (majority baseline {baseline:.3f}): OK")
 
 
 def test_ids_target_class_returns_a_concept_model():
@@ -154,13 +147,11 @@ def test_ids_target_class_returns_a_concept_model():
                lambda_weights=(0.2, 0.2, 0.2, 0.2, 1.0, 1.0, 2.0), **_FAST).fit(rep)
     assert isinstance(model, ConceptModel)
     assert all(r.target == "x" for r in model.rules)
-    print("IDS(target_class=...) returns a single-class ConceptModel: OK")
 
 
 def test_ids_produces_the_decomposition_types_too():
     caps = IDS().produces()
     assert {FlatRuleSet, ConceptSet, ConceptCascade, PairwiseModel} <= caps
-    print(f"IDS().produces() includes the DecomposingLearner types: {sorted(t.__name__ for t in caps)}: OK")
 
 
 def test_ids_auto_converts_a_boolean_representation_transparently():
@@ -168,14 +159,12 @@ def test_ids_auto_converts_a_boolean_representation_transparently():
     assert not isinstance(rep, NListRepresentation)
     model = IDS(min_support=0.05, min_confidence=0.5, max_len=2, **_FAST).fit(rep)
     assert isinstance(model, FlatRuleSet)
-    print("IDS.fit auto-converts a plain HorizontalBitmapRepresentation without the caller doing it: OK")
 
 
 def test_ids_raises_a_clear_error_past_the_auto_convert_threshold():
     rep, raw, y = _separable_multiclass(n=60)
     with pytest.raises(ValueError, match="max_auto_convert_cells"):
         IDS(max_auto_convert_cells=1, **_FAST).fit(rep)
-    print("IDS.fit raises past max_auto_convert_cells instead of silently converting: OK")
 
 
 def test_ids_rejects_an_unknown_optimizer_or_wrong_lambda_count():
@@ -183,7 +172,6 @@ def test_ids_rejects_an_unknown_optimizer_or_wrong_lambda_count():
         IDS(optimizer="sls")                       # names aren't components
     with pytest.raises(ValueError, match="lambda_weights"):
         IDS(lambda_weights=(1.0,) * 5)
-    print("IDS validates optimizer= and lambda_weights= eagerly in the constructor: OK")
 
 
 def test_ids_default_constructor_values_match_the_papers_reported_settings():
@@ -199,7 +187,6 @@ def test_ids_default_constructor_values_match_the_papers_reported_settings():
     assert ids.tune_lambdas is True
     assert ids.validation_fraction == 0.05
     assert (ids.max_rules, ids.max_avg_length, ids.max_overlap, ids.max_uncovered) == (15, 10.0, 0.10, 0.15)
-    print("IDS()'s defaults match the paper's own reported settings, except max_len (measured mining-cost limit): OK")
 
 
 def test_ids_sls_optimizer_runs_and_returns_a_valid_model():
@@ -210,7 +197,6 @@ def test_ids_sls_optimizer_runs_and_returns_a_valid_model():
     assert isinstance(model, FlatRuleSet)
     preds = np.asarray(model.predict(rep))
     assert preds.shape == y.shape
-    print(f"IDS(optimizer='sls') runs and returns a valid FlatRuleSet ({len(model.rules)} rules): OK")
 
 
 def test_ids_tune_lambdas_runs_and_returns_a_valid_model():
@@ -221,7 +207,6 @@ def test_ids_tune_lambdas_runs_and_returns_a_valid_model():
     assert isinstance(model, FlatRuleSet)
     preds = np.asarray(model.predict(rep))
     assert preds.shape == y.shape
-    print(f"IDS(tune_lambdas=True) runs and returns a valid FlatRuleSet ({len(model.rules)} rules): OK")
 
 
 def test_ids_default_settings_match_the_paper_and_run_end_to_end():
@@ -238,8 +223,6 @@ def test_ids_default_settings_match_the_paper_and_run_end_to_end():
     assert isinstance(model, FlatRuleSet)
     preds = np.asarray(model.predict(rep))
     assert preds.shape == y.shape
-    print(f"IDS()'s real default configuration (sls + tuned lambdas) runs end-to-end "
-          f"({len(model.rules)} rules): OK")
 
 
 # -- IDS consuming an externally-supplied rule pool (rules=) -----------------
@@ -256,7 +239,6 @@ def test_ids_with_an_externally_supplied_rules_pool_skips_mining_entirely():
                optimizer=GreedySelection(), tune_lambdas=False,
                lambda_weights=(0.2, 0.2, 0.2, 0.2, 1.0, 1.0, 2.0)).fit(rep)
     assert isinstance(model, FlatRuleSet)
-    print("IDS(rules=...) compresses an externally-supplied pool without mining: OK")
 
 
 def test_ids_random_forest_rules_round_trip():
@@ -277,11 +259,3 @@ def test_ids_random_forest_rules_round_trip():
     assert isinstance(model, FlatRuleSet)
     preds = np.asarray(model.predict(data))
     assert preds.shape == y.shape
-    print(f"IDS(rules=from_random_forest(...)) round-trips end to end ({len(model.rules)} rules): OK")
-
-
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-    print("\nAll tests passed.")

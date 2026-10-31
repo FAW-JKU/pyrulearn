@@ -73,7 +73,6 @@ def test_builder_negation_generates_paired_features_and_group_constraints():
     closure = ds.propagate({c["red"]: True})
     assert closure[c["green"]] is False and closure[c.negative["red"]] is False
     assert closure[c.negative["green"]] is True
-    print("builder negation: paired features + group constraints + negation_of: OK")
 
 
 def test_builder_negation_per_attribute_override():
@@ -84,7 +83,6 @@ def test_builder_negation_per_attribute_override():
     assert "keep!=a" in ds.feature_names and "drop!=x" not in ds.feature_names
     assert ds.negation_of("keep=a") is not None
     assert ds.negation_of("drop=x") is None
-    print("per-attribute negation= override: OK")
 
 
 def test_builder_generates_features_and_constraints():
@@ -106,7 +104,6 @@ def test_builder_generates_features_and_constraints():
     assert len(ds.constraints) == 2  # one ExactlyOne, one NumericGroup
     assert isinstance(ds.constraints[0], ExactlyOne)
     assert isinstance(ds.constraints[1], NumericGroup)
-    print("builder generates features/constraints: OK")
 
 
 def test_nominal_mutual_exclusion_propagation():
@@ -129,7 +126,6 @@ def test_nominal_mutual_exclusion_propagation():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("nominal mutual exclusion propagation: OK")
 
 
 def test_numeric_threshold_chain_propagation():
@@ -153,7 +149,6 @@ def test_numeric_threshold_chain_propagation():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("numeric threshold chain propagation: OK")
 
 
 def test_add_numeric_without_le_thresholds_is_unchanged():
@@ -168,7 +163,6 @@ def test_add_numeric_without_le_thresholds_is_unchanged():
     assert idx.le is None
     assert ds.feature_names == ["age>=20", "age>=30", "age>=40", "age<20", "age<30", "age<40"]
     assert len(ds.constraints) == 1
-    print("add_numeric with no le_thresholds is unchanged: OK")
 
 
 def test_add_numeric_le_thresholds_creates_separate_family():
@@ -186,7 +180,6 @@ def test_add_numeric_le_thresholds_creates_separate_family():
     assert set(le_idx.negative) == {10, 20}  # the > complements
     # one NumericGroup per family
     assert len(ds.constraints) == 2
-    print("add_numeric(le_thresholds=...) creates a separate feature family: OK")
 
 
 def test_le_threshold_chain_propagation_mirrors_ge():
@@ -213,7 +206,6 @@ def test_le_threshold_chain_propagation_mirrors_ge():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("<= threshold chain propagation correctly mirrors >=: OK")
 
 
 def test_ge_and_le_families_have_no_cross_reasoning():
@@ -229,7 +221,6 @@ def test_ge_and_le_families_have_no_cross_reasoning():
     # only each family's own complements are forced, nothing across, no raise
     assert closure == {ge_idx[30]: True, le_idx[25]: True,
                        ge_idx.negative[30]: False, le_idx.negative[25]: False}
-    print(">= and <= families don't cross-reason (deliberate, documented): OK")
 
 
 def test_ge_and_le_at_same_value_behaves_as_equality():
@@ -255,7 +246,6 @@ def test_ge_and_le_at_same_value_behaves_as_equality():
     rep = HorizontalBitmapRepresentation(ds, X, np.array(["?"] * 5))
     covered = r.covers_data(rep)
     assert list(covered) == [False, False, True, False, False]
-    print("age>=30 and age<=30 together behave as age==30, both structurally and at coverage: OK")
 
 
 def test_le_feature_binarizes_directly_from_raw_numeric_column():
@@ -271,7 +261,6 @@ def test_le_feature_binarizes_directly_from_raw_numeric_column():
     df = pd.DataFrame({"income": [10000, 19992, 20000, 30000]})
     X = binarize(ds, df)
     assert list(X[:, le_idx[19992]]) == [True, True, False, False]
-    print("<= feature binarizes correctly straight from a raw numeric column: OK")
 
 
 def test_le_literal_rendering():
@@ -285,7 +274,6 @@ def test_le_literal_rendering():
     assert r_neg.to_string("logic") == "income > 19992 → neg"
     assert r_pos.to_string("prolog") == "pos(X) :- income(X, V1), V1 <= 19992."
     assert r_neg.to_string("prolog") == "neg(X) :- income(X, V1), V1 > 19992."
-    print("<= / > literal rendering (logic/prolog): OK")
 
 
 def test_rule_consistency_and_implied_conditions():
@@ -305,7 +293,6 @@ def test_rule_consistency_and_implied_conditions():
     # inconsistent rule: color=red and color=blue
     r_bad = Rule([color_idx["red"], color_idx["blue"]], dataspec=ds)
     assert not r_bad.is_consistent()
-    print("rule consistency + implied conditions: OK")
 
 
 def test_display_formats_with_typed_attributes():
@@ -323,7 +310,6 @@ def test_display_formats_with_typed_attributes():
     r2 = Rule([color_idx.negative["red"]], dataspec=ds)
     assert r2.to_string("logic") == "color ≠ red"
     assert r2.to_string("logic", ascii=True) == "color != red"
-    print("typed-attribute display formats: OK")
 
 
 def test_set_valued_features_are_independent():
@@ -342,7 +328,6 @@ def test_set_valued_features_are_independent():
     assert r.to_string("logic") == "urgent ∈ tags ∧ bug ∈ tags → p1"
     assert r.to_string("logic", ascii=True) == "urgent in tags AND bug in tags -> p1"
     assert r.to_string("prolog") == "p1(X) :- tags(X, urgent), tags(X, bug)."
-    print("set-valued features: OK")
 
 
 def test_hierarchical_features_propagation_and_display():
@@ -388,7 +373,6 @@ def test_hierarchical_features_propagation_and_display():
     # only positive implications (hierarchy nodes have no != feature):
     # Paris -> France, Europe
     assert {l.feature for l in r.implied_conditions()} == {idx["France"], idx["Europe"]}
-    print("hierarchical features: OK")
 
 
 def test_relational_feature_provenance_and_display():
@@ -409,7 +393,6 @@ def test_relational_feature_provenance_and_display():
     r = Rule([rel_idx], target="qualifies", dataspec=ds)
     assert r.to_string("logic") == "income > age * 1000 → qualifies"
     assert r.to_string("prolog") == "qualifies(X) :- income_gt_age_scaled(X)."
-    print("relational features: OK")
 
 
 def test_binary_attribute_has_two_value_features_paired_as_negations():
@@ -496,29 +479,3 @@ def test_extend_closure_matches_propagate_from_scratch():
             assert spec.extend_closure(closure, new) == expected
         checked += 1
     assert checked > 200
-    print("extend_closure matches propagate from scratch: OK")
-
-
-if __name__ == "__main__":
-    test_extend_closure_matches_propagate_from_scratch()
-    test_builder_generates_features_and_constraints()
-    test_nominal_mutual_exclusion_propagation()
-    test_numeric_threshold_chain_propagation()
-    test_add_numeric_without_le_thresholds_is_unchanged()
-    test_add_numeric_le_thresholds_creates_separate_family()
-    test_le_threshold_chain_propagation_mirrors_ge()
-    test_ge_and_le_families_have_no_cross_reasoning()
-    test_ge_and_le_at_same_value_behaves_as_equality()
-    test_le_feature_binarizes_directly_from_raw_numeric_column()
-    test_le_literal_rendering()
-    test_rule_consistency_and_implied_conditions()
-    test_display_formats_with_typed_attributes()
-    test_set_valued_features_are_independent()
-    test_hierarchical_features_propagation_and_display()
-    test_relational_feature_provenance_and_display()
-    test_binary_attribute_has_two_value_features_paired_as_negations()
-    test_binary_unknown_and_missing_values_cover_neither_value()
-    test_binary_needs_two_distinct_values()
-    test_two_valued_nominal_keeps_its_inequality_columns()
-    test_negation_toggles_keep_a_binary_attributes_pairing()
-    print("\nAll tests passed.")

@@ -24,7 +24,6 @@ def test_without_negations_drops_exactly_the_negation_features():
                                  "age>=30", "age>=50", "age<30", "age<50"]
     assert not pos.has_negation_features
     assert [neg.feature_names[i] for i in keep] == pos.feature_names
-    print("without_negations() keeps the positive features (names + order) and maps columns: OK")
 
 
 def test_without_negations_regenerates_constraints():
@@ -33,7 +32,6 @@ def test_without_negations_regenerates_constraints():
     assert NominalGroup not in kinds          # -> ExactlyOne
     assert ExactlyOne in kinds
     assert NumericGroup in kinds              # numeric attributes unchanged
-    print("without_negations() rebuilds NominalGroup->ExactlyOne, keeps NumericGroup: OK")
 
 
 def test_without_negations_is_identity_when_there_is_nothing_to_drop():
@@ -43,7 +41,6 @@ def test_without_negations_is_identity_when_there_is_nothing_to_drop():
     assert keep.tolist() == list(range(pos.n_features))
     plain = DataSpec(["a", "b", "c"])
     assert plain.without_negations()[0] is plain
-    print("without_negations() returns self unchanged when there are no negation features: OK")
 
 
 def test_with_negations_adds_the_missing_partners():
@@ -57,7 +54,6 @@ def test_with_negations_adds_the_missing_partners():
         else:
             assert is_complement[j]
             assert neg.feature_name(neg.negation_of(j)) == pos.feature_name(source[j])
-    print("with_negations() adds each missing negation feature as its partner's complement: OK")
 
 
 def test_with_negations_reconstructs_the_data_matrix():
@@ -81,7 +77,6 @@ def test_with_negations_reconstructs_the_data_matrix():
 
     assert neg.feature_names == native.feature_names
     assert np.array_equal(reconstructed, native_X)
-    print("with_negations()'s (source, is_complement) rebuilds the same matrix as a native build: OK")
 
 
 def test_with_negations_is_identity_when_every_feature_already_has_one():
@@ -90,4 +85,3 @@ def test_with_negations_is_identity_when_every_feature_already_has_one():
     assert same.feature_names == neg.feature_names
     assert not is_complement.any()
     assert source.tolist() == list(range(neg.n_features))
-    print("with_negations() is a no-op when every feature already has its negation: OK")

@@ -82,7 +82,6 @@ def test_evaluate_feature():
         assert False, "expected NotImplementedError"
     except NotImplementedError:
         pass
-    print("evaluate_feature: OK")
 
 
 def test_read_csv_infer():
@@ -98,7 +97,6 @@ def test_read_csv_infer():
     r = Rule.from_pos_neg(pos=[age_idx], target="pos", dataspec=rep.spec)
     cov = r.covers_data(rep)
     assert list(cov) == [False, False, True, False, True, True, False, True]
-    print("read_csv infer: OK")
 
 
 def test_read_csv_given_dataspec():
@@ -113,7 +111,6 @@ def test_read_csv_given_dataspec():
     color_red_idx = rep.spec.feature_index("color=red")
     assert list(rep.X[:, age_idx]) == [False, False, True, False, True, True, False, True]
     assert list(rep.X[:, color_red_idx]) == [True, True, True, False, False, False, False, False]
-    print("read_csv given dataspec: OK")
 
 
 def test_read_csv_strict_true_raises_on_mismatch():
@@ -126,7 +123,6 @@ def test_read_csv_strict_true_raises_on_mismatch():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("strict=True raises on mismatch: OK")
 
 
 def test_read_csv_strict_false_allows_mismatch():
@@ -143,7 +139,6 @@ def test_read_csv_strict_false_allows_mismatch():
     # rows with the unmodeled "green" category come back False on every color feature
     for i in green_rows:
         assert rep.X[i, red_idx] == False and rep.X[i, blue_idx] == False
-    print("strict=False allows mismatch: OK")
 
 
 def test_validate_dataspec_mismatches():
@@ -157,7 +152,6 @@ def test_validate_dataspec_mismatches():
     problems = validate_dataspec(ds, df)
     assert any("shape" in p and "no matching column" in p for p in problems)
     assert any("color" in p and "green" in p for p in problems)
-    print("validate_dataspec mismatches: OK")
 
 
 def test_binarize_never_covers_missing_value_by_default():
@@ -169,7 +163,6 @@ def test_binarize_never_covers_missing_value_by_default():
     blue_idx = rep.spec.feature_index("color=blue")
     assert rep.X[2, red_idx] == False
     assert rep.X[2, blue_idx] == False
-    print("binarize NEVER_COVERS default on missing value: OK")
 
 
 def test_missing_strategy_majority_imputation():
@@ -186,7 +179,6 @@ def test_missing_strategy_majority_imputation():
     age_idx = ds.feature_index("age>=30")
     assert X[3, color_red_idx] == True
     assert X[3, age_idx] == True
-    print("missing_strategy MAJORITY imputation: OK")
 
 
 def test_missing_strategy_random_imputation_reproducible():
@@ -203,7 +195,6 @@ def test_missing_strategy_random_imputation_reproducible():
     blue_idx = ds.feature_index("color=blue")
     # the imputed value is always one of the column's known categories
     assert X1[4, red_idx] != X1[4, blue_idx]
-    print("missing_strategy RANDOM imputation reproducibility: OK")
 
 
 def test_missing_strategy_separate_nominal_and_numeric():
@@ -228,7 +219,6 @@ def test_missing_strategy_separate_nominal_and_numeric():
     age_missing_idx = ds.feature_index("age=<missing>")
     assert list(X[:, age_ge30_idx]) == [True, False]
     assert list(X[:, age_missing_idx]) == [False, True]
-    print("missing_strategy SEPARATE (nominal + numeric): OK")
 
 
 def test_missing_strategy_separate_without_declared_feature_raises():
@@ -241,7 +231,6 @@ def test_missing_strategy_separate_without_declared_feature_raises():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "missing_name" in str(e) or "missing-value feature" in str(e)
-    print("missing_strategy SEPARATE without declared feature raises: OK")
 
 
 def test_missing_values_sentinel_recognition():
@@ -254,7 +243,6 @@ def test_missing_values_sentinel_recognition():
     blue_idx = ds.feature_index("color=blue")
     assert list(X[:, red_idx]) == [True, False]
     assert list(X[:, blue_idx]) == [False, False]
-    print("missing_values sentinel recognition: OK")
 
 
 # -- encode: binarize's sparse-intermediate cousin --------------------------
@@ -275,7 +263,6 @@ def test_encode_matches_binarize(rep_cls):
     assert isinstance(got, rep_cls)
     assert np.array_equal(got.X, expected.X)
     assert np.array_equal(got.y, expected.y)
-    print(f"encode matches binarize+{rep_cls.__name__} (NEVER_COVERS default): OK")
 
 
 def test_encode_with_no_representation_arg_defaults_to_vertical_bitmap():
@@ -285,7 +272,6 @@ def test_encode_with_no_representation_arg_defaults_to_vertical_bitmap():
     df = pd.DataFrame({"color": ["red", "blue", "red"]})
     got = encode(ds, df)
     assert isinstance(got, VerticalBitmapRepresentation)
-    print("encode defaults to VerticalBitmapRepresentation with no representation=: OK")
 
 
 @pytest.mark.parametrize("rep_cls", _ENCODE_REPS)
@@ -301,7 +287,6 @@ def test_encode_matches_binarize_majority_imputation(rep_cls):
     expected = rep_cls(ds, binarize(ds, df, missing_strategy=MissingStrategy.MAJORITY))
     got = encode(ds, df, representation=rep_cls, missing_strategy=MissingStrategy.MAJORITY)
     assert np.array_equal(got.X, expected.X)
-    print(f"encode matches binarize+{rep_cls.__name__} (MAJORITY imputation): OK")
 
 
 @pytest.mark.parametrize("rep_cls", _ENCODE_REPS)
@@ -315,7 +300,6 @@ def test_encode_matches_binarize_random_imputation_reproducible(rep_cls):
     got2 = encode(ds, df, representation=rep_cls, missing_strategy=MissingStrategy.RANDOM, random_state=0)
     assert np.array_equal(got1.X, expected.X)
     assert np.array_equal(got1.X, got2.X)  # same seed -> reproducible
-    print(f"encode matches binarize+{rep_cls.__name__} (RANDOM imputation, reproducible): OK")
 
 
 @pytest.mark.parametrize("rep_cls", _ENCODE_REPS)
@@ -328,7 +312,6 @@ def test_encode_matches_binarize_separate_nominal_and_numeric(rep_cls):
     expected = rep_cls(ds, binarize(ds, df, missing_strategy=MissingStrategy.SEPARATE))
     got = encode(ds, df, representation=rep_cls, missing_strategy=MissingStrategy.SEPARATE)
     assert np.array_equal(got.X, expected.X)
-    print(f"encode matches binarize+{rep_cls.__name__} (SEPARATE, nominal + numeric): OK")
 
 
 def test_encode_separate_without_declared_feature_raises():
@@ -338,7 +321,6 @@ def test_encode_separate_without_declared_feature_raises():
     df = pd.DataFrame({"color": ["red", None]})
     with pytest.raises(ValueError, match="missing_name|missing-value feature"):
         encode(ds, df, missing_strategy=MissingStrategy.SEPARATE)
-    print("encode SEPARATE without declared feature raises, same as binarize: OK")
 
 
 @pytest.mark.parametrize("rep_cls", _ENCODE_REPS)
@@ -350,7 +332,6 @@ def test_encode_passes_weights_through(rep_cls):
     w = np.array([1.0, 2.0, 3.0])
     got = encode(ds, df, representation=rep_cls, weights=w)
     assert np.array_equal(got.weights, w)
-    print(f"encode passes weights= through to {rep_cls.__name__}: OK")
 
 
 def test_dataspec_missing_strategy_default_resolution():
@@ -367,12 +348,10 @@ def test_dataspec_missing_strategy_default_resolution():
     # an explicit argument still overrides the DataSpec's own default
     X2 = binarize(ds, df, missing_strategy=MissingStrategy.NEVER_COVERS)
     assert list(X2[:, missing_idx]) == [False, False]
-    print("DataSpec.missing_strategy resolution chain: OK")
 
 
 def test_default_missing_strategy_is_never_covers():
     assert DataSpec.DEFAULT_MISSING_STRATEGY == MissingStrategy.NEVER_COVERS
-    print("DataSpec.DEFAULT_MISSING_STRATEGY == NEVER_COVERS: OK")
 
 
 def test_read_arff_infer():
@@ -384,7 +363,6 @@ def test_read_arff_infer():
         "no", "no", "yes", "yes", "yes", "no", "yes",
         "no", "yes", "yes", "yes", "yes", "yes", "no",
     ]
-    print("read_arff infer: OK")
 
 
 def test_read_arff_given_dataspec():
@@ -399,7 +377,6 @@ def test_read_arff_given_dataspec():
     temps = [85, 80, 83, 70, 68, 65, 64, 72, 69, 75, 75, 72, 81, 71]
     expected = [t >= 75 for t in temps]
     assert list(rep.X[:, idx]) == expected
-    print("read_arff given dataspec: OK")
 
 
 def test_write_arff_round_trips_through_read_arff(tmp_path):
@@ -416,7 +393,6 @@ def test_write_arff_round_trips_through_read_arff(tmp_path):
     assert "outlook=sunny" in rep.spec.feature_names
     assert any(n.startswith("temperature>=") for n in rep.spec.feature_names)
     assert list(rep.y) == ["no", "no", "yes", "yes", "yes"]
-    print("write_arff round-trips through read_arff: OK")
 
 
 def test_write_arff_quotes_nominal_values_needing_it():
@@ -444,7 +420,6 @@ def test_write_arff_quotes_nominal_values_needing_it():
     # specific file can't round-trip through read_arff (see write_arff's
     # docstring)
     assert "'no checking',good" in text
-    print("write_arff quotes nominal values that need it (spaces), leaves others bare: OK")
 
 
 def test_write_arff_quotes_attribute_names_needing_it():
@@ -467,7 +442,6 @@ def test_write_arff_quotes_attribute_names_needing_it():
 
     assert "@attribute 'bruises%3F'" in text
     assert "@attribute bruises%3F " not in text  # unquoted form would corrupt parsing
-    print("write_arff quotes attribute names that need it (e.g. containing '%'): OK")
 
 
 def test_write_arff_feature_names_override():
@@ -495,7 +469,6 @@ def test_write_arff_feature_names_override():
     buf.seek(0)
     rep = read_arff(buf, target="label")
     assert any(n.startswith(("f0", "f1", "f2")) for n in rep.spec.feature_names)
-    print("write_arff feature_names override avoids operator-laden real names: OK")
 
 
 def test_write_csv_round_trips_through_read_csv(tmp_path):
@@ -511,7 +484,6 @@ def test_write_csv_round_trips_through_read_csv(tmp_path):
     assert rep.n_samples == 4
     assert {"color=red", "color=blue", "color=green"} <= set(rep.spec.feature_names)
     assert list(rep.y) == ["neg", "pos", "neg", "pos"]
-    print("write_csv round-trips through read_csv: OK")
 
 
 def test_write_csv_feature_names_override():
@@ -526,7 +498,6 @@ def test_write_csv_feature_names_override():
     buf.seek(0)
     rep = read_csv(buf, target="label")
     assert any(n.startswith("f0") for n in rep.spec.feature_names)
-    print("write_csv feature_names override renames only feature columns, not target: OK")
 
 
 def test_write_csv_wrong_feature_names_length_raises():
@@ -536,7 +507,6 @@ def test_write_csv_wrong_feature_names_length_raises():
         assert False, "expected ValueError"
     except ValueError as e:
         assert "feature_names" in str(e)
-    print("write_csv raises on mismatched feature_names length: OK")
 
 
 def test_build_dataspec_makes_two_valued_columns_binary():
@@ -578,32 +548,3 @@ def test_read_arff_treats_question_mark_as_missing_and_uses_the_header_domain():
     assert row["sex=male"] == 0 and row["sex=female"] == 0
     row = dict(zip(ds.feature_names, rep.X[2].astype(int)))  # c missing: no c feature holds
     assert all(v == 0 for n, v in row.items() if n.startswith("c"))
-
-
-if __name__ == "__main__":
-    test_evaluate_feature()
-    test_read_csv_infer()
-    test_read_csv_given_dataspec()
-    test_read_csv_strict_true_raises_on_mismatch()
-    test_read_csv_strict_false_allows_mismatch()
-    test_validate_dataspec_mismatches()
-    test_binarize_never_covers_missing_value_by_default()
-    test_missing_strategy_majority_imputation()
-    test_missing_strategy_random_imputation_reproducible()
-    test_missing_strategy_separate_nominal_and_numeric()
-    test_missing_strategy_separate_without_declared_feature_raises()
-    test_missing_values_sentinel_recognition()
-    test_dataspec_missing_strategy_default_resolution()
-    test_default_missing_strategy_is_never_covers()
-    test_read_arff_infer()
-    test_read_arff_given_dataspec()
-    test_write_arff_round_trips_through_read_arff(Path(tempfile.mkdtemp()))
-    test_write_arff_quotes_nominal_values_needing_it()
-    test_write_arff_quotes_attribute_names_needing_it()
-    test_write_arff_feature_names_override()
-    test_write_csv_round_trips_through_read_csv(Path(tempfile.mkdtemp()))
-    test_write_csv_feature_names_override()
-    test_write_csv_wrong_feature_names_length_raises()
-    test_build_dataspec_makes_two_valued_columns_binary()
-    test_read_arff_treats_question_mark_as_missing_and_uses_the_header_domain()
-    print("\nAll tests passed.")

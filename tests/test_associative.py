@@ -32,7 +32,6 @@ def test_ensure_representation_passes_through_an_already_nlist_representation_un
     rep = NListRepresentation.from_boolean(_rep([[1, 0], [0, 1]], ["a", "b"]))
     miner = CARMiner(max_auto_convert_cells=1_000_000)
     assert miner.ensure_representation(rep, miner.max_auto_convert_cells) is rep
-    print("ensure_representation: NListRepresentation passes through by identity: OK")
 
 
 def test_ensure_representation_auto_converts_a_small_boolean_representation():
@@ -41,7 +40,6 @@ def test_ensure_representation_auto_converts_a_small_boolean_representation():
     out = miner.ensure_representation(rep, miner.max_auto_convert_cells)
     assert isinstance(out, NListRepresentation)
     assert out.n_samples == rep.n_samples
-    print("ensure_representation: auto-converts a HorizontalBitmapRepresentation below the threshold: OK")
 
 
 def test_ensure_representation_raises_past_the_size_threshold():
@@ -49,7 +47,6 @@ def test_ensure_representation_raises_past_the_size_threshold():
     miner = CARMiner(max_auto_convert_cells=1)
     with pytest.raises(ValueError, match="max_auto_convert_cells"):
         miner.ensure_representation(rep, miner.max_auto_convert_cells)
-    print("ensure_representation: raises ValueError past max_auto_convert_cells, names the threshold: OK")
 
 
 def test_ensure_representation_converts_a_non_boolean_non_nlist_representation_too(capsys):
@@ -85,7 +82,6 @@ def test_generate_cars_gives_the_same_cars_on_a_sparse_representation_as_on_nlis
     from_sparse = {(c.items, c.target): c.confidence
                    for c in generate_cars(sparse, min_support=0.01, min_confidence=0.5, max_len=1)}
     assert from_nlist == from_sparse
-    print("generate_cars produces identical CARs on NListRepresentation and SparseDataRepresentation: OK")
 
 
 # -- coverage_select: the shared database-coverage walk ---------------------
@@ -115,7 +111,6 @@ def test_coverage_select_skips_a_rule_that_is_wrong_on_everything_it_newly_cover
     assert len(trace) == 1
     errors_so_far, default_label = trace[0]
     assert errors_so_far == 0 and default_label == "a"
-    print("coverage_select (default, CBA-CB) skips a rule that's wrong on all its new rows: OK")
 
 
 def test_coverage_select_with_keep_coverage_keeps_a_rule_on_any_new_coverage():
@@ -129,7 +124,6 @@ def test_coverage_select_with_keep_coverage_keeps_a_rule_on_any_new_coverage():
     assert kept == [rule_high]
     errors_so_far, default_label = trace[0]
     assert errors_so_far == 2 and default_label == "a"
-    print("coverage_select(keep=Coverage()) keeps a rule on any new coverage, right or wrong: OK")
 
 
 def test_coverage_select_stops_once_everything_is_covered():
@@ -145,7 +139,6 @@ def test_coverage_select_stops_once_everything_is_covered():
     # confirm both end up kept and the walk ends error-free.
     assert len(kept) == 2
     assert trace[-1][0] == 0  # 0 total errors once both are applied
-    print("coverage_select processes every rule until fully covered: OK")
 
 
 # -- generate_cars: support is the support of body + head -------------------
@@ -164,7 +157,6 @@ def test_generate_cars_thresholds_the_support_of_the_rule_not_of_the_antecedent(
     assert generate_cars(data, min_support=0.4, min_confidence=0.5, max_len=1) == []
     lower = generate_cars(data, min_support=0.3, min_confidence=0.5, max_len=1)  # 3 rows: both qualify
     assert {(c.items, c.target) for c in lower} == {((0,), "a"), ((0,), "b")}
-    print("generate_cars thresholds rule support (body + head), not antecedent support: OK")
 
 
 def test_generate_cars_only_class_restricts_which_itemsets_are_explored():
@@ -176,7 +168,6 @@ def test_generate_cars_only_class_restricts_which_itemsets_are_explored():
     only_b = generate_cars(data, min_support=0.4, min_confidence=0.5, max_len=2, only_class="b")
     # f0 (rows 0-7) has 4 'b' rows -> qualifies at conf 4/8; f1 (rows 0-3) has 0 'b' rows -> pruned
     assert {(c.items, c.target) for c in only_b} == {((0,), "b")}
-    print("generate_cars(only_class=...) prunes itemsets by that class's own support: OK")
 
 
 # -- stats from counts == stats from annotate --------------------------------
@@ -210,7 +201,6 @@ def test_set_stats_from_counts_equals_annotate_including_abstain_edge_cases():
         covered = {c: int(np.sum(mask & (y == c))) for c in totals}
         got = SingleRule(Rule(r.conditions, target=r.target, dataspec=data.spec)).set_stats_from_counts(covered, totals)
         _same_stats(expected, got)
-    print("SingleRule.set_stats_from_counts == annotate (3 classes, full cover, unseen target): OK")
 
 
 def test_the_miners_count_based_stats_equal_a_fresh_annotate_for_every_rule():
@@ -222,7 +212,6 @@ def test_the_miners_count_based_stats_equal_a_fresh_annotate_for_every_rule():
     for r in model.rules:
         fresh = annotate_rules([Rule(r.conditions, target=r.target, dataspec=nl.spec)], nl)[0]
         _same_stats(fresh, r)
-    print(f"the miner's stats-from-counts match annotate for all {len(model.rules)} mined rules: OK")
 
 
 # -- CARMiner: the raw, unpruned CAR pool -------------------
@@ -244,7 +233,6 @@ def test_carminer_returns_the_raw_car_pool_as_a_flat_rule_set():
     nlist = miner.ensure_representation(rep, miner.max_auto_convert_cells)
     cars = generate_cars(nlist, miner.min_support, miner.min_confidence, miner.max_len)
     assert len(model.rules) == len(cars)  # every mined CAR survives, unpruned
-    print(f"CARMiner returns the full unpruned CAR pool ({len(cars)} rules): OK")
 
 
 def test_carminer_defaults_to_the_same_combiner_as_a_random_forest_import():
@@ -255,7 +243,6 @@ def test_carminer_defaults_to_the_same_combiner_as_a_random_forest_import():
     rep, raw, y = _separable_multiclass()
     model = CARMiner(min_support=0.02, min_confidence=0.5, max_len=3).fit(rep)
     assert isinstance(model.combiner, HeuristicMaxCombiner)
-    print("CARMiner's raw FlatRuleSet uses the plain 'max' default combiner: OK")
 
 
 def test_carminer_runs_end_to_end_on_a_sparse_representation():
@@ -266,8 +253,6 @@ def test_carminer_runs_end_to_end_on_a_sparse_representation():
     model = CARMiner(min_support=0.02, min_confidence=0.5, max_len=3).fit(sparse)
     assert isinstance(model, FlatRuleSet)
     assert len(model.rules) > 0
-    print(f"CARMiner.fit runs end to end on a SparseDataRepresentation "
-          f"({len(model.rules)} rules): OK")
 
 
 def test_carminer_target_class_returns_a_concept_model():
@@ -275,7 +260,6 @@ def test_carminer_target_class_returns_a_concept_model():
     model = CARMiner(min_support=0.02, min_confidence=0.5, target_class="x").fit(rep)
     assert isinstance(model, ConceptModel)
     assert all(r.target == "x" for r in model.rules)
-    print("CARMiner(target_class=...) returns a single-class ConceptModel: OK")
 
 
 # -- sort_by_measured_precedence: the generalized (non-CAR) precedence sort --
@@ -299,7 +283,6 @@ def test_sort_by_measured_precedence_matches_confidence_then_support_order():
     assert ordered[0].conditions == r_a.conditions  # highest confidence first
     assert ordered[1].conditions == r_b.conditions  # tie on confidence -> r_b: support 2 > r_c: support 1
     assert ordered[2].conditions == r_c.conditions
-    print("sort_by_measured_precedence orders by confidence desc, then support desc: OK")
 
 
 def test_sort_by_measured_precedence_breaks_a_confidence_and_support_tie_by_generality():
@@ -316,7 +299,6 @@ def test_sort_by_measured_precedence_breaks_a_confidence_and_support_tie_by_gene
     ordered = sort_by_measured_precedence(annotate_rules([r_long, r_short], data))
     assert ordered[0].conditions == r_short.conditions
     assert ordered[1].conditions == r_long.conditions
-    print("sort_by_measured_precedence breaks a confidence/support tie by generality (fewer conditions): OK")
 
 
 def test_sort_by_measured_precedence_raises_on_an_unannotated_rule():
@@ -324,11 +306,3 @@ def test_sort_by_measured_precedence_raises_on_an_unannotated_rule():
     unannotated = Rule((0,), target="a", dataspec=data.spec)
     with pytest.raises(ValueError, match="measured stats"):
         sort_by_measured_precedence([unannotated])
-    print("sort_by_measured_precedence raises a clear error on an unannotated rule: OK")
-
-
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-    print("\nAll tests passed.")

@@ -31,7 +31,6 @@ def test_generate_cars_on_a_hand_worked_dataset():
     assert set(by_items) == {(0,), (1,)}  # (1,)->b never clears 0.5 confidence (2/5)
     assert by_items[(0,)].target == "a" and by_items[(0,)].confidence == pytest.approx(1.0)
     assert by_items[(1,)].target == "a" and by_items[(1,)].confidence == pytest.approx(0.6)
-    print("generate_cars matches hand-computed CARs: OK")
 
 
 def test_cba_select_prunes_a_kept_rule_that_makes_things_worse():
@@ -55,7 +54,6 @@ def test_cba_select_prunes_a_kept_rule_that_makes_things_worse():
     assert [r.conditions[0].feature for r in kept] == [0]
     assert kept[0].target == "a"
     assert default == "b"
-    print("CBA._select truncates to the minimum-error prefix, dropping the harmful rule: OK")
 
 
 # -- CBA end to end -----------------------------------------------------
@@ -75,7 +73,6 @@ def test_cba_fit_returns_a_decision_list_that_predicts():
     preds = np.asarray(model.predict(rep))
     acc = float(np.mean(preds == y))
     assert acc > 0.7, f"CBA training accuracy only {acc:.3f}"
-    print(f"CBA().fit returns a working DecisionList, train acc={acc:.3f}: OK")
 
 
 def test_cba_target_class_returns_a_concept_model():
@@ -83,13 +80,11 @@ def test_cba_target_class_returns_a_concept_model():
     model = CBA(min_support=0.02, min_confidence=0.5, target_class="x").fit(rep)
     assert isinstance(model, ConceptModel)
     assert all(r.target == "x" for r in model.rules)
-    print("CBA(target_class=...) returns a single-class ConceptModel: OK")
 
 
 def test_cba_produces_the_decomposition_types_too():
     caps = CBA().produces()
     assert {DecisionList, ConceptSet, ConceptCascade, PairwiseModel} <= caps
-    print(f"CBA().produces() includes the DecomposingLearner types: {sorted(t.__name__ for t in caps)}: OK")
 
 
 def test_cba_auto_converts_a_boolean_representation_transparently():
@@ -97,14 +92,12 @@ def test_cba_auto_converts_a_boolean_representation_transparently():
     assert not isinstance(rep, NListRepresentation)
     model = CBA(min_support=0.05, min_confidence=0.5, max_len=2).fit(rep)
     assert isinstance(model, DecisionList)
-    print("CBA.fit auto-converts a plain HorizontalBitmapRepresentation without the caller doing it: OK")
 
 
 def test_cba_raises_a_clear_error_past_the_auto_convert_threshold():
     rep, raw, y = _separable_multiclass(n=60)
     with pytest.raises(ValueError, match="max_auto_convert_cells"):
         CBA(max_auto_convert_cells=1).fit(rep)
-    print("CBA.fit raises past max_auto_convert_cells instead of silently converting: OK")
 
 
 # -- CBA consuming an externally-supplied rule pool (rules=) -----------------
@@ -123,7 +116,6 @@ def test_cba_with_an_externally_supplied_rules_pool_skips_mining_entirely():
     assert isinstance(model, DecisionList)
     assert [r.conditions[0].feature for r in model.rules] == [0]
     assert model.default_prediction == "b"
-    print("CBA(rules=...) compresses an externally-supplied pool without mining: OK")
 
 
 def test_cba_distills_correctly_on_a_sparse_representation_not_just_boolean_or_nlist():
@@ -142,7 +134,6 @@ def test_cba_distills_correctly_on_a_sparse_representation_not_just_boolean_or_n
     assert isinstance(model, DecisionList)
     assert [r.conditions[0].feature for r in model.rules] == [0]
     assert model.default_prediction == "b"
-    print("CBA(rules=...) distills correctly on a SparseDataRepresentation directly: OK")
 
 
 def test_cba_random_forest_rules_round_trip():
@@ -164,11 +155,3 @@ def test_cba_random_forest_rules_round_trip():
     assert len(model.rules) > 0
     preds = np.asarray(model.predict(data))
     assert preds.shape == y.shape
-    print(f"CBA(rules=from_random_forest(...)) round-trips end to end ({len(model.rules)} rules): OK")
-
-
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-    print("\nAll tests passed.")
