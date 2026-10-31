@@ -133,6 +133,13 @@ def _counts(stats: RuleStats):
     ))
 
 
+def _optimistic(stats: RuleStats) -> RuleStats:
+    """`stats` projected to ``(tp, 0)``: every positive kept, every
+    negative shed, with `fn`/`tn` shifted to hold the class totals."""
+    fp = 0 if np.ndim(stats.fp) == 0 else np.zeros_like(stats.fp)
+    return RuleStats(tp=stats.tp, fp=fp, fn=stats.fn, tn=stats.fp + stats.tn, length=stats.length)
+
+
 def _div(num, den, default: float = 0.0):
     """``num / den`` where ``den > 0``, `default` elsewhere -- elementwise,
     without the divide-by-zero warnings `np.where` would raise by
@@ -246,6 +253,27 @@ class RuleHeuristic(ABC):
         the class docstring for why this exists next to `score`."""
         return _loop(self.score, stats)
 
+    # -- bounding the refinements -----------------------------------------
+    #
+    # A refinement covers a subset of its rule's examples: at most `tp`
+    # positives and `fp` negatives. An upper bound on its score lets a
+    # search drop a rule none of whose refinements could beat the best
+    # rule so far (optimistic pruning).
+
+    def bound(self, stats: RuleStats) -> Score:
+        """An upper bound on the score of every refinement of a rule with
+        `stats`: by default the score at the ``(tp, 0)`` projection --
+        every positive kept, every negative shed -- an upper bound for
+        any heuristic that rises with `tp` and falls with `fp`. One that
+        doesn't (`LikelihoodRatio`) overrides it. `length` stays the
+        rule's own, so a length-penalized bound is no lower than any
+        refinement's score."""
+        return self.score(_optimistic(stats))
+
+    def batch_bound(self, stats: RuleStats) -> Any:
+        """`bound` for every element of `stats`' arrays at once."""
+        return self.batch_score(_optimistic(stats))
+
     # -- choosing the head ------------------------------------------------
     #
     # A search for a rule of any class (a decision list's, `target_class`
@@ -277,13 +305,9 @@ class RuleHeuristic(ABC):
     def head_bound(self, covered, totals, length: Any = 0) -> Any:
         """An upper bound on the score of every refinement of a rule
         covering `covered` of each class, over all heads: for each head
-        the score of keeping all of its covered examples and none of the
-        others (the ``(tp, 0)`` projection), maximized over the heads."""
+        `batch_bound` for each head, maximized over the heads."""
         covered = np.asarray(covered, dtype=float)
-        stats = head_stats(covered, totals, length)
-        optimistic = RuleStats(tp=stats.tp, fp=np.zeros_like(stats.fp), fn=stats.fn, tn=stats.fp + stats.tn,
-                               length=length)
-        return _best_of_heads(self.batch_score(optimistic), covered)[0]
+        return _best_of_heads(self.batch_bound(head_stats(covered, totals, length)), covered)[0]
 
     def __repr__(self) -> str:
         """The class name plus every constructor argument that differs
@@ -1057,6 +1081,12 @@ class LengthPenalized(RuleHeuristic):
     def head_bound(self, covered, totals, length: Any = 0) -> Any:
         return self.base.head_bound(covered, totals, length) - self.penalty * np.asarray(length, dtype=float)
 
+    def bound(self, stats: RuleStats) -> float:
+        return self.base.bound(stats) - self.penalty * stats.length
+
+    def batch_bound(self, stats: RuleStats) -> np.ndarray:
+        return self.base.batch_bound(stats) - self.penalty * _counts(stats)[4]
+
 
 class MinimalLength(RuleHeuristic):
     """h = -length -- shorter (fewer conditions) scores higher, i.e.
@@ -1261,6 +1291,25 @@ class LikelihoodRatio(RuleHeuristic):
             term_fp = np.where(fp > 0, fp * np.log(fp / e_fp), 0.0)
         valid = (covered != 0) & (total != 0) & (p0 > 0.0) & (p0 < 1.0)
         return np.where(valid, 2 * (term_tp + term_fp), 0.0)
+
+    # Not monotone in tp and fp -- it rewards a covered distribution far
+    # from the prior in either direction -- so the (tp, 0) projection is
+    # no bound. The statistic is 2 (tp+fp) KL(covered || prior), jointly
+    # convex in (tp, fp), so its maximum over the refinements' box
+    # [1, tp] x [0, fp] (a refinement covering no positive is never a
+    # search's result) lies at a corner; (1, 0) is below (tp, 0).
+
+    def bound(self, stats: RuleStats) -> float:
+        return float(self.batch_bound(stats))
+
+    def batch_bound(self, stats: RuleStats) -> np.ndarray:
+        tp, fp, fn, tn, length = _counts(stats)
+        one = np.minimum(tp, 1.0)
+
+        def at(t, f):
+            return self.batch_score(RuleStats(tp=t, fp=f, fn=tp + fn - t, tn=fp + tn - f, length=length))
+
+        return np.maximum.reduce([at(tp, 0.0 * fp), at(tp, fp), at(one, fp)])
 
 
 class FoilGain(GainHeuristic):

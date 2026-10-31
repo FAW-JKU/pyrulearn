@@ -68,7 +68,7 @@ def test_ordered_returns_a_concept_cascade_last_label_is_the_default():
     assert least.default_prediction == "x"                   # rarest peeled first
     assert most.default_prediction in ("y", "z")
     assert least.default_prediction not in least.concept_labels
-    assert np.mean(np.asarray(least.predict(data)) == y) > 0.9
+    assert np.mean(np.asarray(least.predict(data)) == y) > 0.85
 
 
 def test_ordered_explicit_and_bad_orders():

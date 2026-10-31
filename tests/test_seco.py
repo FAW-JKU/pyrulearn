@@ -1148,18 +1148,18 @@ def test_seco_raises_without_labels():
     print("SeCo.fit raises without labels: OK")
 
 
-def test_cn2_defaults_wire_laplace_and_significance_as_stopping():
+def test_cn2_defaults_wire_laplace_and_significance_as_filtering():
     cn2 = CN2(target_class="pos")
     assert isinstance(cn2.single_rule_learner.heuristic, Laplace)
     assert isinstance(cn2.single_rule_learner.search, BeamSearch)
     assert cn2.single_rule_learner.search.beam_width == 5
-    assert cn2.single_rule_learner.filtering is None
-    assert isinstance(cn2.single_rule_learner.stopping, ThresholdPrePruning)
-    assert isinstance(cn2.single_rule_learner.stopping.heuristic, LikelihoodRatio)
-    assert cn2.single_rule_learner.stopping.threshold == 3.841
-    assert cn2.single_rule_learner.stopping.operator == "<"
-    assert cn2.single_rule_learner.stopping.polarity is True
-    print("CN2 defaults wire Laplace + a 3.841 likelihood-ratio significance test as stopping: OK")
+    assert cn2.single_rule_learner.stopping is None
+    assert isinstance(cn2.single_rule_learner.filtering, ThresholdPrePruning)
+    assert isinstance(cn2.single_rule_learner.filtering.heuristic, LikelihoodRatio)
+    assert cn2.single_rule_learner.filtering.threshold == 3.841
+    assert cn2.single_rule_learner.filtering.operator == "<"
+    assert cn2.single_rule_learner.filtering.polarity is True
+    print("CN2 defaults wire Laplace + a 3.841 likelihood-ratio significance test as filtering: OK")
 
 
 def test_cn2_overrides_are_all_honored():
@@ -1173,16 +1173,22 @@ def test_cn2_overrides_are_all_honored():
     )
     assert cn2.single_rule_learner.heuristic is heuristic
     assert cn2.single_rule_learner.search.beam_width == 2
-    assert cn2.single_rule_learner.stopping is None  # significance_threshold=None disables it
+    assert cn2.single_rule_learner.filtering is None  # significance_threshold=None disables it
     assert cn2.max_rules == 1
     print("CN2 constructor overrides (heuristic/beam_width/significance/max_rules) are honored: OK")
 
 
-def test_cn2_explicit_filtering_overrides_significance_threshold_default():
-    cn2 = CN2(target_class="pos", filtering=ThresholdPrePruning(LikelihoodRatio(), 2.0, "<"))
-    assert cn2.single_rule_learner.filtering is not None
-    assert cn2.single_rule_learner.stopping is None  # significance_threshold's default never built
-    print("CN2's explicit filtering= suppresses the default stopping= construction: OK")
+def test_cn2_explicit_stopping_overrides_significance_threshold_default():
+    cn2 = CN2(target_class="pos", stopping=ThresholdPrePruning(LikelihoodRatio(), 2.0, "<"))
+    assert cn2.single_rule_learner.stopping is not None
+    assert cn2.single_rule_learner.filtering is None  # significance_threshold's default never built
+    print("CN2's explicit stopping= suppresses the default filtering= construction: OK")
+
+
+def test_cn2_passes_stop_covering_through():
+    crit = ThresholdPrePruning(LikelihoodRatio(), 3.841, "<")
+    assert CN2(significance_threshold=None, stop_covering=crit).stop_covering is crit
+    print("CN2's stop_covering= reaches SeCo: OK")
 
 
 def test_cn2_explicit_search_overrides_beam_width():
@@ -1207,19 +1213,18 @@ def test_cn2_fits_a_disjunctive_concept_with_significance_disabled():
     print("CN2 with significance disabled fits a disjunctive concept perfectly: OK")
 
 
-def test_cn2_default_significance_as_stopping_can_underfit():
-    # confirms, concretely, the risk CN2's own docstring flags: with the
-    # default stopping-based significance test active, the search can
-    # halt before ever reaching the precise concept -- unlike the old
-    # (pre-redesign) stop_covering wiring, which only ever checked
-    # significance *after* the search had already run to completion
-    # unconstrained, this can genuinely change the answer, not just
-    # whether it's kept.
+def test_cn2_significance_as_stopping_can_underfit_where_filtering_does_not():
+    # the risk CN2's docstring flags: as a stopping criterion, the
+    # significance test can halt the search before it ever reaches the
+    # precise concept, which the default, the test as a filter, still
+    # finds by running the search out
     rep, ds, y = _disjunctive_dataset()
-    cn2 = CN2(target_class="pos", beam_width=3)  # significance_threshold=3.841 (default), as stopping
-    ruleset = cn2.fit(rep)
-    assert not np.all(ruleset.predict(rep) == y)
-    print("CN2's default (significance-as-stopping) can underfit a concept the disabled variant fits perfectly: OK")
+    stopped = CN2(target_class="pos", beam_width=3,
+                  stopping=ThresholdPrePruning(LikelihoodRatio(), 3.841, operator="<")).fit(rep)
+    assert not np.all(stopped.predict(rep) == y)
+    filtered = CN2(target_class="pos", beam_width=3).fit(rep)
+    assert np.all(filtered.predict(rep) == y)
+    print("CN2's significance test as stopping underfits a concept the default filter fits perfectly: OK")
 
 
 def test_cn2_an_absurd_significance_threshold_yields_an_empty_ruleset_either_mode():
@@ -1241,17 +1246,17 @@ def test_cn2_an_absurd_significance_threshold_yields_an_empty_ruleset_either_mod
     print("An absurd significance threshold empties the ruleset whether wired as filtering or stopping: OK")
 
 
-def test_cn2_significance_test_as_filtering_is_passed_as_such():
+def test_cn2_significance_test_as_stopping_is_passed_as_such():
     criterion = ThresholdPrePruning(LikelihoodRatio(), 3.841, "<")
-    cn2 = CN2(target_class="pos", filtering=criterion)
-    assert cn2.single_rule_learner.stopping is None      # no default stopping once a criterion is given
-    assert cn2.single_rule_learner.filtering is criterion
+    cn2 = CN2(target_class="pos", stopping=criterion)
+    assert cn2.single_rule_learner.filtering is None     # no default filtering once a criterion is given
+    assert cn2.single_rule_learner.stopping is criterion
     default = CN2(target_class="pos").single_rule_learner
-    assert default.filtering is None and isinstance(default.stopping, ThresholdPrePruning)
-    assert default.stopping.threshold == 3.841
+    assert default.stopping is None and isinstance(default.filtering, ThresholdPrePruning)
+    assert default.filtering.threshold == 3.841
     with pytest.raises(TypeError):
-        CN2(target_class="pos", mode="filtering")           # no names: pass the criterion
-    print("CN2's significance test: stopping by default, filtering when passed as such: OK")
+        CN2(target_class="pos", mode="stopping")            # no names: pass the criterion
+    print("CN2's significance test: filtering by default, stopping when passed as such: OK")
 
 
 def test_cn2_conceptset_uses_microvotecombiner_not_the_family_max_default():
@@ -1933,3 +1938,19 @@ def test_cn2_laplace_counts_the_classes_of_the_data():
     other = CN2(heuristic=WRAcc())
     other.fit(three)
     assert isinstance(other.single_rule_learner.heuristic, WRAcc)
+
+
+def test_cn2_returns_significant_rules_only():
+    # every rule CN2 returns passed the significance filter on the
+    # examples left at its turn, so the first is significant on all
+    rng = np.random.default_rng(0)
+    X = rng.integers(0, 2, size=(120, 6)).astype(bool)
+    y = np.where(X[:, 0] & X[:, 1] | X[:, 2], "pos", "neg")
+    flip = rng.random(120) < 0.15
+    y = np.where(flip, np.where(y == "pos", "neg", "pos"), y)
+    data = HorizontalBitmapRepresentation(DataSpec([f"x{i}" for i in range(6)]), X, y)
+    model = CN2(target_class="pos").fit(data)
+    assert len(model.rules) >= 1
+    first = model.rules[0]
+    assert LikelihoodRatio().score(RuleStats.from_rule(first, data, "pos")) >= 3.841
+    print(f"CN2 with the significance filter: {len(model.rules)} rules, the first significant: OK")

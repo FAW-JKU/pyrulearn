@@ -3,6 +3,28 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
+## Unreleased
+
+### Added
+
+- `demos/noise_robustness.py`: rule learners under class noise in the
+  training data, by learner family.
+- `RuleHeuristic.bound`/`batch_bound`: an upper bound on the score of every
+  refinement of a rule, by default the score at the ``(tp, 0)`` projection;
+  `LikelihoodRatio`, which isn't monotone in `tp` and `fp`, bounds by the
+  maximum over the corners of the refinements' coverage. The searches'
+  optimistic pruning uses it.
+- `CN2(stop_covering=...)`, passed through to `SeCo`.
+
+### Changed
+
+- `CN2`'s significance test is a `filtering` criterion by default, as in
+  Clark & Niblett's and Clark & Boswell's search, no longer a `stopping`
+  criterion, which halted a search the moment the round's best candidate
+  was insignificant and made CN2 underfit, most of all under class noise.
+  The old behavior is
+  ``CN2(stopping=ThresholdPrePruning(LikelihoodRatio(), 3.841, "<"))``.
+
 ## 0.5.0 (2026-10-31)
 
 ### Added

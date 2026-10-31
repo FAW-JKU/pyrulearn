@@ -648,8 +648,8 @@ class HeuristicObjective(Objective):
     """A `RuleHeuristic` as an `Objective`: statistics are `RuleStats`
     (class counts for the search's target class), children are counted by
     `count_open_children` (one `batch_cover_counts` per node), the bound
-    is the score at the ``(tp, 0)`` projection -- every positive kept,
-    every negative dropped -- and a child is dead once it covers no
+    is the heuristic's own (`RuleHeuristic.bound`; by default the score
+    at the ``(tp, 0)`` projection), and a child is dead once it covers no
     positive. Exactly what the searches did with a heuristic before
     objectives existed; every search wraps a heuristic in one
     (`as_objective`)."""
@@ -684,14 +684,14 @@ class HeuristicObjective(Objective):
         return batch_score_one(self.heuristic, stats)
 
     def batch_bound(self, batch):
-        return self.heuristic.batch_score(RuleStats(tp=batch.tp, fp=np.zeros_like(batch.fp), fn=batch.fn,
-                                                    tn=batch.fp + batch.tn, length=batch.length))
+        return self.heuristic.batch_bound(batch)
 
     def bound(self, stats) -> Score:
-        return self.heuristic.score(_optimistic_stats(stats))
+        return self.heuristic.bound(stats)
 
     def bound_one(self, stats) -> Score:
-        return batch_score_one(self.heuristic, _optimistic_stats(stats))
+        v = np.asarray(self.heuristic.batch_bound(stats))
+        return float(v) if v.ndim == 0 else tuple(float(x) for x in v.reshape(-1))
 
     def take(self, batch, index):
         length = batch.length if np.ndim(batch.length) == 0 else np.asarray(batch.length)[index]
@@ -3428,30 +3428,26 @@ class CN2(_ClassCountLaplace, SeCo):
       in the denominator: each `fit` sets `Laplace(n_classes=c)` for the
       data's ``c`` classes unless `heuristic` is given (`Laplace()` for
       the two-class form whatever the data).
-    - **significance test, as a *stopping* criterion**: CN2's own
-      description (Clark & Boswell) checks, inside the search itself,
-      whether the round's best candidate is still statistically
-      significant (`LikelihoodRatio`, CN2's own G-test statistic) --
-      and if not, halts and returns the best significant rule found so
-      far, rather than testing only the search's finished answer once
-      at the end. That's exactly `BeamSearch`'s `stopping` (see
-      `PrePruningCriterion`/`BeamSearch`'s own docstrings): `evaluate`
-      is "no longer significant" (`LikelihoodRatio() < threshold`), and
-      the default `polarity=True` reads correctly (reject the
-      insignificant ones). Both `stopping` and `filtering` refuse to
-      *return* an insignificant rule -- if a covering iteration never
-      reaches a significant one, the search returns `None` and `SeCo`
-      ends the loop, so an over-strict threshold shows up as a short or
-      empty ruleset either way. They differ only in reach: `stopping`
-      halts the search the moment the round's best candidate goes
-      insignificant, so it can miss a rule that would have regained
-      significance a few refinements deeper -- as `filtering` the
-      criterion lets the search run out and can still find that rule
-      (``CN2(filtering=ThresholdPrePruning(LikelihoodRatio(), 3.841,
-      operator="<"))``). Pass
+    - **significance test, as a *filtering* criterion**: Clark &
+      Niblett's and Clark & Boswell's search replaces its best rule by a
+      candidate only if the candidate is statistically significant
+      (`LikelihoodRatio`, CN2's own G-test statistic) and better, and
+      runs on until the beam is empty -- `BeamSearch`'s `filtering`
+      (`ThresholdPrePruning(LikelihoodRatio(), threshold, operator="<")`,
+      rejecting the insignificant ones). If a covering iteration finds
+      no significant rule, the search returns `None` and `SeCo` ends
+      the loop for that class: with Laplace, Clark & Boswell observe,
+      the test acts mostly as this termination criterion. Two cheaper
+      readings are available, both weaker under class noise
+      (`demos/noise_robustness.py`): the test as `stopping` (halting a
+      search the moment the round's best candidate is insignificant,
+      ``CN2(stopping=ThresholdPrePruning(LikelihoodRatio(), 3.841,
+      operator="<"))``), and the test of
+      each search's result only, ending the covering loop
+      (``CN2(significance_threshold=None, stop_covering=...)``). Pass
       `significance_threshold=None` to disable the criterion entirely
       (every rule the search lands on is accepted, same as calling
-      `SeCo` directly with a `Laplace` heuristic and no `stopping`).
+      `SeCo` directly with a `Laplace` heuristic and no `filtering`).
 
     `significance_threshold` defaults to 3.841, the chi-squared critical
     value at alpha=0.05 with 1 degree of freedom -- the significance
@@ -3471,10 +3467,8 @@ class CN2(_ClassCountLaplace, SeCo):
 
     `filtering`/`stopping`, if passed explicitly, override
     `significance_threshold`'s default construction entirely: the
-    significance test is the default `stopping` criterion (gate the
-    result *and* halt early) only while neither is given. To use it as a
-    `filtering` criterion instead (gate the result, run the search out),
-    pass it as such.
+    significance test is the default `filtering` criterion only while
+    neither is given.
 
     `fit(data)`'s default `ConceptSet` uses `MicroVoteCombiner`, not the
     family's generic `HeuristicMaxCombiner()` -- see `_fit_one_vs_rest` below for
@@ -3514,12 +3508,13 @@ class CN2(_ClassCountLaplace, SeCo):
         random_state: Optional[int] = 0,
         covering: Optional[CoveringStrategy] = None,
         seed: Optional[SeedSelection] = None,
+        stop_covering: Optional[PrePruningCriterion] = None,
     ):
         self._default_laplace = heuristic is None
         heuristic = heuristic if heuristic is not None else Laplace()
         search = search if search is not None else BeamSearch(beam_width=beam_width)
         if stopping is None and filtering is None and significance_threshold is not None:
-            stopping = ThresholdPrePruning(LikelihoodRatio(), significance_threshold, operator="<")
+            filtering = ThresholdPrePruning(LikelihoodRatio(), significance_threshold, operator="<")
         single_rule_learner = SingleRuleLearner(
             heuristic=heuristic,
             search=search,
@@ -3536,6 +3531,7 @@ class CN2(_ClassCountLaplace, SeCo):
             random_state=random_state,
             covering=covering,
             seed=seed,
+            stop_covering=stop_covering,
         )
 
     @produces(ConceptSet)

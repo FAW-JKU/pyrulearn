@@ -729,3 +729,31 @@ def test_correlation_and_chi_square_take_a_rounding_error_below_zero_as_zero():
         warnings.simplefilter("error")
         scores = Correlation().batch_score(batch)
     assert scores[0] == 0.0 and scores[1] == pytest.approx(Correlation().score(RuleStats(tp=2.0, fp=1.0, fn=1.0, tn=2.0)))
+
+
+def test_likelihood_ratio_bound_covers_every_refinement():
+    # the statistic isn't monotone in tp and fp, so its bound is the
+    # maximum over the corners of the refinements' box; check it against
+    # every refinement (1 <= tp' <= tp, 0 <= fp' <= fp) by brute force
+    lr = LikelihoodRatio()
+    for n_pos, n_neg in [(10, 30), (30, 10), (20, 20)]:
+        for tp in range(1, n_pos + 1):
+            for fp in range(n_neg + 1):
+                stats = RuleStats(tp=tp, fp=fp, fn=n_pos - tp, tn=n_neg - fp)
+                bound = lr.bound(stats)
+                best = max(lr.score(RuleStats(tp=t, fp=f, fn=n_pos - t, tn=n_neg - f))
+                           for t in range(1, tp + 1) for f in range(fp + 1))
+                assert best <= bound + 1e-9
+                assert abs(best - bound) < 1e-9   # a corner is itself a refinement
+    batch = RuleStats(tp=np.array([1, 5]), fp=np.array([9, 0]), fn=np.array([9, 5]), tn=np.array([21, 30]))
+    assert np.allclose(lr.batch_bound(batch), [lr.bound(H.RuleStats(tp=1, fp=9, fn=9, tn=21)),
+                                               lr.bound(H.RuleStats(tp=5, fp=0, fn=5, tn=30))])
+    print("LikelihoodRatio's bound is the maximum over every refinement: OK")
+
+
+def test_default_bound_is_the_tp_0_projection():
+    stats = RuleStats(tp=4, fp=3, fn=6, tn=7, length=2)
+    assert H.Laplace().bound(stats) == H.Laplace().score(RuleStats(tp=4, fp=0, fn=6, tn=10, length=2))
+    penalized = H.LengthPenalized(LikelihoodRatio(), 0.5)
+    assert abs(penalized.bound(stats) - (LikelihoodRatio().bound(stats) - 1.0)) < 1e-12
+    print("the default bound is the (tp, 0) projection; LengthPenalized wraps its base's: OK")
