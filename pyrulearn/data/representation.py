@@ -198,6 +198,18 @@ class DataRepresentation(ABC):
         than something every refinement step pays for."""
         raise NotImplementedError
 
+    @abstractmethod
+    def batch_cover_counts(
+        self, handle: Any, positive_class: Any, feature_indices: Sequence[int]
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """``(tp, fp, keeps_all)`` arrays, one entry per feature in
+        `feature_indices`: the counts of `handle` refined by each feature,
+        and whether that refinement drops no covered row with a nonzero
+        weight. What every rule search counts a node's children with
+        (`pyrulearn.learners.seco.count_open_children`); each
+        representation batches it as its storage allows."""
+        raise NotImplementedError
+
     def batch_cover_sums(self, handle: Any, values: np.ndarray, feature_indices: Sequence[int]) -> np.ndarray:
         """``values`` (``(n_samples, m)``, any per-row numbers -- e.g. a
         boosting loss's gradients) summed over the rows covered by

@@ -52,7 +52,7 @@ from typing import Any, Optional
 import numpy as np
 
 from .heuristics import RuleHeuristic, RuleStats
-from .data import HorizontalBitmapRepresentation
+from .data import DataRepresentation
 from .rule import Rule
 
 #: comparison operators `ThresholdPrePruning` accepts, by symbol
@@ -146,7 +146,7 @@ class PrePruningCriterion(ABC):
         self,
         rule: Rule,
         stats: RuleStats,
-        data: HorizontalBitmapRepresentation,
+        data: DataRepresentation,
         target_class: Any,
         example_mask: Optional[np.ndarray] = None,
     ) -> bool:
@@ -156,7 +156,7 @@ class PrePruningCriterion(ABC):
         self,
         rule: Rule,
         stats: RuleStats,
-        data: HorizontalBitmapRepresentation,
+        data: DataRepresentation,
         target_class: Any,
         example_mask: Optional[np.ndarray] = None,
     ) -> bool:
@@ -166,7 +166,7 @@ class PrePruningCriterion(ABC):
         self,
         rule: Rule,
         stats: RuleStats,
-        data: HorizontalBitmapRepresentation,
+        data: DataRepresentation,
         target_class: Any,
         example_mask: Optional[np.ndarray] = None,
     ) -> bool:
@@ -211,7 +211,7 @@ class ThresholdPrePruning(PrePruningCriterion):
         self,
         rule: Rule,
         stats: RuleStats,
-        data: HorizontalBitmapRepresentation,
+        data: DataRepresentation,
         target_class: Any,
         example_mask: Optional[np.ndarray] = None,
     ) -> bool:
@@ -278,7 +278,7 @@ class EncodingLengthRestriction(PrePruningCriterion):
         self,
         rule: Rule,
         stats: RuleStats,
-        data: HorizontalBitmapRepresentation,
+        data: DataRepresentation,
         target_class: Any,
         example_mask: Optional[np.ndarray] = None,
     ) -> bool:
@@ -312,7 +312,7 @@ class AnyOf(PrePruningCriterion):
         self,
         rule: Rule,
         stats: RuleStats,
-        data: HorizontalBitmapRepresentation,
+        data: DataRepresentation,
         target_class: Any,
         example_mask: Optional[np.ndarray] = None,
     ) -> bool:
@@ -332,7 +332,7 @@ class AllOf(PrePruningCriterion):
         self,
         rule: Rule,
         stats: RuleStats,
-        data: HorizontalBitmapRepresentation,
+        data: DataRepresentation,
         target_class: Any,
         example_mask: Optional[np.ndarray] = None,
     ) -> bool:
@@ -387,7 +387,7 @@ class ProductiveRule(PrePruningCriterion):
         self,
         rule: Rule,
         stats: RuleStats,
-        data: HorizontalBitmapRepresentation,
+        data: DataRepresentation,
         target_class: Any,
         example_mask: Optional[np.ndarray] = None,
     ) -> bool:
