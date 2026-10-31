@@ -28,7 +28,7 @@ Y = np.array(["a", "b", "a", "b", "a"], dtype=object)
 DATA = HorizontalBitmapRepresentation(DS, X, Y)
 
 
-# --------------------------------------------------------------- WeightedRule ---
+# -- WeightedRule ------------------------------------------------------
 
 def test_weighted_rule_is_rule_plus_one_declarative_field():
     wr = WeightedRule([0], target="a", dataspec=DS, weight=0.8)
@@ -53,7 +53,7 @@ def test_weighted_rule_structural_copies_keep_weight():
     assert type(child) is Rule
 
 
-# ---------------------------------------------------- hierarchy: the two axes ---
+# -- hierarchy: the two axes -------------------------------------------
 
 def test_family_membership():
     ds = DS
@@ -70,9 +70,16 @@ def test_family_membership():
         RuleSet()
     with pytest.raises(TypeError):
         RuleList()
+    # and every model, base or composite, is a RuleModel
+    for m in (SingleRule(r[0]), ConceptModel(r), FlatRuleSet(r), DisjointRuleSet(r),
+              DecisionList(r), ConceptSet.from_rules(r),
+              ConceptCascade([ConceptModel(r, label="a")]),
+              EnsembleModel([SingleRule(r[0])]),
+              PairwiseModel([("a", "b", FlatRuleSet(r))])):
+        assert isinstance(m, RuleModel)
 
 
-# ------------------------------------------------------------------ SingleRule ---
+# -- SingleRule --------------------------------------------------------
 
 def test_single_rule_predicts_head_or_default():
     m = SingleRule(Rule([0], target="a", dataspec=DS), default_prediction="b")
@@ -82,7 +89,56 @@ def test_single_rule_predicts_head_or_default():
     assert type(m.filter("z")) is FlatRuleSet and len(m.filter("z")) == 0
 
 
-# ---------------------------------------------------------------- ConceptModel ---
+def test_flat_containers_store_single_rule_not_bare_rule():
+    r1 = Rule([0], target="a", dataspec=DS)
+    r2 = WeightedRule([1], target="b", dataspec=DS, weight=0.7)
+    fs = FlatRuleSet([r1, r2])
+    assert all(type(r) is SingleRule for r in fs.rules)
+    assert [r.rule for r in fs.rules] == [r1, r2]
+
+
+def test_single_rule_forwards_reads_to_the_wrapped_rule():
+    r = WeightedRule([0, 1], target="a", dataspec=DS, weight=0.42)
+    sr = SingleRule(r)
+    assert sr.target == "a"
+    assert sr.conditions == r.conditions
+    assert sr.dataspec is DS
+    assert sr.pos == r.pos
+    assert sr.weight == 0.42
+    assert sr.to_string("logic") == r.to_string("logic")  # fmt positional-first, like Rule.to_string
+    assert sr.to_string(fmt="prolog") == r.to_string(fmt="prolog")
+    assert sr.rules == [sr]           # recursion base case
+
+
+def test_single_rule_weight_is_settable_through_the_wrapper():
+    r = WeightedRule([0], target="a", dataspec=DS, weight=0.5)
+    fs = FlatRuleSet([r])
+    fs.rules[0].weight = 0.05
+    assert r.weight == 0.05           # mutation reaches the real underlying rule
+    assert fs.rules[0].weight == 0.05  # and is visible again through the same wrapper
+
+
+def test_single_rule_missing_attribute_still_raises_attribute_error():
+    sr = SingleRule(Rule([0], target="a", dataspec=DS))
+    with pytest.raises(AttributeError):
+        sr.this_attribute_does_not_exist_anywhere
+
+
+def test_filter_and_remap_keep_producing_single_rule_wrapped_containers():
+    r1 = Rule([0], target="a", dataspec=DS)
+    r2 = Rule([1], target="b", dataspec=DS)
+    fs = FlatRuleSet([r1, r2])
+
+    filtered = fs.filter("a")
+    assert all(type(r) is SingleRule for r in filtered.rules)
+
+    ds2 = DataSpec(["p", "q", "r"])
+    remapped = fs.remap(ds2)
+    assert all(type(r) is SingleRule for r in remapped.rules)
+    assert remapped.rules[0].dataspec is ds2
+
+
+# -- ConceptModel ------------------------------------------------------
 
 def test_concept_model_predicts_label_or_none():
     cm = ConceptModel([Rule([0], target="a", dataspec=DS), Rule([1], target="a", dataspec=DS)])
@@ -97,7 +153,7 @@ def test_concept_model_rejects_mixed_heads():
         ConceptModel([Rule([0], target="a"), Rule([1], target="b")])
 
 
-# ------------------------------------------------------------------ FlatRuleSet ---
+# -- FlatRuleSet -------------------------------------------------------
 
 def test_flat_rule_set_resolves_by_combiner_and_swaps():
     rs = FlatRuleSet([Rule([0], target="a", dataspec=DS), Rule([1], target="b", dataspec=DS)],
@@ -109,7 +165,7 @@ def test_flat_rule_set_resolves_by_combiner_and_swaps():
     assert type(rs.remap(DataSpec(["p", "q", "r", "s"]))) is FlatRuleSet
 
 
-# ------------------------------------------------------------------ DecisionList ---
+# -- DecisionList ------------------------------------------------------
 
 def test_decision_list_is_first_match():
     dl = DecisionList([Rule([0], target="a", dataspec=DS), Rule([], target="b", dataspec=DS)],
@@ -117,7 +173,29 @@ def test_decision_list_is_first_match():
     assert list(dl.predict(DATA)) == ["a", "b", "a", "b", "b"]
 
 
-# --------------------------------------------------------------- DisjointRuleSet ---
+def test_decision_list_predict_and_firing_coverage():
+    X = np.array([
+        [1, 0],   # only a
+        [0, 1],   # only b
+        [0, 0],   # neither
+        [1, 1],   # both -- r1 should claim this one, not r2
+    ], dtype=bool)
+    ds = DataSpec(["a", "b"])
+    rep = HorizontalBitmapRepresentation(ds, X)
+    r1 = Rule.from_pos_neg(pos=[0], target="A", dataspec=ds)
+    r2 = Rule.from_pos_neg(pos=[1], target="B", dataspec=ds)
+    r3 = Rule.from_pos_neg(target="default", dataspec=ds)  # no conditions -> catch-all
+    dl = DecisionList([r1, r2, r3])
+
+    assert list(dl.predict(rep)) == ["A", "B", "default", "A"]
+
+    cov = dl.coverage_matrix(rep)          # raw coverage ignores order/position entirely
+    unique = dl._unique_mask(cov)          # "fires": matches, and not already claimed
+    assert list(cov.sum(axis=1)) == [2, 2, 4]
+    assert list(unique.sum(axis=1)) == [2, 1, 1]
+
+
+# -- DisjointRuleSet ---------------------------------------------------
 
 def test_disjoint_rule_set_predicts_the_one_covering_rule():
     drs = DisjointRuleSet([Rule([0], target="a", dataspec=DS), Rule([2], target="b", dataspec=DS)],
@@ -125,7 +203,7 @@ def test_disjoint_rule_set_predicts_the_one_covering_rule():
     assert list(drs.predict(DATA)) == ["a", "a", "a", "b", "a"]
 
 
-# ------------------------------------------------------------------- ConceptSet ---
+# -- ConceptSet --------------------------------------------------------
 
 def test_concept_set_blocks_and_matches_flat_when_no_conflict():
     rules = [Rule([0], target="a", dataspec=DS), Rule([2], target="b", dataspec=DS)]
@@ -140,7 +218,7 @@ def test_concept_set_blocks_and_matches_flat_when_no_conflict():
     assert isinstance(cs.filter("a").combiner, CountVoteCombiner)
 
 
-# --------------------------------------------------------------- ConceptCascade ---
+# -- ConceptCascade ----------------------------------------------------
 
 def test_concept_cascade_first_firing_concept_wins():
     a = ConceptModel([Rule([0], target="a", dataspec=DS)], label="a")
@@ -150,11 +228,8 @@ def test_concept_cascade_first_firing_concept_wins():
 
 
 def test_concept_cascade_unique_mask_credits_the_whole_first_concept():
-    # two rules in concept "a", both cover row2 [p,q] (p and p&q). _unique_mask
-    # is no longer wired into .stats() (per-rule breakdown was dropped in favor
-    # of one whole-model ConfusionMatrix -- see test_evaluation.py for that), but
-    # the underlying resolution logic is still there and still worth testing
-    # directly: rule-level credit, not just concept-level.
+    # two rules in concept "a", both cover row2 [p,q] (p and p&q): the
+    # credit is per rule, not just per concept
     a = ConceptModel([Rule([0], target="a", dataspec=DS), Rule([0, 1], target="a", dataspec=DS)], label="a")
     b = ConceptModel([Rule([1], target="b", dataspec=DS)], label="b")
     casc = ConceptCascade([a, b], default_prediction="b")
@@ -164,41 +239,7 @@ def test_concept_cascade_unique_mask_credits_the_whole_first_concept():
     assert um[0, 2] and um[1, 2]
 
 
-# ------------------------------------------------------------------------ stats ---
-
-def test_evaluate_returns_a_model_stats_and_stores_nothing():
-    rs = FlatRuleSet([Rule([0], target="a", dataspec=DS), Rule([1], target="a", dataspec=DS)],
-                     default_prediction="a")
-    st = rs.evaluate(DATA)
-    assert type(st).__name__ == "ModelStats"
-    assert st.n_rows == 5
-    assert st.n_rules == 2
-    assert st.n_conditions == 2   # one condition per rule
-    assert st.confusion is not None
-    assert st.confusion.labels == ["a", "b"]
-    assert 0.0 <= st.confusion.accuracy <= 1.0
-    # a pure measurement: nothing is stored on the model or its rules
-    assert not hasattr(rs, "stats")
-    assert all(r.stats() is None for r in rs.rules)
-    assert rs.evaluate(DATA) is not st
-
-
-def test_stats_confusion_is_none_without_labels():
-    rep_no_y = HorizontalBitmapRepresentation(DS, X)  # no labels available to score a confusion matrix against
-    rs = FlatRuleSet([Rule([0], target="a", dataspec=DS)], default_prediction="a")
-    st = rs.evaluate(rep_no_y)
-    assert st.confusion is None
-    assert st.n_rules == 1
-
-
-def test_majority_class_default_and_distribution():
-    m = SingleRule(Rule([0], target="a", dataspec=DS), default_prediction=MajorityClass(DATA))
-    assert list(m.predict(DATA)) == ["a", "a", "a", "a", "a"]
-    dist = m.predict_distribution(DATA)
-    assert dist.shape == (5, 1) and np.allclose(dist, 1.0)
-
-
-# -------------------------------------------------------------------- composite ---
+# -- composite ---------------------------------------------------------
 
 def test_ensemble_model_votes_over_members():
     m1 = SingleRule(Rule([0], target="a", dataspec=DS), default_prediction=None)   # p -> a
@@ -216,6 +257,27 @@ def test_ensemble_model_votes_over_members():
     assert list(ensw.predict(DATA))[2] == "b"   # m2->b weighted 5 beats m1+m3 -> a
 
 
+def test_ensemble_vote_ties_never_depend_on_member_order():
+    ds = DataSpec(["a"])
+
+    def members(y):
+        train = HorizontalBitmapRepresentation(ds, np.array([[1]] * len(y), dtype=bool), np.array(y))
+        good = ConceptModel(annotate_rules([Rule([0], target="good", dataspec=ds)], train), label="good")
+        bad = ConceptModel(annotate_rules([Rule([0], target="bad", dataspec=ds)], train), label="bad")
+        return good, bad
+
+    row = HorizontalBitmapRepresentation(ds, np.array([[1]], dtype=bool))
+    for y, expected in ((["good"] * 3 + ["bad"], "good"),     # good more frequent
+                        (["good"] + ["bad"] * 3, "bad"),       # bad more frequent
+                        (["good", "bad"], "bad")):             # level -> the label sorting first
+        good, bad = members(y)
+        for order in ([good, bad], [bad, good]):
+            assert EnsembleModel(order).predict(row)[0] == expected, (y, order)
+    # an unequal weighted vote isn't a tie
+    good, bad = members(["good", "bad"])
+    assert EnsembleModel([good, bad], member_weights=[0.6, 0.4]).predict(row)[0] == "good"
+
+
 def test_pairwise_model_round_robin_vote():
     ab = FlatRuleSet([Rule([0], target="a", dataspec=DS)], default_prediction="b")
     ac = FlatRuleSet([Rule([0], target="a", dataspec=DS)], default_prediction="c")
@@ -226,6 +288,20 @@ def test_pairwise_model_round_robin_vote():
     assert type(pm.filter("a")) is PairwiseModel and pm.filter("a").pairs == pm.pairs
 
 
+def test_pairwise_ties_use_training_frequencies_from_stats_when_no_priors_are_given():
+    ds = DataSpec(["a"])
+    # a 2-class model whose only pair abstains-free vote is a tie: one
+    # member per direction, each voting for its own positive class
+    y = ["yes"] * 3 + ["no"]
+    train = HorizontalBitmapRepresentation(ds, np.array([[1]] * 4, dtype=bool), np.array(y))
+    yes = ConceptModel(annotate_rules([Rule([0], target="yes", dataspec=ds)], train), label="yes")
+    no = ConceptModel(annotate_rules([Rule([0], target="no", dataspec=ds)], train), label="no")
+    row = HorizontalBitmapRepresentation(ds, np.array([[1]], dtype=bool))
+    # no label_priors recorded: read from the rules' stats -> "yes" (3 of 4)
+    for members in ([("yes", "no", yes), ("no", "yes", no)], [("no", "yes", no), ("yes", "no", yes)]):
+        assert PairwiseModel(members).predict(row)[0] == "yes"
+
+
 def test_deep_model_is_a_stub():
     dm = DeepModel([SingleRule(Rule([0], target="a", dataspec=DS))], dependencies={0: []})
     assert isinstance(dm, CompositeModel)
@@ -233,7 +309,7 @@ def test_deep_model_is_a_stub():
         dm.predict(DATA)
 
 
-# ------------------------------------------------------------------- converters ---
+# -- converters --------------------------------------------------------
 
 def test_converters_and_can_convert():
     rs = FlatRuleSet([Rule([0], target="a", dataspec=DS), Rule([1], target="b", dataspec=DS)],
@@ -260,7 +336,34 @@ def test_converters_and_can_convert():
     assert type(convert(ens, FlatRuleSet)) is FlatRuleSet
 
 
-# ------------------------------------------------------------------- provenance ---
+# -- evaluate ----------------------------------------------------------
+
+def test_evaluate_returns_a_model_stats_and_stores_nothing():
+    rs = FlatRuleSet([Rule([0], target="a", dataspec=DS), Rule([1], target="a", dataspec=DS)],
+                     default_prediction="a")
+    st = rs.evaluate(DATA)
+    assert type(st).__name__ == "ModelStats"
+    assert st.n_rows == 5
+    assert st.n_rules == 2
+    assert st.n_conditions == 2   # one condition per rule
+    assert st.confusion is not None
+    assert st.confusion.labels == ["a", "b"]
+    assert 0.0 <= st.confusion.accuracy <= 1.0
+    # a pure measurement: nothing is stored on the model or its rules
+    assert not hasattr(rs, "stats")
+    assert all(r.stats() is None for r in rs.rules)
+    assert rs.evaluate(DATA) is not st
+
+
+def test_stats_confusion_is_none_without_labels():
+    rep_no_y = HorizontalBitmapRepresentation(DS, X)  # no labels available to score a confusion matrix against
+    rs = FlatRuleSet([Rule([0], target="a", dataspec=DS)], default_prediction="a")
+    st = rs.evaluate(rep_no_y)
+    assert st.confusion is None
+    assert st.n_rules == 1
+
+
+# -- provenance --------------------------------------------------------
 
 def test_provenance_defaults_to_none_and_is_a_plain_settable_attribute():
     m = FlatRuleSet([Rule([0], target="a", dataspec=DS)])
@@ -279,8 +382,6 @@ def test_provenance_equality_and_repr():
     assert "JRip" in repr(p1) and "weka.classifiers.rules.JRip" in repr(p1)
     assert "source" not in repr(Provenance(learner="CN2", params={}))  # no source -> omitted
 
-
-# --------------------------------------------- provenance through filter/remap/convert ---
 
 def _rules_with_provenance():
     """Two SingleRules, each its own fresh Provenance instance (matching
@@ -382,79 +483,7 @@ def test_converters_carry_provenance():
     assert conceptcascade_to_decision_list(cascade).provenance is cascade.provenance
 
 
-# ---------------------------------------------------- SingleRule containers ---
-
-def test_default_rule_is_a_single_rule_with_its_own_stats_and_provenance():
-    fs = FlatRuleSet([Rule([0], target="a", dataspec=DS)], default_prediction="b")
-    dr = fs.default_rule
-    assert type(dr) is SingleRule
-    assert dr.target == "b" and dr.conditions == ()
-    assert dr.stats() is None                   # nothing measured yet
-    dr.set_stats(DATA)                           # fall-through stats land here, like any other leaf
-    assert fs.default_rule is dr and fs.default_rule.stats() is not None
-    assert fs.default_rule.provenance is None   # settable, just like any other RuleModel
-
-
-def test_flat_containers_store_single_rule_not_bare_rule():
-    r1 = Rule([0], target="a", dataspec=DS)
-    r2 = WeightedRule([1], target="b", dataspec=DS, weight=0.7)
-    fs = FlatRuleSet([r1, r2])
-    assert all(type(r) is SingleRule for r in fs.rules)
-    assert [r.rule for r in fs.rules] == [r1, r2]
-
-
-def test_single_rule_forwards_reads_to_the_wrapped_rule():
-    r = WeightedRule([0, 1], target="a", dataspec=DS, weight=0.42)
-    sr = SingleRule(r)
-    assert sr.target == "a"
-    assert sr.conditions == r.conditions
-    assert sr.dataspec is DS
-    assert sr.pos == r.pos
-    assert sr.weight == 0.42
-    assert sr.to_string("logic") == r.to_string("logic")
-    assert sr.rules == [sr]           # recursion base case
-
-
-def test_single_rule_weight_is_settable_through_the_wrapper():
-    r = WeightedRule([0], target="a", dataspec=DS, weight=0.5)
-    fs = FlatRuleSet([r])
-    fs.rules[0].weight = 0.05
-    assert r.weight == 0.05           # mutation reaches the real underlying rule
-    assert fs.rules[0].weight == 0.05  # and is visible again through the same wrapper
-
-
-def test_single_rule_missing_attribute_still_raises_attribute_error():
-    sr = SingleRule(Rule([0], target="a", dataspec=DS))
-    with pytest.raises(AttributeError):
-        sr.this_attribute_does_not_exist_anywhere
-
-
-def test_filter_and_remap_keep_producing_single_rule_wrapped_containers():
-    r1 = Rule([0], target="a", dataspec=DS)
-    r2 = Rule([1], target="b", dataspec=DS)
-    fs = FlatRuleSet([r1, r2])
-
-    filtered = fs.filter("a")
-    assert all(type(r) is SingleRule for r in filtered.rules)
-
-    ds2 = DataSpec(["p", "q", "r"])
-    remapped = fs.remap(ds2)
-    assert all(type(r) is SingleRule for r in remapped.rules)
-    assert remapped.rules[0].dataspec is ds2
-
-
-def test_all_are_rule_models():
-    ds = DS
-    r = [Rule([0], target="a", dataspec=ds)]
-    for m in (SingleRule(r[0]), ConceptModel(r), FlatRuleSet(r), DisjointRuleSet(r),
-              DecisionList(r), ConceptSet.from_rules(r),
-              ConceptCascade([ConceptModel(r, label="a")]),
-              EnsembleModel([SingleRule(r[0])]),
-              PairwiseModel([("a", "b", FlatRuleSet(r))])):
-        assert isinstance(m, RuleModel)
-
-
-# ------------------------------------------------------------ annotate_rules ---
+# -- annotate_rules ----------------------------------------------------
 
 def test_annotate_rules_wraps_and_populates_stats_against_given_data():
     r1 = Rule([0], target="a", dataspec=DS)          # p -> a: covers rows 0, 2
@@ -496,7 +525,7 @@ def test_annotate_default_rule_is_a_noop_when_there_is_no_default_rule():
     assert result is fs
 
 
-# ------------------------------------------------------- default_prediction ---
+# -- default_prediction ------------------------------------------------
 
 def test_predict_default_prediction_bare_label_and_none():
     ds = DataSpec(["a", "b"])
@@ -513,6 +542,17 @@ def test_predict_default_prediction_bare_label_and_none():
     assert list(dl.predict(rep)) == ["pos", None, None]
     dl.default_prediction = "neg"
     assert list(dl.predict(rep)) == ["pos", "neg", "neg"]
+
+
+def test_default_rule_is_a_single_rule_with_its_own_stats_and_provenance():
+    fs = FlatRuleSet([Rule([0], target="a", dataspec=DS)], default_prediction="b")
+    dr = fs.default_rule
+    assert type(dr) is SingleRule
+    assert dr.target == "b" and dr.conditions == ()
+    assert dr.stats() is None                   # nothing measured yet
+    dr.set_stats(DATA)                           # fall-through stats land here, like any other leaf
+    assert fs.default_rule is dr and fs.default_rule.stats() is not None
+    assert fs.default_rule.provenance is None   # settable, just like any other RuleModel
 
 
 def test_default_rule_reassignment_discards_materialized_rule_and_stats():
@@ -554,6 +594,13 @@ def test_object_policy_gives_per_example_fallback():
 
     dl = DecisionList([r], default_prediction=_ParityDefault())
     assert list(dl.predict(data_rep)) == ["matched", "odd", "even", "odd"]
+
+
+def test_majority_class_default_and_distribution():
+    m = SingleRule(Rule([0], target="a", dataspec=DS), default_prediction=MajorityClass(DATA))
+    assert list(m.predict(DATA)) == ["a", "a", "a", "a", "a"]
+    dist = m.predict_distribution(DATA)
+    assert dist.shape == (5, 1) and np.allclose(dist, 1.0)
 
 
 def test_majority_class_materializes_as_the_default_rules_target():
@@ -648,7 +695,7 @@ def test_remap_onto_merged_dataspec():
     assert list(remapped2.predict(shared_rep)) == ["pos", None, None]
 
 
-# --------------------------------------------------------- is_disjoint / coverage ---
+# -- is_disjoint / coverage --------------------------------------------
 
 def test_disjoint_rule_set_is_disjoint_and_exhaustive():
     from _negation_helpers import make_rule, neg_spec, neg_X
@@ -707,29 +754,7 @@ def test_coverage_space_and_coverage_path():
     assert path.tolist() == [[0, 0], [0, 2], [1, 2]]
 
 
-def test_decision_list_predict_and_firing_coverage():
-    X = np.array([
-        [1, 0],   # only a
-        [0, 1],   # only b
-        [0, 0],   # neither
-        [1, 1],   # both -- r1 should claim this one, not r2
-    ], dtype=bool)
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X)
-    r1 = Rule.from_pos_neg(pos=[0], target="A", dataspec=ds)
-    r2 = Rule.from_pos_neg(pos=[1], target="B", dataspec=ds)
-    r3 = Rule.from_pos_neg(target="default", dataspec=ds)  # no conditions -> catch-all
-    dl = DecisionList([r1, r2, r3])
-
-    assert list(dl.predict(rep)) == ["A", "B", "default", "A"]
-
-    cov = dl.coverage_matrix(rep)          # raw coverage ignores order/position entirely
-    unique = dl._unique_mask(cov)          # "fires": matches, and not already claimed
-    assert list(cov.sum(axis=1)) == [2, 2, 4]
-    assert list(unique.sum(axis=1)) == [2, 1, 1]
-
-
-# ------------------------------------------------------------------ to_string ---
+# -- to_string ---------------------------------------------------------
 
 def test_flat_rule_set_to_string_grouped_by_class():
     ds = DataSpec(["age_gt_30", "smoker", "high_bp"])
@@ -882,12 +907,7 @@ def test_headless_formats_name_the_class_inside_models():
     assert rules[0].rule.to_string("conditions") == "f0, f1"
 
 
-def test_single_rule_to_string_delegates_to_the_wrapped_rule():
-    r = Rule.from_pos_neg(pos=[0], target="a", n_features=2)
-    sr = SingleRule(r)
-    assert sr.to_string("logic") == r.to_string("logic")  # fmt is positional-first, like Rule.to_string
-    assert sr.to_string(fmt="prolog") == r.to_string(fmt="prolog")
-
+# -- to_string: training stats -----------------------------------------
 
 def test_to_string_prints_only_the_rules_own_frozen_stats():
     ds = DataSpec(["age_gt_30", "smoker", "high_bp"])
@@ -976,6 +996,8 @@ def test_to_string_coverage_correctness_counts():
     # r2: covers rows 1,2 -- row1 is low_risk (wrong), row2 is high_risk -> tp=1, fp=1
     assert "high_risk(X) :- high_bp(X).  % (1/1)" in prolog
 
+
+# -- to_string: class distributions ------------------------------------
 
 def _three_class_dog_rule():
     # one rule, trained on 19 rows; it covers 16: 1 bird, 1 cat, 14 dog
@@ -1073,6 +1095,8 @@ def test_to_string_show_classes_is_independent_of_show_distribution():
     assert "dog(X) :- barks(X).  % [1, 1, 14]" in text  # the vector itself is untouched
 
 
+# -- to_string: composite models ---------------------------------------
+
 def _three_class_fixture_data():
     ds = DataSpec(["a", "b"])
     X = np.array([[1, 0], [1, 1], [0, 1], [0, 0], [1, 0], [0, 1]], dtype=bool)
@@ -1145,20 +1169,6 @@ def test_pairwise_weighted_vote_heuristic_is_configurable_and_printed():
     assert head not in lap.to_string(fmt="prolog", show_resolution=False)
 
 
-def test_pairwise_ties_use_training_frequencies_from_stats_when_no_priors_are_given():
-    ds = DataSpec(["a"])
-    # a 2-class model whose only pair abstains-free vote is a tie: one
-    # member per direction, each voting for its own positive class
-    y = ["yes"] * 3 + ["no"]
-    train = HorizontalBitmapRepresentation(ds, np.array([[1]] * 4, dtype=bool), np.array(y))
-    yes = ConceptModel(annotate_rules([Rule([0], target="yes", dataspec=ds)], train), label="yes")
-    no = ConceptModel(annotate_rules([Rule([0], target="no", dataspec=ds)], train), label="no")
-    row = HorizontalBitmapRepresentation(ds, np.array([[1]], dtype=bool))
-    # no label_priors recorded: read from the rules' stats -> "yes" (3 of 4)
-    for members in ([("yes", "no", yes), ("no", "yes", no)], [("no", "yes", no), ("yes", "no", yes)]):
-        assert PairwiseModel(members).predict(row)[0] == "yes"
-
-
 def test_pairwisemodel_to_string_show_classes_false_suppresses_everything():
     cat_dog, cat_bird, dog_bird, _ = _three_class_pairwise_fixture()
     pw = PairwiseModel([("cat", "dog", cat_dog), ("cat", "bird", cat_bird), ("dog", "bird", dog_bird)])
@@ -1187,27 +1197,6 @@ def test_ensemblemodel_to_string_shows_member_weights_and_top_level_legend():
     assert "cat(X) :- a(X).  % (2/1)" in text
 
 
-def test_ensemble_vote_ties_never_depend_on_member_order():
-    ds = DataSpec(["a"])
-
-    def members(y):
-        train = HorizontalBitmapRepresentation(ds, np.array([[1]] * len(y), dtype=bool), np.array(y))
-        good = ConceptModel(annotate_rules([Rule([0], target="good", dataspec=ds)], train), label="good")
-        bad = ConceptModel(annotate_rules([Rule([0], target="bad", dataspec=ds)], train), label="bad")
-        return good, bad
-
-    row = HorizontalBitmapRepresentation(ds, np.array([[1]], dtype=bool))
-    for y, expected in ((["good"] * 3 + ["bad"], "good"),     # good more frequent
-                        (["good"] + ["bad"] * 3, "bad"),       # bad more frequent
-                        (["good", "bad"], "bad")):             # level -> the label sorting first
-        good, bad = members(y)
-        for order in ([good, bad], [bad, good]):
-            assert EnsembleModel(order).predict(row)[0] == expected, (y, order)
-    # an unequal weighted vote isn't a tie
-    good, bad = members(["good", "bad"])
-    assert EnsembleModel([good, bad], member_weights=[0.6, 0.4]).predict(row)[0] == "good"
-
-
 def test_ensemble_prints_its_conflict_resolution():
     data = _three_class_fixture_data()
     ds = data.spec
@@ -1220,7 +1209,7 @@ def test_ensemble_prints_its_conflict_resolution():
     assert head not in EnsembleModel([cat, dog]).to_string(fmt="prolog", show_resolution=False)
 
 
-# ------------------------------------------------------------------ covered_by ---
+# -- covered_by --------------------------------------------------------
 
 def _covered_by_fixture():
     ds = DataSpec(["p", "q", "r"])

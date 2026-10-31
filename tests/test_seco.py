@@ -149,7 +149,6 @@ def _either_dataset(n=400, seed=0):
 
 # -- searches ----------------------------------------------------------
 
-
 @pytest.mark.parametrize("search, heuristic", [
     (BeamSearch(beam_width=3), Accuracy()),
     (HillClimbing(), Accuracy()),
@@ -402,7 +401,6 @@ def test_branching_gain_ascent_yields_a_copy_at_each_near_tie():
 
 # -- optimistic pruning ------------------------------------------------
 
-
 def test_beam_search_optimistic_pruning_skips_an_already_pure_seed():
     rep, ds = _conjunction_dataset()
     pure_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # a AND b: fp=0
@@ -474,7 +472,6 @@ def test_hill_climbers_optimistic_pruning_skips_an_already_pure_rule(search_cls,
 
 
 # -- search space ------------------------------------------------------
-
 
 def test_empty_rule_all_features_starts_from_universal_rule():
     rep, ds = _conjunction_dataset()
@@ -555,7 +552,6 @@ def test_seed_example_index_strategy_seeds_on_the_exact_row():
 
 
 # -- preparation and post-processing -----------------------------------
-
 
 def test_no_split_passes_mask_through_unchanged():
     rep, ds = _conjunction_dataset()
@@ -662,7 +658,6 @@ def test_reduced_error_pruning_leaves_an_already_empty_rule_alone():
 
 
 # -- pre-pruning criteria: filtering and stopping ----------------------
-
 
 def test_threshold_pre_pruning_rejects_bad_operator():
     try:
@@ -925,7 +920,6 @@ def test_encoding_length_restriction_never_fires_on_the_empty_rule():
 
 # -- single-rule learner -----------------------------------------------
 
-
 def test_single_rule_learner_default_config_matches_bare_beam_search():
     rep, ds = _conjunction_dataset()
     direct = BeamSearch().search(rep, "pos", Accuracy(), EmptyRuleAllFeatures().initial_candidates(rep, "pos"))
@@ -969,7 +963,6 @@ def test_single_rule_learner_propagates_none_when_the_search_finds_nothing_eligi
 
 
 # -- covering loop (SeCo) ----------------------------------------------
-
 
 def test_seco_is_a_native_rule_learner():
     learner = SingleRuleLearner(heuristic=Accuracy())
@@ -1245,7 +1238,6 @@ def test_seco_rules_carry_their_own_training_stats(learner):
 
 # -- CN2 ---------------------------------------------------------------
 
-
 def test_cn2_defaults_and_the_significance_test_as_stopping():
     srl = CN2(target_class="pos").single_rule_learner
     assert isinstance(srl.heuristic, Laplace)
@@ -1414,7 +1406,6 @@ def test_cn2_microvotecombiner_matches_clark_and_boswell_1991s_summed_distributi
 
 # -- AQR (Clark & Niblett, 1989) ---------------------------------------
 
-
 def test_aqr_defaults_wire_seed_lef_and_consistency_filtering():
     aqr = AQR(target_class="pos")
     srl = aqr.single_rule_learner
@@ -1520,7 +1511,6 @@ def test_aqr_require_consistency_false_lets_an_inconsistent_rule_through():
 
 # -- PFoil -------------------------------------------------------------
 
-
 def test_pfoil_defaults_wire_gain_ascent_foilgain_and_mdl_stopping():
     srl = PFoil(target_class="pos").single_rule_learner
     assert isinstance(srl.heuristic, FoilGain)
@@ -1563,7 +1553,6 @@ def test_pfoil_mdl_stopping_curbs_growth_on_a_wide_noisy_dataset():
 
 # -- PFossil -----------------------------------------------------------
 
-
 def test_pfossil_defaults_wire_hillclimbing_correlation_and_filtering():
     srl = PFossil(target_class="pos").single_rule_learner
     assert type(srl.search) is HillClimbing
@@ -1594,7 +1583,6 @@ def test_pfossil_fits_a_disjunctive_concept_with_the_threshold_disabled():
 
 
 # -- Pypper ------------------------------------------------------------
-
 
 def test_pypper_returns_a_least_frequent_first_concept_cascade():
     data, ds, y = _noisy_3class()
@@ -1638,7 +1626,6 @@ def test_pypper_on_binary_data():
 
 
 # -- CPAR --------------------------------------------------------------
-
 
 def test_cpar_is_a_seco_configuration():
     from pyrulearn.learners.cpar import CPAR
