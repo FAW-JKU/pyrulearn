@@ -3,10 +3,31 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
-## Unreleased
+## 0.5.0 (2026-10-31)
 
 ### Added
 
+- `Bagging` (`pyrulearn.learners.bagging`): each member learned from a
+  bootstrap sample of the training data, represented by the drawn rows
+  weighted by their numbers of draws, so learners whose counts are sums of
+  example weights learn the same rules as from duplicated rows.
+- `AdaBoost` (`pyrulearn.learners.adaboost`): SAMME over any learner, the
+  members voting with weights ``log((1 - err) / err) + log(K - 1)``, a
+  member's error at least half an example. `early_stopping=False`: where
+  SAMME would stop (a member no better than random guessing, or one without
+  training errors), the example weights are reset to those of a bootstrap
+  sample and boosting goes on, for up to twice `n_estimators` rounds.
+- `EnsembleModel(combiner=...)`: the members' deciding rules
+  (`RuleModel.deciding_rules`, the strongest covering rule of the predicted
+  class, or a decision list's first covering rule) resolved by any rule
+  combiner, as a rule set resolves its covering rules -- every conflict
+  resolution at the level of the members, too. `ensemblemodel_to_flatruleset`
+  is the same at the level of the rules.
+- `staged(n)`: a model after its first `n` rounds, identical to a refit
+  with `n` rounds -- `EnsembleModel.staged` keeps the first `n` members
+  (bagging, AdaBoost); Slipper, ENDER and Boomer record their rounds in
+  `LinearRuleModel.stages`, from which `LinearRuleModel.staged` rebuilds the
+  model. All sizes of a series from one fit.
 - `abstain=` for `EnsembleModel`, `Bagging` and `AdaBoost`, on by default: a
   member votes only where its rules cover the example, its default ignored,
   with a combiner as well as for the plain and the `member_weights` vote.
@@ -47,6 +68,18 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   Friedman test and critical-difference diagram, and decision lists against
   rule sets over the number of classes. The large `kropt` and `letter` (18 and
   26 classes) run 5-fold, with 1800 s per fit.
+- `demos/base_vs_composite.py`: bagged concept sets of Pypper, PFossil and
+  PFoil (10, 25 and 50 members from one fit), combined at the level of the
+  members or of the union of their rules, with each of the four conflict
+  resolutions. It replaces the forest demo of the same name (the trees' vote
+  against the rule set of their leaves).
+- `demos/model_vs_rule_weighting.py`: AdaBoost over concept sets (model
+  weighting; members abstaining or voting with their defaults) against
+  Slipper, ENDER and Boomer (rule weighting), by accuracy against the number
+  of rules.
+- `demos/multiclass_decomposition.py`: the decompositions against
+  one-vs-rest over the number of classes, on the 26 multi-class datasets of
+  the rule-models demo.
 - `experiments.stats.critical_difference_groups`: the groups a
   critical-difference diagram joins by a bar.
 
@@ -67,6 +100,16 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   of AQ's seed covering, which AQR keeps -- and which every learner gets with
   `seed=RandomSeed()`. Pypper's `model=DecisionList` is the new covering loop
   instead of its converted class cascade.
+
+### Fixed
+
+- `Correlation` and `ChiSquare` take a product of counts that a rounding
+  error puts below 0 (fractional example weights, e.g. from AdaBoost) as 0:
+  the batch score warned of an invalid square root, the scalar one raised a
+  math domain error.
+- `run_cv`: a cached timeout is reused only if the current `fit_timeout` is
+  no longer than the time that fit was given; a re-run with a longer timeout
+  used to return the old timeouts.
 
 ## 0.4.2 (2026-10-25)
 

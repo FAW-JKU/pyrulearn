@@ -143,6 +143,8 @@ already-fitted external model (or its text output) into a `RuleModel`.
 | **CPAR** | `cpar.CPAR` | FOIL-gain rule growing on weighted examples that also follows every nearly-as-good condition (several rules per search), covered positives decayed instead of removed; predicts by the mean expected accuracy of each class's best `k` covering rules (`TopKMeanCombiner`). Built from exchangeable components; `cpar.DenseCPAR` is a faster, Boolean-only implementation learning the same models | Yin & Han 2003 |
 | **IDS** | `ids.IDS` | interpretable decision sets: submodular objective, `SmoothLocalSearch` or `GreedySelection` as `optimizer=`, optional coordinate-ascent tuning of the weights | Lakkaraju et al. 2016 |
 | **RuleFit** (distiller) | `rulefit.RuleFit` | a sparse (L1 / elastic-net) logistic regression over a rule pool's coverage, multinomial for multiclass; returns a `LinearRuleModel`. Only RuleFit's fitting step: candidates come from the pool, not from a tree ensemble | Friedman & Popescu 2008 |
+| **Bagging** | `bagging.Bagging` | members of any learner, each from a bootstrap sample (the drawn rows weighted by their numbers of draws); an `EnsembleModel` voting by any rule combiner over the members' deciding rules, members abstaining where their rules don't cover an example | Breiman 1996 |
+| **AdaBoost** (SAMME) | `adaboost.AdaBoost` | members of any learner, each from the examples reweighted by its predecessors' errors, voting with SAMME's weights; `early_stopping=False` restarts from a bootstrap sample where SAMME would stop | Freund & Schapire 1997; Zhu et al. 2009 |
 | **Multiclass decomposition** | `multiclass.OneVsRest`, `OrderedOneVsRest`, `Pairwise` | one-vs-rest, ordered (peeling) and round-robin decomposition for any binary-capable learner | Fürnkranz 2002 |
 
 `CBA`, `CMAR`, `IDS` and `RuleFit` are *rule distillers*: each consumes any pool of
@@ -693,7 +695,10 @@ rules apply:
   `RuleModel`s, combined at prediction time. Concrete subclasses:
   - `EnsembleModel` -- a flat, optionally weighted vote over independent
     members (bagging / boosting-style ensembles, e.g. one member per
-    random-forest tree).
+    random-forest tree), or, with `combiner=`, the members' deciding rules
+    resolved by any rule combiner. With `abstain` (the default), a member
+    votes only where its rules cover an example. `staged(n)` keeps the
+    first `n` members.
   - `PairwiseModel` -- round robin: one binary member per label pair,
     each voting for one of its two labels.
   - `DeepModel` -- members wired into a dependency DAG ("stacking");
@@ -2867,7 +2872,7 @@ If you use pyrulearn, please cite it via [`CITATION.cff`](CITATION.cff)
   author  = {F{\"u}rnkranz, Johannes},
   title   = {pyrulearn},
   year    = {2026},
-  version = {0.4.2},
+  version = {0.5.0},
   url     = {https://github.com/juffif/pyrulearn}
 }
 ```

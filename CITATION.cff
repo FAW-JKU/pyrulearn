@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "pyrulearn"
 type: software
-version: 0.4.2
+version: 0.5.0
 license: GPL-3.0-or-later
 repository-code: "https://github.com/juffif/pyrulearn"
 abstract: >-
@@ -11,7 +11,8 @@ abstract: >-
   (separate-and-conquer families such as CN2, PFOIL, FOSSIL and Pypper, a RIPPER re-implementation,
   with removal or weighted covering; locally optimal rules; the associative
   classifiers CBA, CMAR, CPAR and IDS; the rule ensembles SLIPPER, LRI, ENDER,
-  BOOMER and optimal rule boosting; and RuleFit) and interfaces to external
+  BOOMER and optimal rule boosting; RuleFit; and bagging and AdaBoost over
+  any of them) and interfaces to external
   ones (scikit-learn, wittgenstein, imodels, Weka, LORD, pyarc, mlrl-boomer,
   realkd).
 keywords:
