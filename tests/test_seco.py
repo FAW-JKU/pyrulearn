@@ -62,55 +62,107 @@ def _conjunction_dataset():
     return rep, ds
 
 
-def test_beam_search_finds_perfect_conjunction():
+def _disjunctive_dataset():
+    # y = pos iff (a AND b) OR (c AND d) -- a genuinely disjunctive concept
+    # no single conjunction can capture, needing two separate rules
+    X = np.array([
+        [1, 1, 0, 0],  # pos: a AND b
+        [1, 1, 1, 1],  # pos: both
+        [0, 0, 1, 1],  # pos: c AND d
+        [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1],
+        [0, 0, 0, 0], [1, 0, 1, 0], [0, 1, 0, 1],  # neg
+    ], dtype=bool)
+    y = np.array(["pos", "pos", "pos"] + ["neg"] * 7)
+    ds = DataSpec(["a", "b", "c", "d"])
+    rep = HorizontalBitmapRepresentation(ds, X, y)
+    return rep, ds, y
+
+
+def _laplace_trap_dataset():
+    # "e" covers no example at all, so its one-condition rule scores
+    # Laplace (0+1)/(0+0+2) = 0.5 -- above every impure one-condition rule
+    # (a: 2 pos / 3 neg -> 3/7). The pure rule a AND b (2 pos / 0 neg,
+    # 0.75) is only reachable through an impure first step.
+    X = np.array([
+        [1, 1, 0], [1, 1, 0],                                        # positives
+        [1, 0, 0], [1, 0, 0], [1, 0, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],  # negatives
+    ], dtype=bool)
+    y = np.array(["pos", "pos"] + ["neg"] * 6)
+    ds = DataSpec(["a", "b", "e"])
+    return HorizontalBitmapRepresentation(ds, X, y), ds
+
+
+def _grow_prune_overfit_dataset():
+    # a alone perfectly predicts y on both halves; b spuriously helps on the
+    # grow half only (one grow row has a=True,b=False,y=neg -- adding "b"
+    # removes that false positive there) but never matters on the prune
+    # half (no a=True,b=False rows there at all), so a correctly-pruned
+    # rule should end up as just "a=True", not "a=True AND b=True"
+    X = np.array([
+        [1, 1], [1, 1], [1, 0], [0, 0],  # grow: rows 0-3
+        [1, 1], [1, 1], [0, 0], [0, 0],  # prune: rows 4-7
+    ], dtype=bool)
+    y = np.array(["pos", "pos", "neg", "neg", "pos", "pos", "neg", "neg"])
+    ds = DataSpec(["a", "b"])
+    rep = HorizontalBitmapRepresentation(ds, X, y)
+    grow_mask = np.array([True] * 4 + [False] * 4)
+    prune_mask = np.array([False] * 4 + [True] * 4)
+    return rep, ds, grow_mask, prune_mask
+
+
+def _wide_noisy_disjunction_dataset(n=300, d=60, seed=1, noise_rate=0.05):
+    # y = pos iff (a0 AND a1) OR (a2 AND NOT a3), plus label noise -- many
+    # more (irrelevant) features than the toy 4-feature disjunctive
+    # dataset, needed because EncodingLengthRestriction's benefit term
+    # (dominated by log2(C(N,p))) swamps its encoding-length term whenever
+    # d is small (confirmed empirically: the criterion is essentially
+    # inert on _disjunctive_dataset's 4 features, only visibly constrains
+    # growth once d is large enough for 1+log2(d) bits/literal to matter)
+    rng = np.random.default_rng(seed)
+    X = rng.integers(0, 2, size=(n, d)).astype(bool)
+    ds = DataSpec([f"a{i}" for i in range(d)])
+    y_clean = (X[:, 0] & X[:, 1]) | (X[:, 2] & ~X[:, 3])
+    noise = rng.random(n) < noise_rate
+    y = np.where(noise, ~y_clean, y_clean)
+    y = np.where(y, "pos", "neg")
+    rep = HorizontalBitmapRepresentation(ds, X, y)
+    return rep, y
+
+
+def _noisy_3class(n=500, seed=0):
+    rng = np.random.default_rng(seed)
+    raw = rng.random((n, 6)) < 0.5
+    y = np.where(raw[:, 0] & ~raw[:, 1], "a",
+         np.where(raw[:, 2] & raw[:, 3], "b", "c"))
+    y = np.where(rng.random(n) < 0.05, rng.permutation(y), y)
+    ds = neg_spec([f"f{i}" for i in range(6)])
+    return HorizontalBitmapRepresentation(ds, neg_X(raw), y), ds, y
+
+
+def _either_dataset(n=400, seed=0):
+    # y = a OR b: a and b are (about) equally good first conditions
+    rng = np.random.default_rng(seed)
+    raw = rng.random((n, 3)) < 0.5
+    y = np.where(raw[:, 0] | raw[:, 1], "pos", "neg")
+    return HorizontalBitmapRepresentation(DataSpec(["a", "b", "c"]), raw, y)
+
+
+# -- searches ----------------------------------------------------------
+
+
+@pytest.mark.parametrize("search, heuristic", [
+    (BeamSearch(beam_width=3), Accuracy()),
+    (HillClimbing(), Accuracy()),
+    (GainAscentHillClimbing(), FoilGain()),
+    (GainAscentHillClimbing(), DeltaGain(Laplace())),
+])
+def test_searches_find_the_perfect_conjunction(search, heuristic):
     rep, ds = _conjunction_dataset()
-    empty_rule = Rule([], target="pos", dataspec=ds)
-    initial = [(empty_rule, frozenset(range(3)))]
-
-    best = BeamSearch(beam_width=3).search(rep, "pos", Accuracy(), initial)
-
+    initial = [(Rule([], target="pos", dataspec=ds), frozenset(range(3)))]
+    best = search.search(rep, "pos", heuristic, initial)
     stats = RuleStats.from_rule(best, rep, "pos")
     assert (stats.tp, stats.fp, stats.fn, stats.tn) == (2, 0, 0, 6)
     assert best.length() == 2  # needs both a and b for perfect precision
-    print("BeamSearch finds the perfect a-AND-b conjunction: OK")
-
-
-def test_hill_climbing_finds_the_perfect_conjunction_with_a_plain_heuristic():
-    rep, ds = _conjunction_dataset()
-    empty_rule = Rule([], target="pos", dataspec=ds)
-    initial = [(empty_rule, frozenset(range(3)))]
-
-    best = HillClimbing().search(rep, "pos", Accuracy(), initial)
-
-    stats = RuleStats.from_rule(best, rep, "pos")
-    assert (stats.tp, stats.fp, stats.fn, stats.tn) == (2, 0, 0, 6)
-    assert best.length() == 2  # needs both a and b for perfect precision
-    print("HillClimbing(Accuracy) finds the perfect a-AND-b conjunction: OK")
-
-
-def test_gain_ascent_hill_climbing_finds_the_perfect_conjunction_with_foilgain():
-    rep, ds = _conjunction_dataset()
-    empty_rule = Rule([], target="pos", dataspec=ds)
-    initial = [(empty_rule, frozenset(range(3)))]
-
-    best = GainAscentHillClimbing().search(rep, "pos", FoilGain(), initial)
-
-    stats = RuleStats.from_rule(best, rep, "pos")
-    assert (stats.tp, stats.fp, stats.fn, stats.tn) == (2, 0, 0, 6)
-    assert best.length() == 2  # needs both a and b for perfect precision
-    print("GainAscentHillClimbing(FoilGain) finds the perfect a-AND-b conjunction: OK")
-
-
-def test_gain_ascent_hill_climbing_with_delta_gain_matches_foilgain_on_this_dataset():
-    rep, ds = _conjunction_dataset()
-    empty_rule = Rule([], target="pos", dataspec=ds)
-    initial = [(empty_rule, frozenset(range(3)))]
-
-    best = GainAscentHillClimbing().search(rep, "pos", DeltaGain(Laplace()), initial)
-
-    stats = RuleStats.from_rule(best, rep, "pos")
-    assert (stats.tp, stats.fp, stats.fn, stats.tn) == (2, 0, 0, 6)
-    print("GainAscentHillClimbing(DeltaGain(Laplace())) also finds the perfect conjunction: OK")
 
 
 def test_hill_climbers_stop_at_the_start_when_no_move_improves():
@@ -125,7 +177,6 @@ def test_hill_climbers_stop_at_the_start_when_no_move_improves():
 
     assert GainAscentHillClimbing().search(rep, "pos", FoilGain(), initial).length() == 0
     assert HillClimbing().search(rep, "pos", Accuracy(), initial).length() == 0
-    print("both hill climbers return the initial rule unchanged when nothing improves: OK")
 
 
 def test_hill_climbing_returns_none_when_the_walk_cant_start_and_a_gate_is_set():
@@ -141,25 +192,16 @@ def test_hill_climbing_returns_none_when_the_walk_cant_start_and_a_gate_is_set()
     gate = ThresholdPrePruning(Accuracy(), threshold=0.6, operator="<")  # empty rule's accuracy 0.5 fails it
     assert HillClimbing().search(rep, "pos", Accuracy(), initial, filtering=gate) is None
     assert HillClimbing().search(rep, "pos", Accuracy(), initial, stopping=gate) is None
-    print("HillClimbing returns None (not the empty seed) when the walk can't start and a gate is set: OK")
 
 
-def test_hill_climbing_accepts_a_plain_heuristic_and_rejects_a_gain_one():
+def test_hill_climbers_take_their_own_kind_of_heuristic():
     rep, ds = _conjunction_dataset()
     initial = [(Rule([], target="pos", dataspec=ds), frozenset(range(3)))]
-
     HillClimbing().search(rep, "pos", Accuracy(), initial)  # no raise
     with pytest.raises(ValueError, match="GainAscentHillClimbing"):
         HillClimbing().search(rep, "pos", FoilGain(), initial)
-    print("HillClimbing takes a plain RuleHeuristic and points a GainHeuristic at the subclass: OK")
-
-
-def test_gain_ascent_hill_climbing_rejects_a_plain_heuristic():
-    rep, ds = _conjunction_dataset()
-    initial = [(Rule([], target="pos", dataspec=ds), frozenset(range(3)))]
     with pytest.raises(ValueError, match="GainHeuristic"):
         GainAscentHillClimbing().search(rep, "pos", Accuracy(), initial)
-    print("GainAscentHillClimbing rejects a plain (non-Gain) heuristic: OK")
 
 
 def test_hill_climbing_rejects_more_than_one_initial_candidate():
@@ -170,7 +212,47 @@ def test_hill_climbing_rejects_more_than_one_initial_candidate():
         heuristic = FoilGain() if isinstance(search, GainAscentHillClimbing) else Accuracy()
         with pytest.raises(ValueError):
             search.search(rep, "pos", heuristic, initial)
-    print("both hill climbers reject more than one initial candidate: OK")
+
+
+def test_hill_climbing_matches_beam_search_width_one_on_a_unimodal_landscape():
+    # on a landscape that rises monotonically to one peak, HillClimbing
+    # and BeamSearch(beam_width=1) return the identical rule -- HillClimbing
+    # just stops climbing sooner (its local-maximum stop), doing no more
+    # specialization work than the beam.
+    rep, y = _wide_noisy_disjunction_dataset(d=12, seed=3)
+    initial = [(Rule([], target="pos", dataspec=rep.spec), frozenset(range(12)))]
+
+    with _counting_expansions() as hc:
+        hc_rule = HillClimbing().search(rep, "pos", Laplace(), initial)
+    with _counting_expansions() as beam:
+        beam_rule = BeamSearch(beam_width=1).search(rep, "pos", Laplace(), initial)
+
+    assert hc_rule.pos == beam_rule.pos
+    assert hc[0] <= beam[0]
+
+
+def test_hill_climbers_grow_to_consistency_when_the_local_optimum_stop_is_off():
+    # a noisy conjunction: y = a AND b with ~12% label flips, so {a, b} is
+    # the best pure-ish rule but every prefix still covers negatives. With
+    # stop_at_local_optimum=False both hill climbers keep adding conditions
+    # past the score/gain peak until fp == 0 (or features run out).
+    rng = np.random.default_rng(4)
+    n = 300
+    X = rng.integers(0, 2, size=(n, 6)).astype(bool)
+    y_clean = X[:, 0] & X[:, 1]
+    y = np.where(rng.random(n) < 0.12, ~y_clean, y_clean)
+    y = np.where(y, "pos", "neg")
+    ds = DataSpec([f"a{i}" for i in range(6)])
+    rep = HorizontalBitmapRepresentation(ds, X, y)
+    init = lambda: [(Rule([], target="pos", dataspec=ds), frozenset(range(6)))]
+
+    for search_cls, heuristic in [(HillClimbing, Accuracy()), (GainAscentHillClimbing, FoilGain())]:
+        peak = search_cls().search(rep, "pos", heuristic, init())
+        grown = search_cls(stop_at_local_optimum=False).search(rep, "pos", heuristic, init())
+        peak_fp = RuleStats.from_rule(peak, rep, "pos").fp
+        grown_stats = RuleStats.from_rule(grown, rep, "pos")
+        assert grown.length() >= peak.length()
+        assert grown_stats.fp < peak_fp or grown_stats.fp == 0  # drove negatives down
 
 
 def test_beam_search_deduplicates_rules_reached_by_different_orders():
@@ -210,7 +292,6 @@ def test_beam_search_deduplicates_rules_reached_by_different_orders():
 
     assert len(seen) == len(set(seen)), \
         f"a child with the same rule content was built more than once: {seen}"
-    print("BeamSearch never builds two children with identical content: OK")
 
 
 def test_beam_search_respects_example_mask():
@@ -236,7 +317,6 @@ def test_beam_search_respects_example_mask():
 
     masked_stats = RuleStats.from_rule(best_masked, rep, "pos", example_mask=mask)
     assert (masked_stats.tp, masked_stats.fp, masked_stats.fn, masked_stats.tn) == (1, 0, 0, 4)
-    print("BeamSearch's example_mask changes which rule is preferred: OK")
 
 
 def test_beam_search_raises_on_empty_initial_candidates():
@@ -246,7 +326,6 @@ def test_beam_search_raises_on_empty_initial_candidates():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("BeamSearch raises on empty initial_candidates: OK")
 
 
 def test_beam_search_never_returns_worse_than_initial_candidate():
@@ -259,183 +338,6 @@ def test_beam_search_never_returns_worse_than_initial_candidate():
     best = BeamSearch(beam_width=3).search(rep, "pos", Accuracy(), initial)
     stats = RuleStats.from_rule(best, rep, "pos")
     assert (stats.tp, stats.fp, stats.fn, stats.tn) == (2, 0, 0, 6)
-    print("BeamSearch never regresses below its best initial candidate: OK")
-
-
-def test_empty_rule_all_features_starts_from_universal_rule():
-    rep, ds = _conjunction_dataset()
-    candidates = EmptyRuleAllFeatures().initial_candidates(rep, "pos")
-    assert len(candidates) == 1
-    rule, mask = candidates[0]
-    assert rule.length() == 0
-    assert rule.target == "pos"
-    assert mask == frozenset({0, 1, 2})
-    print("EmptyRuleAllFeatures: starts from the empty rule, every feature open: OK")
-
-
-def test_feature_subset_resolves_names_to_indices():
-    rep, ds = _conjunction_dataset()
-    candidates = FeatureSubset(["b", "c"]).initial_candidates(rep, "pos")
-    assert len(candidates) == 1
-    rule, mask = candidates[0]
-    assert rule.length() == 0
-    assert mask == frozenset({ds.feature_index("b"), ds.feature_index("c")})
-    assert 0 not in mask  # "a" excluded
-    print("FeatureSubset resolves feature names to indices: OK")
-
-
-def test_no_split_passes_mask_through_unchanged():
-    rep, ds = _conjunction_dataset()
-    mask = np.array([True, False] * 4)
-    search_mask, context = NoSplit().prepare(rep, "pos", mask)
-    assert np.array_equal(search_mask, mask)
-    assert context is None
-    search_mask_none, context_none = NoSplit().prepare(rep, "pos", None)
-    assert search_mask_none is None
-    assert context_none is None
-    print("NoSplit passes the incoming mask through unchanged: OK")
-
-
-def test_grow_prune_split_produces_disjoint_masks_covering_scope():
-    rep, ds = _conjunction_dataset()
-    grow_mask, prune_mask = GrowPruneSplit(prune_fraction=0.25, random_state=0).prepare(rep, "pos")
-    assert not np.any(grow_mask & prune_mask)  # disjoint
-    assert np.all(grow_mask | prune_mask)  # covers every row (no incoming mask -> full scope)
-    assert prune_mask.sum() == 2  # 25% of 8 rows
-
-    # restricting to a smaller incoming scope should restrict the split to it
-    scope = np.array([True] * 6 + [False] * 2)  # rows 6,7 out of scope
-    grow_mask2, prune_mask2 = GrowPruneSplit(prune_fraction=0.5, random_state=0).prepare(rep, "pos", scope)
-    assert not np.any(grow_mask2 & prune_mask2)
-    assert np.array_equal(grow_mask2 | prune_mask2, scope)
-    print("GrowPruneSplit: disjoint masks, covers exactly the in-scope rows: OK")
-
-
-def test_grow_prune_split_falls_back_when_stratification_is_impossible():
-    # 1 positive, 10 negatives in scope -- stratified train_test_split
-    # needs >=2 of every class to put one in each split, so this must
-    # raise internally and fall back to a non-stratified split instead
-    # of propagating the error -- confirmed as a real failure mode (not
-    # hypothetical): a SeCo covering loop's remaining scope shrinks every
-    # iteration and can easily end up exactly like this late on
-    X = np.zeros((11, 2), dtype=bool)
-    y = np.array(["pos"] + ["neg"] * 10)
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-
-    grow_mask, prune_mask = GrowPruneSplit(prune_fraction=0.3, random_state=0).prepare(rep, "pos")
-    assert not np.any(grow_mask & prune_mask)
-    assert np.all(grow_mask | prune_mask)
-    print("GrowPruneSplit falls back to a non-stratified split when stratification isn't possible: OK")
-
-
-def test_grow_prune_split_falls_back_to_no_split_when_too_few_examples():
-    X = np.zeros((1, 2), dtype=bool)
-    y = np.array(["pos"])
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-
-    mask, context = GrowPruneSplit(prune_fraction=0.3, random_state=0).prepare(rep, "pos")
-    assert mask is None  # matches NoSplit's behavior: no example_mask given in, none constructed
-    assert context is None
-    print("GrowPruneSplit falls back to no split at all when there's too little to split: OK")
-
-
-def _grow_prune_overfit_dataset():
-    # a alone perfectly predicts y on both halves; b spuriously helps on the
-    # grow half only (one grow row has a=True,b=False,y=neg -- adding "b"
-    # removes that false positive there) but never matters on the prune
-    # half (no a=True,b=False rows there at all), so a correctly-pruned
-    # rule should end up as just "a=True", not "a=True AND b=True"
-    X = np.array([
-        [1, 1], [1, 1], [1, 0], [0, 0],  # grow: rows 0-3
-        [1, 1], [1, 1], [0, 0], [0, 0],  # prune: rows 4-7
-    ], dtype=bool)
-    y = np.array(["pos", "pos", "neg", "neg", "pos", "pos", "neg", "neg"])
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-    grow_mask = np.array([True] * 4 + [False] * 4)
-    prune_mask = np.array([False] * 4 + [True] * 4)
-    return rep, ds, grow_mask, prune_mask
-
-
-def test_reduced_error_pruning_strips_condition_that_doesnt_generalize():
-    rep, ds, grow_mask, prune_mask = _grow_prune_overfit_dataset()
-    grown_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # "a AND b", as grown on grow_mask
-    assert grown_rule.length() == 2
-
-    pruned = ReducedErrorPruning(Accuracy()).postprocess(grown_rule, rep, "pos", prune_mask)
-    assert pruned.length() == 1
-    assert pruned.conditions[0] == grown_rule.conditions[0]  # kept "a", dropped "b"
-    print("ReducedErrorPruning strips a condition that doesn't generalize to the prune set: OK")
-
-
-def test_reduced_error_pruning_noop_without_context():
-    rep, ds, grow_mask, prune_mask = _grow_prune_overfit_dataset()
-    grown_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)
-    unchanged = ReducedErrorPruning(Accuracy()).postprocess(grown_rule, rep, "pos", None)
-    assert unchanged == grown_rule
-    unchanged2 = NoPostProcessing().postprocess(grown_rule, rep, "pos", prune_mask)
-    assert unchanged2 == grown_rule
-    print("ReducedErrorPruning/NoPostProcessing are no-ops without a pruning mask/by default: OK")
-
-
-def test_reduced_error_pruning_never_truncates_to_the_empty_rule():
-    # prune set where EVERY row is the target class -- the empty
-    # (unconditional) rule would score a perfect 1.0 here, strictly
-    # beating any real truncation, yet must never be chosen: confirmed
-    # directly as a real SeCo failure mode (an "always true" rule ends
-    # a covering loop early and fires on every prediction), not just a
-    # hypothetical edge case
-    X = np.array([[1, 1], [1, 0], [0, 1]], dtype=bool)
-    y = np.array(["pos", "pos", "pos"])
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-    grown_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # "a AND b"
-    prune_mask = np.ones(3, dtype=bool)
-
-    pruned = ReducedErrorPruning(Accuracy()).postprocess(grown_rule, rep, "pos", prune_mask)
-    assert pruned.length() >= 1
-    print("ReducedErrorPruning never truncates a rule all the way to the empty/unconditional rule: OK")
-
-
-def test_reduced_error_pruning_leaves_an_already_empty_rule_alone():
-    # a rule that started empty (the *search's* own conclusion, not
-    # something pruning truncated down to) should pass through unchanged
-    ds = DataSpec(["a", "b"])
-    X = np.array([[1, 1], [0, 0]], dtype=bool)
-    y = np.array(["pos", "neg"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-    empty_rule = Rule([], target="pos", dataspec=ds)
-    prune_mask = np.ones(2, dtype=bool)
-
-    result = ReducedErrorPruning(Accuracy()).postprocess(empty_rule, rep, "pos", prune_mask)
-    assert result == empty_rule
-    print("ReducedErrorPruning leaves an already-empty rule (from the search itself) unchanged: OK")
-
-
-def test_single_rule_learner_default_config_matches_bare_beam_search():
-    rep, ds = _conjunction_dataset()
-    direct = BeamSearch().search(rep, "pos", Accuracy(), EmptyRuleAllFeatures().initial_candidates(rep, "pos"))
-    via_learner = SingleRuleLearner(heuristic=Accuracy()).learn_one_rule(rep, "pos")
-    assert via_learner == direct
-    print("SingleRuleLearner's default config matches calling BeamSearch directly: OK")
-
-
-def test_single_rule_learner_full_ripper_style_config_runs_end_to_end():
-    rep, ds, grow_mask, prune_mask = _grow_prune_overfit_dataset()
-    heuristic = Accuracy()
-    learner = SingleRuleLearner(
-        heuristic=heuristic,
-        search=BeamSearch(beam_width=3),
-        preparation=GrowPruneSplit(prune_fraction=0.5, random_state=0),
-        postprocessing=ReducedErrorPruning(heuristic),
-        space_init=EmptyRuleAllFeatures(),
-    )
-    rule = learner.learn_one_rule(rep, "pos")
-    assert rule.target == "pos"
-    assert rule.length() >= 1  # ran end to end and found something non-degenerate
-    print("SingleRuleLearner with a full RIPPER-style config runs end to end: OK")
 
 
 def test_beam_search_tp_zero_floor_stops_specializing():
@@ -455,33 +357,50 @@ def test_beam_search_tp_zero_floor_stops_specializing():
         best = BeamSearch(beam_width=3).search(rep, "pos", Accuracy(), initial)
     assert count[0] == 0  # tp==0 floor stopped it before specialize() was ever called
     assert best is None  # a rule covering no positives is never returned
-    print("BeamSearch's tp==0 floor stops specialize() from being called at all: OK")
-
-
-def _laplace_trap_dataset():
-    # "e" covers no example at all, so its one-condition rule scores
-    # Laplace (0+1)/(0+0+2) = 0.5 -- above every impure one-condition rule
-    # (a: 2 pos / 3 neg -> 3/7). The pure rule a AND b (2 pos / 0 neg,
-    # 0.75) is only reachable through an impure first step.
-    X = np.array([
-        [1, 1, 0], [1, 1, 0],                                        # positives
-        [1, 0, 0], [1, 0, 0], [1, 0, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0],  # negatives
-    ], dtype=bool)
-    y = np.array(["pos", "pos"] + ["neg"] * 6)
-    ds = DataSpec(["a", "b", "e"])
-    return HorizontalBitmapRepresentation(ds, X, y), ds
 
 
 @pytest.mark.parametrize("search", [BeamSearch(beam_width=1), HillClimbing()])
 def test_rule_covering_no_positives_never_blocks_the_search(search):
-    # regression test: a child covering no positives used to win the beam
-    # slot (or the hill-climbing move) on its heuristic score alone, and,
-    # being unrefinable, end the search at an impure one-condition rule
+    # a child covering no positives must not win the beam slot (or the
+    # hill-climbing move) on its heuristic score alone: being unrefinable,
+    # it would end the search at an impure one-condition rule
     rep, ds = _laplace_trap_dataset()
     empty = [(Rule([], target="pos", dataspec=ds), frozenset(range(3)))]
     best = search.search(rep, "pos", Laplace(), empty)
     assert best == Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)
-    print(f"{type(search).__name__} gets past a rule covering no positives: OK")
+
+
+def test_search_all_is_search_without_branching():
+    rep = _either_dataset()
+    initial = EmptyRuleAllFeatures().initial_candidates(rep, "pos")
+    for search, heuristic in [(GainAscentHillClimbing(), FoilGain()), (HillClimbing(), Laplace()),
+                              (BeamSearch(beam_width=3), Laplace())]:
+        one = search.search(rep, "pos", heuristic, initial)
+        assert search.search_all(rep, "pos", heuristic, initial) == ([] if one is None else [one])
+
+
+def test_branching_gain_ascent_yields_a_copy_at_each_near_tie():
+    rep = _either_dataset()
+    initial = EmptyRuleAllFeatures().initial_candidates(rep, "pos")
+    plain = GainAscentHillClimbing(branch_similarity=1.0).search_all(rep, "pos", FoilGain(), initial)
+    both = GainAscentHillClimbing(branch_similarity=0.5).search_all(rep, "pos", FoilGain(), initial)
+    assert len(plain) == 1
+    assert {r.pos for r in both} == {(0,), (1,)}                  # a and b, from one search
+    # search still returns the best-gain lineage alone
+    best = GainAscentHillClimbing(branch_similarity=0.5).search(rep, "pos", FoilGain(), initial)
+    assert best in both and len([best]) == 1
+    # min_gain: a gain of at least this, not just any positive gain
+    stuck = GainAscentHillClimbing(min_gain=1e9).search_all(rep, "pos", FoilGain(), initial)
+    assert [r.length() for r in stuck] == [0]                     # no move: the seed, as `search` returns
+    assert GainAscentHillClimbing(min_gain=1e9, branch_similarity=0.5).search_all(
+        rep, "pos", FoilGain(), initial) == []                    # branching never yields the empty seed
+    with pytest.raises(ValueError):
+        GainAscentHillClimbing(min_gain=0.0)
+    with pytest.raises(ValueError):
+        GainAscentHillClimbing(branch_similarity=1.5)
+
+
+# -- optimistic pruning ------------------------------------------------
 
 
 def test_beam_search_optimistic_pruning_skips_an_already_pure_seed():
@@ -495,7 +414,7 @@ def test_beam_search_optimistic_pruning_skips_an_already_pure_seed():
         best = BeamSearch(beam_width=3).search(rep, "pos", Accuracy(), initial)
     # a pure rule's optimistic (tp, 0) bound is just its own score, which is
     # already the running best -- so it never promises improvement and is
-    # never specialized (the case the old unconditional fp==0 floor handled)
+    # never specialized
     assert count[0] == 0
     assert best == pure_rule
 
@@ -504,7 +423,6 @@ def test_beam_search_optimistic_pruning_skips_an_already_pure_seed():
     with _counting_expansions() as count_off:
         BeamSearch(beam_width=3, optimistic_pruning=False).search(rep, "pos", Accuracy(), initial)
     assert count_off[0] > 0
-    print("BeamSearch optimistic pruning skips specializing an already-pure rule; off, it doesn't: OK")
 
 
 def test_beam_search_optimistic_pruning_halts_the_whole_search_early():
@@ -532,103 +450,218 @@ def test_beam_search_optimistic_pruning_halts_the_whole_search_early():
     assert 0 < on[0] < off[0]   # same search, reached with strictly less work
     assert best_on == best_off  # ...and the identical answer -- pruning only ever
     #                             skips branches that provably can't out-score it
-    print("BeamSearch optimistic pruning halts the whole search early without changing the answer: OK")
 
 
-def test_gain_ascent_optimistic_pruning_stops_at_a_pure_rule():
+@pytest.mark.parametrize("search_cls, heuristic", [(HillClimbing, Accuracy()),
+                                                    (GainAscentHillClimbing, FoilGain())])
+def test_hill_climbers_optimistic_pruning_skips_an_already_pure_rule(search_cls, heuristic):
+    # a pure rule's (tp, 0) bound is its own score: it can't beat the
+    # running best, so it isn't specialized. Without the bound it is,
+    # once, and the local-optimum (or gain) stop lands on the same rule.
     rep, ds = _conjunction_dataset()
     pure_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # a AND b: fp == 0
     initial = [(pure_rule, frozenset({2}))]  # "c" still open
 
     with _counting_expansions() as on:
-        best_on = GainAscentHillClimbing().search(rep, "pos", FoilGain(), initial)
-    assert on[0] == 0  # optimistic (tp, 0) bound == the rule itself -> gain 0 -> stop
-    assert best_on == pure_rule
-
-    with _counting_expansions() as off:
-        best_off = GainAscentHillClimbing(optimistic_pruning=False).search(rep, "pos", FoilGain(), initial)
-    assert off[0] > 0             # no bound -> it does specialize once
-    assert best_off == pure_rule  # ...but the gain floor still stops it at the same rule
-    print("GainAscentHillClimbing optimistic pruning stops at a pure rule (subsuming the old fp==0 floor): OK")
-
-
-def test_hill_climbing_optimistic_pruning_skips_an_already_pure_rule():
-    # base-class optimistic pruning is BeamSearch's bound, restated: a
-    # pure rule's (tp, 0) projection is itself, so it can't beat the
-    # running best -> not specialized (same case the old fp==0 floor
-    # handled). Same answer either way -- pure efficiency.
-    rep, ds = _conjunction_dataset()
-    pure_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # a AND b: fp == 0
-    initial = [(pure_rule, frozenset({2}))]  # "c" still open
-
-    with _counting_expansions() as on:
-        best_on = HillClimbing().search(rep, "pos", Accuracy(), initial)
+        best_on = search_cls().search(rep, "pos", heuristic, initial)
     assert on[0] == 0
     assert best_on == pure_rule
 
     with _counting_expansions() as off:
-        best_off = HillClimbing(optimistic_pruning=False).search(rep, "pos", Accuracy(), initial)
-    assert off[0] > 0             # no bound -> it specializes once
-    assert best_off == pure_rule  # ...but the local-maximum stop lands on the same rule
-    print("HillClimbing optimistic pruning skips an already-pure rule; same answer without it: OK")
+        best_off = search_cls(optimistic_pruning=False).search(rep, "pos", heuristic, initial)
+    assert off[0] > 0
+    assert best_off == pure_rule
 
 
-def test_hill_climbing_matches_beam_search_width_one_on_a_unimodal_landscape():
-    # on a landscape that rises monotonically to one peak, HillClimbing
-    # and BeamSearch(beam_width=1) return the identical rule -- HillClimbing
-    # just stops climbing sooner (its local-maximum stop), doing no more
-    # specialization work than the beam.
-    rep, y = _wide_noisy_disjunction_dataset(d=12, seed=3)
-    initial = [(Rule([], target="pos", dataspec=rep.spec), frozenset(range(12)))]
-
-    with _counting_expansions() as hc:
-        hc_rule = HillClimbing().search(rep, "pos", Laplace(), initial)
-    with _counting_expansions() as beam:
-        beam_rule = BeamSearch(beam_width=1).search(rep, "pos", Laplace(), initial)
-
-    assert hc_rule.pos == beam_rule.pos
-    assert hc[0] <= beam[0]
-    print("HillClimbing == BeamSearch(beam_width=1) on a unimodal landscape, with <= the work: OK")
+# -- search space ------------------------------------------------------
 
 
-def test_hill_climbers_grow_to_consistency_when_the_local_optimum_stop_is_off():
-    # a noisy conjunction: y = a AND b with ~12% label flips, so {a, b} is
-    # the best pure-ish rule but every prefix still covers negatives. With
-    # stop_at_local_optimum=False both hill climbers keep adding conditions
-    # past the score/gain peak until fp == 0 (or features run out).
-    rng = np.random.default_rng(4)
-    n = 300
-    X = rng.integers(0, 2, size=(n, 6)).astype(bool)
-    y_clean = X[:, 0] & X[:, 1]
-    y = np.where(rng.random(n) < 0.12, ~y_clean, y_clean)
-    y = np.where(y, "pos", "neg")
-    ds = DataSpec([f"a{i}" for i in range(6)])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-    init = lambda: [(Rule([], target="pos", dataspec=ds), frozenset(range(6)))]
-
-    for search_cls, heuristic in [(HillClimbing, Accuracy()), (GainAscentHillClimbing, FoilGain())]:
-        peak = search_cls().search(rep, "pos", heuristic, init())
-        grown = search_cls(stop_at_local_optimum=False).search(rep, "pos", heuristic, init())
-        peak_fp = RuleStats.from_rule(peak, rep, "pos").fp
-        grown_stats = RuleStats.from_rule(grown, rep, "pos")
-        assert grown.length() >= peak.length()
-        assert grown_stats.fp < peak_fp or grown_stats.fp == 0  # drove negatives down
-    print("HillClimbing / GainAscentHillClimbing grow to consistency with stop_at_local_optimum=False: OK")
-
-
-def test_hill_climbing_returns_none_when_filtering_rejects_every_visited_rule():
+def test_empty_rule_all_features_starts_from_universal_rule():
     rep, ds = _conjunction_dataset()
-    empty_rule = Rule([], target="pos", dataspec=ds)
-    initial = [(empty_rule, frozenset(range(3)))]
+    candidates = EmptyRuleAllFeatures().initial_candidates(rep, "pos")
+    assert len(candidates) == 1
+    rule, mask = candidates[0]
+    assert rule.length() == 0
+    assert rule.target == "pos"
+    assert mask == frozenset({0, 1, 2})
 
-    # laplace < 2.0 is always true -- no rule the walk visits is ever
-    # eligible, so there's nothing to fall back to
-    reject_everything = ThresholdPrePruning(Laplace(), threshold=2.0, operator="<")
-    result = HillClimbing().search(
-        rep, "pos", Laplace(), initial, filtering=reject_everything,
-    )
-    assert result is None
-    print("HillClimbing returns None when filtering rejects every rule the walk visits: OK")
+
+def test_feature_subset_resolves_names_to_indices():
+    rep, ds = _conjunction_dataset()
+    candidates = FeatureSubset(["b", "c"]).initial_candidates(rep, "pos")
+    assert len(candidates) == 1
+    rule, mask = candidates[0]
+    assert rule.length() == 0
+    assert mask == frozenset({ds.feature_index("b"), ds.feature_index("c")})
+    assert 0 not in mask  # "a" excluded
+
+
+def test_seed_example_seeds_on_an_uncovered_positive():
+    rep, ds, y = _disjunctive_dataset()
+    candidates = SeedExample("first").initial_candidates(rep, "pos", np.ones(rep.n_samples, dtype=bool))
+    assert len(candidates) == 1
+    rule, mask = candidates[0]
+    assert rule.length() == 0 and rule.target == "pos"
+    # row 0 is the first positive: [1,1,0,0] -> open only to features a, b
+    assert mask == frozenset({0, 1})
+
+
+def test_seed_example_respects_the_example_mask():
+    rep, ds, y = _disjunctive_dataset()
+    mask = np.ones(rep.n_samples, dtype=bool)
+    mask[:2] = False  # hide the two a-AND-b positives; only the c-AND-d one (row 2) is left
+    _, open_mask = SeedExample("first").initial_candidates(rep, "pos", mask)[0]
+    assert open_mask == frozenset({2, 3})  # row 2 is [0,0,1,1]
+
+
+def test_seed_example_raises_with_no_uncovered_positive():
+    rep, ds, y = _disjunctive_dataset()
+    none_left = np.zeros(rep.n_samples, dtype=bool)
+    try:
+        SeedExample().initial_candidates(rep, "pos", none_left)
+        assert False, "expected ValueError"
+    except ValueError as e:
+        assert "seed" in str(e).lower()
+
+
+def test_seed_example_random_strategy_is_reproducible():
+    rep, ds, y = _disjunctive_dataset()
+    full = np.ones(rep.n_samples, dtype=bool)
+    a = SeedExample("random", random_state=0).initial_candidates(rep, "pos", full)[0][1]
+    b = SeedExample("random", random_state=0).initial_candidates(rep, "pos", full)[0][1]
+    assert a == b  # same random_state -> same seed
+    # whichever positive it lands on, the open mask is that row's True features
+    assert a in ({0, 1}, {2, 3}) or len(a) > 0
+
+
+def test_seed_example_rejects_unknown_strategy():
+    try:
+        SeedExample("sideways")
+        assert False, "expected ValueError"
+    except ValueError:
+        pass
+
+
+def test_seed_example_index_strategy_seeds_on_the_exact_row():
+    rep, ds, y = _disjunctive_dataset()
+    # row 2 is [0,0,1,1] (a c-AND-d positive), regardless of target_class / mask
+    _, open_mask = SeedExample("index", index=2).initial_candidates(rep, "anything", None)[0]
+    assert open_mask == frozenset({2, 3})
+    try:
+        SeedExample("index")  # index is required
+        assert False, "expected ValueError"
+    except ValueError:
+        pass
+
+
+# -- preparation and post-processing -----------------------------------
+
+
+def test_no_split_passes_mask_through_unchanged():
+    rep, ds = _conjunction_dataset()
+    mask = np.array([True, False] * 4)
+    search_mask, context = NoSplit().prepare(rep, "pos", mask)
+    assert np.array_equal(search_mask, mask)
+    assert context is None
+    search_mask_none, context_none = NoSplit().prepare(rep, "pos", None)
+    assert search_mask_none is None
+    assert context_none is None
+
+
+def test_grow_prune_split_produces_disjoint_masks_covering_scope():
+    rep, ds = _conjunction_dataset()
+    grow_mask, prune_mask = GrowPruneSplit(prune_fraction=0.25, random_state=0).prepare(rep, "pos")
+    assert not np.any(grow_mask & prune_mask)  # disjoint
+    assert np.all(grow_mask | prune_mask)  # covers every row (no incoming mask -> full scope)
+    assert prune_mask.sum() == 2  # 25% of 8 rows
+
+    # restricting to a smaller incoming scope should restrict the split to it
+    scope = np.array([True] * 6 + [False] * 2)  # rows 6,7 out of scope
+    grow_mask2, prune_mask2 = GrowPruneSplit(prune_fraction=0.5, random_state=0).prepare(rep, "pos", scope)
+    assert not np.any(grow_mask2 & prune_mask2)
+    assert np.array_equal(grow_mask2 | prune_mask2, scope)
+
+
+def test_grow_prune_split_falls_back_when_stratification_is_impossible():
+    # 1 positive, 10 negatives in scope -- stratified train_test_split
+    # needs >=2 of every class to put one in each split, so this must
+    # raise internally and fall back to a non-stratified split instead
+    # of propagating the error -- confirmed as a real failure mode (not
+    # hypothetical): a SeCo covering loop's remaining scope shrinks every
+    # iteration and can easily end up exactly like this late on
+    X = np.zeros((11, 2), dtype=bool)
+    y = np.array(["pos"] + ["neg"] * 10)
+    ds = DataSpec(["a", "b"])
+    rep = HorizontalBitmapRepresentation(ds, X, y)
+
+    grow_mask, prune_mask = GrowPruneSplit(prune_fraction=0.3, random_state=0).prepare(rep, "pos")
+    assert not np.any(grow_mask & prune_mask)
+    assert np.all(grow_mask | prune_mask)
+
+
+def test_grow_prune_split_falls_back_to_no_split_when_too_few_examples():
+    X = np.zeros((1, 2), dtype=bool)
+    y = np.array(["pos"])
+    ds = DataSpec(["a", "b"])
+    rep = HorizontalBitmapRepresentation(ds, X, y)
+
+    mask, context = GrowPruneSplit(prune_fraction=0.3, random_state=0).prepare(rep, "pos")
+    assert mask is None  # matches NoSplit's behavior: no example_mask given in, none constructed
+    assert context is None
+
+
+def test_reduced_error_pruning_strips_condition_that_doesnt_generalize():
+    rep, ds, grow_mask, prune_mask = _grow_prune_overfit_dataset()
+    grown_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # "a AND b", as grown on grow_mask
+    assert grown_rule.length() == 2
+
+    pruned = ReducedErrorPruning(Accuracy()).postprocess(grown_rule, rep, "pos", prune_mask)
+    assert pruned.length() == 1
+    assert pruned.conditions[0] == grown_rule.conditions[0]  # kept "a", dropped "b"
+
+
+def test_reduced_error_pruning_noop_without_context():
+    rep, ds, grow_mask, prune_mask = _grow_prune_overfit_dataset()
+    grown_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)
+    unchanged = ReducedErrorPruning(Accuracy()).postprocess(grown_rule, rep, "pos", None)
+    assert unchanged == grown_rule
+    unchanged2 = NoPostProcessing().postprocess(grown_rule, rep, "pos", prune_mask)
+    assert unchanged2 == grown_rule
+
+
+def test_reduced_error_pruning_never_truncates_to_the_empty_rule():
+    # prune set where EVERY row is the target class -- the empty
+    # (unconditional) rule would score a perfect 1.0 here, strictly
+    # beating any real truncation, yet must never be chosen: confirmed
+    # directly as a real SeCo failure mode (an "always true" rule ends
+    # a covering loop early and fires on every prediction), not just a
+    # hypothetical edge case
+    X = np.array([[1, 1], [1, 0], [0, 1]], dtype=bool)
+    y = np.array(["pos", "pos", "pos"])
+    ds = DataSpec(["a", "b"])
+    rep = HorizontalBitmapRepresentation(ds, X, y)
+    grown_rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds)  # "a AND b"
+    prune_mask = np.ones(3, dtype=bool)
+
+    pruned = ReducedErrorPruning(Accuracy()).postprocess(grown_rule, rep, "pos", prune_mask)
+    assert pruned.length() >= 1
+
+
+def test_reduced_error_pruning_leaves_an_already_empty_rule_alone():
+    # a rule that started empty (the *search's* own conclusion, not
+    # something pruning truncated down to) should pass through unchanged
+    ds = DataSpec(["a", "b"])
+    X = np.array([[1, 1], [0, 0]], dtype=bool)
+    y = np.array(["pos", "neg"])
+    rep = HorizontalBitmapRepresentation(ds, X, y)
+    empty_rule = Rule([], target="pos", dataspec=ds)
+    prune_mask = np.ones(2, dtype=bool)
+
+    result = ReducedErrorPruning(Accuracy()).postprocess(empty_rule, rep, "pos", prune_mask)
+    assert result == empty_rule
+
+
+# -- pre-pruning criteria: filtering and stopping ----------------------
 
 
 def test_threshold_pre_pruning_rejects_bad_operator():
@@ -637,7 +670,6 @@ def test_threshold_pre_pruning_rejects_bad_operator():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("ThresholdPrePruning rejects an invalid operator: OK")
 
 
 def test_threshold_pre_pruning_all_operators():
@@ -658,7 +690,6 @@ def test_threshold_pre_pruning_all_operators():
     ]:
         criterion = ThresholdPrePruning(Accuracy(), threshold=threshold, operator=operator)
         assert criterion.reject(empty_rule, stats, rep, "pos") is expected, (operator, threshold)
-    print("ThresholdPrePruning supports every comparison operator: OK")
 
 
 def test_polarity_flips_which_of_accept_reject_equals_evaluate():
@@ -676,7 +707,6 @@ def test_polarity_flips_which_of_accept_reject_equals_evaluate():
     assert flipped.evaluate(empty_rule, stats, rep, "pos") is True  # same raw predicate
     assert flipped.accept(empty_rule, stats, rep, "pos") is True    # but now accept() == evaluate()
     assert flipped.reject(empty_rule, stats, rep, "pos") is False
-    print("polarity=False flips which of accept()/reject() equals evaluate() directly: OK")
 
 
 def test_any_of_and_all_of_composition():
@@ -691,7 +721,6 @@ def test_any_of_and_all_of_composition():
     assert AnyOf(never_reject, never_reject).reject(empty_rule, stats, rep, "pos") is False
     assert AllOf(always_reject, always_reject).reject(empty_rule, stats, rep, "pos") is True
     assert AllOf(always_reject, never_reject).reject(empty_rule, stats, rep, "pos") is False
-    print("AnyOf/AllOf compose PrePruningCriterion instances correctly: OK")
 
 
 def test_any_of_drives_beam_search_stopping_via_combination_not_a_single_forward():
@@ -715,7 +744,6 @@ def test_any_of_drives_beam_search_stopping_via_combination_not_a_single_forward
     combined = AnyOf(never_reject, always_reject)
     stopped = BeamSearch(beam_width=2).search(rep, "pos", Accuracy(), initial, stopping=combined)
     assert stopped is None
-    print("AnyOf genuinely combines criteria to drive BeamSearch's stopping, not just forwarding one: OK")
 
 
 def test_filtering_does_not_reorder_the_beam_and_only_relaxes_optimistic_pruning():
@@ -752,7 +780,6 @@ def test_filtering_does_not_reorder_the_beam_and_only_relaxes_optimistic_pruning
     # while the unfiltered run finds the real rule
     assert result_without is not None
     assert result_with is None
-    print("Filtering never reorders the beam; it only relaxes optimistic pruning's bound: OK")
 
 
 def test_filtering_excludes_the_best_rule_without_blocking_the_search_from_finding_it():
@@ -769,7 +796,20 @@ def test_filtering_excludes_the_best_rule_without_blocking_the_search_from_findi
     filtered = BeamSearch(beam_width=2).search(rep, "pos", Accuracy(), initial, filtering=filtering)
     filtered_stats = RuleStats.from_rule(filtered, rep, "pos")
     assert (filtered_stats.tp, filtered_stats.fp) == (2, 2)  # falls back to the 0.75 single-condition rule
-    print("Filtering excludes the best rule from eligibility without preventing the search from finding it: OK")
+
+
+def test_hill_climbing_returns_none_when_filtering_rejects_every_visited_rule():
+    rep, ds = _conjunction_dataset()
+    empty_rule = Rule([], target="pos", dataspec=ds)
+    initial = [(empty_rule, frozenset(range(3)))]
+
+    # laplace < 2.0 is always true -- no rule the walk visits is ever
+    # eligible, so there's nothing to fall back to
+    reject_everything = ThresholdPrePruning(Laplace(), threshold=2.0, operator="<")
+    result = HillClimbing().search(
+        rep, "pos", Laplace(), initial, filtering=reject_everything,
+    )
+    assert result is None
 
 
 def test_stopping_never_fires_on_the_seed_candidate():
@@ -787,7 +827,6 @@ def test_stopping_never_fires_on_the_seed_candidate():
         best = BeamSearch(beam_width=3).search(rep, "pos", Accuracy(), initial, stopping=always_true)
     assert best is None
     assert count[0] == 1  # the seed WAS specialized (round 1 ran); it just wasn't stopping-checked
-    print("Stopping never fires on the seed; firing at round 1 with nothing tracked yet returns None: OK")
 
 
 def test_stopping_leave_polarity_returns_the_pre_trigger_best_or_none():
@@ -811,7 +850,6 @@ def test_stopping_leave_polarity_returns_the_pre_trigger_best_or_none():
     stats = RuleStats.from_rule(best, rep, "pos")
     assert (stats.tp, stats.fp) == (2, 0)  # "a AND b" -- round 1's rule, tracked before round 2 fired
     assert best.length() == 2
-    print("Stopping (leave polarity) returns the best rule from before the triggering round: OK")
 
 
 def test_stopping_enter_polarity_returns_the_triggering_rule_directly():
@@ -833,7 +871,81 @@ def test_stopping_enter_polarity_returns_the_triggering_rule_directly():
     assert stopped.length() == 1
     stats = RuleStats.from_rule(stopped, rep, "pos")
     assert (stats.tp, stats.fp) == (2, 2)
-    print("Stopping with polarity=False (enter) returns the triggering rule directly, before it improves further: OK")
+
+
+def test_uncovered_positives_threshold_criterion_arithmetic():
+    # dataset-independent check of the raw evaluate() arithmetic used by
+    # test_seco_stop_covering_via_uncovered_positives below
+    rep, ds = _conjunction_dataset()
+    empty_rule = Rule([], target="pos", dataspec=ds)
+    criterion = ThresholdPrePruning(UncoveredPositives(), threshold=0.0, operator=">=")  # p=0
+    assert criterion.evaluate(empty_rule, RuleStats(tp=8, fp=0, fn=1, tn=0), rep, "pos") is False  # fn=1 > 0
+    assert criterion.evaluate(empty_rule, RuleStats(tp=9, fp=0, fn=0, tn=0), rep, "pos") is True   # fn=0 <= 0
+
+
+def test_encoding_length_restriction_arithmetic_matches_quinlan_1990_p251():
+    # direct check against Quinlan (1990), Machine Learning 5(3):239-266,
+    # p. 251: encoding_length = l*(1+log2(d)) - log2(l!), benefit =
+    # log2(N) + log2(C(N,p)); evaluate() fires once encoding_length >
+    # benefit. d=100 features (not e.g. 6) is deliberate -- confirmed
+    # empirically that with only a handful of features, 1+log2(d) bits/
+    # literal is too small for the criterion to ever fire at realistic
+    # rule lengths/coverage (see test_pfoil_mdl_stopping_curbs_growth_
+    # on_a_wide_noisy_dataset's own comment for the same finding at the
+    # whole-search level)
+    import math
+    ds_wide = DataSpec([f"a{i}" for i in range(100)])
+    rep_wide = HorizontalBitmapRepresentation(ds_wide, np.zeros((1, 100), dtype=bool))
+    criterion = EncodingLengthRestriction()
+
+    # l=2, p=40, N=300: nowhere near "too expensive" yet
+    rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds_wide)
+    stats = RuleStats(tp=40, fp=2, fn=10, tn=248)
+    encoding_length = 2 * (1 + math.log2(100)) - math.log2(math.factorial(2))
+    benefit = math.log2(300) + math.log2(math.comb(300, 40))
+    assert encoding_length < benefit
+    assert criterion.evaluate(rule, stats, rep_wide, "pos") is False
+
+    # l=6, p=1, N=300: a long rule barely covering anything does trip it
+    long_rule = Rule.from_pos_neg(pos=[0, 1, 2, 3, 4, 5], target="pos", dataspec=ds_wide)
+    barely_covering_stats = RuleStats(tp=1, fp=0, fn=149, tn=150)
+    encoding_length_long = 6 * (1 + math.log2(100)) - math.log2(math.factorial(6))
+    benefit_barely = math.log2(300) + math.log2(math.comb(300, 1))
+    assert encoding_length_long > benefit_barely
+    assert criterion.evaluate(long_rule, barely_covering_stats, rep_wide, "pos") is True
+
+
+def test_encoding_length_restriction_never_fires_on_the_empty_rule():
+    ds6 = DataSpec(["a", "b", "c", "d", "e", "f"])
+    rep6 = HorizontalBitmapRepresentation(ds6, np.zeros((1, 6), dtype=bool))
+    empty = Rule([], target="pos", dataspec=ds6)
+    criterion = EncodingLengthRestriction()
+    assert criterion.evaluate(empty, RuleStats(tp=150, fp=150, fn=0, tn=0), rep6, "pos") is False
+
+
+# -- single-rule learner -----------------------------------------------
+
+
+def test_single_rule_learner_default_config_matches_bare_beam_search():
+    rep, ds = _conjunction_dataset()
+    direct = BeamSearch().search(rep, "pos", Accuracy(), EmptyRuleAllFeatures().initial_candidates(rep, "pos"))
+    via_learner = SingleRuleLearner(heuristic=Accuracy()).learn_one_rule(rep, "pos")
+    assert via_learner == direct
+
+
+def test_single_rule_learner_full_ripper_style_config_runs_end_to_end():
+    rep, ds, grow_mask, prune_mask = _grow_prune_overfit_dataset()
+    heuristic = Accuracy()
+    learner = SingleRuleLearner(
+        heuristic=heuristic,
+        search=BeamSearch(beam_width=3),
+        preparation=GrowPruneSplit(prune_fraction=0.5, random_state=0),
+        postprocessing=ReducedErrorPruning(heuristic),
+        space_init=EmptyRuleAllFeatures(),
+    )
+    rule = learner.learn_one_rule(rep, "pos")
+    assert rule.target == "pos"
+    assert rule.length() >= 1  # ran end to end and found something non-degenerate
 
 
 def test_single_rule_learner_passes_filtering_and_stopping_through():
@@ -842,7 +954,6 @@ def test_single_rule_learner_passes_filtering_and_stopping_through():
     learner = SingleRuleLearner(heuristic=Accuracy(), search=BeamSearch(beam_width=1), stopping=stopping)
     rule = learner.learn_one_rule(rep, "pos")
     assert rule.length() == 1  # matches the direct BeamSearch(beam_width=1, stopping=stopping) case
-    print("SingleRuleLearner passes filtering/stopping through to the search: OK")
 
 
 def test_single_rule_learner_propagates_none_when_the_search_finds_nothing_eligible():
@@ -855,30 +966,15 @@ def test_single_rule_learner_propagates_none_when_the_search_finds_nothing_eligi
         filtering=reject_everything,
     )
     assert learner.learn_one_rule(rep, "pos") is None
-    print("SingleRuleLearner.learn_one_rule returns None (skipping post-processing) when the search does: OK")
 
 
-def _disjunctive_dataset():
-    # y = pos iff (a AND b) OR (c AND d) -- a genuinely disjunctive concept
-    # no single conjunction can capture, needing two separate rules
-    X = np.array([
-        [1, 1, 0, 0],  # pos: a AND b
-        [1, 1, 1, 1],  # pos: both
-        [0, 0, 1, 1],  # pos: c AND d
-        [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1],
-        [0, 0, 0, 0], [1, 0, 1, 0], [0, 1, 0, 1],  # neg
-    ], dtype=bool)
-    y = np.array(["pos", "pos", "pos"] + ["neg"] * 7)
-    ds = DataSpec(["a", "b", "c", "d"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-    return rep, ds, y
+# -- covering loop (SeCo) ----------------------------------------------
 
 
 def test_seco_is_a_native_rule_learner():
     learner = SingleRuleLearner(heuristic=Accuracy())
     seco = SeCo(single_rule_learner=learner, target_class="pos")
     assert isinstance(seco, NativeRuleLearner)
-    print("SeCo is a NativeRuleLearner: OK")
 
 
 def test_seco_covers_a_disjunctive_concept_with_two_rules():
@@ -895,17 +991,6 @@ def test_seco_covers_a_disjunctive_concept_with_two_rules():
 
     preds = ruleset.predict(rep)
     assert np.all(preds == y)  # perfect coverage of the disjunctive concept
-    print("SeCo finds both disjuncts as separate rules and covers the concept perfectly: OK")
-
-
-class _AlwaysEmptyRuleLearner:
-    """Stand-in for SingleRuleLearner that always 'finds' the empty
-    (unconditional) rule -- used to test SeCo's own length==0 guard
-    directly, isolated from whether search or pruning is what actually
-    produced it."""
-
-    def learn_one_rule(self, data, target_class, example_mask=None):
-        return Rule([], target=target_class, dataspec=data.spec)
 
 
 def test_seco_binary_is_a_concept_model_with_a_majority_fallback():
@@ -928,55 +1013,6 @@ def test_seco_binary_is_a_concept_model_with_a_majority_fallback():
     # the fallback is a plain overridable attribute
     concept.default_prediction = "c"
     assert concept.default_rule.target == "c"
-    print("SeCo binary fit -> ConceptModel with a MajorityClass fallback: OK")
-
-
-def test_seco_rules_carry_measured_stats_not_a_stored_weight():
-    # No declarative weight is stored anywhere anymore (weight_heuristic
-    # is gone from SeCo's constructor entirely) -- every rule's own
-    # measured stats() is the one source of truth, scoreable by any
-    # heuristic on demand (Laplace here, matching what HeuristicMaxCombiner/
-    # sort_rules default to, but any RuleHeuristic works equally).
-    rep, ds = _conjunction_dataset()
-
-    for learner in (CN2(significance_threshold=None, target_class="pos"),
-                    PFossil(target_class="pos"),
-                    SeCo(SingleRuleLearner(heuristic=FoilGain(), search=GainAscentHillClimbing()),
-                         target_class="pos")):
-        fitted = learner.fit(rep)
-        assert fitted.rules
-        for r in fitted.rules:
-            expected = Laplace().score_rule(r, rep, positive_class="pos")
-            measured = Laplace().score(r.stats().confusion.rule_stats("pos"))
-            assert measured == pytest.approx(expected)
-
-    aqr = AQR(random_state=0).fit(rep)
-    for r in aqr.rules:
-        expected = Laplace().score_rule(r, rep, positive_class=r.target)
-        measured = Laplace().score(r.stats().confusion.rule_stats(r.target))
-        assert measured == pytest.approx(expected)
-
-    # weight_heuristic no longer exists as a constructor argument at all --
-    # pass a heuristic to a combiner (HeuristicMaxCombiner(Precision())) or
-    # sort_rules(by=Precision()) instead of configuring it on the learner
-    with pytest.raises(TypeError):
-        SeCo(SingleRuleLearner(heuristic=FoilGain(), search=GainAscentHillClimbing()),
-             target_class="pos", weight_heuristic=Precision())
-    print("SeCo rules carry measured stats (Laplace-scoreable); weight_heuristic is gone: OK")
-
-
-def test_ripper_rules_carry_measured_stats():
-    data, ds, y = _noisy_3class()
-    model = Pypper(random_state=0).fit(data)
-    assert model.rules
-    # each stage measures its own rules against its own (row-sliced)
-    # subproblem, so a rule's own Laplace is >= its Laplace on the full
-    # data (fewer negatives left within that stage's scope)
-    for r in model.rules:
-        full = Laplace().score_rule(r, data, positive_class=r.target)
-        own = Laplace().score(r.stats().confusion.rule_stats(r.target))
-        assert 0.0 <= own <= 1.0 and own >= full - 1e-9
-    print("Pypper rules carry measured stats (Laplace per stage subproblem): OK")
 
 
 def test_seco_no_target_class_dispatches_the_model_type():
@@ -1003,7 +1039,6 @@ def test_seco_no_target_class_dispatches_the_model_type():
 
     with pytest.raises(TypeError, match="cannot produce"):
         SeCo(single_rule_learner=learner).fit(rep, model=DisjointRuleSet)
-    print("SeCo(target_class=None) dispatches model=: OK")
 
 
 def test_seco_seed_covering_is_one_loop_over_all_classes():
@@ -1035,7 +1070,16 @@ def test_seco_seed_covering_is_one_loop_over_all_classes():
     # also available (non-default) on the other SeCo learners
     cn2 = CN2(random_state=0).fit(rep, model=FlatRuleSet)
     assert type(cn2) is FlatRuleSet and {r.target for r in cn2.rules} <= {"x", "y", "z"}
-    print("model=DecisionList / AQR default: one seed-covering loop over all classes: OK")
+
+
+class _AlwaysEmptyRuleLearner:
+    """Stand-in for SingleRuleLearner that always 'finds' the empty
+    (unconditional) rule -- used to test SeCo's own length==0 guard
+    directly, isolated from whether search or pruning is what actually
+    produced it."""
+
+    def learn_one_rule(self, data, target_class, example_mask=None):
+        return Rule([], target=target_class, dataspec=data.spec)
 
 
 def test_seco_rejects_unconditional_rule_even_straight_from_search():
@@ -1044,23 +1088,6 @@ def test_seco_rejects_unconditional_rule_even_straight_from_search():
     ruleset = seco.fit(rep)
     assert len(ruleset.rules) == 0  # rejected immediately, not just when pruning produces it
     assert ruleset.default_rule is not None
-    print("SeCo rejects a length-0 rule even straight from the search, not just from pruning: OK")
-
-
-def test_seco_covering_removes_both_classes_not_just_positives():
-    # a=True covers rows 0(pos),1(pos),2(neg) -- both classes present
-    X = np.array([[1, 1], [1, 0], [1, 1], [0, 1], [0, 0]], dtype=bool)
-    y = np.array(["pos", "pos", "neg", "neg", "neg"])
-    ds = DataSpec(["a", "b"])
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-    rule = Rule.from_pos_neg(pos=[0], target="pos", dataspec=ds)  # a=True
-
-    # replicates exactly the one-line update SeCo.fit uses
-    remaining = np.ones(5, dtype=bool)
-    remaining = remaining & ~rule.covers_data_packed(rep)
-    assert not remaining[0] and not remaining[1] and not remaining[2]  # covered -- both classes gone
-    assert remaining[3] and remaining[4]  # uncovered -- still there
-    print("SeCo's covering-mask update removes every covered example, both classes, not just positives: OK")
 
 
 def test_seco_max_rules_caps_the_loop():
@@ -1072,7 +1099,6 @@ def test_seco_max_rules_caps_the_loop():
     assert len(ruleset.rules) == 1  # capped, even though 2 would be needed for full coverage
     preds = ruleset.predict(rep)
     assert not np.all(preds == y)  # incomplete coverage as a result
-    print("SeCo's max_rules caps the loop even when more rules would help: OK")
 
 
 def test_seco_stop_covering_prevents_rules_below_threshold():
@@ -1094,18 +1120,6 @@ def test_seco_stop_covering_prevents_rules_below_threshold():
     assert with_criterion.default_rule.target == "neg"
     preds = with_criterion.predict(rep)
     assert np.mean(preds == y) == 0.7  # all 3 positives misclassified, nothing to catch them
-    print("stop_covering (a plain ThresholdPrePruning) can reject every candidate, leaving only the default rule: OK")
-
-
-def test_uncovered_positives_threshold_criterion_arithmetic():
-    # dataset-independent check of the raw evaluate() arithmetic used by
-    # test_seco_stop_covering_via_uncovered_positives below
-    rep, ds = _conjunction_dataset()
-    empty_rule = Rule([], target="pos", dataspec=ds)
-    criterion = ThresholdPrePruning(UncoveredPositives(), threshold=0.0, operator=">=")  # p=0
-    assert criterion.evaluate(empty_rule, RuleStats(tp=8, fp=0, fn=1, tn=0), rep, "pos") is False  # fn=1 > 0
-    assert criterion.evaluate(empty_rule, RuleStats(tp=9, fp=0, fn=0, tn=0), rep, "pos") is True   # fn=0 <= 0
-    print("ThresholdPrePruning(UncoveredPositives(), ...) fires exactly when fn <= p: OK")
 
 
 def test_seco_stop_covering_via_uncovered_positives():
@@ -1132,7 +1146,69 @@ def test_seco_stop_covering_via_uncovered_positives():
     ruleset = SeCo(single_rule_learner=learner, target_class="pos", stop_covering=criterion).fit(rep)
     assert len(ruleset.rules) == 1
     assert not np.all(ruleset.predict(rep) == y)  # the straggler positive falls to the default rule instead
-    print("stop_covering via UncoveredPositives stops once few enough positives would remain uncovered: OK")
+
+
+def test_irep_covering_stop_prevents_a_coin_flip_rule_from_being_kept():
+    # a target class whose positives are ~40% of what any rule can isolate:
+    # a covering loop with no quality floor keeps adding sub-0.5 rules; the
+    # IREP stop (Precision < 0.5) halts before the first one is appended.
+    rng = np.random.default_rng(7)
+    n = 400
+    X = rng.integers(0, 2, size=(n, 5)).astype(bool)
+    # y=a is a real but weak signal; nothing gets a pure rule for it
+    p = np.where(X[:, 0], 0.55, 0.2)
+    y = np.where(rng.random(n) < p, "a", "b")
+    ds = DataSpec([f"f{i}" for i in range(5)])
+    data = HorizontalBitmapRepresentation(ds, X, y)
+
+    floor = ThresholdPrePruning(Precision(), 0.5, operator="<")
+    grow = SingleRuleLearner(heuristic=FoilGain(), search=GainAscentHillClimbing(stop_at_local_optimum=False),
+                             preparation=GrowPruneSplit(1 / 3, 0), postprocessing=ReducedErrorPruning(Precision()))
+    with_floor = SeCo(grow, target_class="a", stop_covering=floor).fit(data)
+    without = SeCo(grow, target_class="a").fit(data)
+
+    assert all(RuleStats.from_rule(r, data, "a").tp
+               / max(1, RuleStats.from_rule(r, data, "a").tp + RuleStats.from_rule(r, data, "a").fp) >= 0.5
+               for r in with_floor.rules)
+    assert len(with_floor.rules) <= len(without.rules)
+
+
+def test_replace_revise_optimization_simplifies_a_noisy_ruleset():
+    data, ds, y = _noisy_3class(n=600)
+    grow = SingleRuleLearner(
+        heuristic=FoilGain(), search=GainAscentHillClimbing(),
+        preparation=GrowPruneSplit(1 / 3, 0), postprocessing=ReducedErrorPruning(Precision()),
+    )
+    plain = SeCo(grow, target_class="a").fit(data)
+    optimized = SeCo(grow, target_class="a", optimization=ReplaceReviseOptimization(2, 1 / 3, 0)).fit(data)
+
+    assert len(optimized.rules) <= len(plain.rules)
+    # optimization is guided by description length -- it doesn't make it worse
+    dl_plain = rule_set_description_length(plain.rules, data, "a")
+    dl_opt = rule_set_description_length(optimized.rules, data, "a")
+    assert dl_opt <= dl_plain + 1e-6
+
+
+def test_rule_set_description_length_grows_with_redundancy():
+    data, ds, y = _noisy_3class(n=300)
+    r1 = SeCo(
+        SingleRuleLearner(heuristic=FoilGain(), search=GainAscentHillClimbing()),
+        target_class="a",
+    ).fit(data).rules
+    assert r1
+    dl1 = rule_set_description_length(r1, data, "a")
+    dl2 = rule_set_description_length(r1 + [r1[0]], data, "a")  # a duplicate rule adds theory bits
+    assert dl2 > dl1
+
+
+def test_seco_accepts_every_rule_of_a_branching_search():
+    rep = _either_dataset()
+    plain = PFoil(target_class="pos").fit(rep)
+    branching = PFoil(target_class="pos", search=GainAscentHillClimbing(branch_similarity=0.5)).fit(rep)
+    assert len(branching.rules) >= len(plain.rules)
+    assert all(r.target == "pos" and r.length() > 0 for r in branching.rules)
+    # PFoil's stopping criterion still applies per lineage
+    assert np.mean(np.asarray(branching.predict(rep)) == rep.y) >= np.mean(np.asarray(plain.predict(rep)) == rep.y) - 0.05
 
 
 def test_seco_raises_without_labels():
@@ -1145,23 +1221,46 @@ def test_seco_raises_without_labels():
         assert False, "expected ValueError"
     except ValueError:
         pass
-    print("SeCo.fit raises without labels: OK")
+
+
+@pytest.mark.parametrize("learner", [
+    CN2(target_class="pos"),
+    CN2(significance_threshold=None, target_class="pos"),
+    PFossil(target_class="pos"),
+    SeCo(SingleRuleLearner(heuristic=FoilGain(), search=GainAscentHillClimbing()), target_class="pos"),
+    AQR(random_state=0),  # the seed-covering loop
+], ids=["CN2", "CN2-unfiltered", "PFossil", "SeCo-FoilGain", "AQR"])
+def test_seco_rules_carry_their_own_training_stats(learner):
+    # each rule's stats are measured when it is learned, on the training
+    # data, and match RuleStats.from_rule; the default rule carries its own
+    rep, ds, y = _disjunctive_dataset()
+    model = learner.fit(rep)
+    assert model.rules
+    for r in model.rules:
+        expected = RuleStats.from_rule(r.rule, rep, r.target)
+        got = r.stats().confusion.rule_stats(r.target)
+        assert (got.tp, got.fp, got.fn, got.tn) == (expected.tp, expected.fp, expected.fn, expected.tn)
+    assert model.default_rule.stats() is not None and model.default_rule.stats().confusion is not None
 
 
 # -- CN2 ---------------------------------------------------------------
 
-def test_cn2_defaults_wire_laplace_and_significance_as_filtering():
-    cn2 = CN2(target_class="pos")
-    assert isinstance(cn2.single_rule_learner.heuristic, Laplace)
-    assert isinstance(cn2.single_rule_learner.search, BeamSearch)
-    assert cn2.single_rule_learner.search.beam_width == 5
-    assert cn2.single_rule_learner.stopping is None
-    assert isinstance(cn2.single_rule_learner.filtering, ThresholdPrePruning)
-    assert isinstance(cn2.single_rule_learner.filtering.heuristic, LikelihoodRatio)
-    assert cn2.single_rule_learner.filtering.threshold == 3.841
-    assert cn2.single_rule_learner.filtering.operator == "<"
-    assert cn2.single_rule_learner.filtering.polarity is True
-    print("CN2 defaults wire Laplace + a 3.841 likelihood-ratio significance test as filtering: OK")
+
+def test_cn2_defaults_and_the_significance_test_as_stopping():
+    srl = CN2(target_class="pos").single_rule_learner
+    assert isinstance(srl.heuristic, Laplace)
+    assert isinstance(srl.search, BeamSearch) and srl.search.beam_width == 5
+    assert srl.stopping is None
+    assert isinstance(srl.filtering, ThresholdPrePruning)
+    assert isinstance(srl.filtering.heuristic, LikelihoodRatio)
+    assert (srl.filtering.threshold, srl.filtering.operator, srl.filtering.polarity) == (3.841, "<", True)
+
+    # an explicit criterion replaces the default construction
+    criterion = ThresholdPrePruning(LikelihoodRatio(), 3.841, "<")
+    srl = CN2(target_class="pos", stopping=criterion).single_rule_learner
+    assert srl.stopping is criterion and srl.filtering is None
+    with pytest.raises(TypeError):
+        CN2(target_class="pos", mode="stopping")  # no names: pass the criterion
 
 
 def test_cn2_overrides_are_all_honored():
@@ -1177,20 +1276,11 @@ def test_cn2_overrides_are_all_honored():
     assert cn2.single_rule_learner.search.beam_width == 2
     assert cn2.single_rule_learner.filtering is None  # significance_threshold=None disables it
     assert cn2.max_rules == 1
-    print("CN2 constructor overrides (heuristic/beam_width/significance/max_rules) are honored: OK")
-
-
-def test_cn2_explicit_stopping_overrides_significance_threshold_default():
-    cn2 = CN2(target_class="pos", stopping=ThresholdPrePruning(LikelihoodRatio(), 2.0, "<"))
-    assert cn2.single_rule_learner.stopping is not None
-    assert cn2.single_rule_learner.filtering is None  # significance_threshold's default never built
-    print("CN2's explicit stopping= suppresses the default filtering= construction: OK")
 
 
 def test_cn2_passes_stop_covering_through():
     crit = ThresholdPrePruning(LikelihoodRatio(), 3.841, "<")
     assert CN2(significance_threshold=None, stop_covering=crit).stop_covering is crit
-    print("CN2's stop_covering= reaches SeCo: OK")
 
 
 def test_cn2_explicit_search_overrides_beam_width():
@@ -1198,7 +1288,26 @@ def test_cn2_explicit_search_overrides_beam_width():
     cn2 = CN2(target_class="pos", beam_width=2, search=custom)
     assert cn2.single_rule_learner.search is custom
     assert cn2.single_rule_learner.search.beam_width == 7  # beam_width= ignored once search= is given
-    print("CN2's explicit search= overrides beam_width=: OK")
+
+
+def test_cn2_laplace_counts_the_classes_of_the_data():
+    from pyrulearn.heuristics import Laplace, WRAcc
+    from pyrulearn.learners.seco import CN2
+    rng = np.random.default_rng(0)
+    raw = rng.random((90, 4)) < 0.5
+    spec = neg_spec([f"f{i}" for i in range(4)])
+    three = HorizontalBitmapRepresentation(spec, neg_X(raw), np.array(["a", "b", "c"] * 30))
+    cn2 = CN2()
+    cn2.fit(three)
+    assert cn2.single_rule_learner.heuristic.n_classes == 3
+    cn2.fit(HorizontalBitmapRepresentation(spec, neg_X(raw), np.array(["a", "b"] * 45)))
+    assert cn2.single_rule_learner.heuristic.n_classes == 2
+    fixed = CN2(heuristic=Laplace())
+    fixed.fit(three)
+    assert fixed.single_rule_learner.heuristic.n_classes == 2
+    other = CN2(heuristic=WRAcc())
+    other.fit(three)
+    assert isinstance(other.single_rule_learner.heuristic, WRAcc)
 
 
 def test_cn2_fits_a_disjunctive_concept_with_significance_disabled():
@@ -1212,7 +1321,6 @@ def test_cn2_fits_a_disjunctive_concept_with_significance_disabled():
     cn2 = CN2(target_class="pos", beam_width=3, significance_threshold=None)
     ruleset = cn2.fit(rep)
     assert np.all(ruleset.predict(rep) == y)
-    print("CN2 with significance disabled fits a disjunctive concept perfectly: OK")
 
 
 def test_cn2_significance_as_stopping_can_underfit_where_filtering_does_not():
@@ -1226,39 +1334,33 @@ def test_cn2_significance_as_stopping_can_underfit_where_filtering_does_not():
     assert not np.all(stopped.predict(rep) == y)
     filtered = CN2(target_class="pos", beam_width=3).fit(rep)
     assert np.all(filtered.predict(rep) == y)
-    print("CN2's significance test as stopping underfits a concept the default filter fits perfectly: OK")
+
+
+def test_cn2_returns_significant_rules_only():
+    # every rule CN2 returns passed the significance filter on the
+    # examples left at its turn, so the first is significant on all
+    rng = np.random.default_rng(0)
+    X = rng.integers(0, 2, size=(120, 6)).astype(bool)
+    y = np.where(X[:, 0] & X[:, 1] | X[:, 2], "pos", "neg")
+    flip = rng.random(120) < 0.15
+    y = np.where(flip, np.where(y == "pos", "neg", "pos"), y)
+    data = HorizontalBitmapRepresentation(DataSpec([f"x{i}" for i in range(6)]), X, y)
+    model = CN2(target_class="pos").fit(data)
+    assert len(model.rules) >= 1
+    first = model.rules[0]
+    assert LikelihoodRatio().score(RuleStats.from_rule(first, data, "pos")) >= 3.841
 
 
 def test_cn2_an_absurd_significance_threshold_yields_an_empty_ruleset_either_mode():
-    # An absurd threshold makes every round "insignificant" from the very
-    # first refinement. As `filtering`: nothing is ever eligible ->
-    # search returns None -> SeCo stops with no rules. As `stopping`:
-    # fires at round 1 with nothing acceptable tracked yet -> also None ->
-    # also an empty ruleset. The two modes only diverge on a *moderate*
-    # threshold, where `filtering` (running the search out) can still find
-    # a rule that re-enters the acceptable region a few refinements deeper
-    # than `stopping` (which quits) would ever look.
+    # every rule is insignificant: as filtering, nothing is ever eligible;
+    # as stopping, it fires at round 1 with nothing tracked yet. Either
+    # way the search returns None and the covering loop stops.
     rep, ds, y = _disjunctive_dataset()
-    filtered = CN2(target_class="pos", beam_width=3,
-                   filtering=ThresholdPrePruning(LikelihoodRatio(), 1000.0, "<")).fit(rep)
-    stopped = CN2(target_class="pos", beam_width=3, significance_threshold=1000.0).fit(rep)
-    assert list(filtered.rules) == []
-    assert list(stopped.rules) == []
+    filtered = CN2(target_class="pos", beam_width=3, significance_threshold=1000.0).fit(rep)
+    stopped = CN2(target_class="pos", beam_width=3,
+                  stopping=ThresholdPrePruning(LikelihoodRatio(), 1000.0, "<")).fit(rep)
+    assert list(filtered.rules) == [] and list(stopped.rules) == []
     assert filtered.default_rule is not None and stopped.default_rule is not None
-    print("An absurd significance threshold empties the ruleset whether wired as filtering or stopping: OK")
-
-
-def test_cn2_significance_test_as_stopping_is_passed_as_such():
-    criterion = ThresholdPrePruning(LikelihoodRatio(), 3.841, "<")
-    cn2 = CN2(target_class="pos", stopping=criterion)
-    assert cn2.single_rule_learner.filtering is None     # no default filtering once a criterion is given
-    assert cn2.single_rule_learner.stopping is criterion
-    default = CN2(target_class="pos").single_rule_learner
-    assert default.stopping is None and isinstance(default.filtering, ThresholdPrePruning)
-    assert default.filtering.threshold == 3.841
-    with pytest.raises(TypeError):
-        CN2(target_class="pos", mode="stopping")            # no names: pass the criterion
-    print("CN2's significance test: filtering by default, stopping when passed as such: OK")
 
 
 def test_cn2_conceptset_uses_microvotecombiner_not_the_family_max_default():
@@ -1271,7 +1373,6 @@ def test_cn2_conceptset_uses_microvotecombiner_not_the_family_max_default():
     model = CN2(random_state=0).fit(rep)
     assert isinstance(model, ConceptSet)
     assert isinstance(model.combiner, MicroVoteCombiner)
-    print("CN2's default ConceptSet uses MicroVoteCombiner, not the family's generic 'max': OK")
 
 
 def test_cn2_microvotecombiner_matches_clark_and_boswell_1991s_summed_distribution_vote():
@@ -1309,110 +1410,9 @@ def test_cn2_microvotecombiner_matches_clark_and_boswell_1991s_summed_distributi
     assert list(rs.predict(fired_by_all, combiner=HeuristicMaxCombiner(Laplace()))) == ["elephant"]
     # MicroVoteCombiner sums raw covered counts instead: elephant=5, bird=4+4=8 -> bird wins
     assert list(rs.predict(fired_by_all, combiner=MicroVoteCombiner())) == ["bird"]
-    print("MicroVoteCombiner sums covered-class distributions and can flip 'max's own answer, "
-          "matching CN2-unordered's actual voting rule: OK")
 
 
-def test_cn2_laplace_counts_the_classes_of_the_data():
-    from pyrulearn.heuristics import Laplace, WRAcc
-    from pyrulearn.learners.seco import CN2
-    rng = np.random.default_rng(0)
-    raw = rng.random((90, 4)) < 0.5
-    spec = neg_spec([f"f{i}" for i in range(4)])
-    three = HorizontalBitmapRepresentation(spec, neg_X(raw), np.array(["a", "b", "c"] * 30))
-    cn2 = CN2()
-    cn2.fit(three)
-    assert cn2.single_rule_learner.heuristic.n_classes == 3
-    cn2.fit(HorizontalBitmapRepresentation(spec, neg_X(raw), np.array(["a", "b"] * 45)))
-    assert cn2.single_rule_learner.heuristic.n_classes == 2
-    fixed = CN2(heuristic=Laplace())
-    fixed.fit(three)
-    assert fixed.single_rule_learner.heuristic.n_classes == 2
-    other = CN2(heuristic=WRAcc())
-    other.fit(three)
-    assert isinstance(other.single_rule_learner.heuristic, WRAcc)
-
-
-def test_cn2_returns_significant_rules_only():
-    # every rule CN2 returns passed the significance filter on the
-    # examples left at its turn, so the first is significant on all
-    rng = np.random.default_rng(0)
-    X = rng.integers(0, 2, size=(120, 6)).astype(bool)
-    y = np.where(X[:, 0] & X[:, 1] | X[:, 2], "pos", "neg")
-    flip = rng.random(120) < 0.15
-    y = np.where(flip, np.where(y == "pos", "neg", "pos"), y)
-    data = HorizontalBitmapRepresentation(DataSpec([f"x{i}" for i in range(6)]), X, y)
-    model = CN2(target_class="pos").fit(data)
-    assert len(model.rules) >= 1
-    first = model.rules[0]
-    assert LikelihoodRatio().score(RuleStats.from_rule(first, data, "pos")) >= 3.841
-    print(f"CN2 with the significance filter: {len(model.rules)} rules, the first significant: OK")
-
-
-# ---- AQR (Clark & Niblett, 1989) + SeedExample -----------------------------
-
-def test_seed_example_seeds_on_an_uncovered_positive():
-    rep, ds, y = _disjunctive_dataset()
-    candidates = SeedExample("first").initial_candidates(rep, "pos", np.ones(rep.n_samples, dtype=bool))
-    assert len(candidates) == 1
-    rule, mask = candidates[0]
-    assert rule.length() == 0 and rule.target == "pos"
-    # row 0 is the first positive: [1,1,0,0] -> open only to features a, b
-    assert mask == frozenset({0, 1})
-    print("SeedExample: seeds on the first uncovered positive, open mask = its True features: OK")
-
-
-def test_seed_example_respects_the_example_mask():
-    rep, ds, y = _disjunctive_dataset()
-    mask = np.ones(rep.n_samples, dtype=bool)
-    mask[:2] = False  # hide the two a-AND-b positives; only the c-AND-d one (row 2) is left
-    _, open_mask = SeedExample("first").initial_candidates(rep, "pos", mask)[0]
-    assert open_mask == frozenset({2, 3})  # row 2 is [0,0,1,1]
-    print("SeedExample: only seeds on positives that are still in scope: OK")
-
-
-def test_seed_example_raises_with_no_uncovered_positive():
-    rep, ds, y = _disjunctive_dataset()
-    none_left = np.zeros(rep.n_samples, dtype=bool)
-    try:
-        SeedExample().initial_candidates(rep, "pos", none_left)
-        assert False, "expected ValueError"
-    except ValueError as e:
-        assert "seed" in str(e).lower()
-    print("SeedExample raises when there is no uncovered positive to seed on: OK")
-
-
-def test_seed_example_random_strategy_is_reproducible():
-    rep, ds, y = _disjunctive_dataset()
-    full = np.ones(rep.n_samples, dtype=bool)
-    a = SeedExample("random", random_state=0).initial_candidates(rep, "pos", full)[0][1]
-    b = SeedExample("random", random_state=0).initial_candidates(rep, "pos", full)[0][1]
-    assert a == b  # same random_state -> same seed
-    # whichever positive it lands on, the open mask is that row's True features
-    assert a in ({0, 1}, {2, 3}) or len(a) > 0
-    print("SeedExample('random') is reproducible under a fixed random_state: OK")
-
-
-def test_seed_example_rejects_unknown_strategy():
-    try:
-        SeedExample("sideways")
-        assert False, "expected ValueError"
-    except ValueError:
-        pass
-    print("SeedExample rejects an unknown strategy: OK")
-
-
-def test_seed_example_index_strategy_seeds_on_the_exact_row():
-    rep, ds, y = _disjunctive_dataset()
-    # row 2 is [0,0,1,1] (a c-AND-d positive), regardless of target_class / mask
-    _, open_mask = SeedExample("index", index=2).initial_candidates(rep, "anything", None)[0]
-    assert open_mask == frozenset({2, 3})
-    try:
-        SeedExample("index")  # index is required
-        assert False, "expected ValueError"
-    except ValueError:
-        pass
-    print("SeedExample(strategy='index') seeds on the given row, ignoring class/mask: OK")
+# -- AQR (Clark & Niblett, 1989) ---------------------------------------
 
 
 def test_aqr_defaults_wire_seed_lef_and_consistency_filtering():
@@ -1425,14 +1425,12 @@ def test_aqr_defaults_wire_seed_lef_and_consistency_filtering():
     assert isinstance(srl.filtering.heuristic, CoveredNegatives)
     assert srl.stopping is None
     assert isinstance(srl.search, BeamSearch) and srl.search.beam_width == 5  # the paper's star size
-    print("AQR defaults: SeedExample + a LEF + consistency as filtering, beam_width 5: OK")
 
 
 def test_aqr_maxstar_is_the_star_size_and_search_overrides_it():
     assert AQR(target_class="pos", maxstar=3).single_rule_learner.search.beam_width == 3
     custom = BeamSearch(beam_width=9)
     assert AQR(target_class="pos", maxstar=3, search=custom).single_rule_learner.search is custom
-    print("AQR: maxstar sets the beam width; an explicit search= overrides it: OK")
 
 
 def test_aqr_overrides_are_all_honored():
@@ -1446,7 +1444,6 @@ def test_aqr_overrides_are_all_honored():
     assert isinstance(srl.heuristic, CoveredPositives)
     assert srl.filtering is None  # require_consistency=False drops the gate
     assert isinstance(srl.space_init, EmptyRuleAllFeatures)
-    print("AQR honors heuristic=/require_consistency=/space_init= overrides: OK")
 
 
 def test_aqr_covers_a_disjunctive_concept_with_consistent_rules():
@@ -1462,7 +1459,6 @@ def test_aqr_covers_a_disjunctive_concept_with_consistent_rules():
         assert RuleStats.from_rule(r, rep, "pos").fp == 0
     assert ruleset.default_rule is not None and ruleset.default_rule.target == "neg"
     assert np.all(ruleset.predict(rep) == y)
-    print("AQR covers the disjunctive concept with two consistent rules: OK")
 
 
 def test_aqr_uses_negation_features_for_negated_conditions():
@@ -1478,7 +1474,6 @@ def test_aqr_uses_negation_features_for_negated_conditions():
     assert set(r.pos) == {ds.feature_index("a"), ds.feature_index("not b")}
     assert RuleStats.from_rule(r, rep, "pos").fp == 0
     assert np.all(ruleset.predict(rep) == y)
-    print("AQR grows a negated condition as a literal on the paired negation feature: OK")
 
 
 def test_aqr_stops_when_no_consistent_rule_can_be_found():
@@ -1493,7 +1488,6 @@ def test_aqr_stops_when_no_consistent_rule_can_be_found():
     ruleset = AQR(target_class="pos").fit(rep)
     assert len(ruleset.rules) == 0
     assert ruleset.default_rule is not None and ruleset.default_rule.target == "neg"
-    print("AQR stops (empty ruleset) when the data admits no consistent rule: OK")
 
 
 def test_aqr_sets_a_bad_seed_aside_and_keeps_covering():
@@ -1509,7 +1503,6 @@ def test_aqr_sets_a_bad_seed_aside_and_keeps_covering():
         ruleset = AQR(target_class="pos", space_init=SeedExample(strategy, 0)).fit(rep)
         assert [set(r.pos) for r in ruleset.rules] == [{0}], strategy
         assert list(ruleset.predict(rep)) == ["neg", "neg", "pos", "pos", "neg", "neg", "neg"]
-    print("AQR sets a seed with no consistent rule aside and keeps covering: OK")
 
 
 def test_aqr_require_consistency_false_lets_an_inconsistent_rule_through():
@@ -1523,84 +1516,20 @@ def test_aqr_require_consistency_false_lets_an_inconsistent_rule_through():
     ruleset = AQR(target_class="pos", heuristic=CoveredPositives(), require_consistency=False).fit(rep)
     assert len(ruleset.rules) == 1
     assert RuleStats.from_rule(ruleset.rules[0], rep, "pos").fp > 0  # inconsistent, but accepted
-    print("AQR(require_consistency=False) accepts an inconsistent rule: OK")
 
 
-def test_encoding_length_restriction_arithmetic_matches_quinlan_1990_p251():
-    # direct check against Quinlan (1990), Machine Learning 5(3):239-266,
-    # p. 251: encoding_length = l*(1+log2(d)) - log2(l!), benefit =
-    # log2(N) + log2(C(N,p)); evaluate() fires once encoding_length >
-    # benefit. d=100 features (not e.g. 6) is deliberate -- confirmed
-    # empirically that with only a handful of features, 1+log2(d) bits/
-    # literal is too small for the criterion to ever fire at realistic
-    # rule lengths/coverage (see test_pfoil_mdl_stopping_curbs_growth_
-    # on_a_wide_noisy_dataset's own comment for the same finding at the
-    # whole-search level)
-    import math
-    ds_wide = DataSpec([f"a{i}" for i in range(100)])
-    rep_wide = HorizontalBitmapRepresentation(ds_wide, np.zeros((1, 100), dtype=bool))
-    criterion = EncodingLengthRestriction()
-
-    # l=2, p=40, N=300: nowhere near "too expensive" yet
-    rule = Rule.from_pos_neg(pos=[0, 1], target="pos", dataspec=ds_wide)
-    stats = RuleStats(tp=40, fp=2, fn=10, tn=248)
-    encoding_length = 2 * (1 + math.log2(100)) - math.log2(math.factorial(2))
-    benefit = math.log2(300) + math.log2(math.comb(300, 40))
-    assert encoding_length < benefit
-    assert criterion.evaluate(rule, stats, rep_wide, "pos") is False
-
-    # l=6, p=1, N=300: a long rule barely covering anything does trip it
-    long_rule = Rule.from_pos_neg(pos=[0, 1, 2, 3, 4, 5], target="pos", dataspec=ds_wide)
-    barely_covering_stats = RuleStats(tp=1, fp=0, fn=149, tn=150)
-    encoding_length_long = 6 * (1 + math.log2(100)) - math.log2(math.factorial(6))
-    benefit_barely = math.log2(300) + math.log2(math.comb(300, 1))
-    assert encoding_length_long > benefit_barely
-    assert criterion.evaluate(long_rule, barely_covering_stats, rep_wide, "pos") is True
-    print("EncodingLengthRestriction's arithmetic matches Quinlan 1990 p.251 by hand-computation: OK")
+# -- PFoil -------------------------------------------------------------
 
 
-def test_encoding_length_restriction_never_fires_on_the_empty_rule():
-    ds6 = DataSpec(["a", "b", "c", "d", "e", "f"])
-    rep6 = HorizontalBitmapRepresentation(ds6, np.zeros((1, 6), dtype=bool))
-    empty = Rule([], target="pos", dataspec=ds6)
-    criterion = EncodingLengthRestriction()
-    assert criterion.evaluate(empty, RuleStats(tp=150, fp=150, fn=0, tn=0), rep6, "pos") is False
-    print("EncodingLengthRestriction never fires on the length-0 (empty) rule: OK")
-
-
-def _wide_noisy_disjunction_dataset(n=300, d=60, seed=1, noise_rate=0.05):
-    # y = pos iff (a0 AND a1) OR (a2 AND NOT a3), plus label noise -- many
-    # more (irrelevant) features than the toy 4-feature disjunctive
-    # dataset, needed because EncodingLengthRestriction's benefit term
-    # (dominated by log2(C(N,p))) swamps its encoding-length term whenever
-    # d is small (confirmed empirically: the criterion is essentially
-    # inert on _disjunctive_dataset's 4 features, only visibly constrains
-    # growth once d is large enough for 1+log2(d) bits/literal to matter)
-    rng = np.random.default_rng(seed)
-    X = rng.integers(0, 2, size=(n, d)).astype(bool)
-    ds = DataSpec([f"a{i}" for i in range(d)])
-    y_clean = (X[:, 0] & X[:, 1]) | (X[:, 2] & ~X[:, 3])
-    noise = rng.random(n) < noise_rate
-    y = np.where(noise, ~y_clean, y_clean)
-    y = np.where(y, "pos", "neg")
-    rep = HorizontalBitmapRepresentation(ds, X, y)
-    return rep, y
-
-
-def test_pfoil_defaults_wire_gain_ascent_hill_climbing_foilgain_and_mdl_stopping():
-    pfoil = PFoil(target_class="pos")
-    assert isinstance(pfoil.single_rule_learner.heuristic, FoilGain)
-    assert isinstance(pfoil.single_rule_learner.search, GainAscentHillClimbing)
-    assert pfoil.single_rule_learner.filtering is None
-    assert isinstance(pfoil.single_rule_learner.stopping, EncodingLengthRestriction)
-    print("PFoil defaults wire GainAscentHillClimbing + FoilGain + EncodingLengthRestriction as stopping: OK")
-
-
-def test_pfoil_mdl_stopping_false_recovers_mooneys_unrestricted_pfoil():
-    pfoil = PFoil(target_class="pos", mdl_stopping=False)
-    assert pfoil.single_rule_learner.stopping is None
-    assert pfoil.single_rule_learner.filtering is None
-    print("PFoil(mdl_stopping=False) disables the MDL criterion entirely: OK")
+def test_pfoil_defaults_wire_gain_ascent_foilgain_and_mdl_stopping():
+    srl = PFoil(target_class="pos").single_rule_learner
+    assert isinstance(srl.heuristic, FoilGain)
+    assert isinstance(srl.search, GainAscentHillClimbing)
+    assert srl.filtering is None
+    assert isinstance(srl.stopping, EncodingLengthRestriction)
+    # Mooney's PFOIL, without the MDL criterion
+    srl = PFoil(target_class="pos", mdl_stopping=False).single_rule_learner
+    assert srl.stopping is None and srl.filtering is None
 
 
 def test_pfoil_finds_the_perfect_conjunction_on_the_toy_dataset():
@@ -1613,7 +1542,6 @@ def test_pfoil_finds_the_perfect_conjunction_on_the_toy_dataset():
     ruleset = pfoil.fit(rep)
     assert len(ruleset.rules) >= 1
     assert {l.feature for l in ruleset.rules[0].conditions} == {0, 1}
-    print("PFoil finds the perfect a-AND-b conjunction on the toy dataset: OK")
 
 
 def test_pfoil_mdl_stopping_curbs_growth_on_a_wide_noisy_dataset():
@@ -1631,47 +1559,31 @@ def test_pfoil_mdl_stopping_curbs_growth_on_a_wide_noisy_dataset():
     assert acc_restricted <= acc_unrestricted  # MDL stopping trims the final rule short of perfectly memorizing
     assert acc_unrestricted == 1.0  # unrestricted growth fully memorizes this (small, noisy) training set
     assert acc_restricted < 1.0     # MDL stopping actually intervened, not a no-op
-    print("PFoil's MDL stopping measurably curbs overfitting relative to unrestricted growth on a wide dataset: OK")
+
+
+# -- PFossil -----------------------------------------------------------
 
 
 def test_pfossil_defaults_wire_hillclimbing_correlation_and_filtering():
     srl = PFossil(target_class="pos").single_rule_learner
-    assert isinstance(srl.search, HillClimbing)
-    assert not isinstance(srl.search, GainAscentHillClimbing)  # plain heuristic path
-    assert isinstance(srl.heuristic, Correlation)  # passed straight through, no DeltaGain wrap
+    assert type(srl.search) is HillClimbing
+    assert isinstance(srl.heuristic, Correlation)
     assert srl.stopping is None
     assert isinstance(srl.filtering, ThresholdPrePruning)
     assert isinstance(srl.filtering.heuristic, Correlation)
-    assert srl.filtering.threshold == 0.3
-    assert srl.filtering.operator == "<"
-    print("PFossil defaults wire HillClimbing + Correlation + a 0.3 threshold as filtering: OK")
+    assert (srl.filtering.threshold, srl.filtering.operator) == (0.3, "<")
 
 
-def test_pfossil_threshold_as_stopping_is_passed_as_such():
+def test_pfossil_overrides():
     criterion = ThresholdPrePruning(Correlation(), 0.3, "<")
     srl = PFossil(target_class="pos", stopping=criterion).single_rule_learner
-    assert srl.filtering is None
-    assert srl.stopping is criterion
-    print("PFossil's correlation threshold as stopping=, when passed as such: OK")
-
-
-def test_pfossil_passes_any_plain_heuristic_straight_through():
-    # no more DeltaGain wrapping -- HillClimbing ranks a plain heuristic
-    # directly, and an explicit BeamSearch always did
-    hc = PFossil(target_class="pos", heuristic=Laplace()).single_rule_learner.heuristic
-    assert isinstance(hc, Laplace)
-    beam = PFossil(
-        target_class="pos", search=BeamSearch(beam_width=5), heuristic=Correlation(),
-    ).single_rule_learner.heuristic
-    assert isinstance(beam, Correlation)
-    print("PFossil passes a plain heuristic straight through for both HillClimbing and BeamSearch: OK")
-
-
-def test_pfossil_correlation_threshold_none_disables_the_criterion():
-    pfossil = PFossil(target_class="pos", correlation_threshold=None)
-    assert pfossil.single_rule_learner.stopping is None
-    assert pfossil.single_rule_learner.filtering is None
-    print("PFossil(correlation_threshold=None) disables the criterion entirely: OK")
+    assert srl.filtering is None and srl.stopping is criterion
+    srl = PFossil(target_class="pos", correlation_threshold=None).single_rule_learner
+    assert srl.stopping is None and srl.filtering is None
+    # any plain heuristic, for the hill climbing and for a beam
+    assert isinstance(PFossil(target_class="pos", heuristic=Laplace()).single_rule_learner.heuristic, Laplace)
+    beam = PFossil(target_class="pos", search=BeamSearch(beam_width=5), heuristic=Correlation())
+    assert isinstance(beam.single_rule_learner.heuristic, Correlation)
 
 
 def test_pfossil_fits_a_disjunctive_concept_with_the_threshold_disabled():
@@ -1679,40 +1591,28 @@ def test_pfossil_fits_a_disjunctive_concept_with_the_threshold_disabled():
     pfossil = PFossil(target_class="pos", correlation_threshold=None)
     ruleset = pfossil.fit(rep)
     assert np.all(ruleset.predict(rep) == y)
-    print("PFossil with the correlation threshold disabled fits a disjunctive concept perfectly: OK")
 
 
 # -- Pypper ------------------------------------------------------------
 
-def _noisy_3class(n=500, seed=0):
-    rng = np.random.default_rng(seed)
-    raw = rng.random((n, 6)) < 0.5
-    y = np.where(raw[:, 0] & ~raw[:, 1], "a",
-         np.where(raw[:, 2] & raw[:, 3], "b", "c"))
-    y = np.where(rng.random(n) < 0.05, rng.permutation(y), y)
-    ds = neg_spec([f"f{i}" for i in range(6)])
-    return HorizontalBitmapRepresentation(ds, neg_X(raw), y), ds, y
 
-
-def test_ripper_returns_a_least_frequent_first_concept_cascade():
+def test_pypper_returns_a_least_frequent_first_concept_cascade():
     data, ds, y = _noisy_3class()
     model = Pypper(random_state=0).fit(data)
     assert type(model) is ConceptCascade
     assert model.default_prediction == "c"                  # most frequent -> catch-all
     assert set(r.target for r in model.rules) <= {"a", "b"}  # rarer classes get rules
     assert np.mean(np.asarray(model.predict(data)) == y) > 0.85
-    print("Pypper -> least-frequent-first ConceptCascade, majority is the default: OK")
 
 
-def test_ripper_is_reproducible():
+def test_pypper_is_reproducible():
     data, ds, y = _noisy_3class()
     a = Pypper(random_state=1).fit(data)
     b = Pypper(random_state=1).fit(data)
     assert [r.pos for r in a.rules] == [r.pos for r in b.rules]
-    print("Pypper(random_state=) is reproducible: OK")
 
 
-def test_ripper_stage_learner_wires_the_irep_grow_phase():
+def test_pypper_stage_learner_wires_the_irep_grow_phase():
     stage = Pypper(random_state=0)._stage_learner()
     srl = stage.single_rule_learner
     assert isinstance(srl.search, GainAscentHillClimbing)
@@ -1726,151 +1626,18 @@ def test_ripper_stage_learner_wires_the_irep_grow_phase():
     assert EncodingLengthRestriction in kinds and ThresholdPrePruning in kinds
     irep = next(c for c in stage.stop_covering.criteria if isinstance(c, ThresholdPrePruning))
     assert isinstance(irep.heuristic, Precision) and irep.threshold == 0.5 and irep.operator == "<"
-    print("Pypper stage learner: grow-to-consistency search + REP + minNo + IREP covering stop: OK")
 
 
-def test_irep_covering_stop_prevents_a_coin_flip_rule_from_being_kept():
-    # a target class whose positives are ~40% of what any rule can isolate:
-    # a covering loop with no quality floor keeps adding sub-0.5 rules; the
-    # IREP stop (Precision < 0.5) halts before the first one is appended.
-    rng = np.random.default_rng(7)
-    n = 400
-    X = rng.integers(0, 2, size=(n, 5)).astype(bool)
-    # y=a is a real but weak signal; nothing gets a pure rule for it
-    p = np.where(X[:, 0], 0.55, 0.2)
-    y = np.where(rng.random(n) < p, "a", "b")
-    ds = DataSpec([f"f{i}" for i in range(5)])
-    data = HorizontalBitmapRepresentation(ds, X, y)
-
-    floor = ThresholdPrePruning(Precision(), 0.5, operator="<")
-    grow = SingleRuleLearner(heuristic=FoilGain(), search=GainAscentHillClimbing(stop_at_local_optimum=False),
-                             preparation=GrowPruneSplit(1 / 3, 0), postprocessing=ReducedErrorPruning(Precision()))
-    with_floor = SeCo(grow, target_class="a", stop_covering=floor).fit(data)
-    without = SeCo(grow, target_class="a").fit(data)
-
-    assert all(RuleStats.from_rule(r, data, "a").tp
-               / max(1, RuleStats.from_rule(r, data, "a").tp + RuleStats.from_rule(r, data, "a").fp) >= 0.5
-               for r in with_floor.rules)
-    assert len(with_floor.rules) <= len(without.rules)
-    print("IREP covering stop keeps every rule above coin-flip precision: OK")
-
-
-def test_replace_revise_optimization_simplifies_a_noisy_ruleset():
-    data, ds, y = _noisy_3class(n=600)
-    grow = SingleRuleLearner(
-        heuristic=FoilGain(), search=GainAscentHillClimbing(),
-        preparation=GrowPruneSplit(1 / 3, 0), postprocessing=ReducedErrorPruning(Precision()),
-    )
-    plain = SeCo(grow, target_class="a").fit(data)
-    optimized = SeCo(grow, target_class="a", optimization=ReplaceReviseOptimization(2, 1 / 3, 0)).fit(data)
-
-    assert len(optimized.rules) <= len(plain.rules)
-    # optimization is guided by description length -- it doesn't make it worse
-    dl_plain = rule_set_description_length(plain.rules, data, "a")
-    dl_opt = rule_set_description_length(optimized.rules, data, "a")
-    assert dl_opt <= dl_plain + 1e-6
-    print(f"ReplaceReviseOptimization: {len(plain.rules)} -> {len(optimized.rules)} rules, "
-          f"DL {dl_plain:.0f} -> {dl_opt:.0f}: OK")
-
-
-def test_rule_set_description_length_grows_with_redundancy():
-    data, ds, y = _noisy_3class(n=300)
-    r1 = SeCo(
-        SingleRuleLearner(heuristic=FoilGain(), search=GainAscentHillClimbing()),
-        target_class="a",
-    ).fit(data).rules
-    assert r1
-    dl1 = rule_set_description_length(r1, data, "a")
-    dl2 = rule_set_description_length(r1 + [r1[0]], data, "a")  # a duplicate rule adds theory bits
-    assert dl2 > dl1
-    print("rule_set_description_length: a redundant rule costs more bits: OK")
-
-
-def test_ripper_on_binary_data():
+def test_pypper_on_binary_data():
     data, ds, y = _noisy_3class()
     yb = np.where(y == "a", "a", "rest")
     db = HorizontalBitmapRepresentation(ds, np.asarray(data.X), yb)
     model = Pypper(random_state=0).fit(db)
     assert type(model) is ConceptCascade and model.default_prediction == "rest"
     assert np.mean(np.asarray(model.predict(db)) == yb) > 0.9
-    print("Pypper on a binary problem: rules for the minority class, majority default: OK")
 
 
-# ------------------------------------------------------------- fit-time stats ---
-
-def test_covering_loop_rules_and_default_rule_carry_their_own_training_stats():
-    rep, ds, y = _disjunctive_dataset()
-    model = CN2(target_class="pos").fit(rep)  # -> ConceptModel
-    for r in model.rules:
-        expected = RuleStats.from_rule(r.rule, rep, "pos")
-        got = r.stats().confusion.rule_stats("pos")
-        assert (got.tp, got.fp, got.fn, got.tn) == (expected.tp, expected.fp, expected.fn, expected.tn)
-    dr_stats = model.default_rule.stats()
-    assert dr_stats is not None and dr_stats.confusion is not None
-    print("CN2's covering-loop rules and default_rule carry stats matching RuleStats.from_rule: OK")
-
-
-def test_seed_covering_rules_carry_their_own_training_stats():
-    rep, ds, y = _disjunctive_dataset()
-    model = AQR(random_state=0).fit(rep)  # -> FlatRuleSet, _seed_covering_fit path
-    for r in model.rules:
-        expected = RuleStats.from_rule(r.rule, rep, r.target)
-        got = r.stats().confusion.rule_stats(r.target)
-        assert (got.tp, got.fp, got.fn, got.tn) == (expected.tp, expected.fp, expected.fn, expected.tn)
-    print("AQR's seed-covering rules carry stats matching RuleStats.from_rule: OK")
-
-
-# ----------------------------------------------- several rules per search
-
-def _either_dataset(n=400, seed=0):
-    # y = a OR b: a and b are (about) equally good first conditions
-    rng = np.random.default_rng(seed)
-    raw = rng.random((n, 3)) < 0.5
-    y = np.where(raw[:, 0] | raw[:, 1], "pos", "neg")
-    return HorizontalBitmapRepresentation(DataSpec(["a", "b", "c"]), raw, y)
-
-
-def test_search_all_is_search_without_branching():
-    rep = _either_dataset()
-    initial = EmptyRuleAllFeatures().initial_candidates(rep, "pos")
-    for search, heuristic in [(GainAscentHillClimbing(), FoilGain()), (HillClimbing(), Laplace()),
-                              (BeamSearch(beam_width=3), Laplace())]:
-        one = search.search(rep, "pos", heuristic, initial)
-        assert search.search_all(rep, "pos", heuristic, initial) == ([] if one is None else [one])
-    print("search_all without branching is search's one rule: OK")
-
-
-def test_branching_gain_ascent_yields_a_copy_at_each_near_tie():
-    rep = _either_dataset()
-    initial = EmptyRuleAllFeatures().initial_candidates(rep, "pos")
-    plain = GainAscentHillClimbing(branch_similarity=1.0).search_all(rep, "pos", FoilGain(), initial)
-    both = GainAscentHillClimbing(branch_similarity=0.5).search_all(rep, "pos", FoilGain(), initial)
-    assert len(plain) == 1
-    assert {r.pos for r in both} == {(0,), (1,)}                  # a and b, from one search
-    # search still returns the best-gain lineage alone
-    best = GainAscentHillClimbing(branch_similarity=0.5).search(rep, "pos", FoilGain(), initial)
-    assert best in both and len([best]) == 1
-    # min_gain: a gain of at least this, not just any positive gain
-    stuck = GainAscentHillClimbing(min_gain=1e9).search_all(rep, "pos", FoilGain(), initial)
-    assert [r.length() for r in stuck] == [0]                     # no move: the seed, as `search` returns
-    assert GainAscentHillClimbing(min_gain=1e9, branch_similarity=0.5).search_all(
-        rep, "pos", FoilGain(), initial) == []                    # branching never yields the empty seed
-    with pytest.raises(ValueError):
-        GainAscentHillClimbing(min_gain=0.0)
-    with pytest.raises(ValueError):
-        GainAscentHillClimbing(branch_similarity=1.5)
-    print("branching gain ascent yields a copy at each near-tie: OK")
-
-
-def test_seco_accepts_every_rule_of_a_branching_search():
-    rep = _either_dataset()
-    plain = PFoil(target_class="pos").fit(rep)
-    branching = PFoil(target_class="pos", search=GainAscentHillClimbing(branch_similarity=0.5)).fit(rep)
-    assert len(branching.rules) >= len(plain.rules)
-    assert all(r.target == "pos" and r.length() > 0 for r in branching.rules)
-    # PFoil's stopping criterion still applies per lineage
-    assert np.mean(np.asarray(branching.predict(rep)) == rep.y) >= np.mean(np.asarray(plain.predict(rep)) == rep.y) - 0.05
-    print("SeCo accepts every rule a branching search yields: OK")
+# -- CPAR --------------------------------------------------------------
 
 
 def test_cpar_is_a_seco_configuration():
@@ -1881,78 +1648,3 @@ def test_cpar_is_a_seco_configuration():
     assert type(search) is GainAscentHillClimbing
     assert (search.min_gain, search.branch_similarity) == (0.7, 0.99)
     assert isinstance(cpar.single_rule_learner.heuristic, FoilGain)
-    print("CPAR is a SeCo configuration: OK")
-
-
-if __name__ == "__main__":
-    test_beam_search_finds_perfect_conjunction()
-    test_hill_climbing_finds_the_perfect_conjunction_with_foilgain()
-    test_hill_climbing_with_delta_gain_matches_foilgain_on_this_dataset()
-    test_hill_climbing_stops_at_the_start_when_no_move_has_positive_gain()
-    test_hill_climbing_returns_none_when_the_walk_cant_start_and_a_gate_is_set()
-    test_hill_climbing_rejects_a_non_gain_heuristic()
-    test_hill_climbing_rejects_more_than_one_initial_candidate()
-    test_beam_search_deduplicates_rules_reached_by_different_orders()
-    test_beam_search_respects_example_mask()
-    test_beam_search_raises_on_empty_initial_candidates()
-    test_beam_search_never_returns_worse_than_initial_candidate()
-    test_empty_rule_all_features_starts_from_universal_rule()
-    test_feature_subset_resolves_names_to_indices()
-    test_no_split_passes_mask_through_unchanged()
-    test_grow_prune_split_produces_disjoint_masks_covering_scope()
-    test_grow_prune_split_falls_back_when_stratification_is_impossible()
-    test_grow_prune_split_falls_back_to_no_split_when_too_few_examples()
-    test_reduced_error_pruning_strips_condition_that_doesnt_generalize()
-    test_reduced_error_pruning_noop_without_context()
-    test_reduced_error_pruning_never_truncates_to_the_empty_rule()
-    test_reduced_error_pruning_leaves_an_already_empty_rule_alone()
-    test_single_rule_learner_default_config_matches_bare_beam_search()
-    test_single_rule_learner_full_ripper_style_config_runs_end_to_end()
-    test_beam_search_tp_zero_floor_stops_specializing()
-    test_beam_search_fp_zero_floor_stops_specializing()
-    test_threshold_pre_pruning_rejects_bad_operator()
-    test_threshold_pre_pruning_all_operators()
-    test_polarity_flips_which_of_accept_reject_equals_evaluate()
-    test_any_of_and_all_of_composition()
-    test_any_of_drives_beam_search_stopping_via_combination_not_a_single_forward()
-    test_filtering_never_changes_exploration_only_best_rule_eligibility()
-    test_filtering_excludes_the_best_rule_without_blocking_the_search_from_finding_it()
-    test_stopping_never_fires_on_the_seed_candidate()
-    test_stopping_leave_polarity_returns_the_pre_trigger_best_or_none()
-    test_stopping_enter_polarity_returns_the_triggering_rule_directly()
-    test_single_rule_learner_passes_filtering_and_stopping_through()
-    test_seco_is_a_native_rule_learner()
-    test_seco_covers_a_disjunctive_concept_with_two_rules()
-    test_seco_rejects_unconditional_rule_even_straight_from_search()
-    test_seco_covering_removes_both_classes_not_just_positives()
-    test_seco_max_rules_caps_the_loop()
-    test_seco_stop_covering_prevents_rules_below_threshold()
-    test_uncovered_positives_threshold_criterion_arithmetic()
-    test_seco_stop_covering_via_uncovered_positives()
-    test_seco_raises_without_labels()
-    test_cn2_defaults_wire_laplace_and_significance_as_stopping()
-    test_cn2_overrides_are_all_honored()
-    test_cn2_explicit_filtering_overrides_significance_threshold_default()
-    test_cn2_explicit_search_overrides_beam_width()
-    test_cn2_fits_a_disjunctive_concept_with_significance_disabled()
-    test_cn2_default_significance_as_stopping_can_underfit()
-    test_cn2_filtering_that_rejects_everything_is_inert_not_empty()
-    test_cn2_an_absurd_significance_threshold_yields_an_empty_ruleset_either_mode()
-    test_cn2_mode_filtering_wires_the_same_criterion_as_filtering_not_stopping()
-    test_cn2_mode_rejects_unknown_value()
-    test_cn2_explicit_stopping_suppresses_mode_routing()
-    test_encoding_length_restriction_arithmetic_matches_quinlan_1990_p251()
-    test_encoding_length_restriction_never_fires_on_the_empty_rule()
-    test_pfoil_defaults_wire_hill_climbing_foilgain_and_mdl_stopping()
-    test_pfoil_mdl_stopping_false_recovers_mooneys_unrestricted_pfoil()
-    test_pfoil_finds_the_perfect_conjunction_on_the_toy_dataset()
-    test_pfoil_mdl_stopping_curbs_growth_on_a_wide_noisy_dataset()
-    test_pfossil_defaults_wire_hillclimbing_deltagain_correlation_and_filtering()
-    test_pfossil_mode_stopping_wires_the_criterion_as_stopping_not_filtering()
-    test_pfossil_wraps_a_plain_heuristic_for_hillclimbing_but_leaves_explicit_beamsearch_alone()
-    test_pfossil_mode_rejects_unknown_value()
-    test_pfossil_correlation_threshold_none_disables_the_criterion()
-    test_pfossil_fits_a_disjunctive_concept_with_the_threshold_disabled()
-    test_covering_loop_rules_and_default_rule_carry_their_own_training_stats()
-    test_seed_covering_rules_carry_their_own_training_stats()
-    print("\nAll tests passed.")
