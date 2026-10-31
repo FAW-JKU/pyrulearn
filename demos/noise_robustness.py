@@ -215,10 +215,9 @@ def _slug(group: str) -> str:
 
 
 def _plot(res: pd.DataFrame, group: str, quick: bool) -> list:
-    """Accuracy, number of rules and fit time against the noise level for
-    the learners of `group`, with `REFERENCES` from the other groups as thin
-    grey lines."""
-    path = os.path.join(PLOTS_DIR, f"{NAME}{'_quick' if quick else ''}_{_slug(group)}.png")
+    """One plot each of the accuracy, the number of rules and the fit time
+    against the noise level for the learners of `group`, with `REFERENCES`
+    from the other groups as thin grey lines."""
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -228,38 +227,38 @@ def _plot(res: pd.DataFrame, group: str, quick: bool) -> list:
         means = res.groupby(["name", "noise"])[["accuracy", "n_rules", "fit_time"]].mean()
         present = set(means.index.get_level_values(0))
         os.makedirs(PLOTS_DIR, exist_ok=True)
-        fig, axes = plt.subplots(1, 3, figsize=(14, 4.2))
-        columns = ["accuracy", "n_rules", "fit_time"]
         references = [n for n in REFERENCES if n not in GROUPS[group] and n in present]
-        for name, style in zip(references, ["-", "--"]):
-            m = means.loc[name]
-            for ax, column in zip(axes, columns):
-                ax.plot(m.index, m[column], style, color="0.6", lw=1, label=f"{name} (reference)")
-        for name, marker in zip(GROUPS[group], "osD^vP"):
-            if name in present:
+        L = []
+        for column, what, ylabel in [("accuracy", "accuracy", "accuracy (mean)"),
+                                     ("n_rules", "rules", "rules (mean, log scale)"),
+                                     ("fit_time", "fit time", "fit time in s (mean, log scale)")]:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            for name, style in zip(references, ["-", "--"]):
                 m = means.loc[name]
-                for ax, column in zip(axes, columns):
+                ax.plot(m.index, m[column], style, color="0.6", lw=1, label=f"{name} (reference)")
+            for name, marker in zip(GROUPS[group], "osD^vP"):
+                if name in present:
+                    m = means.loc[name]
                     ax.plot(m.index, m[column], "-", marker=marker, markersize=4, label=name)
-        for ax in axes:
             ax.xaxis.set_major_formatter(PercentFormatter(1.0))
             ax.set_xlabel("class noise in the training data")
             ax.grid(alpha=0.3, which="both")
-        axes[0].yaxis.set_major_formatter(PercentFormatter(1.0))
-        axes[0].set_ylabel("accuracy (mean)")
-        axes[1].set_yscale("log")
-        axes[1].set_ylabel("rules (mean, log scale)")
-        axes[2].set_yscale("log")
-        axes[2].set_ylabel("fit time in s (mean, log scale)")
-        for ax in axes[1:]:
-            ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
-            ax.yaxis.set_minor_formatter(NullFormatter())
-        axes[0].legend(fontsize=8)
-        fig.tight_layout()
-        fig.savefig(path, dpi=110)
-        plt.close(fig)
-        print(f"Plot   -> {path}")
-        return [f"![{group}: accuracy, rules and fit time against class noise]({os.path.basename(PLOTS_DIR)}/"
-                f"{os.path.basename(path)})\n\n"]
+            ax.set_ylabel(ylabel)
+            if column == "accuracy":
+                ax.yaxis.set_major_formatter(PercentFormatter(1.0))
+            else:
+                ax.set_yscale("log")
+                ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
+                ax.yaxis.set_minor_formatter(NullFormatter())
+            ax.legend(fontsize=8)
+            fig.tight_layout()
+            path = os.path.join(PLOTS_DIR, f"{NAME}{'_quick' if quick else ''}_{_slug(group)}_{column}.png")
+            fig.savefig(path, dpi=110)
+            plt.close(fig)
+            print(f"Plot   -> {path}")
+            L.append(f"![{group}: {what} against class noise]({os.path.basename(PLOTS_DIR)}/"
+                     f"{os.path.basename(path)})\n\n")
+        return L
     except Exception as e:  # noqa: BLE001 -- a plot failure shouldn't sink the rest of the report
         print(f"Plot skipped: {type(e).__name__}: {e}")
         return []
