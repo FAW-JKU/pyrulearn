@@ -1148,6 +1148,8 @@ def test_seco_raises_without_labels():
     print("SeCo.fit raises without labels: OK")
 
 
+# -- CN2 ---------------------------------------------------------------
+
 def test_cn2_defaults_wire_laplace_and_significance_as_filtering():
     cn2 = CN2(target_class="pos")
     assert isinstance(cn2.single_rule_learner.heuristic, Laplace)
@@ -1309,6 +1311,42 @@ def test_cn2_microvotecombiner_matches_clark_and_boswell_1991s_summed_distributi
     assert list(rs.predict(fired_by_all, combiner=MicroVoteCombiner())) == ["bird"]
     print("MicroVoteCombiner sums covered-class distributions and can flip 'max's own answer, "
           "matching CN2-unordered's actual voting rule: OK")
+
+
+def test_cn2_laplace_counts_the_classes_of_the_data():
+    from pyrulearn.heuristics import Laplace, WRAcc
+    from pyrulearn.learners.seco import CN2
+    rng = np.random.default_rng(0)
+    raw = rng.random((90, 4)) < 0.5
+    spec = neg_spec([f"f{i}" for i in range(4)])
+    three = HorizontalBitmapRepresentation(spec, neg_X(raw), np.array(["a", "b", "c"] * 30))
+    cn2 = CN2()
+    cn2.fit(three)
+    assert cn2.single_rule_learner.heuristic.n_classes == 3
+    cn2.fit(HorizontalBitmapRepresentation(spec, neg_X(raw), np.array(["a", "b"] * 45)))
+    assert cn2.single_rule_learner.heuristic.n_classes == 2
+    fixed = CN2(heuristic=Laplace())
+    fixed.fit(three)
+    assert fixed.single_rule_learner.heuristic.n_classes == 2
+    other = CN2(heuristic=WRAcc())
+    other.fit(three)
+    assert isinstance(other.single_rule_learner.heuristic, WRAcc)
+
+
+def test_cn2_returns_significant_rules_only():
+    # every rule CN2 returns passed the significance filter on the
+    # examples left at its turn, so the first is significant on all
+    rng = np.random.default_rng(0)
+    X = rng.integers(0, 2, size=(120, 6)).astype(bool)
+    y = np.where(X[:, 0] & X[:, 1] | X[:, 2], "pos", "neg")
+    flip = rng.random(120) < 0.15
+    y = np.where(flip, np.where(y == "pos", "neg", "pos"), y)
+    data = HorizontalBitmapRepresentation(DataSpec([f"x{i}" for i in range(6)]), X, y)
+    model = CN2(target_class="pos").fit(data)
+    assert len(model.rules) >= 1
+    first = model.rules[0]
+    assert LikelihoodRatio().score(RuleStats.from_rule(first, data, "pos")) >= 3.841
+    print(f"CN2 with the significance filter: {len(model.rules)} rules, the first significant: OK")
 
 
 # ---- AQR (Clark & Niblett, 1989) + SeedExample -----------------------------
@@ -1918,39 +1956,3 @@ if __name__ == "__main__":
     test_covering_loop_rules_and_default_rule_carry_their_own_training_stats()
     test_seed_covering_rules_carry_their_own_training_stats()
     print("\nAll tests passed.")
-
-
-def test_cn2_laplace_counts_the_classes_of_the_data():
-    from pyrulearn.heuristics import Laplace, WRAcc
-    from pyrulearn.learners.seco import CN2
-    rng = np.random.default_rng(0)
-    raw = rng.random((90, 4)) < 0.5
-    spec = neg_spec([f"f{i}" for i in range(4)])
-    three = HorizontalBitmapRepresentation(spec, neg_X(raw), np.array(["a", "b", "c"] * 30))
-    cn2 = CN2()
-    cn2.fit(three)
-    assert cn2.single_rule_learner.heuristic.n_classes == 3
-    cn2.fit(HorizontalBitmapRepresentation(spec, neg_X(raw), np.array(["a", "b"] * 45)))
-    assert cn2.single_rule_learner.heuristic.n_classes == 2
-    fixed = CN2(heuristic=Laplace())
-    fixed.fit(three)
-    assert fixed.single_rule_learner.heuristic.n_classes == 2
-    other = CN2(heuristic=WRAcc())
-    other.fit(three)
-    assert isinstance(other.single_rule_learner.heuristic, WRAcc)
-
-
-def test_cn2_returns_significant_rules_only():
-    # every rule CN2 returns passed the significance filter on the
-    # examples left at its turn, so the first is significant on all
-    rng = np.random.default_rng(0)
-    X = rng.integers(0, 2, size=(120, 6)).astype(bool)
-    y = np.where(X[:, 0] & X[:, 1] | X[:, 2], "pos", "neg")
-    flip = rng.random(120) < 0.15
-    y = np.where(flip, np.where(y == "pos", "neg", "pos"), y)
-    data = HorizontalBitmapRepresentation(DataSpec([f"x{i}" for i in range(6)]), X, y)
-    model = CN2(target_class="pos").fit(data)
-    assert len(model.rules) >= 1
-    first = model.rules[0]
-    assert LikelihoodRatio().score(RuleStats.from_rule(first, data, "pos")) >= 3.841
-    print(f"CN2 with the significance filter: {len(model.rules)} rules, the first significant: OK")

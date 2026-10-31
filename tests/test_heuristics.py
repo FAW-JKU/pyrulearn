@@ -731,6 +731,16 @@ def test_correlation_and_chi_square_take_a_rounding_error_below_zero_as_zero():
     assert scores[0] == 0.0 and scores[1] == pytest.approx(Correlation().score(RuleStats(tp=2.0, fp=1.0, fn=1.0, tn=2.0)))
 
 
+# ------------------------------------------- bounds on the refinements
+
+def test_default_bound_is_the_tp_0_projection():
+    stats = RuleStats(tp=4, fp=3, fn=6, tn=7, length=2)
+    assert H.Laplace().bound(stats) == H.Laplace().score(RuleStats(tp=4, fp=0, fn=6, tn=10, length=2))
+    penalized = H.LengthPenalized(LikelihoodRatio(), 0.5)
+    assert abs(penalized.bound(stats) - (LikelihoodRatio().bound(stats) - 1.0)) < 1e-12
+    print("the default bound is the (tp, 0) projection; LengthPenalized wraps its base's: OK")
+
+
 def test_likelihood_ratio_bound_covers_every_refinement():
     # the statistic isn't monotone in tp and fp, so its bound is the
     # maximum over the corners of the refinements' box; check it against
@@ -749,11 +759,3 @@ def test_likelihood_ratio_bound_covers_every_refinement():
     assert np.allclose(lr.batch_bound(batch), [lr.bound(H.RuleStats(tp=1, fp=9, fn=9, tn=21)),
                                                lr.bound(H.RuleStats(tp=5, fp=0, fn=5, tn=30))])
     print("LikelihoodRatio's bound is the maximum over every refinement: OK")
-
-
-def test_default_bound_is_the_tp_0_projection():
-    stats = RuleStats(tp=4, fp=3, fn=6, tn=7, length=2)
-    assert H.Laplace().bound(stats) == H.Laplace().score(RuleStats(tp=4, fp=0, fn=6, tn=10, length=2))
-    penalized = H.LengthPenalized(LikelihoodRatio(), 0.5)
-    assert abs(penalized.bound(stats) - (LikelihoodRatio().bound(stats) - 1.0)) < 1e-12
-    print("the default bound is the (tp, 0) projection; LengthPenalized wraps its base's: OK")
