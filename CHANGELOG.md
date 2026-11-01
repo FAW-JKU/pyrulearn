@@ -25,6 +25,14 @@ is in early development (alpha): until 1.0, minor versions may change the API.
 
 ### Changed
 
+- `demos/seco_learners_comparison.py` rebuilt: the 69 datasets of the other
+  comparisons (`letter` with a 3600s cap); CN2 with beam 1 next to beam 5,
+  and Clark & Niblett's ordered CN2 (entropy, the significance test over all
+  classes) at both beams; AQR and Opus(Laplace) in the main comparison
+  instead of a preliminary check. Fit times are the geometric mean of their
+  ratios to Weka:JRip's, a time-out counted at the cap; the plots show one
+  point per learner (mean accuracy rank against time and against size)
+  next to the accuracy-complexity scatter, one point per dataset.
 - `CN2`'s significance test is a `filtering` criterion by default, as in
   Clark & Niblett's and Clark & Boswell's search, no longer a `stopping`
   criterion, which halted a search the moment the round's best candidate
