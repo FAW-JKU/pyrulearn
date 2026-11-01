@@ -25,6 +25,11 @@ is in early development (alpha): until 1.0, minor versions may change the API.
 
 ### Changed
 
+- `Pypper` prunes to the prefix with the best `Laplace` estimate instead of
+  the best precision (`prune_heuristic=`, `Precision()` for Cohen's
+  ranking), as Weka's JRip does: plain precision kept long prefixes that
+  cover a few pruning examples without error. On 68 datasets (5-fold)
+  82.72% instead of 82.45%, with a few more rules.
 - `demos/seco_learners_comparison.py` rebuilt: the 69 datasets of the other
   comparisons (`letter` with a 3600s cap); CN2 with beam 1 next to beam 5,
   and Clark & Niblett's ordered CN2 (entropy, the significance test over all

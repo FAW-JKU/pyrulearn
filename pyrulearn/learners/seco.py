@@ -3927,8 +3927,15 @@ class Pypper(DecomposingLearner, NativeRuleLearner):
       (or it would drop below two covered positives, RIPPER's `minNo`,
       wired as a `stopping` criterion), *not* stopping at a gain peak,
     - **pruned** -- trailing conditions dropped by `ReducedErrorPruning`
-      on the 1/3 held-out split (`Precision`, monotone with RIPPER's own
-      ``(p-n)/(p+n)`` rule-value metric),
+      on the 1/3 held-out split, to the prefix with the best `Laplace`
+      estimate ``(p+1)/(p+n+2)``. Cohen's own rule-value metric,
+      ``(p-n)/(p+n)``, ranks prefixes as `Precision` does
+      (`prune_heuristic=Precision()`); the Laplace estimate is Weka's
+      JRip's, and it is the better choice here: plain precision keeps
+      long prefixes that cover a few pruning examples without error.
+      On 68 datasets (5-fold) it raised Pypper's mean accuracy from
+      82.45% to 82.72%, better on 30 and worse on 19, with a few more
+      rules (8.2 against 7.1, JRip's 8.9),
     then the whole class's rules go through `ReplaceReviseOptimization(k)`
     (`k=2` passes by default).
 
@@ -3947,7 +3954,8 @@ class Pypper(DecomposingLearner, NativeRuleLearner):
     see `ReplaceReviseOptimization`.
 
     `k` -- optimization passes. `prune_fraction` -- held-out split size
-    for grow/prune (both IREP\\* and the optimization). `grow_heuristic`/
+    for grow/prune (both IREP\\* and the optimization). `prune_heuristic`
+    -- what IREP\\*'s pruning maximizes (default `Laplace()`). `grow_heuristic`/
     `search` -- override the growth heuristic / search (defaults `FoilGain`
     and `GainAscentHillClimbing(stop_at_local_optimum=False)`; pass your
     own `search` and you own its `stop_at_local_optimum` too).
@@ -3968,12 +3976,14 @@ class Pypper(DecomposingLearner, NativeRuleLearner):
         target_class: Any = None,
         seed: Optional[SeedSelection] = None,
         space_init: Optional[SearchSpaceInit] = None,
+        prune_heuristic: Optional[RuleHeuristic] = None,
     ):
         self.k = k
         self.prune_fraction = prune_fraction
         self.random_state = random_state
         self.max_rules = max_rules
         self.grow_heuristic = grow_heuristic
+        self.prune_heuristic = prune_heuristic
         self.search = search
         self.target_class = target_class
         self.seed = seed
@@ -3996,7 +4006,8 @@ class Pypper(DecomposingLearner, NativeRuleLearner):
             heuristic=heuristic,
             search=search,
             preparation=GrowPruneSplit(self.prune_fraction, self.random_state),
-            postprocessing=ReducedErrorPruning(Precision()),
+            postprocessing=ReducedErrorPruning(
+                self.prune_heuristic if self.prune_heuristic is not None else Laplace()),
             space_init=self.space_init,
             stopping=ThresholdPrePruning(CoveredPositives(), 2, operator="<"),
         )

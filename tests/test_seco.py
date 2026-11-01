@@ -1694,6 +1694,9 @@ def test_pypper_stage_learner_wires_the_irep_grow_phase():
     assert isinstance(srl.search, GainAscentHillClimbing)
     assert srl.search.stop_at_local_optimum is False  # grow to consistency, not to the gain peak
     assert isinstance(srl.postprocessing, ReducedErrorPruning)  # ...then prune it back
+    assert isinstance(srl.postprocessing.heuristic, Laplace)    # JRip's measure, not Cohen's
+    cohen = Pypper(prune_heuristic=Precision())._stage_learner().single_rule_learner
+    assert isinstance(cohen.postprocessing.heuristic, Precision)
     assert isinstance(srl.stopping, ThresholdPrePruning)  # RIPPER's minNo: keep >= 2 positives
     assert srl.stopping.threshold == 2
     # covering loop stops on FOIL's MDL restriction OR IREP's coin-flip rule
