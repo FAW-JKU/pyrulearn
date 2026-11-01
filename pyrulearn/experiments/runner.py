@@ -434,6 +434,27 @@ def _skipped_row(cell: _Cell) -> Dict[str, Any]:
             "n_conditions": np.nan}
 
 
+def _cached_rows(learners, datasets, n_folds, random_state, cache_dir, representation, discretizer,
+                 max_ordinal_values, fit_timeout, stop_on_timeout) -> List[Dict[str, Any]]:
+    """`run_cv`'s rows with `cached_only`, in its order and with no data loaded: what
+    `cache_dir` holds. A cell it doesn't hold is left out -- unless `stop_on_timeout` had
+    it skipped, which the cache doesn't record: then it reads as a skipped cell."""
+    rows: List[Dict[str, Any]] = []
+    for entry in datasets:
+        cells = [(fold, learner, _cache_load_valid(
+                      cache_dir, _cache_key(entry, n_folds, fold, random_state, learner, representation,
+                                            discretizer, max_ordinal_values), fit_timeout))
+                 for fold in range(n_folds) for learner in learners]
+        timed_out = {learner.display_name for _, learner, row in cells
+                     if row is not None and row.get("error") == "timeout"}
+        for fold, learner, row in cells:
+            if row is None and stop_on_timeout and learner.display_name in timed_out:
+                row = _skipped_row(_Cell(0, entry.name, fold, n_folds, learner, "", None, None, None))
+            if row is not None:
+                rows.append(row)
+    return rows
+
+
 def _whole_cv_timed_out(results):
     """Every fold of a (dataset, learner) with a timed-out fold as a timeout, its measures
     NaN -- the cross-validation of that pair counts as timed out, not just the folds that
@@ -585,6 +606,7 @@ def run_cv(
     n_jobs: Union[int, str] = 1,
     stop_on_timeout: bool = True,
     max_ordinal_values: int = DEFAULT_MAX_ORDINAL_VALUES,
+    cached_only: bool = False,
 ):
     """Run every learner in `learners` against every dataset in
     `datasets`, `n_folds`-fold cross-validation, and return one
@@ -642,6 +664,11 @@ def run_cv(
     started are skipped. `False`: every fold is run and counted on its own.
     `timed_out(results)` lists the pairs that timed out, and with `verbose`
     the run ends with a line naming them.
+
+    `cached_only` (default False): fit nothing and load no data -- the table
+    of what `cache_dir` already holds, for reporting learners too slow to
+    run every time. A cell it doesn't hold is left out, so the table may be
+    incomplete, or empty.
 
     Each training fold is encoded by `build_dataspec`: numeric columns
     discretized by `discretizer` (a `pyrulearn.data.discretization.
@@ -703,6 +730,13 @@ def run_cv(
     n_jobs = _resolve_n_jobs(n_jobs)
 
     resolved_representation = representation or default_representation()
+    if cached_only:
+        if cache_dir is None:
+            raise ValueError("cached_only needs a cache_dir")
+        results = pd.DataFrame(_cached_rows(learners, datasets, n_folds, random_state, cache_dir,
+                                            resolved_representation, discretizer, max_ordinal_values,
+                                            fit_timeout, stop_on_timeout))
+        return _whole_cv_timed_out(results) if stop_on_timeout else results
     cells = _iter_cells(learners, datasets, n_folds, discretizer, random_state, cache_dir,
                         resolved_representation, verbose, max_ordinal_values=max_ordinal_values,
                         fit_timeout=fit_timeout)

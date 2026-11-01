@@ -22,6 +22,8 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   two-class test. With `CN2(heuristic=Entropy())` and `model=DecisionList`,
   the original ordered CN2. CN2's default stays the two-class test of the
   rule's head. `chi2_critical_value(df, alpha)` without scipy.
+- `run_cv(cached_only=True)`: the table of what `cache_dir` already holds,
+  with nothing fitted and no data loaded.
 
 ### Changed
 
@@ -37,7 +39,9 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   instead of a preliminary check. Fit times are the geometric mean of their
   ratios to Weka:JRip's, a time-out counted at the cap; the plots show one
   point per learner (mean accuracy rank against time and against size)
-  next to the accuracy-complexity scatter, one point per dataset.
+  next to the accuracy-complexity scatter, one point per dataset. AQR and
+  both Opus variants are optional, 92% of the fit time: `--full` reports them
+  from the cache, `--slow` runs them.
 - `CN2`'s significance test is a `filtering` criterion by default, as in
   Clark & Niblett's and Clark & Boswell's search, no longer a `stopping`
   criterion, which halted a search the moment the round's best candidate

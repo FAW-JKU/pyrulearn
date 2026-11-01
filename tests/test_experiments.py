@@ -3,6 +3,7 @@ synthetic dataset stands in for `CatalogEntry.load()` -- nothing here
 hits the network), with `Pypper`/`PFossil` as fast, deterministic-enough
 real learners rather than a hand-rolled fake one."""
 
+import os
 import time
 
 import numpy as np
@@ -375,6 +376,47 @@ def test_a_cached_timeout_is_tried_again_with_a_longer_fit_timeout(tmp_path):
     assert _cache_load_valid(str(tmp_path), "t", 1800.0) is None       # a longer one: run it again
     assert _cache_load_valid(str(tmp_path), "t", None) is None         # no limit at all: run it again
     assert _cache_load_valid(str(tmp_path), "ok", 0.5) is not None     # a finished fold is always kept
+
+
+def test_run_cv_cached_only_reports_the_cache_and_fits_nothing(tmp_path):
+    entries = [_synthetic_entry("synth_a"), _synthetic_entry("synth_b")]
+    cache = str(tmp_path)
+    full = run_cv(LEARNERS, entries, n_folds=2, fit_timeout=None, random_state=0, cache_dir=cache, verbose=False)
+    cached = run_cv(LEARNERS, entries, n_folds=2, fit_timeout=None, random_state=0, cache_dir=cache,
+                    cached_only=True)
+    pd.testing.assert_frame_equal(cached.drop(columns="error"), full.drop(columns="error"))
+
+    os.remove(next(os.path.join(cache, f) for f in sorted(os.listdir(cache))))
+    missing = run_cv(LEARNERS, entries, n_folds=2, fit_timeout=None, random_state=0, cache_dir=cache,
+                     cached_only=True)
+    assert len(missing) == len(full) - 1    # left out, not fitted
+    assert len(os.listdir(cache)) == len(full) - 1
+
+    assert run_cv(LEARNERS, entries, n_folds=2, fit_timeout=None, random_state=0,
+                  cache_dir=str(tmp_path / "empty"), cached_only=True).empty
+    with pytest.raises(ValueError, match="cache_dir"):
+        run_cv(LEARNERS, entries, n_folds=2, cached_only=True)
+
+
+def test_run_cv_cached_only_reads_a_skipped_fold_as_timed_out(tmp_path):
+    from pyrulearn.experiments.runner import _cache_key, _cache_save, timed_out
+    from pyrulearn.data.representation import default_representation
+    entry = _synthetic_entry("synth_a")
+    learner, other = LEARNERS[0], LEARNERS[1]
+    key = lambda fold, l: _cache_key(entry, 3, fold, 0, l, default_representation())
+    base = {"dataset": entry.name, "accuracy": 0.9, "n_rules": 2, "n_conditions": 3, "fit_time": 1.0, "error": None}
+    _cache_save(str(tmp_path), key(0, learner), {**base, "fold": 0, "learner": learner.display_name})
+    _cache_save(str(tmp_path), key(1, learner), {**base, "fold": 1, "learner": learner.display_name,
+                                                 "accuracy": None, "error": "timeout", "fit_time": 300.5})
+    _cache_save(str(tmp_path), key(0, other), {**base, "fold": 0, "learner": other.display_name})
+    # fold 2 of `learner` was skipped, so not cached; `other` simply hasn't run its later folds
+    results = run_cv([learner, other], [entry], n_folds=3, fit_timeout=300.0, random_state=0,
+                     cache_dir=str(tmp_path), cached_only=True)
+    rows = results[results["learner"] == learner.display_name]
+    assert list(rows["fold"]) == [0, 1, 2]
+    assert (rows["error"] == "timeout").all() and rows["accuracy"].isna().all()
+    assert list(results[results["learner"] == other.display_name]["fold"]) == [0]
+    assert timed_out(results) == {(entry.name, learner.display_name)}
 
 
 def test_timed_out_on_a_table_without_timeouts_and_the_closing_line(capsys):

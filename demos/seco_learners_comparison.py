@@ -49,6 +49,11 @@ handling several classes -- see `LEARNER_NOTES`):
                   Limited to one thread in this demo only (LORD's own
                   default is half the machine's cores).
 
+AQR and the two Opus are **optional** (`OPTIONAL`): they took 92% of the fit
+time of a full run (about 8 of 9 hours on 10 cores), most of it time-outs. A
+run without `--slow` doesn't start them, but its report and plots still show
+what the cache holds for them, from the last run with `--slow`.
+
 Run: `python demos/seco_learners_comparison.py` with no arguments
 is the **quick** default (`QUICK_DATASETS`, `QUICK_FOLDS`-fold); its
 report/plots go to ``seco_learners_comparison_quick_*`` and are not
@@ -135,6 +140,8 @@ CACHE_DIR = os.path.join(HERE, "_seco_learners_comparison_cache")
 
 #: the learner whose fit time is the unit of every other's (`time_ratios`)
 REFERENCE = "Weka:JRip"
+#: not started without `--slow`; the report shows what the cache holds for them
+OPTIONAL = ("AQR", "Opus(Laplace)", "Opus(WRAcc)")
 
 
 def _plot_paths(quick: bool):
@@ -312,6 +319,10 @@ def _build_description(datasets, n_folds: int, quick: bool, learner_names) -> st
                  f"\nThe reference Java LORD is not included in this run (not found at "
                  f"`{LORD_CLASSPATH.split(os.pathsep)[0]}`; set `$LORD_CLASSPATH`).\n")
     learner_lines = "\n".join(f"- **{n}** -- {LEARNER_NOTES.get(n, '')}" for n in learner_names)
+    optional = [n for n in OPTIONAL if n in learner_names]
+    optional_note = (f"\n{', '.join(optional)} are optional and take most of a full run's time: a run "
+                     f"reports them from the cache of the last run with `--slow`, the only one that "
+                     f"starts them.\n" if optional else "")
     return f"""\
 {mode_note}pyrulearn's separate-and-conquer rule learners compared with each other
 and with two external baselines, on {len(datasets) - n_multiclass} two-class and
@@ -325,7 +336,7 @@ of handling several classes; the variants of CN2 and Opus are named after
 what differs.
 
 {learner_lines}
-{lord_note}
+{lord_note}{optional_note}
 Protocol: {n_folds}-fold stratified cross-validation
 (`pyrulearn.experiments.runner.run_cv`), one `DataSpec` per training fold
 (`build_dataspec(discretizer=TreeDiscretizer(max_intervals={MAX_INTERVALS}))`), the test fold binarized
@@ -437,6 +448,8 @@ def write_report(results, datasets, n_folds: int, report_path: str, plots: dict,
 #: the color of pyrulearn's own learners in the rank plots, and of the external ones in all plots
 NATIVE_COLOR = "#2a6fbb"
 EXTERNAL_COLOR = "#7f7f7f"
+#: `REFERENCE` and its line in the plot of the fit times
+REFERENCE_COLOR = "#ff7f0e"
 #: the external learners, by their pyrulearn counterpart: grey, with the counterpart's marker
 EXTERNAL = {"Weka:JRip": "Pypper", "JavaLORD": "PyLORD"}
 #: one color per pyrulearn learner, from tab20: close variants as the dark and the light version
@@ -452,11 +465,13 @@ SPARE_COLORS = ["#17becf", "#9edae5", "#ff9896", "#c5b0d5"]
 MARKERS = ["o", "s", "^", "D", "v", "P", "X", "<", ">", "*", "h", "p", "d"]
 
 
-def _labeled_scatter(ax, x, y, labels, open_points=()):
+def _labeled_scatter(ax, x, y, labels, open_points=(), highlight=None):
     """One point per learner, named next to it -- with a dozen learners, a
-    legend of colors would be unreadable. The external learners in grey."""
+    legend of colors would be unreadable. The external learners in grey,
+    `highlight` in `REFERENCE_COLOR`."""
     for xi, yi, label in zip(x, y, labels):
-        color = EXTERNAL_COLOR if label in EXTERNAL else NATIVE_COLOR
+        color = (REFERENCE_COLOR if label == highlight else
+                 EXTERNAL_COLOR if label in EXTERNAL else NATIVE_COLOR)
         ax.scatter([xi], [yi], s=40, color=color, facecolors="none" if label in open_points else color, zorder=3)
         ax.annotate(label, (xi, yi), xytext=(6, 3), textcoords="offset points", fontsize=8)
 
@@ -508,13 +523,17 @@ def write_plots(results, plots: dict, learner_names) -> None:
     plt.close(fig)
     print(f"Plot   -> {plots['accuracy']}")
 
+    with_timeouts = set(results.loc[results["error"] == "timeout", "learner"])
     ratios = time_ratios(results)
     names = [n for n in ranks.index if n in ratios.index]
     fig, ax = plt.subplots(figsize=(7, 5))
+    ax.axvline(1, color=REFERENCE_COLOR, linestyle="--", linewidth=1.5, zorder=2)
     _labeled_scatter(ax, ratios.loc[names, "ratio"], ranks[names], names,
-                     open_points=set(ratios.index[ratios["capped"] > 0]))
+                     open_points=with_timeouts, highlight=REFERENCE)
     ax.set_xscale("log")
     ax.invert_yaxis()
+    for x, text, side in ((0.9, f"\u2190 faster than {REFERENCE}", "right"), (1.1, "slower \u2192", "left")):
+        ax.text(x, 0.03, text, transform=ax.get_xaxis_transform(), ha=side, fontsize=9, color=REFERENCE_COLOR)
     ax.set_xlabel(f"fit time relative to {REFERENCE} (geometric mean over the datasets, log)")
     ax.set_ylabel("mean accuracy rank (better up)")
     ax.set_title("accuracy vs. fit time, one point per learner\n(open: includes time-outs, counted at the cap)",
@@ -530,12 +549,12 @@ def write_plots(results, plots: dict, learner_names) -> None:
     size = np.exp(np.log(per_pair).groupby("learner").mean())
     names = [n for n in ranks.index if n in size.index]
     fig, ax = plt.subplots(figsize=(7, 5))
-    _labeled_scatter(ax, size[names], ranks[names], names)
+    _labeled_scatter(ax, size[names], ranks[names], names, open_points=with_timeouts)
     ax.set_xscale("log")
     ax.invert_yaxis()
     ax.set_xlabel("conditions in the model (geometric mean over the datasets, log)")
     ax.set_ylabel("mean accuracy rank (better up)")
-    ax.set_title("accuracy vs. rule-set size, one point per learner", fontsize=10)
+    ax.set_title("accuracy vs. rule-set size, one point per learner\n(open: includes time-outs)", fontsize=10)
     ax.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(plots["size"], dpi=110, bbox_inches="tight")
@@ -552,7 +571,7 @@ def write_plots(results, plots: dict, learner_names) -> None:
         print(f"Critical-difference diagram skipped: {type(e).__name__}: {e}")
 
 
-def main(quick: bool = True, names: Optional[list] = None) -> None:
+def main(quick: bool = True, names: Optional[list] = None, slow: bool = False) -> None:
     n_folds = QUICK_FOLDS if quick else N_FOLDS
     report_path = QUICK_REPORT_PATH if quick else REPORT_PATH
     plots = _plot_paths(quick)
@@ -560,16 +579,26 @@ def main(quick: bool = True, names: Optional[list] = None) -> None:
     names = names or (QUICK_DATASETS if quick else BINARY_DATASETS + MULTICLASS_DATASETS)
     datasets = Catalog.default().select(names=names)
     learners = build_learners()
-    learner_names = [l.display_name for l in learners]
+    fitted = learners if slow else [l for l in learners if l.display_name not in OPTIONAL]
+    optional = [l for l in learners if l not in fitted]
 
     runs = []
     for group, timeout in (([d for d in datasets if d.name not in LONG_DATASETS], FIT_TIMEOUT),
                            ([d for d in datasets if d.name in LONG_DATASETS], LONG_FIT_TIMEOUT)):
         if group:
-            runs.append(run_cv(learners, group, n_folds=n_folds, fit_timeout=timeout,
-                               discretizer=TreeDiscretizer(max_intervals=MAX_INTERVALS),
-                               random_state=RANDOM_STATE, cache_dir=CACHE_DIR, n_jobs=_n_jobs()))
-    results = pd.concat(runs, ignore_index=True)
+            common = dict(n_folds=n_folds, fit_timeout=timeout, cache_dir=CACHE_DIR, random_state=RANDOM_STATE,
+                          discretizer=TreeDiscretizer(max_intervals=MAX_INTERVALS))
+            runs.append(run_cv(fitted, group, n_jobs=_n_jobs(), **common))
+            if optional:
+                runs.append(run_cv(optional, group, cached_only=True, **common))
+    results = pd.concat([r for r in runs if len(r)], ignore_index=True)
+    # an optional learner the cache doesn't hold in full would rank on other datasets than the rest
+    rows = results.groupby("learner").size()
+    incomplete = [l.display_name for l in optional if rows.get(l.display_name, 0) < len(datasets) * n_folds]
+    if incomplete:
+        print(f"Not in the cache for this run, so left out: {', '.join(incomplete)} (`--slow` runs them)")
+        results = results[~results["learner"].isin(incomplete)]
+    learner_names = [l.display_name for l in learners if l.display_name not in incomplete]
     write_report(results, datasets, n_folds, report_path, plots, quick, learner_names)
     write_plots(results, plots, learner_names)
 
@@ -586,7 +615,10 @@ if __name__ == "__main__":
     parser.add_argument("--n-jobs", default="1",
                         help="fits to run at the same time (default 1); capped at the available cores "
                              "unless given as 'N!'")
+    parser.add_argument("--slow", action="store_true",
+                        help=f"also run the optional learners ({', '.join(OPTIONAL)}), most of a full "
+                             "run's time; without it, the report takes them from the cache")
     args = parser.parse_args()
     N_JOBS = args.n_jobs
     main(quick=not (args.full or args.datasets),
-         names=args.datasets.split(",") if args.datasets else None)
+         names=args.datasets.split(",") if args.datasets else None, slow=args.slow)
