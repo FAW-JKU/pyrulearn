@@ -15,6 +15,13 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   maximum over the corners of the refinements' coverage. The searches'
   optimistic pruning uses it.
 - `CN2(stop_covering=...)`, passed through to `SeCo`.
+- `pyrulearn.pruning.LikelihoodRatioTest`: CN2's significance test over
+  all classes, as Clark & Niblett (1989) state it -- the covered class
+  distribution against the scope's, at significance level `alpha` with
+  one degree of freedom less than the classes in scope; on two classes the
+  two-class test. With `CN2(heuristic=Entropy())` and `model=DecisionList`,
+  the original ordered CN2. CN2's default stays the two-class test of the
+  rule's head. `chi2_critical_value(df, alpha)` without scipy.
 
 ### Changed
 
@@ -24,6 +31,18 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   was insignificant and made CN2 underfit, most of all under class noise.
   The old behavior is
   ``CN2(stopping=ThresholdPrePruning(LikelihoodRatio(), 3.841, "<"))``.
+
+### Fixed
+
+- `BeamSearch` with a `filtering` criterion ends once no rule in its beam
+  has a refinement that could pass it
+  (`PrePruningCriterion.may_accept_refinements`, given the rule, its
+  statistics, the data and a bound from the objective's
+  `criterion_bound`). Without it, a search with nothing significant left
+  to find ran every refinement out, so the default CN2 timed out on small
+  datasets (sonar, ozone-level-8hr in `demos/rule_models.py`), most of all
+  in a covering loop that tries every remaining seed. The rules learned
+  are the same.
 
 ## 0.5.0 (2026-10-31)
 

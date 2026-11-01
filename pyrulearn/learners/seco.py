@@ -623,6 +623,13 @@ class Objective(ABC):
     def exact_bound(self, data, handle) -> Optional[Score]:
         return None
 
+    def criterion_bound(self, heuristic: RuleHeuristic, stats) -> Optional[float]:
+        """An upper bound on `heuristic`'s score -- a criterion's, not the
+        objective's -- over the refinements of a rule with `stats`, the
+        statistics a criterion would see for them; None if there is none
+        (`PrePruningCriterion.may_accept_refinements`)."""
+        return None
+
     @abstractmethod
     def take(self, batch, index) -> Any:
         raise NotImplementedError
@@ -691,6 +698,9 @@ class HeuristicObjective(Objective):
     def bound_one(self, stats) -> Score:
         v = np.asarray(self.heuristic.batch_bound(stats))
         return float(v) if v.ndim == 0 else tuple(float(x) for x in v.reshape(-1))
+
+    def criterion_bound(self, heuristic, stats) -> Optional[float]:
+        return float(heuristic.bound(stats))
 
     def take(self, batch, index):
         length = batch.length if np.ndim(batch.length) == 0 else np.asarray(batch.length)[index]
@@ -942,6 +952,10 @@ class HeadObjective(Objective):
     def bound_one(self, stats: HeadStats) -> Score:
         return float(self.heuristic.head_bound(stats.covered, self.totals, stats.length))
 
+    def criterion_bound(self, heuristic, stats: HeadStats) -> Optional[float]:
+        # over every head: a refinement may predict another class
+        return float(heuristic.head_bound(stats.covered, self.totals, stats.length))
+
     def take(self, batch: HeadStats, index) -> HeadStats:
         length = batch.length if np.ndim(batch.length) == 0 else np.asarray(batch.length)[index]
         return HeadStats(tp=batch.tp[index], fp=batch.fp[index], fn=batch.fn[index], tn=batch.tn[index],
@@ -1011,7 +1025,15 @@ class BeamSearch(RuleSearch):
     nothing is pruned -- so a strict `filtering` criterion makes
     optimistic pruning kick in later (a lower filtered-best is a weaker
     bound), never earlier, and can never cause the search to skip a
-    branch it would otherwise have kept.
+    branch it would otherwise have kept. One exception, which changes
+    no result: once no rule in flight has a refinement that could pass
+    `filtering` at all (`PrePruningCriterion.may_accept_refinements`,
+    from the objective's `criterion_bound` -- for CN2's significance
+    test, the likelihood ratio's bound below the critical value), the
+    search ends, since nothing it found from there on could be returned.
+    Without that, a search with nothing significant left to find would
+    run every refinement out, building every candidate on the way
+    looking for an eligible one.
 
     This replaces an older unconditional "stop once some beam member has
     `fp == 0`" rule -- a pure rule's own optimistic bound is just its
@@ -1058,7 +1080,8 @@ class BeamSearch(RuleSearch):
     `optimistic_pruning`'s bound (see above): since only a
     filter-passing rule can be returned, only its score is a sound thing
     to prune against, so a strict `filtering` criterion only ever delays
-    the optimistic cutoff, never brings it forward.
+    the optimistic cutoff, never brings it forward (but see the one
+    exception above, the end of a search nothing can pass).
 
     `stopping` gates the result exactly as `filtering` does (a rule in
     its reject region is never returned), and *additionally* halts the
@@ -1181,6 +1204,19 @@ class BeamSearch(RuleSearch):
                 if not objective.dead(entry[3]) and promises_improvement(entry[3], best_score)
             ]
             if not refinable:
+                break
+            # the same for `filtering`: once no rule in flight has a
+            # refinement that could pass it (CN2's significance test, with
+            # nothing significant left to find), no rule found from here on
+            # could be returned. Stopping then changes no result -- unlike
+            # dropping single hopeless rules, which would free beam slots
+            # for others and so change the search.
+            if filtering is not None and self.optimistic_pruning and not any(
+                filtering.may_accept_refinements(
+                    entry[0], entry[3], data, target_class, example_mask,
+                    lambda h, st=entry[3]: objective.criterion_bound(h, st))
+                for entry in refinable
+            ):
                 break
             # every parent's children are scored from counts alone
             # (`count_open_children`); only the ones that make the beam --
@@ -3481,11 +3517,19 @@ class CN2(_ClassCountLaplace, SeCo):
     mode: one covering loop over all classes, each rule the best of any
     class, predicting the class the heuristic chooses for it (with
     `Laplace`, the covered majority); the default is the majority of the
-    examples no rule covers. `heuristic=Entropy()` gives the original's
-    entropy over the whole class distribution. One difference remains:
-    the significance test is the two-class one for the rule's head
-    against the rest, not the original's statistic over all classes.
-    `target_class=HeadPerRule()` -- one search per class, the best rule of
+    examples no rule covers. Clark & Niblett's (1989) original is
+    ``CN2(heuristic=Entropy(), filtering=LikelihoodRatioTest())`` with
+    `model=DecisionList`: entropy over the whole class distribution, and
+    the significance test over all classes
+    (`pyrulearn.pruning.LikelihoodRatioTest`). The default test is the
+    two-class one, the rule's head against the rest: a rule predicts its
+    head, and one whose head is covered at no more than its prior share
+    predicts it no better than the default, however the other classes
+    shift. The test over all classes would accept it; it fits a
+    class-neutral heuristic like entropy, but is stricter with many
+    classes (its critical value grows with their number), and on one
+    fold of each of the 24 multi-class datasets of `demos/rule_models.py`
+    it was the less accurate choice in both modes (by about a point). `target_class=HeadPerRule()` -- one search per class, the best rule of
     them -- may be the better choice: in `demos/rule_models.py` it was
     clearly the best decision list for CN2, at about three times the
     training time.

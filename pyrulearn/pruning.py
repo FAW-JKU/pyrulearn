@@ -43,15 +43,16 @@ This module only defines the criteria themselves; every consumer
 
 from __future__ import annotations
 
+import functools
 import itertools
 import math
 import operator as _operator
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Callable, List, Optional, Tuple
 
 import numpy as np
 
-from .heuristics import RuleHeuristic, RuleStats
+from .heuristics import GainHeuristic, RuleHeuristic, RuleStats
 from .data import DataRepresentation
 from .rule import Rule
 
@@ -172,6 +173,23 @@ class PrePruningCriterion(ABC):
     ) -> bool:
         return not self.reject(rule, stats, data, target_class, example_mask)
 
+    def may_accept_refinements(
+        self,
+        rule: Rule,
+        stats: RuleStats,
+        data: DataRepresentation,
+        target_class: Any,
+        example_mask: Optional[np.ndarray],
+        bound: Callable[[RuleHeuristic], Optional[float]],
+    ) -> bool:
+        """Whether some refinement of `rule` (with `stats`) may still be
+        accepted; `bound(heuristic)` is an upper bound on `heuristic`'s
+        score over the rule's refinements (None if there is none). True
+        unless the criterion can rule it out -- a search that finds this
+        false for every rule it would refine can never accept a rule
+        again (`pyrulearn.learners.seco.BeamSearch`)."""
+        return True
+
 
 class ThresholdPrePruning(PrePruningCriterion):
     """`evaluate()` is ``heuristic score <operator> threshold``. Phrase
@@ -217,6 +235,195 @@ class ThresholdPrePruning(PrePruningCriterion):
     ) -> bool:
         score = self.heuristic.score(stats)
         return COMPARISON_OPERATORS[self.operator](score, self.threshold)
+
+    def may_accept_refinements(self, rule, stats, data, target_class, example_mask, bound) -> bool:
+        # only a rejection of the low scores ("<", "<=") is decided by an
+        # upper bound: a refinement passes CN2's test only if the bound
+        # on its likelihood ratio reaches the critical value
+        if not self.polarity or self.operator not in ("<", "<=") or isinstance(self.heuristic, GainHeuristic):
+            return True
+        best = bound(self.heuristic)
+        if best is None:
+            return True
+        return best >= self.threshold if self.operator == "<" else best > self.threshold
+
+
+def _regularized_lower_gamma(a: float, x: float) -> float:
+    """P(a, x), the regularized lower incomplete gamma function: a series
+    below ``x < a + 1``, a continued fraction above (Numerical Recipes'
+    gammp)."""
+    if x <= 0:
+        return 0.0
+    log_front = a * math.log(x) - x - math.lgamma(a)
+    if x < a + 1:
+        term = total = 1.0 / a
+        n = a
+        while abs(term) > abs(total) * 1e-15:
+            n += 1
+            term *= x / n
+            total += term
+        return total * math.exp(log_front)
+    tiny = 1e-300
+    b = x + 1 - a
+    c, d = 1 / tiny, 1 / b
+    h = d
+    for i in range(1, 10000):
+        an = -i * (i - a)
+        b += 2
+        d = an * d + b
+        d = tiny if abs(d) < tiny else d
+        c = b + an / c
+        c = tiny if abs(c) < tiny else c
+        d = 1 / d
+        delta = d * c
+        h *= delta
+        if abs(delta - 1) < 1e-15:
+            break
+    return 1.0 - math.exp(log_front) * h
+
+
+@functools.lru_cache(maxsize=None)
+def chi2_critical_value(df: int, alpha: float = 0.05) -> float:
+    """The chi-squared value exceeded with probability `alpha` at `df`
+    degrees of freedom (3.841 at ``df=1, alpha=0.05``), by bisection on
+    the distribution function -- so the core library needs no scipy."""
+    if df < 1:
+        raise ValueError(f"df must be at least 1, got {df}")
+    lo, hi = 0.0, max(1.0, float(df))
+    while 1 - _regularized_lower_gamma(df / 2, hi / 2) > alpha:
+        hi *= 2
+    for _ in range(200):
+        mid = (lo + hi) / 2
+        if 1 - _regularized_lower_gamma(df / 2, mid / 2) > alpha:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+#: the class codes of the last few label arrays seen, by identity (np.unique
+#: on string labels is too slow to repeat for every candidate rule)
+_CLASS_CODES: List[Tuple[Any, np.ndarray, int]] = []
+
+
+def _class_codes(y) -> Tuple[np.ndarray, int]:
+    for seen, codes, k in _CLASS_CODES:
+        if seen is y:
+            return codes, k
+    classes, codes = np.unique(np.asarray(y), return_inverse=True)
+    _CLASS_CODES.insert(0, (y, codes.ravel(), len(classes)))
+    del _CLASS_CODES[4:]
+    return _CLASS_CODES[0][1], _CLASS_CODES[0][2]
+
+
+def likelihood_ratio_statistic(covered: np.ndarray, prior: np.ndarray) -> float:
+    """``2 sum_i f_i ln(f_i / e_i)``: the covered class counts ``f``
+    against those expected from the class counts `prior` of the scope,
+    ``e = prior / sum(prior) * sum(f)``."""
+    covered = np.asarray(covered, dtype=float)
+    n, total = covered.sum(), float(np.sum(prior))
+    if n <= 0 or total <= 0:
+        return 0.0
+    expected = np.asarray(prior, dtype=float) / total * n
+    m = covered > 0
+    return float(2 * np.sum(covered[m] * np.log(covered[m] / expected[m])))
+
+
+def likelihood_ratio_bound(covered: np.ndarray, prior: np.ndarray) -> float:
+    """An upper bound on `likelihood_ratio_statistic` over every
+    refinement of a rule covering `covered`, i.e. every nonzero ``f'``
+    with ``0 <= f' <= covered``. The statistic is ``2 (sum f) KL``,
+    convex in ``f``, so its maximum over that box lies at a corner: each
+    class covered entirely or not at all. ``2 (sum_S a_i - F_S ln F_S)``
+    with ``a_i = f_i ln(f_i / p_i)`` (``p`` the prior proportions) is
+    maximized over the class subsets ``S`` exactly by a knapsack over the
+    covered total ``F_S`` for integral counts, by enumeration for up to
+    12 covered classes otherwise, and beyond that bounded by
+    ``2 sum_i f_i ln(1 / p_i)``, the sum of each class's pure rule."""
+    f = np.asarray(covered, dtype=float)
+    p = np.asarray(prior, dtype=float) / float(np.sum(prior))
+    m = f > 0
+    f, p = f[m], p[m]
+    if not len(f):
+        return 0.0
+    a = f * np.log(f / p)
+    if np.all(f == np.round(f)):
+        counts = f.astype(np.int64)
+        best = np.full(int(counts.sum()) + 1, -np.inf)
+        best[0] = 0.0
+        for c, ai in zip(counts.tolist(), a.tolist()):
+            shifted = best[:-c] + ai
+            best = best.copy()
+            best[c:] = np.maximum(best[c:], shifted)
+        sizes = np.arange(1, len(best), dtype=float)
+        return float(2 * np.max(best[1:] - sizes * np.log(sizes)))
+    if len(f) <= 12:
+        subsets = np.array(list(itertools.product((0.0, 1.0), repeat=len(f)))[1:])
+        sizes = subsets @ f
+        return float(2 * np.max(subsets @ a - sizes * np.log(sizes)))
+    return float(2 * np.sum(f * np.log(1 / p)))
+
+
+class LikelihoodRatioTest(PrePruningCriterion):
+    """CN2's significance test as Clark & Niblett (1989) state it: the
+    likelihood ratio statistic ``2 sum_i f_i ln(f_i / e_i)`` of the class
+    distribution of the examples a rule covers (``f``, over every class)
+    against the distribution expected from the examples in scope (``e``),
+    compared with the chi-squared critical value at significance level
+    `alpha` and ``k - 1`` degrees of freedom, ``k`` the classes in scope
+    (`chi2_critical_value`). `evaluate` is true for an *insignificant*
+    rule, so the default polarity rejects those -- as a `filtering`
+    criterion, as a `stopping` one, or as `SeCo`'s `stop_covering`.
+
+    The statistic doesn't depend on the rule's head: a rule is
+    significant if it separates any classes from each other -- even one
+    that covers its head at exactly the head's prior share, and so
+    predicts it no better than a default would. It fits where a rule is
+    judged by its whole class distribution: a class-neutral heuristic
+    (`pyrulearn.heuristics.Entropy`, as in the original CN2), or
+    classification by summed distributions; where a rule is judged by
+    its head, the two-class test (CN2's default) asks the right
+    question. With many classes it is also the stricter one. With two
+    classes it is the two-class `pyrulearn.heuristics.LikelihoodRatio`,
+    and the test is ``ThresholdPrePruning(LikelihoodRatio(), 3.841, "<")``
+    at ``alpha=0.05``. A rule's class counts come from its statistics
+    if they carry them (a decision list's search, `covered`), else from
+    its coverage of the data. `may_accept_refinements` bounds the
+    statistic over the rule's refinements (`likelihood_ratio_bound`)."""
+
+    def __init__(self, alpha: float = 0.05):
+        if not 0 < alpha < 1:
+            raise ValueError(f"alpha must be between 0 and 1, got {alpha}")
+        self.alpha = alpha
+
+    def _distributions(self, rule, stats, data, example_mask) -> Tuple[np.ndarray, np.ndarray]:
+        codes, k = _class_codes(data.y)
+        weights = data.scope_weights(example_mask)
+        prior = np.bincount(codes, weights, minlength=k)
+        covered = getattr(stats, "covered", None)
+        if covered is None or np.ndim(covered) != 1 or len(covered) != k:
+            rows = np.asarray(data.coverage(rule), dtype=bool)
+            covered = np.bincount(codes[rows], weights[rows], minlength=k)
+        return np.asarray(covered, dtype=float), prior
+
+    def critical_value(self, prior: np.ndarray) -> Optional[float]:
+        """The critical value for a scope with class counts `prior`, None
+        if it holds a single class (nothing to separate)."""
+        df = int(np.count_nonzero(prior)) - 1
+        return chi2_critical_value(df, self.alpha) if df >= 1 else None
+
+    def evaluate(self, rule, stats, data, target_class, example_mask=None) -> bool:
+        covered, prior = self._distributions(rule, stats, data, example_mask)
+        critical = self.critical_value(prior)
+        return critical is None or likelihood_ratio_statistic(covered, prior) < critical
+
+    def may_accept_refinements(self, rule, stats, data, target_class, example_mask, bound) -> bool:
+        covered, prior = self._distributions(rule, stats, data, example_mask)
+        critical = self.critical_value(prior)
+        return critical is not None and likelihood_ratio_bound(covered, prior) >= critical
+
+    def __repr__(self) -> str:
+        return "LikelihoodRatioTest()" if self.alpha == 0.05 else f"LikelihoodRatioTest(alpha={self.alpha})"
 
 
 def _log2_factorial(n: int) -> float:

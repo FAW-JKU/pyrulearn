@@ -15,7 +15,10 @@ from pyrulearn.heuristics import (
     Laplace, LEF, LikelihoodRatio, MinimalLength, RuleStats, UncoveredPositives,
 )
 from pyrulearn.learners import NativeRuleLearner
-from pyrulearn.pruning import AllOf, AnyOf, EncodingLengthRestriction, ThresholdPrePruning
+from pyrulearn.pruning import (
+    AllOf, AnyOf, EncodingLengthRestriction, LikelihoodRatioTest, ThresholdPrePruning, chi2_critical_value,
+    likelihood_ratio_bound, likelihood_ratio_statistic,
+)
 from pyrulearn.learners.seco import (
     AQR, BeamSearch, CN2, EmptyRuleAllFeatures, FeatureSubset, GainAscentHillClimbing, HillClimbing,
     NoSplit, GrowPruneSplit,
@@ -687,6 +690,60 @@ def test_threshold_pre_pruning_all_operators():
         assert criterion.reject(empty_rule, stats, rep, "pos") is expected, (operator, threshold)
 
 
+_NO_RULE = (None, None, None, None, None)  # what a bound-only criterion ignores
+
+
+def test_threshold_pre_pruning_bounds_only_a_rejection_of_low_scores():
+    # a refinement can pass "reject below t" only if its bound reaches t;
+    # for any other comparison, or without a bound, the criterion can't tell
+    below = ThresholdPrePruning(LikelihoodRatio(), 3.841, operator="<")
+    assert below.may_accept_refinements(*_NO_RULE, lambda h: 3.841) is True
+    assert below.may_accept_refinements(*_NO_RULE, lambda h: 3.0) is False
+    assert below.may_accept_refinements(*_NO_RULE, lambda h: None) is True
+    at_most = ThresholdPrePruning(LikelihoodRatio(), 3.841, operator="<=")
+    assert at_most.may_accept_refinements(*_NO_RULE, lambda h: 3.841) is False
+    for criterion in (ThresholdPrePruning(LikelihoodRatio(), 3.841, operator=">="),
+                      ThresholdPrePruning(LikelihoodRatio(), 3.841, operator="<", polarity=False),
+                      ThresholdPrePruning(FoilGain(), 1.0, operator="<")):
+        assert criterion.may_accept_refinements(*_NO_RULE, lambda h: 0.0) is True
+
+
+def test_chi2_critical_values():
+    assert chi2_critical_value(1) == pytest.approx(3.841459, abs=1e-6)
+    assert chi2_critical_value(2) == pytest.approx(5.991465, abs=1e-6)
+    assert chi2_critical_value(5, 0.01) == pytest.approx(15.086272, abs=1e-6)
+
+
+def test_likelihood_ratio_test_on_two_classes_is_the_two_class_likelihood_ratio():
+    rep, ds = _conjunction_dataset()
+    two_class = ThresholdPrePruning(LikelihoodRatio(), chi2_critical_value(1), operator="<")
+    for conditions in ([], [0], [1], [0, 1], [2], [0, 2]):
+        rule = Rule.from_pos_neg(pos=conditions, neg=[], dataspec=ds, target="pos")
+        stats = RuleStats.from_rule(rule, rep, "pos")
+        assert LikelihoodRatioTest().evaluate(rule, stats, rep, "pos") == two_class.evaluate(rule, stats, rep, "pos")
+
+
+def test_likelihood_ratio_test_counts_every_class_and_degrees_of_freedom():
+    # 3 classes of 10 in scope: a rule covering 5 of b and 5 of c, none
+    # of a, differs from the prior only by leaving out a -- the statistic
+    # over all classes sees that, whatever the rule's head
+    prior = np.array([10.0, 10.0, 10.0])
+    covered = np.array([0.0, 5.0, 5.0])
+    assert likelihood_ratio_statistic(covered, prior) == pytest.approx(2 * 10 * np.log(1.5))
+    assert likelihood_ratio_statistic(prior, prior) == 0.0
+    # the bound is the best refinement: here the pure 5 of one class
+    assert likelihood_ratio_bound(covered, prior) == pytest.approx(2 * 5 * np.log(3))
+
+
+def test_likelihood_ratio_test_rejects_everything_in_a_one_class_scope():
+    rep, ds = _conjunction_dataset()
+    rule = Rule.from_pos_neg(pos=[0], neg=[], dataspec=ds, target="pos")
+    stats = RuleStats.from_rule(rule, rep, "pos")
+    only_negatives = np.asarray(rep.y) == "neg"
+    assert LikelihoodRatioTest().evaluate(rule, stats, rep, "pos", only_negatives) is True
+    assert LikelihoodRatioTest().may_accept_refinements(rule, stats, rep, "pos", only_negatives, None) is False
+
+
 def test_polarity_flips_which_of_accept_reject_equals_evaluate():
     rep, ds = _conjunction_dataset()
     empty_rule = Rule([], target="pos", dataspec=ds)
@@ -746,8 +803,9 @@ def test_filtering_does_not_reorder_the_beam_and_only_relaxes_optimistic_pruning
     empty_rule = Rule([], target="pos", dataspec=ds)
     initial = [(empty_rule, frozenset(range(3)))]
 
-    # evaluate() == "accuracy < 2.0", always true -- rejects every candidate
-    reject_everything = ThresholdPrePruning(Accuracy(), threshold=2.0, operator="<")
+    # evaluate() == "accuracy >= -1.0", always true -- rejects every
+    # candidate, but as a rejection of high scores no bound can tell so
+    reject_everything = ThresholdPrePruning(Accuracy(), threshold=-1.0, operator=">=")
 
     # with optimistic pruning OFF, filtering has literally no effect on the
     # search: same beam every round, same rules specialized, same count
@@ -775,6 +833,14 @@ def test_filtering_does_not_reorder_the_beam_and_only_relaxes_optimistic_pruning
     # while the unfiltered run finds the real rule
     assert result_without is not None
     assert result_with is None
+
+    # the same filter as a rejection of low scores ("accuracy < 2.0"): the
+    # bound shows no refinement can pass, and the search ends at once
+    with _counting_expansions() as bounded:
+        assert BeamSearch(beam_width=2).search(
+            rep, "pos", Accuracy(), initial, filtering=ThresholdPrePruning(Accuracy(), 2.0, operator="<"),
+        ) is None
+    assert bounded[0] == 0
 
 
 def test_filtering_excludes_the_best_rule_without_blocking_the_search_from_finding_it():
@@ -1353,6 +1419,28 @@ def test_cn2_an_absurd_significance_threshold_yields_an_empty_ruleset_either_mod
                   stopping=ThresholdPrePruning(LikelihoodRatio(), 1000.0, "<")).fit(rep)
     assert list(filtered.rules) == [] and list(stopped.rules) == []
     assert filtered.default_rule is not None and stopped.default_rule is not None
+
+
+def test_cn2_search_stops_once_nothing_significant_can_follow_and_learns_the_same_rules(monkeypatch):
+    # with nothing left that could become significant the search ends
+    # at once instead of running out every refinement -- and since no
+    # rule from there on could be returned, every model stays the same
+    rep, ds, y = _disjunctive_dataset()
+    with _counting_expansions() as expansions:
+        assert CN2(target_class="pos", significance_threshold=1000.0).fit(rep).rules == []
+    assert expansions[0] == 0
+
+    data, _, _ = _noisy_3class()
+    fits = [{}, {"model": DecisionList}, {"model": DecisionList, "target_class": seco.HeadPerRule()},
+            {"model": DecisionList, "seed": seco.RandomSeed()}]
+    learners = [CN2, lambda: CN2(filtering=LikelihoodRatioTest())]
+    stopped = [[str(r) for r in make().fit(data, **kw).rules] for make in learners for kw in fits]
+    monkeypatch.setattr(ThresholdPrePruning, "may_accept_refinements", lambda self, *args: True)
+    monkeypatch.setattr(LikelihoodRatioTest, "may_accept_refinements", lambda self, *args: True)
+    with _counting_expansions() as expansions:
+        assert CN2(target_class="pos", significance_threshold=1000.0).fit(rep).rules == []
+    assert expansions[0] > 0
+    assert [[str(r) for r in make().fit(data, **kw).rules] for make in learners for kw in fits] == stopped
 
 
 def test_cn2_conceptset_uses_microvotecombiner_not_the_family_max_default():
