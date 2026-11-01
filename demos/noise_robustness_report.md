@@ -86,8 +86,8 @@ Fit time (seconds):
 
 | learner | 0% | 5% | 10% | 20% | 30% |
 |---|--:|--:|--:|--:|--:|
-| CN2 | 0.21 | 4.89 | 8.70 | 6.52 | 6.43 |
-| CN2 (no significance test) | 0.20 | 3.75 | 5.87 | 9.92 | 12.39 |
+| CN2 | 0.18 | 4.25 | 6.99 | 2.49 | 2.21 |
+| CN2 (no significance test) | 0.15 | 2.93 | 4.96 | 8.21 | 10.21 |
 | PFoil | 0.06 | 0.83 | 1.24 | 1.76 | 2.05 |
 | PFoil (no stopping) | 0.06 | 1.36 | 2.28 | 3.65 | 4.60 |
 | PFossil | 0.04 | 0.03 | 0.03 | 0.02 | 0.02 |
@@ -224,16 +224,16 @@ Fit time (seconds):
 | kr-vs-kp | Boomer@20% | 92.15% | 654.5 | 4064.5 | 2.852 |
 | kr-vs-kp | Boomer@30% | 83.92% | 669.3 | 4208.6 | 2.890 |
 | kr-vs-kp | Boomer@5% | 98.12% | 569.8 | 3573.4 | 2.705 |
-| kr-vs-kp | CN2 (no significance test)@0% | 99.34% | 68.6 | 295.9 | 0.433 |
-| kr-vs-kp | CN2 (no significance test)@10% | 92.65% | 614.2 | 3672.0 | 4.929 |
-| kr-vs-kp | CN2 (no significance test)@20% | 83.89% | 924.8 | 6049.2 | 8.202 |
-| kr-vs-kp | CN2 (no significance test)@30% | 74.37% | 1111.1 | 7556.0 | 10.982 |
-| kr-vs-kp | CN2 (no significance test)@5% | 95.31% | 393.8 | 2189.1 | 3.042 |
-| kr-vs-kp | CN2@0% | 99.34% | 68.6 | 295.9 | 0.437 |
-| kr-vs-kp | CN2@10% | 91.68% | 410.2 | 2295.5 | 6.571 |
-| kr-vs-kp | CN2@20% | 88.92% | 152.6 | 656.0 | 4.545 |
-| kr-vs-kp | CN2@30% | 89.05% | 116.9 | 429.4 | 4.710 |
-| kr-vs-kp | CN2@5% | 93.08% | 311.8 | 1688.1 | 3.951 |
+| kr-vs-kp | CN2 (no significance test)@0% | 99.34% | 68.6 | 295.9 | 0.313 |
+| kr-vs-kp | CN2 (no significance test)@10% | 92.65% | 614.2 | 3672.0 | 3.902 |
+| kr-vs-kp | CN2 (no significance test)@20% | 83.89% | 924.8 | 6049.2 | 6.520 |
+| kr-vs-kp | CN2 (no significance test)@30% | 74.37% | 1111.1 | 7556.0 | 8.149 |
+| kr-vs-kp | CN2 (no significance test)@5% | 95.31% | 393.8 | 2189.1 | 2.404 |
+| kr-vs-kp | CN2@0% | 99.34% | 68.6 | 295.9 | 0.382 |
+| kr-vs-kp | CN2@10% | 91.68% | 410.2 | 2295.5 | 4.408 |
+| kr-vs-kp | CN2@20% | 88.92% | 152.6 | 656.0 | 1.147 |
+| kr-vs-kp | CN2@30% | 89.05% | 116.9 | 429.4 | 0.914 |
+| kr-vs-kp | CN2@5% | 93.08% | 311.8 | 1688.1 | 2.884 |
 | kr-vs-kp | ENDER (exponential loss)@0% | 99.09% | 356.4 | 2034.6 | 1.213 |
 | kr-vs-kp | ENDER (exponential loss)@10% | 96.34% | 453.2 | 2088.6 | 1.310 |
 | kr-vs-kp | ENDER (exponential loss)@20% | 95.75% | 461.0 | 2060.1 | 1.321 |
@@ -289,16 +289,16 @@ Fit time (seconds):
 | mushroom | Boomer@20% | 97.66% | 725.8 | 3899.2 | 7.785 |
 | mushroom | Boomer@30% | 92.73% | 748.2 | 4127.5 | 8.006 |
 | mushroom | Boomer@5% | 99.72% | 586.7 | 3020.6 | 7.189 |
-| mushroom | CN2 (no significance test)@0% | 100.00% | 23.0 | 30.0 | 0.185 |
-| mushroom | CN2 (no significance test)@10% | 91.57% | 1428.7 | 8571.0 | 17.347 |
-| mushroom | CN2 (no significance test)@20% | 82.88% | 2223.9 | 14079.3 | 29.773 |
-| mushroom | CN2 (no significance test)@30% | 74.64% | 2739.4 | 17807.2 | 36.439 |
-| mushroom | CN2 (no significance test)@5% | 95.08% | 875.9 | 4844.8 | 11.097 |
-| mushroom | CN2@0% | 100.00% | 23.0 | 30.0 | 0.188 |
-| mushroom | CN2@10% | 94.63% | 1252.3 | 7479.5 | 26.695 |
-| mushroom | CN2@20% | 96.05% | 549.2 | 2662.1 | 19.235 |
-| mushroom | CN2@30% | 95.85% | 417.6 | 2005.2 | 18.291 |
-| mushroom | CN2@5% | 95.08% | 875.9 | 4844.8 | 14.668 |
+| mushroom | CN2 (no significance test)@0% | 100.00% | 23.0 | 30.0 | 0.122 |
+| mushroom | CN2 (no significance test)@10% | 91.57% | 1428.7 | 8571.0 | 14.970 |
+| mushroom | CN2 (no significance test)@20% | 82.88% | 2223.9 | 14079.3 | 24.945 |
+| mushroom | CN2 (no significance test)@30% | 74.64% | 2739.4 | 17807.2 | 30.975 |
+| mushroom | CN2 (no significance test)@5% | 95.08% | 875.9 | 4844.8 | 8.674 |
+| mushroom | CN2@0% | 100.00% | 23.0 | 30.0 | 0.128 |
+| mushroom | CN2@10% | 94.63% | 1252.3 | 7479.5 | 22.170 |
+| mushroom | CN2@20% | 96.05% | 549.2 | 2662.1 | 6.867 |
+| mushroom | CN2@30% | 95.85% | 417.6 | 2005.2 | 5.695 |
+| mushroom | CN2@5% | 95.08% | 875.9 | 4844.8 | 13.152 |
 | mushroom | ENDER (exponential loss)@0% | 100.00% | 183.9 | 1036.8 | 2.638 |
 | mushroom | ENDER (exponential loss)@10% | 99.95% | 424.5 | 1995.3 | 3.268 |
 | mushroom | ENDER (exponential loss)@20% | 99.89% | 417.7 | 1706.4 | 3.035 |
@@ -354,16 +354,16 @@ Fit time (seconds):
 | tic-tac-toe | Boomer@20% | 83.40% | 732.9 | 4436.0 | 1.485 |
 | tic-tac-toe | Boomer@30% | 72.12% | 773.4 | 4763.6 | 1.533 |
 | tic-tac-toe | Boomer@5% | 97.39% | 557.7 | 3078.3 | 1.340 |
-| tic-tac-toe | CN2 (no significance test)@0% | 98.33% | 28.6 | 98.8 | 0.111 |
-| tic-tac-toe | CN2 (no significance test)@10% | 87.79% | 165.8 | 736.4 | 0.676 |
-| tic-tac-toe | CN2 (no significance test)@20% | 80.37% | 229.0 | 1040.4 | 0.920 |
-| tic-tac-toe | CN2 (no significance test)@30% | 70.36% | 266.3 | 1217.3 | 1.092 |
-| tic-tac-toe | CN2 (no significance test)@5% | 94.26% | 116.3 | 500.0 | 0.475 |
-| tic-tac-toe | CN2@0% | 98.33% | 28.6 | 98.8 | 0.116 |
-| tic-tac-toe | CN2@10% | 87.69% | 166.6 | 736.9 | 1.088 |
-| tic-tac-toe | CN2@20% | 80.16% | 221.0 | 1000.5 | 1.830 |
-| tic-tac-toe | CN2@30% | 70.78% | 240.5 | 1089.7 | 2.249 |
-| tic-tac-toe | CN2@5% | 94.26% | 116.3 | 500.0 | 0.655 |
+| tic-tac-toe | CN2 (no significance test)@0% | 98.33% | 28.6 | 98.8 | 0.084 |
+| tic-tac-toe | CN2 (no significance test)@10% | 87.79% | 165.8 | 736.4 | 0.550 |
+| tic-tac-toe | CN2 (no significance test)@20% | 80.37% | 229.0 | 1040.4 | 0.756 |
+| tic-tac-toe | CN2 (no significance test)@30% | 70.36% | 266.3 | 1217.3 | 0.894 |
+| tic-tac-toe | CN2 (no significance test)@5% | 94.26% | 116.3 | 500.0 | 0.373 |
+| tic-tac-toe | CN2@0% | 98.33% | 28.6 | 98.8 | 0.108 |
+| tic-tac-toe | CN2@10% | 87.69% | 166.6 | 736.9 | 1.009 |
+| tic-tac-toe | CN2@20% | 80.16% | 221.0 | 1000.5 | 1.601 |
+| tic-tac-toe | CN2@30% | 70.78% | 240.5 | 1089.7 | 1.916 |
+| tic-tac-toe | CN2@5% | 94.26% | 116.3 | 500.0 | 0.645 |
 | tic-tac-toe | ENDER (exponential loss)@0% | 95.29% | 431.9 | 1285.0 | 0.505 |
 | tic-tac-toe | ENDER (exponential loss)@10% | 83.92% | 446.4 | 1321.5 | 0.520 |
 | tic-tac-toe | ENDER (exponential loss)@20% | 78.08% | 450.0 | 1358.8 | 0.525 |
@@ -419,16 +419,16 @@ Fit time (seconds):
 | vote | Boomer@20% | 85.54% | 380.0 | 1953.2 | 0.833 |
 | vote | Boomer@30% | 77.49% | 403.3 | 2130.7 | 0.847 |
 | vote | Boomer@5% | 93.35% | 231.9 | 1071.9 | 0.730 |
-| vote | CN2 (no significance test)@0% | 94.25% | 28.1 | 87.6 | 0.086 |
-| vote | CN2 (no significance test)@10% | 89.66% | 83.6 | 378.0 | 0.528 |
-| vote | CN2 (no significance test)@20% | 84.89% | 113.6 | 551.3 | 0.777 |
-| vote | CN2 (no significance test)@30% | 82.77% | 138.3 | 689.5 | 1.035 |
-| vote | CN2 (no significance test)@5% | 92.67% | 59.4 | 245.5 | 0.370 |
-| vote | CN2@0% | 94.49% | 26.3 | 84.9 | 0.097 |
-| vote | CN2@10% | 91.04% | 53.8 | 218.7 | 0.465 |
-| vote | CN2@20% | 88.09% | 50.0 | 207.0 | 0.463 |
-| vote | CN2@30% | 83.70% | 49.6 | 203.5 | 0.484 |
-| vote | CN2@5% | 94.27% | 45.6 | 175.6 | 0.299 |
+| vote | CN2 (no significance test)@0% | 94.25% | 28.1 | 87.6 | 0.066 |
+| vote | CN2 (no significance test)@10% | 89.66% | 83.6 | 378.0 | 0.428 |
+| vote | CN2 (no significance test)@20% | 84.89% | 113.6 | 551.3 | 0.637 |
+| vote | CN2 (no significance test)@30% | 82.77% | 138.3 | 689.5 | 0.826 |
+| vote | CN2 (no significance test)@5% | 92.67% | 59.4 | 245.5 | 0.276 |
+| vote | CN2@0% | 94.49% | 26.3 | 84.9 | 0.090 |
+| vote | CN2@10% | 91.04% | 53.8 | 218.7 | 0.373 |
+| vote | CN2@20% | 88.09% | 50.0 | 207.0 | 0.350 |
+| vote | CN2@30% | 83.70% | 49.6 | 203.5 | 0.325 |
+| vote | CN2@5% | 94.27% | 45.6 | 175.6 | 0.307 |
 | vote | ENDER (exponential loss)@0% | 95.64% | 166.4 | 417.3 | 0.234 |
 | vote | ENDER (exponential loss)@10% | 95.66% | 265.3 | 691.8 | 0.270 |
 | vote | ENDER (exponential loss)@20% | 93.37% | 301.4 | 776.4 | 0.281 |

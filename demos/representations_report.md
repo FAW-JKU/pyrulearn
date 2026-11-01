@@ -35,10 +35,10 @@ Fit time in seconds, with negation:
 
 | learner | representation | n=500 | n=1000 | n=2000 | n=4000 | n=8000 | n=16000 | n=32000 |
 |---|---|--:|--:|--:|--:|--:|--:|--:|
-| CN2 | HBitmap | 2.04 | 8.37 | 10.44 | 20.63 | 64.27 | 97.62 | 260.81 |
-| CN2 | VBitmap | 1.83 (90%) | 7.80 (93%) | 9.46 (91%) | 17.51 (85%) | 53.96 (84%) | 67.53 (69%) | 151.28 (58%) |
-| CN2 | NList | 2.01 (98%) | 8.27 (99%) | 10.17 (97%) | 19.89 (96%) | 58.94 (92%) | 78.98 (81%) | 185.91 (71%) |
-| CN2 | Sparse | 2.17 (106%) | 8.75 (104%) | 10.82 (104%) | 21.45 (104%) | 63.26 (98%) | 89.75 (92%) | 234.42 (90%) |
+| CN2 | HBitmap | 0.83 | 4.01 | 3.97 | 12.66 | 43.08 | 75.21 | 226.49 |
+| CN2 | VBitmap | 0.66 (80%) | 3.71 (92%) | 3.20 (81%) | 10.08 (80%) | 34.96 (81%) | 47.09 (63%) | 121.03 (53%) |
+| CN2 | NList | 0.79 (95%) | 3.94 (98%) | 3.73 (94%) | 11.67 (92%) | 39.17 (91%) | 58.02 (77%) | 154.79 (68%) |
+| CN2 | Sparse | 0.91 (111%) | 4.32 (108%) | 4.11 (104%) | 13.37 (106%) | 43.14 (100%) | 67.87 (90%) | 198.00 (87%) |
 | PFossil | HBitmap | 0.03 | 0.03 | 0.04 | 0.09 | 0.13 | 0.28 | 0.55 |
 | PFossil | VBitmap | 0.02 (68%) | 0.02 (67%) | 0.02 (59%) | 0.04 (52%) | 0.07 (52%) | 0.14 (49%) | 0.27 (49%) |
 | PFossil | NList | 0.03 (99%) | 0.03 (100%) | 0.04 (99%) | 0.08 (91%) | 0.12 (93%) | 0.24 (84%) | 0.45 (81%) |
@@ -60,10 +60,10 @@ Without negation:
 
 | learner | representation | n=500 | n=1000 | n=2000 | n=4000 | n=8000 | n=16000 | n=32000 |
 |---|---|--:|--:|--:|--:|--:|--:|--:|
-| CN2 | HBitmap | 0.79 | 2.35 | 3.73 | 9.03 | 18.03 | 37.66 | 152.55 |
-| CN2 | VBitmap | 0.70 (89%) | 2.01 (86%) | 3.04 (82%) | 6.87 (76%) | 12.34 (68%) | 23.67 (63%) | 77.46 (51%) |
-| CN2 | NList | 0.79 (99%) | 2.28 (97%) | 3.51 (94%) | 8.18 (91%) | 15.41 (85%) | 28.89 (77%) | 101.68 (67%) |
-| CN2 | Sparse | 0.85 (108%) | 2.49 (106%) | 3.94 (105%) | 9.08 (101%) | 16.70 (93%) | 32.01 (85%) | 116.28 (76%) |
+| CN2 | HBitmap | 0.29 | 1.00 | 2.29 | 6.17 | 15.04 | 27.94 | 135.12 |
+| CN2 | VBitmap | 0.23 (79%) | 0.82 (82%) | 1.70 (74%) | 4.36 (71%) | 9.88 (66%) | 16.55 (59%) | 65.24 (48%) |
+| CN2 | NList | 0.28 (97%) | 0.97 (97%) | 2.15 (94%) | 5.61 (91%) | 12.61 (84%) | 21.12 (76%) | 89.14 (66%) |
+| CN2 | Sparse | 0.30 (104%) | 1.10 (110%) | 2.38 (104%) | 6.13 (99%) | 13.57 (90%) | 22.68 (81%) | 100.20 (74%) |
 | PFossil | HBitmap | 0.04 | 0.02 | 0.03 | 0.09 | 0.11 | 0.19 | 0.42 |
 | PFossil | VBitmap | 0.03 (71%) | 0.01 (68%) | 0.02 (63%) | 0.06 (65%) | 0.06 (58%) | 0.11 (58%) | 0.24 (57%) |
 | PFossil | NList | 0.03 (93%) | 0.02 (114%) | 0.03 (97%) | 0.08 (89%) | 0.10 (90%) | 0.16 (85%) | 0.34 (81%) |
@@ -85,10 +85,10 @@ Without negation:
 
 | learner | representation | with negation | without negation |
 |---|---|--:|--:|
-| CN2 | HBitmap | 1.15 | 1.28 |
-| CN2 | VBitmap | 0.99 | 1.11 |
-| CN2 | NList | 1.04 | 1.15 |
-| CN2 | Sparse | 1.09 | 1.16 |
+| CN2 | HBitmap | 1.42 | 1.39 |
+| CN2 | VBitmap | 1.27 | 1.25 |
+| CN2 | NList | 1.31 | 1.27 |
+| CN2 | Sparse | 1.35 | 1.27 |
 | PFossil | HBitmap | 0.94 | 0.89 |
 | PFossil | VBitmap | 0.88 | 0.85 |
 | PFossil | NList | 0.87 | 0.83 |
@@ -121,7 +121,7 @@ With negation:
 | HBitmap | 14 KiB | 31 KiB | 65 KiB | 133 KiB | 274 KiB | 547 KiB | 1.1 MiB |
 | VBitmap | 15 KiB (105%) | 31 KiB (103%) | 66 KiB (102%) | 135 KiB (102%) | 271 KiB (99%) | 542 KiB (99%) | 1.1 MiB (100%) |
 | NList | 828 KiB (5869%) | 1.5 MiB (4858%) | 3.2 MiB (5109%) | 6.0 MiB (4592%) | 12.0 MiB (4505%) | 21.5 MiB (4020%) | 37.7 MiB (3528%) |
-| Sparse | 539 KiB (3823%) | 1.2 MiB (3858%) | 2.5 MiB (3887%) | 5.1 MiB (3953%) | 10.4 MiB (3896%) | 20.8 MiB (3897%) | 41.9 MiB (3925%) |
+| Sparse | 539 KiB (3823%) | 1.2 MiB (3857%) | 2.5 MiB (3887%) | 5.1 MiB (3953%) | 10.4 MiB (3896%) | 20.8 MiB (3897%) | 41.9 MiB (3925%) |
 | unpacked `X` | 108 KiB | 238 KiB | 508 KiB | 1.0 MiB | 2.1 MiB | 4.2 MiB | 8.5 MiB |
 
 Without negation:
@@ -130,18 +130,18 @@ Without negation:
 |---|--:|--:|--:|--:|--:|--:|--:|
 | HBitmap | 10 KiB | 21 KiB | 43 KiB | 90 KiB | 180 KiB | 360 KiB | 719 KiB |
 | VBitmap | 10 KiB (108%) | 21 KiB (103%) | 44 KiB (102%) | 89 KiB (99%) | 178 KiB (99%) | 356 KiB (99%) | 716 KiB (100%) |
-| NList | 230 KiB (2414%) | 410 KiB (1978%) | 742 KiB (1717%) | 1.3 MiB (1509%) | 2.9 MiB (1629%) | 5.0 MiB (1410%) | 8.2 MiB (1169%) |
-| Sparse | 238 KiB (2502%) | 483 KiB (2330%) | 984 KiB (2278%) | 1.9 MiB (2183%) | 3.8 MiB (2184%) | 7.7 MiB (2185%) | 15.3 MiB (2185%) |
+| NList | 230 KiB (2415%) | 411 KiB (1980%) | 742 KiB (1718%) | 1.3 MiB (1509%) | 2.9 MiB (1629%) | 5.0 MiB (1410%) | 8.2 MiB (1169%) |
+| Sparse | 238 KiB (2503%) | 483 KiB (2331%) | 984 KiB (2278%) | 1.9 MiB (2183%) | 3.8 MiB (2184%) | 7.7 MiB (2185%) | 15.3 MiB (2185%) |
 | unpacked `X` | 74 KiB | 160 KiB | 338 KiB | 699 KiB | 1.4 MiB | 2.8 MiB | 5.6 MiB |
 
 Memory a fit costs in total -- what the representation holds plus the peak the fit allocates on top of it, caches the representation builds during the fit included (`tracemalloc`, a separate untimed pass), with negation:
 
 | learner | representation | n=500 | n=1000 | n=2000 | n=4000 | n=8000 | n=16000 | n=32000 |
 |---|---|--:|--:|--:|--:|--:|--:|--:|
-| CN2 | HBitmap | 576 KiB | 1.0 MiB | 1.3 MiB | 1.6 MiB | 2.0 MiB | 3.2 MiB | 6.2 MiB |
-| CN2 | VBitmap | 393 KiB (68%) | 463 KiB (43%) | 586 KiB (43%) | 946 KiB (58%) | 1.5 MiB (75%) | 2.8 MiB (88%) | 5.5 MiB (88%) |
-| CN2 | NList | 2.0 MiB (350%) | 3.8 MiB (368%) | 6.2 MiB (465%) | 10.8 MiB (681%) | 21.8 MiB (1097%) | 39.9 MiB (1236%) | 72.1 MiB (1159%) |
-| CN2 | Sparse | 1.3 MiB (237%) | 2.8 MiB (268%) | 5.9 MiB (437%) | 12.2 MiB (768%) | 24.5 MiB (1233%) | 49.1 MiB (1522%) | 98.7 MiB (1586%) |
+| CN2 | HBitmap | 572 KiB | 1.0 MiB | 1.3 MiB | 1.6 MiB | 2.0 MiB | 3.2 MiB | 6.2 MiB |
+| CN2 | VBitmap | 393 KiB (69%) | 463 KiB (43%) | 586 KiB (43%) | 946 KiB (58%) | 1.5 MiB (75%) | 2.8 MiB (88%) | 5.5 MiB (88%) |
+| CN2 | NList | 2.0 MiB (353%) | 3.8 MiB (369%) | 6.2 MiB (464%) | 10.8 MiB (681%) | 21.8 MiB (1097%) | 39.9 MiB (1236%) | 72.1 MiB (1159%) |
+| CN2 | Sparse | 1.3 MiB (237%) | 2.8 MiB (269%) | 5.8 MiB (435%) | 12.4 MiB (780%) | 24.5 MiB (1234%) | 49.1 MiB (1522%) | 98.7 MiB (1586%) |
 | PFossil | HBitmap | 519 KiB | 1019 KiB | 1.2 MiB | 1.3 MiB | 1.6 MiB | 2.0 MiB | 3.8 MiB |
 | PFossil | VBitmap | 136 KiB (26%) | 216 KiB (21%) | 384 KiB (31%) | 636 KiB (47%) | 1.1 MiB (71%) | 2.1 MiB (103%) | 4.0 MiB (106%) |
 | PFossil | NList | 1.9 MiB (380%) | 3.8 MiB (382%) | 6.2 MiB (514%) | 10.8 MiB (815%) | 21.8 MiB (1407%) | 39.9 MiB (1987%) | 72.1 MiB (1900%) |
@@ -163,17 +163,17 @@ Without negation:
 
 | learner | representation | n=500 | n=1000 | n=2000 | n=4000 | n=8000 | n=16000 | n=32000 |
 |---|---|--:|--:|--:|--:|--:|--:|--:|
-| CN2 | HBitmap | 429 KiB | 762 KiB | 1.2 MiB | 1.5 MiB | 1.9 MiB | 2.5 MiB | 5.2 MiB |
-| CN2 | VBitmap | 245 KiB (57%) | 335 KiB (44%) | 451 KiB (37%) | 734 KiB (47%) | 1.2 MiB (63%) | 2.1 MiB (85%) | 4.5 MiB (87%) |
-| CN2 | NList | 1.0 MiB (250%) | 2.0 MiB (275%) | 3.6 MiB (299%) | 4.7 MiB (310%) | 7.4 MiB (393%) | 12.4 MiB (501%) | 22.1 MiB (428%) |
-| CN2 | Sparse | 653 KiB (152%) | 1.2 MiB (163%) | 2.4 MiB (202%) | 4.8 MiB (313%) | 9.5 MiB (504%) | 19.0 MiB (767%) | 37.6 MiB (727%) |
+| CN2 | HBitmap | 429 KiB | 759 KiB | 1.2 MiB | 1.5 MiB | 1.9 MiB | 2.5 MiB | 5.2 MiB |
+| CN2 | VBitmap | 241 KiB (56%) | 335 KiB (44%) | 451 KiB (37%) | 734 KiB (47%) | 1.2 MiB (63%) | 2.1 MiB (85%) | 4.5 MiB (87%) |
+| CN2 | NList | 1.0 MiB (250%) | 2.1 MiB (277%) | 3.6 MiB (299%) | 4.8 MiB (308%) | 7.4 MiB (392%) | 12.4 MiB (501%) | 22.1 MiB (428%) |
+| CN2 | Sparse | 653 KiB (152%) | 1.2 MiB (163%) | 2.4 MiB (203%) | 4.8 MiB (312%) | 9.5 MiB (503%) | 18.9 MiB (763%) | 37.6 MiB (727%) |
 | PFossil | HBitmap | 387 KiB | 711 KiB | 1.1 MiB | 1.2 MiB | 1.4 MiB | 1.8 MiB | 2.7 MiB |
 | PFossil | VBitmap | 108 KiB (28%) | 151 KiB (21%) | 270 KiB (23%) | 468 KiB (37%) | 812 KiB (55%) | 1.5 MiB (82%) | 2.9 MiB (106%) |
 | PFossil | NList | 1.0 MiB (268%) | 2.0 MiB (289%) | 3.5 MiB (311%) | 4.6 MiB (370%) | 7.1 MiB (495%) | 12.4 MiB (689%) | 22.1 MiB (822%) |
 | PFossil | Sparse | 606 KiB (157%) | 1.2 MiB (167%) | 2.3 MiB (207%) | 4.7 MiB (374%) | 9.2 MiB (642%) | 18.4 MiB (1025%) | 36.8 MiB (1368%) |
 | Pypper | HBitmap | 301 KiB | 533 KiB | 1014 KiB | 1.2 MiB | 1.4 MiB | 1.9 MiB | 3.8 MiB |
 | Pypper | VBitmap | 101 KiB (34%) | 152 KiB (29%) | 274 KiB (27%) | 510 KiB (41%) | 992 KiB (68%) | 1.9 MiB (99%) | 3.8 MiB (100%) |
-| Pypper | NList | 845 KiB (280%) | 1.6 MiB (300%) | 3.1 MiB (311%) | 4.5 MiB (375%) | 7.0 MiB (492%) | 12.3 MiB (636%) | 21.9 MiB (573%) |
+| Pypper | NList | 845 KiB (281%) | 1.6 MiB (300%) | 3.1 MiB (311%) | 4.5 MiB (375%) | 7.0 MiB (492%) | 12.3 MiB (636%) | 21.9 MiB (573%) |
 | Pypper | Sparse | 495 KiB (164%) | 978 KiB (184%) | 1.9 MiB (194%) | 3.8 MiB (314%) | 7.5 MiB (531%) | 15.0 MiB (779%) | 30.0 MiB (786%) |
 | PyLORD | HBitmap | 362 KiB | 1.1 MiB | 4.0 MiB | 13.6 MiB | 52.2 MiB |  |  |
 | PyLORD | VBitmap | 342 KiB (95%) | 1.1 MiB (98%) | 3.7 MiB (92%) | 13.5 MiB (100%) | 52.1 MiB (100%) |  |  |
@@ -191,7 +191,7 @@ Peak memory while building (with negation) -- the vertical indexes need more tha
 | HBitmap | 19 KiB | 36 KiB | 70 KiB | 138 KiB | 279 KiB | 552 KiB | 1.1 MiB |
 | VBitmap | 143 KiB (742%) | 306 KiB (856%) | 645 KiB (924%) | 1.3 MiB (970%) | 2.6 MiB (972%) | 5.2 MiB (972%) | 9.5 MiB (889%) |
 | NList | 4.4 MiB (23384%) | 8.5 MiB (24321%) | 17.7 MiB (26016%) | 34.5 MiB (25571%) | 69.8 MiB (25629%) | 130.9 MiB (24267%) | 255.7 MiB (23823%) |
-| Sparse | 698 KiB (3625%) | 1.2 MiB (3304%) | 2.5 MiB (3601%) | 5.1 MiB (3806%) | 10.4 MiB (3825%) | 20.8 MiB (3860%) | 41.9 MiB (3907%) |
+| Sparse | 698 KiB (3625%) | 1.2 MiB (3303%) | 2.5 MiB (3601%) | 5.1 MiB (3806%) | 10.4 MiB (3825%) | 20.8 MiB (3860%) | 41.9 MiB (3907%) |
 | unpacked `X` | 108 KiB | 238 KiB | 508 KiB | 1.0 MiB | 2.1 MiB | 4.2 MiB | 8.5 MiB |
 
 ## 2. Density
@@ -216,10 +216,10 @@ Fit time in seconds:
 
 | learner | representation | p=0.5 | p=0.3 | p=0.1 | p=0.05 | p=0.02 | p=0.01 | p=0.005 | p=0.002 |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|
-| CN2 | HBitmap | 1.06 | 0.98 | 1.16 | 1.59 | 0.94 | 0.82 | 0.17 | 0.10 |
-| CN2 | VBitmap | 0.89 (84%) | 0.82 (83%) | 0.95 (82%) | 1.31 (83%) | 0.72 (77%) | 0.57 (70%) | 0.12 (67%) | 0.06 (65%) |
-| CN2 | NList | 1.03 (97%) | 0.95 (97%) | 1.10 (94%) | 1.50 (95%) | 0.89 (95%) | 0.80 (98%) | 0.17 (95%) | 0.09 (89%) |
-| CN2 | Sparse | 1.06 (100%) | 0.95 (96%) | 1.07 (93%) | 1.45 (91%) | 0.90 (95%) | 0.72 (88%) | 0.15 (86%) | 0.08 (81%) |
+| CN2 | HBitmap | 1.14 | 1.03 | 1.26 | 1.72 | 0.95 | 0.83 | 0.18 | 0.11 |
+| CN2 | VBitmap | 0.96 (84%) | 0.85 (82%) | 1.05 (83%) | 1.41 (82%) | 0.74 (78%) | 0.60 (73%) | 0.13 (70%) | 0.07 (67%) |
+| CN2 | NList | 1.09 (95%) | 1.01 (98%) | 1.19 (94%) | 1.60 (93%) | 0.88 (93%) | 0.79 (95%) | 0.17 (92%) | 0.09 (85%) |
+| CN2 | Sparse | 1.13 (99%) | 1.01 (98%) | 1.17 (93%) | 1.56 (90%) | 0.84 (89%) | 0.72 (87%) | 0.16 (85%) | 0.08 (80%) |
 | PFossil | HBitmap | 0.03 | 0.03 | 0.01 | 0.01 | 0.01 | 0.01 | 0.01 | 0.01 |
 | PFossil | VBitmap | 0.02 (62%) | 0.02 (63%) | 0.01 (59%) | 0.01 (58%) | 0.01 (58%) | 0.01 (58%) | 0.01 (57%) | 0.01 (55%) |
 | PFossil | NList | 0.04 (110%) | 0.03 (101%) | 0.01 (111%) | 0.01 (99%) | 0.01 (99%) | 0.01 (90%) | 0.01 (93%) | 0.01 (79%) |
@@ -246,7 +246,7 @@ Memory held by each representation (share of HBitmap in parentheses; the last ro
 | HBitmap | 62 KiB | 62 KiB | 62 KiB | 62 KiB | 62 KiB | 62 KiB | 62 KiB | 62 KiB |
 | VBitmap | 63 KiB (102%) | 63 KiB (102%) | 63 KiB (102%) | 63 KiB (102%) | 63 KiB (102%) | 63 KiB (102%) | 63 KiB (102%) | 63 KiB (102%) |
 | NList | 16.9 MiB (27943%) | 10.1 MiB (16816%) | 3.4 MiB (5637%) | 1.7 MiB (2809%) | 709 KiB (1148%) | 376 KiB (609%) | 208 KiB (337%) | 111 KiB (180%) |
-| Sparse | 2.4 MiB (3962%) | 1.4 MiB (2390%) | 509 KiB (824%) | 264 KiB (428%) | 119 KiB (193%) | 72 KiB (116%) | 48 KiB (77%) | 33 KiB (54%) |
+| Sparse | 2.4 MiB (3962%) | 1.4 MiB (2390%) | 509 KiB (824%) | 264 KiB (428%) | 119 KiB (193%) | 72 KiB (117%) | 48 KiB (78%) | 33 KiB (54%) |
 | unpacked `X` | 488 KiB | 488 KiB | 488 KiB | 488 KiB | 488 KiB | 488 KiB | 488 KiB | 488 KiB |
 
 Memory a fit costs in total -- what the representation holds plus the peak the fit allocates on top of it, caches the representation builds during the fit included (`tracemalloc`, a separate untimed pass):
@@ -254,9 +254,9 @@ Memory a fit costs in total -- what the representation holds plus the peak the f
 | learner | representation | p=0.5 | p=0.3 | p=0.1 | p=0.05 | p=0.02 | p=0.01 | p=0.005 | p=0.002 |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|
 | CN2 | HBitmap | 1.6 MiB | 1.4 MiB | 1.4 MiB | 1.4 MiB | 1.3 MiB | 1.3 MiB | 1.2 MiB | 1.2 MiB |
-| CN2 | VBitmap | 1.2 MiB (72%) | 1.2 MiB (87%) | 1.2 MiB (85%) | 1.1 MiB (79%) | 796 KiB (59%) | 754 KiB (56%) | 654 KiB (51%) | 470 KiB (38%) |
-| CN2 | NList | 20.3 MiB (1234%) | 13.1 MiB (962%) | 6.4 MiB (471%) | 4.8 MiB (333%) | 3.7 MiB (276%) | 1.2 MiB (88%) | 866 KiB (68%) | 485 KiB (39%) |
-| CN2 | Sparse | 5.7 MiB (346%) | 3.5 MiB (257%) | 1.6 MiB (120%) | 1.4 MiB (95%) | 858 KiB (63%) | 784 KiB (58%) | 645 KiB (51%) | 373 KiB (30%) |
+| CN2 | VBitmap | 1.2 MiB (72%) | 1.2 MiB (87%) | 1.2 MiB (85%) | 1.1 MiB (79%) | 796 KiB (59%) | 753 KiB (56%) | 654 KiB (51%) | 471 KiB (38%) |
+| CN2 | NList | 20.3 MiB (1234%) | 13.1 MiB (961%) | 6.4 MiB (470%) | 4.8 MiB (332%) | 3.7 MiB (276%) | 1.2 MiB (87%) | 865 KiB (68%) | 485 KiB (39%) |
+| CN2 | Sparse | 5.7 MiB (345%) | 3.5 MiB (257%) | 1.6 MiB (120%) | 1.4 MiB (95%) | 858 KiB (63%) | 781 KiB (58%) | 644 KiB (51%) | 374 KiB (30%) |
 | PFossil | HBitmap | 1.2 MiB | 1.2 MiB | 1.2 MiB | 1.2 MiB | 1.2 MiB | 1.2 MiB | 1.2 MiB | 1.2 MiB |
 | PFossil | VBitmap | 405 KiB (32%) | 403 KiB (32%) | 402 KiB (33%) | 402 KiB (33%) | 402 KiB (33%) | 400 KiB (33%) | 395 KiB (32%) | 357 KiB (29%) |
 | PFossil | NList | 19.7 MiB (1620%) | 13.0 MiB (1069%) | 6.3 MiB (526%) | 4.6 MiB (382%) | 3.6 MiB (299%) | 701 KiB (57%) | 481 KiB (39%) | 369 KiB (30%) |
@@ -271,8 +271,8 @@ Memory a fit costs in total -- what the representation holds plus the peak the f
 | PyLORD | Sparse | 5.9 MiB (525%) | 3.6 MiB (325%) | 1.6 MiB (123%) | 1.7 MiB (118%) | 1.7 MiB (107%) | 1.6 MiB (104%) | 1.5 MiB (101%) | 1.2 MiB (99%) |
 | ENDER | HBitmap | 1.5 MiB | 1.5 MiB | 1.5 MiB | 1.5 MiB | 1.5 MiB | 1.5 MiB | 1.5 MiB | 1.5 MiB |
 | ENDER | VBitmap | 1.4 MiB (91%) | 1.4 MiB (91%) | 1.4 MiB (91%) | 1.4 MiB (91%) | 1.4 MiB (91%) | 1.4 MiB (91%) | 1.4 MiB (91%) | 1.4 MiB (91%) |
-| ENDER | NList | 19.4 MiB (1307%) | 11.9 MiB (796%) | 5.2 MiB (346%) | 3.5 MiB (232%) | 2.5 MiB (166%) | 810 KiB (53%) | 601 KiB (39%) | 476 KiB (31%) |
-| ENDER | Sparse | 3.4 MiB (230%) | 2.2 MiB (143%) | 1015 KiB (66%) | 702 KiB (46%) | 493 KiB (32%) | 410 KiB (27%) | 384 KiB (25%) | 363 KiB (24%) |
+| ENDER | NList | 19.4 MiB (1307%) | 11.9 MiB (796%) | 5.2 MiB (346%) | 3.5 MiB (232%) | 2.5 MiB (166%) | 810 KiB (53%) | 602 KiB (39%) | 476 KiB (31%) |
+| ENDER | Sparse | 3.4 MiB (230%) | 2.2 MiB (143%) | 1015 KiB (66%) | 703 KiB (46%) | 493 KiB (32%) | 410 KiB (27%) | 384 KiB (25%) | 363 KiB (24%) |
 
 ## 3. Width
 
@@ -286,8 +286,8 @@ Memory held by each representation (share of HBitmap in parentheses; the last ro
 |---|--:|--:|--:|--:|--:|--:|--:|--:|
 | HBitmap | 13 KiB | 25 KiB | 62 KiB | 122 KiB | 244 KiB | 611 KiB | 1.2 MiB | 2.4 MiB |
 | VBitmap | 13 KiB (103%) | 26 KiB (105%) | 63 KiB (102%) | 126 KiB (103%) | 251 KiB (103%) | 626 KiB (102%) | 1.2 MiB (102%) | 2.4 MiB (102%) |
-| NList | 387 KiB (2997%) | 637 KiB (2586%) | 1.1 MiB (1847%) | 2.1 MiB (1754%) | 4.1 MiB (1703%) | 9.9 MiB (1652%) | 19.5 MiB (1634%) | 38.7 MiB (1624%) |
-| Sparse | 179 KiB (1383%) | 179 KiB (727%) | 180 KiB (292%) | 182 KiB (149%) | 186 KiB (76%) | 198 KiB (32%) | 218 KiB (18%) | 257 KiB (11%) |
+| NList | 388 KiB (2997%) | 637 KiB (2586%) | 1.1 MiB (1846%) | 2.1 MiB (1754%) | 4.1 MiB (1703%) | 9.9 MiB (1652%) | 19.5 MiB (1634%) | 38.7 MiB (1624%) |
+| Sparse | 179 KiB (1383%) | 179 KiB (727%) | 181 KiB (292%) | 182 KiB (149%) | 186 KiB (76%) | 198 KiB (32%) | 218 KiB (18%) | 257 KiB (11%) |
 | unpacked `X` | 98 KiB | 195 KiB | 488 KiB | 977 KiB | 1.9 MiB | 4.8 MiB | 9.5 MiB | 19.1 MiB |
 
 800 `coverage()` calls for random rules of 1-4 conditions:
@@ -300,10 +300,10 @@ Fit time in seconds:
 
 | learner | representation | k=100 | k=200 | k=500 | k=1000 | k=2000 | k=5000 | k=10000 | k=20000 |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|
-| CN2 | HBitmap | 0.98 | 1.06 | 1.28 | 1.39 | 1.79 | 3.95 | 6.14 | 14.22 |
-| CN2 | VBitmap | 0.74 (76%) | 0.84 (79%) | 1.05 (82%) | 1.02 (73%) | 1.04 (58%) | 1.57 (40%) | 2.37 (39%) | 3.74 (26%) |
-| CN2 | NList | 1.01 (104%) | 1.02 (96%) | 1.23 (96%) | 1.25 (90%) | 1.25 (70%) | 1.55 (39%) | 2.30 (38%) | 3.46 (24%) |
-| CN2 | Sparse | 1.08 (110%) | 1.03 (97%) | 1.21 (94%) | 1.16 (83%) | 1.12 (63%) | 1.47 (37%) | 2.24 (36%) | 3.37 (24%) |
+| CN2 | HBitmap | 1.08 | 1.12 | 1.28 | 1.29 | 1.74 | 3.96 | 6.05 | 14.31 |
+| CN2 | VBitmap | 0.85 (79%) | 0.90 (81%) | 1.01 (79%) | 0.99 (77%) | 1.00 (58%) | 1.60 (40%) | 2.27 (37%) | 3.72 (26%) |
+| CN2 | NList | 1.06 (98%) | 1.08 (96%) | 1.17 (92%) | 1.15 (89%) | 1.11 (64%) | 1.57 (40%) | 2.16 (36%) | 3.34 (23%) |
+| CN2 | Sparse | 1.14 (105%) | 1.09 (97%) | 1.14 (89%) | 1.08 (84%) | 1.04 (60%) | 1.50 (38%) | 2.11 (35%) | 3.25 (23%) |
 | PFossil | HBitmap | 0.01 | 0.01 | 0.01 | 0.02 | 0.03 | 0.06 | 0.11 | 0.27 |
 | PFossil | VBitmap | 0.01 (72%) | 0.01 (67%) | 0.01 (60%) | 0.01 (45%) | 0.01 (35%) | 0.01 (24%) | 0.02 (18%) | 0.03 (12%) |
 | PFossil | NList | 0.01 (99%) | 0.01 (101%) | 0.01 (101%) | 0.01 (76%) | 0.02 (61%) | 0.03 (51%) | 0.05 (45%) | 0.09 (33%) |
@@ -325,10 +325,10 @@ Memory a fit costs in total -- what the representation holds plus the peak the f
 
 | learner | representation | k=100 | k=200 | k=500 | k=1000 | k=2000 | k=5000 | k=10000 | k=20000 |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|
-| CN2 | HBitmap | 623 KiB | 992 KiB | 1.4 MiB | 1.8 MiB | 3.2 MiB | 7.3 MiB | 12.1 MiB | 23.9 MiB |
+| CN2 | HBitmap | 624 KiB | 994 KiB | 1.4 MiB | 1.8 MiB | 3.2 MiB | 7.3 MiB | 12.1 MiB | 23.9 MiB |
 | CN2 | VBitmap | 404 KiB (65%) | 567 KiB (57%) | 986 KiB (69%) | 1.4 MiB (80%) | 3.2 MiB (100%) | 7.4 MiB (100%) | 12.1 MiB (100%) | 23.9 MiB (100%) |
-| CN2 | NList | 1.6 MiB (262%) | 2.8 MiB (290%) | 4.1 MiB (299%) | 3.6 MiB (206%) | 7.2 MiB (228%) | 16.8 MiB (229%) | 30.6 MiB (253%) | 60.5 MiB (253%) |
-| CN2 | Sparse | 630 KiB (101%) | 756 KiB (76%) | 1.1 MiB (80%) | 1.5 MiB (84%) | 3.1 MiB (98%) | 6.9 MiB (94%) | 11.1 MiB (92%) | 21.7 MiB (91%) |
+| CN2 | NList | 1.6 MiB (262%) | 2.8 MiB (290%) | 4.2 MiB (300%) | 3.6 MiB (206%) | 7.2 MiB (228%) | 16.8 MiB (229%) | 30.6 MiB (253%) | 60.5 MiB (253%) |
+| CN2 | Sparse | 642 KiB (103%) | 759 KiB (76%) | 1.1 MiB (80%) | 1.5 MiB (84%) | 3.1 MiB (98%) | 6.9 MiB (94%) | 11.1 MiB (92%) | 21.7 MiB (91%) |
 | PFossil | HBitmap | 469 KiB | 823 KiB | 1.2 MiB | 1.4 MiB | 1.8 MiB | 3.2 MiB | 4.8 MiB | 8.9 MiB |
 | PFossil | VBitmap | 129 KiB (28%) | 174 KiB (21%) | 402 KiB (33%) | 688 KiB (48%) | 1.3 MiB (73%) | 3.5 MiB (107%) | 5.7 MiB (120%) | 11.1 MiB (125%) |
 | PFossil | NList | 1.4 MiB (316%) | 2.6 MiB (329%) | 4.0 MiB (335%) | 2.7 MiB (192%) | 5.0 MiB (276%) | 11.9 MiB (368%) | 22.8 MiB (478%) | 45.3 MiB (509%) |
@@ -336,7 +336,7 @@ Memory a fit costs in total -- what the representation holds plus the peak the f
 | Pypper | HBitmap | 362 KiB | 599 KiB | 1.1 MiB | 1.3 MiB | 1.6 MiB | 2.7 MiB | 4.4 MiB | 9.8 MiB |
 | Pypper | VBitmap | 135 KiB (37%) | 179 KiB (30%) | 409 KiB (37%) | 684 KiB (51%) | 1.2 MiB (76%) | 2.9 MiB (105%) | 5.1 MiB (115%) | 11.1 MiB (113%) |
 | Pypper | NList | 1.1 MiB (325%) | 2.1 MiB (351%) | 4.0 MiB (366%) | 2.6 MiB (200%) | 4.9 MiB (305%) | 11.7 MiB (430%) | 22.4 MiB (504%) | 45.7 MiB (464%) |
-| Pypper | Sparse | 401 KiB (111%) | 399 KiB (67%) | 442 KiB (40%) | 487 KiB (36%) | 803 KiB (49%) | 1.8 MiB (68%) | 2.9 MiB (65%) | 7.0 MiB (71%) |
+| Pypper | Sparse | 401 KiB (111%) | 399 KiB (67%) | 443 KiB (40%) | 487 KiB (36%) | 803 KiB (49%) | 1.8 MiB (68%) | 2.9 MiB (65%) | 7.0 MiB (71%) |
 | PyLORD | HBitmap | 1.4 MiB | 1.2 MiB | 1.5 MiB | 1.5 MiB | 1.5 MiB | 2.7 MiB | 4.7 MiB | 8.7 MiB |
 | PyLORD | VBitmap | 1.4 MiB (100%) | 1.2 MiB (99%) | 1.5 MiB (100%) | 1.5 MiB (100%) | 1.5 MiB (99%) | 2.0 MiB (76%) | 2.9 MiB (62%) | 4.6 MiB (53%) |
 | PyLORD | NList | 1.8 MiB (136%) | 2.8 MiB (232%) | 4.2 MiB (278%) | 3.7 MiB (252%) | 5.6 MiB (365%) | 11.5 MiB (427%) | 21.4 MiB (455%) | 41.1 MiB (474%) |
