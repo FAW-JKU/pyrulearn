@@ -3,7 +3,13 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
-## Unreleased
+## 0.5.1 (2026-11-02)
+
+Fixes to CN2 and Pypper, and the demos re-run with them: CN2's
+significance test filters rules instead of stopping the search, and its
+search ends once nothing significant is left to find; Pypper prunes with
+the Laplace estimate, as JRip does. The separate-and-conquer comparison is
+rebuilt on the 69 datasets of the other comparisons.
 
 ### Added
 
