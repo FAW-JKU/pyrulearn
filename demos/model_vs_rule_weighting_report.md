@@ -44,14 +44,14 @@ Datasets, with their numbers of classes: `balance-scale` (3), `cmc` (3), `dna` (
 
 | strategy | learner | rounds | members | rules | accuracy |
 |---|---|--:|--:|--:|--:|
-| model weighting | AdaBoost:Pypper | 1 | 1.0 | 16.0 | 82.76% |
-| model weighting | AdaBoost:Pypper | 5 | 5.0 | 58.9 | 83.18% |
-| model weighting | AdaBoost:Pypper | 10 | 10.0 | 103.1 | 83.29% |
-| model weighting | AdaBoost:Pypper | 25 | 25.0 | 234.1 | 82.81% |
-| model weighting | AdaBoost:Pypper (defaults vote) | 1 | 1.0 | 16.0 | 82.76% |
-| model weighting | AdaBoost:Pypper (defaults vote) | 5 | 5.0 | 58.9 | 81.96% |
-| model weighting | AdaBoost:Pypper (defaults vote) | 10 | 10.0 | 103.1 | 81.83% |
-| model weighting | AdaBoost:Pypper (defaults vote) | 25 | 25.0 | 234.1 | 81.62% |
+| model weighting | AdaBoost:Pypper | 1 | 1.0 | 19.4 | 83.16% |
+| model weighting | AdaBoost:Pypper | 5 | 5.0 | 79.5 | 83.69% |
+| model weighting | AdaBoost:Pypper | 10 | 10.0 | 148.1 | 83.41% |
+| model weighting | AdaBoost:Pypper | 25 | 25.0 | 348.0 | 83.05% |
+| model weighting | AdaBoost:Pypper (defaults vote) | 1 | 1.0 | 19.4 | 83.16% |
+| model weighting | AdaBoost:Pypper (defaults vote) | 5 | 5.0 | 79.5 | 82.69% |
+| model weighting | AdaBoost:Pypper (defaults vote) | 10 | 10.0 | 148.1 | 82.76% |
+| model weighting | AdaBoost:Pypper (defaults vote) | 25 | 25.0 | 348.0 | 82.66% |
 | model weighting | AdaBoost:PFossil | 1 | 1.0 | 19.2 | 82.55% |
 | model weighting | AdaBoost:PFossil | 5 | 5.0 | 92.8 | 83.32% |
 | model weighting | AdaBoost:PFossil | 10 | 10.0 | 185.9 | 83.69% |
@@ -96,15 +96,15 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 
 | learner | strategy | rules | accuracy | mean rank |
 |---|---|--:|--:|--:|
-| Boomer | rule weighting | 223.4 | 86.38% | 3.51 |
-| ENDER | rule weighting | 394.9 | 85.57% | 3.66 |
-| Slipper | rule weighting | 157.5 | 85.52% | 4.76 |
-| AdaBoost:PFoil | model weighting | 1786.4 | 85.36% | 4.95 |
-| AdaBoost:Pypper (defaults vote) | model weighting | 234.1 | 81.62% | 5.02 |
-| AdaBoost:PFoil (defaults vote) | model weighting | 1786.4 | 85.33% | 5.12 |
-| AdaBoost:PFossil (defaults vote) | model weighting | 479.5 | 83.19% | 5.59 |
-| AdaBoost:PFossil | model weighting | 479.5 | 84.15% | 5.59 |
-| AdaBoost:Pypper | model weighting | 234.1 | 82.81% | 6.79 |
+| Boomer | rule weighting | 223.4 | 86.38% | 3.49 |
+| ENDER | rule weighting | 394.9 | 85.57% | 3.68 |
+| Slipper | rule weighting | 157.5 | 85.52% | 4.78 |
+| AdaBoost:Pypper (defaults vote) | model weighting | 348.0 | 82.66% | 4.88 |
+| AdaBoost:PFoil | model weighting | 1786.4 | 85.36% | 4.90 |
+| AdaBoost:PFoil (defaults vote) | model weighting | 1786.4 | 85.33% | 5.09 |
+| AdaBoost:PFossil | model weighting | 479.5 | 84.15% | 5.49 |
+| AdaBoost:PFossil (defaults vote) | model weighting | 479.5 | 83.19% | 5.66 |
+| AdaBoost:Pypper | model weighting | 348.0 | 83.05% | 7.01 |
 
 ## Per dataset (mean across folds)
 
@@ -126,14 +126,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | SPECT | AdaBoost:PFossil@10 | 77.92% | 49.4 |
 | SPECT | AdaBoost:PFossil@25 | 77.92% | 140.9 |
 | SPECT | AdaBoost:PFossil@5 | 79.03% | 23.4 |
-| SPECT | AdaBoost:Pypper (defaults vote)@1 | 79.02% | 4.0 |
-| SPECT | AdaBoost:Pypper (defaults vote)@10 | 83.15% | 35.4 |
-| SPECT | AdaBoost:Pypper (defaults vote)@25 | 81.64% | 85.6 |
-| SPECT | AdaBoost:Pypper (defaults vote)@5 | 85.01% | 18.1 |
-| SPECT | AdaBoost:Pypper@1 | 79.02% | 4.0 |
-| SPECT | AdaBoost:Pypper@10 | 77.93% | 35.4 |
-| SPECT | AdaBoost:Pypper@25 | 79.39% | 85.6 |
-| SPECT | AdaBoost:Pypper@5 | 75.70% | 18.1 |
+| SPECT | AdaBoost:Pypper (defaults vote)@1 | 80.85% | 4.4 |
+| SPECT | AdaBoost:Pypper (defaults vote)@10 | 80.53% | 42.2 |
+| SPECT | AdaBoost:Pypper (defaults vote)@25 | 83.12% | 102.2 |
+| SPECT | AdaBoost:Pypper (defaults vote)@5 | 83.13% | 22.3 |
+| SPECT | AdaBoost:Pypper@1 | 80.85% | 4.4 |
+| SPECT | AdaBoost:Pypper@10 | 77.15% | 42.2 |
+| SPECT | AdaBoost:Pypper@25 | 80.11% | 102.2 |
+| SPECT | AdaBoost:Pypper@5 | 79.03% | 22.3 |
 | SPECT | Boomer@10 | 82.81% | 9.2 |
 | SPECT | Boomer@100 | 83.49% | 46.6 |
 | SPECT | Boomer@25 | 83.90% | 17.1 |
@@ -167,14 +167,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | Titanic | AdaBoost:PFossil@10 | 78.61% | 45.8 |
 | Titanic | AdaBoost:PFossil@25 | 78.38% | 116.6 |
 | Titanic | AdaBoost:PFossil@5 | 78.00% | 21.8 |
-| Titanic | AdaBoost:Pypper (defaults vote)@1 | 79.22% | 7.2 |
-| Titanic | AdaBoost:Pypper (defaults vote)@10 | 78.91% | 49.9 |
-| Titanic | AdaBoost:Pypper (defaults vote)@25 | 78.92% | 122.1 |
-| Titanic | AdaBoost:Pypper (defaults vote)@5 | 78.99% | 26.0 |
-| Titanic | AdaBoost:Pypper@1 | 79.22% | 7.2 |
-| Titanic | AdaBoost:Pypper@10 | 77.23% | 49.9 |
-| Titanic | AdaBoost:Pypper@25 | 78.30% | 122.1 |
-| Titanic | AdaBoost:Pypper@5 | 77.69% | 26.0 |
+| Titanic | AdaBoost:Pypper (defaults vote)@1 | 79.68% | 7.1 |
+| Titanic | AdaBoost:Pypper (defaults vote)@10 | 78.69% | 59.1 |
+| Titanic | AdaBoost:Pypper (defaults vote)@25 | 79.22% | 141.2 |
+| Titanic | AdaBoost:Pypper (defaults vote)@5 | 78.23% | 30.2 |
+| Titanic | AdaBoost:Pypper@1 | 79.68% | 7.1 |
+| Titanic | AdaBoost:Pypper@10 | 77.39% | 59.1 |
+| Titanic | AdaBoost:Pypper@25 | 78.15% | 141.2 |
+| Titanic | AdaBoost:Pypper@5 | 78.07% | 30.2 |
 | Titanic | Boomer@10 | 79.76% | 8.0 |
 | Titanic | Boomer@100 | 78.76% | 65.7 |
 | Titanic | Boomer@25 | 80.44% | 18.9 |
@@ -208,14 +208,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | anneal | AdaBoost:PFossil@10 | 99.66% | 196.3 |
 | anneal | AdaBoost:PFossil@25 | 99.55% | 478.2 |
 | anneal | AdaBoost:PFossil@5 | 99.66% | 99.4 |
-| anneal | AdaBoost:Pypper (defaults vote)@1 | 96.10% | 13.7 |
-| anneal | AdaBoost:Pypper (defaults vote)@10 | 99.22% | 99.8 |
-| anneal | AdaBoost:Pypper (defaults vote)@25 | 99.66% | 225.3 |
-| anneal | AdaBoost:Pypper (defaults vote)@5 | 98.66% | 53.3 |
-| anneal | AdaBoost:Pypper@1 | 96.10% | 13.7 |
-| anneal | AdaBoost:Pypper@10 | 97.88% | 99.8 |
-| anneal | AdaBoost:Pypper@25 | 94.10% | 225.3 |
-| anneal | AdaBoost:Pypper@5 | 99.00% | 53.3 |
+| anneal | AdaBoost:Pypper (defaults vote)@1 | 95.44% | 14.3 |
+| anneal | AdaBoost:Pypper (defaults vote)@10 | 99.22% | 104.9 |
+| anneal | AdaBoost:Pypper (defaults vote)@25 | 99.55% | 243.3 |
+| anneal | AdaBoost:Pypper (defaults vote)@5 | 98.89% | 55.8 |
+| anneal | AdaBoost:Pypper@1 | 95.44% | 14.3 |
+| anneal | AdaBoost:Pypper@10 | 98.66% | 104.9 |
+| anneal | AdaBoost:Pypper@25 | 95.65% | 243.3 |
+| anneal | AdaBoost:Pypper@5 | 98.66% | 55.8 |
 | anneal | Boomer@10 | 96.55% | 9.7 |
 | anneal | Boomer@100 | 98.44% | 35.2 |
 | anneal | Boomer@25 | 97.88% | 15.6 |
@@ -249,14 +249,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | audiology | AdaBoost:PFossil@10 | 78.77% | 466.3 |
 | audiology | AdaBoost:PFossil@25 | 81.40% | 1085.6 |
 | audiology | AdaBoost:PFossil@5 | 79.66% | 243.7 |
-| audiology | AdaBoost:Pypper (defaults vote)@1 | 64.64% | 11.2 |
-| audiology | AdaBoost:Pypper (defaults vote)@10 | 37.15% | 65.7 |
-| audiology | AdaBoost:Pypper (defaults vote)@25 | 32.81% | 162.4 |
-| audiology | AdaBoost:Pypper (defaults vote)@5 | 51.26% | 36.6 |
-| audiology | AdaBoost:Pypper@1 | 64.64% | 11.2 |
-| audiology | AdaBoost:Pypper@10 | 73.50% | 65.7 |
-| audiology | AdaBoost:Pypper@25 | 74.74% | 162.4 |
-| audiology | AdaBoost:Pypper@5 | 74.37% | 36.6 |
+| audiology | AdaBoost:Pypper (defaults vote)@1 | 66.84% | 13.8 |
+| audiology | AdaBoost:Pypper (defaults vote)@10 | 49.64% | 101.7 |
+| audiology | AdaBoost:Pypper (defaults vote)@25 | 47.79% | 247.2 |
+| audiology | AdaBoost:Pypper (defaults vote)@5 | 51.46% | 56.6 |
+| audiology | AdaBoost:Pypper@1 | 66.84% | 13.8 |
+| audiology | AdaBoost:Pypper@10 | 77.89% | 101.7 |
+| audiology | AdaBoost:Pypper@25 | 79.27% | 247.2 |
+| audiology | AdaBoost:Pypper@5 | 73.46% | 56.6 |
 | audiology | Boomer@10 | 69.92% | 9.9 |
 | audiology | Boomer@100 | 79.21% | 34.3 |
 | audiology | Boomer@25 | 77.43% | 15.4 |
@@ -290,14 +290,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | balance-scale | AdaBoost:PFossil@10 | 84.81% | 260.0 |
 | balance-scale | AdaBoost:PFossil@25 | 84.80% | 719.1 |
 | balance-scale | AdaBoost:PFossil@5 | 84.48% | 112.6 |
-| balance-scale | AdaBoost:Pypper (defaults vote)@1 | 80.95% | 14.2 |
-| balance-scale | AdaBoost:Pypper (defaults vote)@10 | 80.78% | 85.4 |
-| balance-scale | AdaBoost:Pypper (defaults vote)@25 | 82.07% | 202.6 |
-| balance-scale | AdaBoost:Pypper (defaults vote)@5 | 80.15% | 49.1 |
-| balance-scale | AdaBoost:Pypper@1 | 80.95% | 14.2 |
-| balance-scale | AdaBoost:Pypper@10 | 80.77% | 85.4 |
-| balance-scale | AdaBoost:Pypper@25 | 82.71% | 202.6 |
-| balance-scale | AdaBoost:Pypper@5 | 80.79% | 49.1 |
+| balance-scale | AdaBoost:Pypper (defaults vote)@1 | 81.75% | 15.8 |
+| balance-scale | AdaBoost:Pypper (defaults vote)@10 | 83.03% | 111.5 |
+| balance-scale | AdaBoost:Pypper (defaults vote)@25 | 84.15% | 284.9 |
+| balance-scale | AdaBoost:Pypper (defaults vote)@5 | 82.07% | 59.4 |
+| balance-scale | AdaBoost:Pypper@1 | 81.75% | 15.8 |
+| balance-scale | AdaBoost:Pypper@10 | 82.23% | 111.5 |
+| balance-scale | AdaBoost:Pypper@25 | 78.54% | 284.9 |
+| balance-scale | AdaBoost:Pypper@5 | 82.40% | 59.4 |
 | balance-scale | Boomer@10 | 81.90% | 11.0 |
 | balance-scale | Boomer@100 | 88.62% | 76.1 |
 | balance-scale | Boomer@25 | 87.35% | 25.5 |
@@ -331,14 +331,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | banknote-authentication | AdaBoost:PFossil@10 | 99.05% | 101.5 |
 | banknote-authentication | AdaBoost:PFossil@25 | 99.13% | 252.2 |
 | banknote-authentication | AdaBoost:PFossil@5 | 99.13% | 53.2 |
-| banknote-authentication | AdaBoost:Pypper (defaults vote)@1 | 98.54% | 9.5 |
-| banknote-authentication | AdaBoost:Pypper (defaults vote)@10 | 99.13% | 75.0 |
-| banknote-authentication | AdaBoost:Pypper (defaults vote)@25 | 98.98% | 179.0 |
-| banknote-authentication | AdaBoost:Pypper (defaults vote)@5 | 99.20% | 42.1 |
-| banknote-authentication | AdaBoost:Pypper@1 | 98.54% | 9.5 |
-| banknote-authentication | AdaBoost:Pypper@10 | 98.98% | 75.0 |
-| banknote-authentication | AdaBoost:Pypper@25 | 98.69% | 179.0 |
-| banknote-authentication | AdaBoost:Pypper@5 | 98.98% | 42.1 |
+| banknote-authentication | AdaBoost:Pypper (defaults vote)@1 | 98.61% | 10.4 |
+| banknote-authentication | AdaBoost:Pypper (defaults vote)@10 | 99.05% | 81.5 |
+| banknote-authentication | AdaBoost:Pypper (defaults vote)@25 | 99.05% | 187.2 |
+| banknote-authentication | AdaBoost:Pypper (defaults vote)@5 | 99.20% | 45.7 |
+| banknote-authentication | AdaBoost:Pypper@1 | 98.61% | 10.4 |
+| banknote-authentication | AdaBoost:Pypper@10 | 98.69% | 81.5 |
+| banknote-authentication | AdaBoost:Pypper@25 | 98.98% | 187.2 |
+| banknote-authentication | AdaBoost:Pypper@5 | 98.83% | 45.7 |
 | banknote-authentication | Boomer@10 | 92.57% | 7.2 |
 | banknote-authentication | Boomer@100 | 98.69% | 35.7 |
 | banknote-authentication | Boomer@25 | 97.38% | 13.1 |
@@ -372,14 +372,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | blood-transfusion-service-center | AdaBoost:PFossil@10 | 69.80% | 10.8 |
 | blood-transfusion-service-center | AdaBoost:PFossil@25 | 69.40% | 27.6 |
 | blood-transfusion-service-center | AdaBoost:PFossil@5 | 72.73% | 5.7 |
-| blood-transfusion-service-center | AdaBoost:Pypper (defaults vote)@1 | 78.60% | 5.0 |
-| blood-transfusion-service-center | AdaBoost:Pypper (defaults vote)@10 | 78.07% | 35.3 |
-| blood-transfusion-service-center | AdaBoost:Pypper (defaults vote)@25 | 78.87% | 83.3 |
-| blood-transfusion-service-center | AdaBoost:Pypper (defaults vote)@5 | 78.07% | 18.5 |
-| blood-transfusion-service-center | AdaBoost:Pypper@1 | 78.60% | 5.0 |
-| blood-transfusion-service-center | AdaBoost:Pypper@10 | 78.20% | 35.3 |
-| blood-transfusion-service-center | AdaBoost:Pypper@25 | 77.80% | 83.3 |
-| blood-transfusion-service-center | AdaBoost:Pypper@5 | 77.00% | 18.5 |
+| blood-transfusion-service-center | AdaBoost:Pypper (defaults vote)@1 | 78.47% | 4.6 |
+| blood-transfusion-service-center | AdaBoost:Pypper (defaults vote)@10 | 78.74% | 35.0 |
+| blood-transfusion-service-center | AdaBoost:Pypper (defaults vote)@25 | 78.20% | 84.5 |
+| blood-transfusion-service-center | AdaBoost:Pypper (defaults vote)@5 | 78.20% | 18.1 |
+| blood-transfusion-service-center | AdaBoost:Pypper@1 | 78.47% | 4.6 |
+| blood-transfusion-service-center | AdaBoost:Pypper@10 | 77.40% | 35.0 |
+| blood-transfusion-service-center | AdaBoost:Pypper@25 | 78.20% | 84.5 |
+| blood-transfusion-service-center | AdaBoost:Pypper@5 | 76.73% | 18.1 |
 | blood-transfusion-service-center | Boomer@10 | 75.94% | 8.6 |
 | blood-transfusion-service-center | Boomer@100 | 78.20% | 39.2 |
 | blood-transfusion-service-center | Boomer@25 | 76.86% | 17.3 |
@@ -413,14 +413,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | breast-cancer | AdaBoost:PFossil@10 | 71.31% | 75.7 |
 | breast-cancer | AdaBoost:PFossil@25 | 68.53% | 215.3 |
 | breast-cancer | AdaBoost:PFossil@5 | 68.17% | 35.0 |
-| breast-cancer | AdaBoost:Pypper (defaults vote)@1 | 74.84% | 2.5 |
-| breast-cancer | AdaBoost:Pypper (defaults vote)@10 | 73.42% | 37.5 |
-| breast-cancer | AdaBoost:Pypper (defaults vote)@25 | 72.39% | 97.8 |
-| breast-cancer | AdaBoost:Pypper (defaults vote)@5 | 74.14% | 18.0 |
-| breast-cancer | AdaBoost:Pypper@1 | 74.84% | 2.5 |
-| breast-cancer | AdaBoost:Pypper@10 | 69.22% | 37.5 |
-| breast-cancer | AdaBoost:Pypper@25 | 67.43% | 97.8 |
-| breast-cancer | AdaBoost:Pypper@5 | 68.12% | 18.0 |
+| breast-cancer | AdaBoost:Pypper (defaults vote)@1 | 74.84% | 2.4 |
+| breast-cancer | AdaBoost:Pypper (defaults vote)@10 | 74.11% | 43.9 |
+| breast-cancer | AdaBoost:Pypper (defaults vote)@25 | 71.33% | 117.2 |
+| breast-cancer | AdaBoost:Pypper (defaults vote)@5 | 73.44% | 18.9 |
+| breast-cancer | AdaBoost:Pypper@1 | 74.84% | 2.4 |
+| breast-cancer | AdaBoost:Pypper@10 | 67.09% | 43.9 |
+| breast-cancer | AdaBoost:Pypper@25 | 68.49% | 117.2 |
+| breast-cancer | AdaBoost:Pypper@5 | 69.52% | 18.9 |
 | breast-cancer | Boomer@10 | 72.38% | 9.8 |
 | breast-cancer | Boomer@100 | 68.17% | 58.1 |
 | breast-cancer | Boomer@25 | 72.39% | 20.5 |
@@ -454,14 +454,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | breast-w | AdaBoost:PFossil@10 | 96.13% | 196.5 |
 | breast-w | AdaBoost:PFossil@25 | 96.13% | 454.1 |
 | breast-w | AdaBoost:PFossil@5 | 95.84% | 104.3 |
-| breast-w | AdaBoost:Pypper (defaults vote)@1 | 94.57% | 6.2 |
-| breast-w | AdaBoost:Pypper (defaults vote)@10 | 94.99% | 59.0 |
-| breast-w | AdaBoost:Pypper (defaults vote)@25 | 95.71% | 139.6 |
-| breast-w | AdaBoost:Pypper (defaults vote)@5 | 94.57% | 30.1 |
-| breast-w | AdaBoost:Pypper@1 | 94.57% | 6.2 |
-| breast-w | AdaBoost:Pypper@10 | 95.85% | 59.0 |
-| breast-w | AdaBoost:Pypper@25 | 96.13% | 139.6 |
-| breast-w | AdaBoost:Pypper@5 | 95.85% | 30.1 |
+| breast-w | AdaBoost:Pypper (defaults vote)@1 | 94.57% | 6.4 |
+| breast-w | AdaBoost:Pypper (defaults vote)@10 | 94.85% | 66.6 |
+| breast-w | AdaBoost:Pypper (defaults vote)@25 | 95.57% | 167.9 |
+| breast-w | AdaBoost:Pypper (defaults vote)@5 | 95.13% | 33.9 |
+| breast-w | AdaBoost:Pypper@1 | 94.57% | 6.4 |
+| breast-w | AdaBoost:Pypper@10 | 95.56% | 66.6 |
+| breast-w | AdaBoost:Pypper@25 | 96.13% | 167.9 |
+| breast-w | AdaBoost:Pypper@5 | 95.56% | 33.9 |
 | breast-w | Boomer@10 | 94.85% | 10.3 |
 | breast-w | Boomer@100 | 96.57% | 58.0 |
 | breast-w | Boomer@25 | 95.71% | 22.5 |
@@ -495,14 +495,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | car | AdaBoost:PFossil@10 | 98.21% | 288.6 |
 | car | AdaBoost:PFossil@25 | 98.15% | 814.0 |
 | car | AdaBoost:PFossil@5 | 98.15% | 135.2 |
-| car | AdaBoost:Pypper (defaults vote)@1 | 91.32% | 24.1 |
-| car | AdaBoost:Pypper (defaults vote)@10 | 96.01% | 176.8 |
-| car | AdaBoost:Pypper (defaults vote)@25 | 97.10% | 388.9 |
-| car | AdaBoost:Pypper (defaults vote)@5 | 92.71% | 99.4 |
-| car | AdaBoost:Pypper@1 | 91.32% | 24.1 |
-| car | AdaBoost:Pypper@10 | 96.93% | 176.8 |
-| car | AdaBoost:Pypper@25 | 95.14% | 388.9 |
-| car | AdaBoost:Pypper@5 | 97.11% | 99.4 |
+| car | AdaBoost:Pypper (defaults vote)@1 | 92.36% | 29.7 |
+| car | AdaBoost:Pypper (defaults vote)@10 | 97.34% | 216.1 |
+| car | AdaBoost:Pypper (defaults vote)@25 | 97.86% | 478.0 |
+| car | AdaBoost:Pypper (defaults vote)@5 | 96.41% | 121.3 |
+| car | AdaBoost:Pypper@1 | 92.36% | 29.7 |
+| car | AdaBoost:Pypper@10 | 97.97% | 216.1 |
+| car | AdaBoost:Pypper@25 | 95.02% | 478.0 |
+| car | AdaBoost:Pypper@5 | 97.74% | 121.3 |
 | car | Boomer@10 | 75.40% | 6.0 |
 | car | Boomer@100 | 95.31% | 58.3 |
 | car | Boomer@25 | 87.79% | 15.4 |
@@ -536,14 +536,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | churn | AdaBoost:PFossil@10 | 92.32% | 93.2 |
 | churn | AdaBoost:PFossil@25 | 92.66% | 232.2 |
 | churn | AdaBoost:PFossil@5 | 92.12% | 49.0 |
-| churn | AdaBoost:Pypper (defaults vote)@1 | 93.42% | 17.5 |
-| churn | AdaBoost:Pypper (defaults vote)@10 | 93.42% | 106.4 |
-| churn | AdaBoost:Pypper (defaults vote)@25 | 93.40% | 224.0 |
-| churn | AdaBoost:Pypper (defaults vote)@5 | 93.36% | 62.3 |
-| churn | AdaBoost:Pypper@1 | 93.42% | 17.5 |
-| churn | AdaBoost:Pypper@10 | 92.84% | 106.4 |
-| churn | AdaBoost:Pypper@25 | 91.28% | 224.0 |
-| churn | AdaBoost:Pypper@5 | 93.26% | 62.3 |
+| churn | AdaBoost:Pypper (defaults vote)@1 | 93.66% | 18.2 |
+| churn | AdaBoost:Pypper (defaults vote)@10 | 93.48% | 143.5 |
+| churn | AdaBoost:Pypper (defaults vote)@25 | 93.24% | 298.8 |
+| churn | AdaBoost:Pypper (defaults vote)@5 | 93.56% | 77.8 |
+| churn | AdaBoost:Pypper@1 | 93.66% | 18.2 |
+| churn | AdaBoost:Pypper@10 | 91.92% | 143.5 |
+| churn | AdaBoost:Pypper@25 | 88.70% | 298.8 |
+| churn | AdaBoost:Pypper@5 | 93.32% | 77.8 |
 | churn | Boomer@10 | 90.44% | 10.6 |
 | churn | Boomer@100 | 94.06% | 78.7 |
 | churn | Boomer@25 | 93.04% | 24.0 |
@@ -577,14 +577,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | climate-model-simulation-crashes | AdaBoost:PFossil@10 | 93.15% | 175.2 |
 | climate-model-simulation-crashes | AdaBoost:PFossil@25 | 92.41% | 437.4 |
 | climate-model-simulation-crashes | AdaBoost:PFossil@5 | 93.52% | 76.4 |
-| climate-model-simulation-crashes | AdaBoost:Pypper (defaults vote)@1 | 94.81% | 5.6 |
-| climate-model-simulation-crashes | AdaBoost:Pypper (defaults vote)@10 | 93.70% | 58.0 |
-| climate-model-simulation-crashes | AdaBoost:Pypper (defaults vote)@25 | 93.70% | 141.4 |
-| climate-model-simulation-crashes | AdaBoost:Pypper (defaults vote)@5 | 93.33% | 28.7 |
-| climate-model-simulation-crashes | AdaBoost:Pypper@1 | 94.81% | 5.6 |
-| climate-model-simulation-crashes | AdaBoost:Pypper@10 | 92.22% | 58.0 |
-| climate-model-simulation-crashes | AdaBoost:Pypper@25 | 93.52% | 141.4 |
-| climate-model-simulation-crashes | AdaBoost:Pypper@5 | 92.59% | 28.7 |
+| climate-model-simulation-crashes | AdaBoost:Pypper (defaults vote)@1 | 95.19% | 6.6 |
+| climate-model-simulation-crashes | AdaBoost:Pypper (defaults vote)@10 | 93.70% | 74.8 |
+| climate-model-simulation-crashes | AdaBoost:Pypper (defaults vote)@25 | 93.89% | 185.9 |
+| climate-model-simulation-crashes | AdaBoost:Pypper (defaults vote)@5 | 94.26% | 37.6 |
+| climate-model-simulation-crashes | AdaBoost:Pypper@1 | 95.19% | 6.6 |
+| climate-model-simulation-crashes | AdaBoost:Pypper@10 | 92.41% | 74.8 |
+| climate-model-simulation-crashes | AdaBoost:Pypper@25 | 93.15% | 185.9 |
+| climate-model-simulation-crashes | AdaBoost:Pypper@5 | 94.07% | 37.6 |
 | climate-model-simulation-crashes | Boomer@10 | 93.52% | 9.0 |
 | climate-model-simulation-crashes | Boomer@100 | 94.07% | 59.5 |
 | climate-model-simulation-crashes | Boomer@25 | 93.52% | 21.1 |
@@ -618,14 +618,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | cmc | AdaBoost:PFossil@10 | 51.80% | 22.6 |
 | cmc | AdaBoost:PFossil@25 | 52.00% | 57.4 |
 | cmc | AdaBoost:PFossil@5 | 52.14% | 12.2 |
-| cmc | AdaBoost:Pypper (defaults vote)@1 | 52.41% | 6.5 |
-| cmc | AdaBoost:Pypper (defaults vote)@10 | 51.60% | 66.1 |
-| cmc | AdaBoost:Pypper (defaults vote)@25 | 51.94% | 166.0 |
-| cmc | AdaBoost:Pypper (defaults vote)@5 | 51.46% | 30.0 |
-| cmc | AdaBoost:Pypper@1 | 52.41% | 6.5 |
-| cmc | AdaBoost:Pypper@10 | 55.61% | 66.1 |
-| cmc | AdaBoost:Pypper@25 | 54.93% | 166.0 |
-| cmc | AdaBoost:Pypper@5 | 54.45% | 30.0 |
+| cmc | AdaBoost:Pypper (defaults vote)@1 | 52.21% | 6.5 |
+| cmc | AdaBoost:Pypper (defaults vote)@10 | 53.09% | 74.7 |
+| cmc | AdaBoost:Pypper (defaults vote)@25 | 51.26% | 196.1 |
+| cmc | AdaBoost:Pypper (defaults vote)@5 | 51.60% | 34.9 |
+| cmc | AdaBoost:Pypper@1 | 52.21% | 6.5 |
+| cmc | AdaBoost:Pypper@10 | 54.59% | 74.7 |
+| cmc | AdaBoost:Pypper@25 | 54.38% | 196.1 |
+| cmc | AdaBoost:Pypper@5 | 54.31% | 34.9 |
 | cmc | Boomer@10 | 51.46% | 10.1 |
 | cmc | Boomer@100 | 54.32% | 88.1 |
 | cmc | Boomer@25 | 55.74% | 22.9 |
@@ -659,14 +659,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | colic | AdaBoost:PFossil@10 | 83.73% | 134.9 |
 | colic | AdaBoost:PFossil@25 | 86.44% | 366.9 |
 | colic | AdaBoost:PFossil@5 | 83.46% | 70.7 |
-| colic | AdaBoost:Pypper (defaults vote)@1 | 85.88% | 3.9 |
-| colic | AdaBoost:Pypper (defaults vote)@10 | 82.62% | 59.5 |
-| colic | AdaBoost:Pypper (defaults vote)@25 | 83.71% | 145.2 |
-| colic | AdaBoost:Pypper (defaults vote)@5 | 81.56% | 31.9 |
-| colic | AdaBoost:Pypper@1 | 85.88% | 3.9 |
-| colic | AdaBoost:Pypper@10 | 81.27% | 59.5 |
-| colic | AdaBoost:Pypper@25 | 81.01% | 145.2 |
-| colic | AdaBoost:Pypper@5 | 81.55% | 31.9 |
+| colic | AdaBoost:Pypper (defaults vote)@1 | 85.08% | 5.6 |
+| colic | AdaBoost:Pypper (defaults vote)@10 | 83.43% | 67.3 |
+| colic | AdaBoost:Pypper (defaults vote)@25 | 83.17% | 171.1 |
+| colic | AdaBoost:Pypper (defaults vote)@5 | 83.98% | 33.4 |
+| colic | AdaBoost:Pypper@1 | 85.08% | 5.6 |
+| colic | AdaBoost:Pypper@10 | 81.01% | 67.3 |
+| colic | AdaBoost:Pypper@25 | 81.25% | 171.1 |
+| colic | AdaBoost:Pypper@5 | 82.90% | 33.4 |
 | colic | Boomer@10 | 85.61% | 8.3 |
 | colic | Boomer@100 | 84.53% | 72.9 |
 | colic | Boomer@25 | 85.07% | 21.1 |
@@ -700,14 +700,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | compas-two-years | AdaBoost:PFossil@10 | 64.95% | 11.8 |
 | compas-two-years | AdaBoost:PFossil@25 | 64.68% | 31.2 |
 | compas-two-years | AdaBoost:PFossil@5 | 62.14% | 5.8 |
-| compas-two-years | AdaBoost:Pypper (defaults vote)@1 | 67.05% | 8.1 |
-| compas-two-years | AdaBoost:Pypper (defaults vote)@10 | 67.24% | 57.1 |
-| compas-two-years | AdaBoost:Pypper (defaults vote)@25 | 68.06% | 140.8 |
-| compas-two-years | AdaBoost:Pypper (defaults vote)@5 | 67.11% | 31.3 |
-| compas-two-years | AdaBoost:Pypper@1 | 67.05% | 8.1 |
-| compas-two-years | AdaBoost:Pypper@10 | 67.64% | 57.1 |
-| compas-two-years | AdaBoost:Pypper@25 | 67.83% | 140.8 |
-| compas-two-years | AdaBoost:Pypper@5 | 67.51% | 31.3 |
+| compas-two-years | AdaBoost:Pypper (defaults vote)@1 | 67.03% | 8.3 |
+| compas-two-years | AdaBoost:Pypper (defaults vote)@10 | 67.58% | 53.6 |
+| compas-two-years | AdaBoost:Pypper (defaults vote)@25 | 67.85% | 133.9 |
+| compas-two-years | AdaBoost:Pypper (defaults vote)@5 | 67.13% | 27.7 |
+| compas-two-years | AdaBoost:Pypper@1 | 67.03% | 8.3 |
+| compas-two-years | AdaBoost:Pypper@10 | 67.72% | 53.6 |
+| compas-two-years | AdaBoost:Pypper@25 | 67.94% | 133.9 |
+| compas-two-years | AdaBoost:Pypper@5 | 67.45% | 27.7 |
 | compas-two-years | Boomer@10 | 66.81% | 11.0 |
 | compas-two-years | Boomer@100 | 68.25% | 72.3 |
 | compas-two-years | Boomer@25 | 67.98% | 25.0 |
@@ -741,14 +741,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | credit-approval | AdaBoost:PFossil@10 | 85.22% | 113.6 |
 | credit-approval | AdaBoost:PFossil@25 | 85.94% | 296.8 |
 | credit-approval | AdaBoost:PFossil@5 | 84.93% | 54.2 |
-| credit-approval | AdaBoost:Pypper (defaults vote)@1 | 84.20% | 6.4 |
-| credit-approval | AdaBoost:Pypper (defaults vote)@10 | 85.94% | 62.2 |
-| credit-approval | AdaBoost:Pypper (defaults vote)@25 | 86.67% | 145.3 |
-| credit-approval | AdaBoost:Pypper (defaults vote)@5 | 84.49% | 33.8 |
-| credit-approval | AdaBoost:Pypper@1 | 84.20% | 6.4 |
-| credit-approval | AdaBoost:Pypper@10 | 85.22% | 62.2 |
-| credit-approval | AdaBoost:Pypper@25 | 84.49% | 145.3 |
-| credit-approval | AdaBoost:Pypper@5 | 84.64% | 33.8 |
+| credit-approval | AdaBoost:Pypper (defaults vote)@1 | 86.09% | 4.8 |
+| credit-approval | AdaBoost:Pypper (defaults vote)@10 | 84.93% | 78.3 |
+| credit-approval | AdaBoost:Pypper (defaults vote)@25 | 86.67% | 190.4 |
+| credit-approval | AdaBoost:Pypper (defaults vote)@5 | 83.77% | 43.3 |
+| credit-approval | AdaBoost:Pypper@1 | 86.09% | 4.8 |
+| credit-approval | AdaBoost:Pypper@10 | 81.88% | 78.3 |
+| credit-approval | AdaBoost:Pypper@25 | 84.06% | 190.4 |
+| credit-approval | AdaBoost:Pypper@5 | 85.36% | 43.3 |
 | credit-approval | Boomer@10 | 86.09% | 9.9 |
 | credit-approval | Boomer@100 | 86.38% | 75.6 |
 | credit-approval | Boomer@25 | 86.23% | 22.5 |
@@ -782,14 +782,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | credit-g | AdaBoost:PFossil@10 | 70.80% | 60.9 |
 | credit-g | AdaBoost:PFossil@25 | 73.50% | 166.6 |
 | credit-g | AdaBoost:PFossil@5 | 69.90% | 28.5 |
-| credit-g | AdaBoost:Pypper (defaults vote)@1 | 71.40% | 5.1 |
-| credit-g | AdaBoost:Pypper (defaults vote)@10 | 74.10% | 60.8 |
-| credit-g | AdaBoost:Pypper (defaults vote)@25 | 74.10% | 161.0 |
-| credit-g | AdaBoost:Pypper (defaults vote)@5 | 73.80% | 28.1 |
-| credit-g | AdaBoost:Pypper@1 | 71.40% | 5.1 |
-| credit-g | AdaBoost:Pypper@10 | 68.50% | 60.8 |
-| credit-g | AdaBoost:Pypper@25 | 67.90% | 161.0 |
-| credit-g | AdaBoost:Pypper@5 | 68.50% | 28.1 |
+| credit-g | AdaBoost:Pypper (defaults vote)@1 | 71.50% | 6.9 |
+| credit-g | AdaBoost:Pypper (defaults vote)@10 | 71.60% | 74.1 |
+| credit-g | AdaBoost:Pypper (defaults vote)@25 | 73.40% | 196.9 |
+| credit-g | AdaBoost:Pypper (defaults vote)@5 | 73.50% | 36.2 |
+| credit-g | AdaBoost:Pypper@1 | 71.50% | 6.9 |
+| credit-g | AdaBoost:Pypper@10 | 67.90% | 74.1 |
+| credit-g | AdaBoost:Pypper@25 | 66.80% | 196.9 |
+| credit-g | AdaBoost:Pypper@5 | 68.30% | 36.2 |
 | credit-g | Boomer@10 | 73.20% | 11.0 |
 | credit-g | Boomer@100 | 75.20% | 91.2 |
 | credit-g | Boomer@25 | 73.70% | 25.8 |
@@ -823,14 +823,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | cylinder-bands | AdaBoost:PFossil@10 | 78.70% | 125.5 |
 | cylinder-bands | AdaBoost:PFossil@25 | 77.41% | 406.5 |
 | cylinder-bands | AdaBoost:PFossil@5 | 78.33% | 51.8 |
-| cylinder-bands | AdaBoost:Pypper (defaults vote)@1 | 68.33% | 9.0 |
-| cylinder-bands | AdaBoost:Pypper (defaults vote)@10 | 75.00% | 74.2 |
-| cylinder-bands | AdaBoost:Pypper (defaults vote)@25 | 77.41% | 176.2 |
-| cylinder-bands | AdaBoost:Pypper (defaults vote)@5 | 73.33% | 39.6 |
-| cylinder-bands | AdaBoost:Pypper@1 | 68.33% | 9.0 |
-| cylinder-bands | AdaBoost:Pypper@10 | 74.63% | 74.2 |
-| cylinder-bands | AdaBoost:Pypper@25 | 74.26% | 176.2 |
-| cylinder-bands | AdaBoost:Pypper@5 | 72.96% | 39.6 |
+| cylinder-bands | AdaBoost:Pypper (defaults vote)@1 | 67.59% | 8.0 |
+| cylinder-bands | AdaBoost:Pypper (defaults vote)@10 | 78.52% | 82.6 |
+| cylinder-bands | AdaBoost:Pypper (defaults vote)@25 | 79.07% | 205.8 |
+| cylinder-bands | AdaBoost:Pypper (defaults vote)@5 | 76.30% | 41.4 |
+| cylinder-bands | AdaBoost:Pypper@1 | 67.59% | 8.0 |
+| cylinder-bands | AdaBoost:Pypper@10 | 78.33% | 82.6 |
+| cylinder-bands | AdaBoost:Pypper@25 | 76.85% | 205.8 |
+| cylinder-bands | AdaBoost:Pypper@5 | 78.15% | 41.4 |
 | cylinder-bands | Boomer@10 | 69.44% | 10.2 |
 | cylinder-bands | Boomer@100 | 81.67% | 81.7 |
 | cylinder-bands | Boomer@25 | 77.22% | 23.6 |
@@ -864,14 +864,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | diabetes | AdaBoost:PFossil@10 | 75.26% | 75.9 |
 | diabetes | AdaBoost:PFossil@25 | 75.92% | 189.1 |
 | diabetes | AdaBoost:PFossil@5 | 74.49% | 39.4 |
-| diabetes | AdaBoost:Pypper (defaults vote)@1 | 76.04% | 7.1 |
-| diabetes | AdaBoost:Pypper (defaults vote)@10 | 75.78% | 59.1 |
-| diabetes | AdaBoost:Pypper (defaults vote)@25 | 76.17% | 142.7 |
-| diabetes | AdaBoost:Pypper (defaults vote)@5 | 74.87% | 31.3 |
-| diabetes | AdaBoost:Pypper@1 | 76.04% | 7.1 |
-| diabetes | AdaBoost:Pypper@10 | 73.57% | 59.1 |
-| diabetes | AdaBoost:Pypper@25 | 75.13% | 142.7 |
-| diabetes | AdaBoost:Pypper@5 | 72.78% | 31.3 |
+| diabetes | AdaBoost:Pypper (defaults vote)@1 | 74.61% | 7.7 |
+| diabetes | AdaBoost:Pypper (defaults vote)@10 | 75.13% | 66.5 |
+| diabetes | AdaBoost:Pypper (defaults vote)@25 | 76.44% | 171.2 |
+| diabetes | AdaBoost:Pypper (defaults vote)@5 | 74.09% | 31.6 |
+| diabetes | AdaBoost:Pypper@1 | 74.61% | 7.7 |
+| diabetes | AdaBoost:Pypper@10 | 73.83% | 66.5 |
+| diabetes | AdaBoost:Pypper@25 | 73.70% | 171.2 |
+| diabetes | AdaBoost:Pypper@5 | 72.65% | 31.6 |
 | diabetes | Boomer@10 | 73.44% | 10.3 |
 | diabetes | Boomer@100 | 75.38% | 78.0 |
 | diabetes | Boomer@25 | 74.74% | 23.0 |
@@ -905,14 +905,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | dna | AdaBoost:PFossil@10 | 95.26% | 410.4 |
 | dna | AdaBoost:PFossil@25 | 94.85% | 1142.1 |
 | dna | AdaBoost:PFossil@5 | 94.35% | 227.3 |
-| dna | AdaBoost:Pypper (defaults vote)@1 | 93.75% | 22.6 |
-| dna | AdaBoost:Pypper (defaults vote)@10 | 92.56% | 171.0 |
-| dna | AdaBoost:Pypper (defaults vote)@25 | 93.28% | 395.5 |
-| dna | AdaBoost:Pypper (defaults vote)@5 | 92.03% | 93.9 |
-| dna | AdaBoost:Pypper@1 | 93.75% | 22.6 |
-| dna | AdaBoost:Pypper@10 | 92.56% | 171.0 |
-| dna | AdaBoost:Pypper@25 | 89.01% | 395.5 |
-| dna | AdaBoost:Pypper@5 | 93.44% | 93.9 |
+| dna | AdaBoost:Pypper (defaults vote)@1 | 93.13% | 29.0 |
+| dna | AdaBoost:Pypper (defaults vote)@10 | 92.75% | 240.6 |
+| dna | AdaBoost:Pypper (defaults vote)@25 | 94.19% | 523.2 |
+| dna | AdaBoost:Pypper (defaults vote)@5 | 91.93% | 125.1 |
+| dna | AdaBoost:Pypper@1 | 93.13% | 29.0 |
+| dna | AdaBoost:Pypper@10 | 93.31% | 240.6 |
+| dna | AdaBoost:Pypper@25 | 91.56% | 523.2 |
+| dna | AdaBoost:Pypper@5 | 93.19% | 125.1 |
 | dna | Boomer@10 | 90.99% | 9.6 |
 | dna | Boomer@100 | 96.20% | 90.8 |
 | dna | Boomer@25 | 94.51% | 19.3 |
@@ -946,14 +946,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | dresses-sales | AdaBoost:PFossil@10 | 62.80% | 41.4 |
 | dresses-sales | AdaBoost:PFossil@25 | 63.40% | 120.0 |
 | dresses-sales | AdaBoost:PFossil@5 | 61.40% | 19.9 |
-| dresses-sales | AdaBoost:Pypper (defaults vote)@1 | 60.40% | 2.1 |
-| dresses-sales | AdaBoost:Pypper (defaults vote)@10 | 60.00% | 41.9 |
-| dresses-sales | AdaBoost:Pypper (defaults vote)@25 | 59.60% | 97.8 |
-| dresses-sales | AdaBoost:Pypper (defaults vote)@5 | 61.60% | 17.4 |
-| dresses-sales | AdaBoost:Pypper@1 | 60.40% | 2.1 |
-| dresses-sales | AdaBoost:Pypper@10 | 59.60% | 41.9 |
-| dresses-sales | AdaBoost:Pypper@25 | 58.80% | 97.8 |
-| dresses-sales | AdaBoost:Pypper@5 | 61.00% | 17.4 |
+| dresses-sales | AdaBoost:Pypper (defaults vote)@1 | 61.00% | 1.8 |
+| dresses-sales | AdaBoost:Pypper (defaults vote)@10 | 60.40% | 44.3 |
+| dresses-sales | AdaBoost:Pypper (defaults vote)@25 | 61.80% | 106.5 |
+| dresses-sales | AdaBoost:Pypper (defaults vote)@5 | 63.20% | 17.7 |
+| dresses-sales | AdaBoost:Pypper@1 | 61.00% | 1.8 |
+| dresses-sales | AdaBoost:Pypper@10 | 55.60% | 44.3 |
+| dresses-sales | AdaBoost:Pypper@25 | 59.60% | 106.5 |
+| dresses-sales | AdaBoost:Pypper@5 | 57.60% | 17.7 |
 | dresses-sales | Boomer@10 | 62.00% | 10.6 |
 | dresses-sales | Boomer@100 | 59.40% | 69.3 |
 | dresses-sales | Boomer@25 | 62.80% | 23.7 |
@@ -987,14 +987,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | ecoli | AdaBoost:PFossil@10 | 78.61% | 260.1 |
 | ecoli | AdaBoost:PFossil@25 | 81.61% | 564.6 |
 | ecoli | AdaBoost:PFossil@5 | 83.10% | 144.9 |
-| ecoli | AdaBoost:Pypper (defaults vote)@1 | 81.91% | 10.4 |
-| ecoli | AdaBoost:Pypper (defaults vote)@10 | 80.11% | 64.7 |
-| ecoli | AdaBoost:Pypper (defaults vote)@25 | 79.74% | 152.3 |
-| ecoli | AdaBoost:Pypper (defaults vote)@5 | 77.75% | 35.8 |
-| ecoli | AdaBoost:Pypper@1 | 81.91% | 10.4 |
-| ecoli | AdaBoost:Pypper@10 | 83.06% | 64.7 |
-| ecoli | AdaBoost:Pypper@25 | 79.19% | 152.3 |
-| ecoli | AdaBoost:Pypper@5 | 83.38% | 35.8 |
+| ecoli | AdaBoost:Pypper (defaults vote)@1 | 82.22% | 10.7 |
+| ecoli | AdaBoost:Pypper (defaults vote)@10 | 78.31% | 90.0 |
+| ecoli | AdaBoost:Pypper (defaults vote)@25 | 81.58% | 200.3 |
+| ecoli | AdaBoost:Pypper (defaults vote)@5 | 80.41% | 51.0 |
+| ecoli | AdaBoost:Pypper@1 | 82.22% | 10.7 |
+| ecoli | AdaBoost:Pypper@10 | 74.45% | 90.0 |
+| ecoli | AdaBoost:Pypper@25 | 69.60% | 200.3 |
+| ecoli | AdaBoost:Pypper@5 | 82.50% | 51.0 |
 | ecoli | Boomer@10 | 81.92% | 10.5 |
 | ecoli | Boomer@100 | 84.30% | 64.8 |
 | ecoli | Boomer@25 | 81.64% | 21.8 |
@@ -1028,14 +1028,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | glass | AdaBoost:PFossil@10 | 69.68% | 271.8 |
 | glass | AdaBoost:PFossil@25 | 70.58% | 633.4 |
 | glass | AdaBoost:PFossil@5 | 72.92% | 151.2 |
-| glass | AdaBoost:Pypper (defaults vote)@1 | 64.55% | 9.1 |
-| glass | AdaBoost:Pypper (defaults vote)@10 | 66.41% | 63.5 |
-| glass | AdaBoost:Pypper (defaults vote)@25 | 68.20% | 141.2 |
-| glass | AdaBoost:Pypper (defaults vote)@5 | 62.14% | 34.5 |
-| glass | AdaBoost:Pypper@1 | 64.55% | 9.1 |
-| glass | AdaBoost:Pypper@10 | 63.92% | 63.5 |
-| glass | AdaBoost:Pypper@25 | 55.61% | 141.2 |
-| glass | AdaBoost:Pypper@5 | 61.17% | 34.5 |
+| glass | AdaBoost:Pypper (defaults vote)@1 | 67.77% | 9.6 |
+| glass | AdaBoost:Pypper (defaults vote)@10 | 67.25% | 82.2 |
+| glass | AdaBoost:Pypper (defaults vote)@25 | 71.41% | 189.1 |
+| glass | AdaBoost:Pypper (defaults vote)@5 | 68.59% | 44.2 |
+| glass | AdaBoost:Pypper@1 | 67.77% | 9.6 |
+| glass | AdaBoost:Pypper@10 | 61.15% | 82.2 |
+| glass | AdaBoost:Pypper@25 | 62.12% | 189.1 |
+| glass | AdaBoost:Pypper@5 | 65.32% | 44.2 |
 | glass | Boomer@10 | 63.14% | 9.1 |
 | glass | Boomer@100 | 73.44% | 70.9 |
 | glass | Boomer@25 | 68.27% | 21.1 |
@@ -1069,14 +1069,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | hayes-roth | AdaBoost:PFossil@10 | 83.75% | 91.7 |
 | hayes-roth | AdaBoost:PFossil@25 | 84.38% | 198.1 |
 | hayes-roth | AdaBoost:PFossil@5 | 85.62% | 50.7 |
-| hayes-roth | AdaBoost:Pypper (defaults vote)@1 | 79.38% | 9.4 |
-| hayes-roth | AdaBoost:Pypper (defaults vote)@10 | 83.75% | 59.0 |
-| hayes-roth | AdaBoost:Pypper (defaults vote)@25 | 83.12% | 132.5 |
-| hayes-roth | AdaBoost:Pypper (defaults vote)@5 | 81.88% | 32.9 |
-| hayes-roth | AdaBoost:Pypper@1 | 79.38% | 9.4 |
-| hayes-roth | AdaBoost:Pypper@10 | 85.00% | 59.0 |
-| hayes-roth | AdaBoost:Pypper@25 | 86.25% | 132.5 |
-| hayes-roth | AdaBoost:Pypper@5 | 83.75% | 32.9 |
+| hayes-roth | AdaBoost:Pypper (defaults vote)@1 | 80.62% | 10.3 |
+| hayes-roth | AdaBoost:Pypper (defaults vote)@10 | 83.12% | 60.0 |
+| hayes-roth | AdaBoost:Pypper (defaults vote)@25 | 83.75% | 131.3 |
+| hayes-roth | AdaBoost:Pypper (defaults vote)@5 | 80.62% | 33.3 |
+| hayes-roth | AdaBoost:Pypper@1 | 80.62% | 10.3 |
+| hayes-roth | AdaBoost:Pypper@10 | 85.00% | 60.0 |
+| hayes-roth | AdaBoost:Pypper@25 | 85.62% | 131.3 |
+| hayes-roth | AdaBoost:Pypper@5 | 82.50% | 33.3 |
 | hayes-roth | Boomer@10 | 83.12% | 10.7 |
 | hayes-roth | Boomer@100 | 83.75% | 28.8 |
 | hayes-roth | Boomer@25 | 86.25% | 18.3 |
@@ -1110,14 +1110,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | heart-c | AdaBoost:PFossil@10 | 78.94% | 198.1 |
 | heart-c | AdaBoost:PFossil@25 | 77.95% | 503.6 |
 | heart-c | AdaBoost:PFossil@5 | 78.24% | 97.3 |
-| heart-c | AdaBoost:Pypper (defaults vote)@1 | 82.55% | 5.7 |
-| heart-c | AdaBoost:Pypper (defaults vote)@10 | 81.23% | 49.7 |
-| heart-c | AdaBoost:Pypper (defaults vote)@25 | 80.23% | 122.7 |
-| heart-c | AdaBoost:Pypper (defaults vote)@5 | 82.20% | 26.7 |
-| heart-c | AdaBoost:Pypper@1 | 82.55% | 5.7 |
-| heart-c | AdaBoost:Pypper@10 | 78.57% | 49.7 |
-| heart-c | AdaBoost:Pypper@25 | 78.60% | 122.7 |
-| heart-c | AdaBoost:Pypper@5 | 83.52% | 26.7 |
+| heart-c | AdaBoost:Pypper (defaults vote)@1 | 80.22% | 6.1 |
+| heart-c | AdaBoost:Pypper (defaults vote)@10 | 82.51% | 59.9 |
+| heart-c | AdaBoost:Pypper (defaults vote)@25 | 81.84% | 145.7 |
+| heart-c | AdaBoost:Pypper (defaults vote)@5 | 82.51% | 32.3 |
+| heart-c | AdaBoost:Pypper@1 | 80.22% | 6.1 |
+| heart-c | AdaBoost:Pypper@10 | 78.24% | 59.9 |
+| heart-c | AdaBoost:Pypper@25 | 77.28% | 145.7 |
+| heart-c | AdaBoost:Pypper@5 | 78.25% | 32.3 |
 | heart-c | Boomer@10 | 81.87% | 10.9 |
 | heart-c | Boomer@100 | 80.60% | 71.8 |
 | heart-c | Boomer@25 | 80.27% | 24.5 |
@@ -1151,14 +1151,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | heart-h | AdaBoost:PFossil@10 | 77.53% | 118.6 |
 | heart-h | AdaBoost:PFossil@25 | 80.25% | 337.1 |
 | heart-h | AdaBoost:PFossil@5 | 80.57% | 53.4 |
-| heart-h | AdaBoost:Pypper (defaults vote)@1 | 78.20% | 4.4 |
-| heart-h | AdaBoost:Pypper (defaults vote)@10 | 82.67% | 46.4 |
-| heart-h | AdaBoost:Pypper (defaults vote)@25 | 81.63% | 118.7 |
-| heart-h | AdaBoost:Pypper (defaults vote)@5 | 80.93% | 24.2 |
-| heart-h | AdaBoost:Pypper@1 | 78.20% | 4.4 |
-| heart-h | AdaBoost:Pypper@10 | 78.84% | 46.4 |
-| heart-h | AdaBoost:Pypper@25 | 76.13% | 118.7 |
-| heart-h | AdaBoost:Pypper@5 | 76.20% | 24.2 |
+| heart-h | AdaBoost:Pypper (defaults vote)@1 | 77.17% | 4.9 |
+| heart-h | AdaBoost:Pypper (defaults vote)@10 | 79.26% | 57.4 |
+| heart-h | AdaBoost:Pypper (defaults vote)@25 | 78.59% | 147.3 |
+| heart-h | AdaBoost:Pypper (defaults vote)@5 | 80.62% | 29.9 |
+| heart-h | AdaBoost:Pypper@1 | 77.17% | 4.9 |
+| heart-h | AdaBoost:Pypper@10 | 80.63% | 57.4 |
+| heart-h | AdaBoost:Pypper@25 | 76.84% | 147.3 |
+| heart-h | AdaBoost:Pypper@5 | 77.91% | 29.9 |
 | heart-h | Boomer@10 | 79.90% | 9.4 |
 | heart-h | Boomer@100 | 80.94% | 53.6 |
 | heart-h | Boomer@25 | 80.94% | 21.3 |
@@ -1192,14 +1192,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | heart-statlog | AdaBoost:PFossil@10 | 77.41% | 187.2 |
 | heart-statlog | AdaBoost:PFossil@25 | 74.81% | 477.4 |
 | heart-statlog | AdaBoost:PFossil@5 | 75.93% | 88.7 |
-| heart-statlog | AdaBoost:Pypper (defaults vote)@1 | 79.26% | 5.0 |
-| heart-statlog | AdaBoost:Pypper (defaults vote)@10 | 80.00% | 50.9 |
-| heart-statlog | AdaBoost:Pypper (defaults vote)@25 | 81.85% | 119.5 |
-| heart-statlog | AdaBoost:Pypper (defaults vote)@5 | 81.48% | 26.5 |
-| heart-statlog | AdaBoost:Pypper@1 | 79.26% | 5.0 |
-| heart-statlog | AdaBoost:Pypper@10 | 81.48% | 50.9 |
-| heart-statlog | AdaBoost:Pypper@25 | 77.78% | 119.5 |
-| heart-statlog | AdaBoost:Pypper@5 | 80.74% | 26.5 |
+| heart-statlog | AdaBoost:Pypper (defaults vote)@1 | 81.85% | 5.5 |
+| heart-statlog | AdaBoost:Pypper (defaults vote)@10 | 81.48% | 60.4 |
+| heart-statlog | AdaBoost:Pypper (defaults vote)@25 | 78.15% | 146.0 |
+| heart-statlog | AdaBoost:Pypper (defaults vote)@5 | 81.11% | 30.1 |
+| heart-statlog | AdaBoost:Pypper@1 | 81.85% | 5.5 |
+| heart-statlog | AdaBoost:Pypper@10 | 78.52% | 60.4 |
+| heart-statlog | AdaBoost:Pypper@25 | 79.26% | 146.0 |
+| heart-statlog | AdaBoost:Pypper@5 | 79.63% | 30.1 |
 | heart-statlog | Boomer@10 | 80.74% | 10.4 |
 | heart-statlog | Boomer@100 | 79.26% | 68.1 |
 | heart-statlog | Boomer@25 | 81.48% | 24.1 |
@@ -1233,14 +1233,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | heloc | AdaBoost:PFossil@10 | 69.22% | 20.3 |
 | heloc | AdaBoost:PFossil@25 | 69.42% | 50.8 |
 | heloc | AdaBoost:PFossil@5 | 69.23% | 10.1 |
-| heloc | AdaBoost:Pypper (defaults vote)@1 | 70.45% | 14.1 |
-| heloc | AdaBoost:Pypper (defaults vote)@10 | 71.19% | 106.1 |
-| heloc | AdaBoost:Pypper (defaults vote)@25 | 71.21% | 241.1 |
-| heloc | AdaBoost:Pypper (defaults vote)@5 | 70.94% | 53.2 |
-| heloc | AdaBoost:Pypper@1 | 70.45% | 14.1 |
-| heloc | AdaBoost:Pypper@10 | 70.71% | 106.1 |
-| heloc | AdaBoost:Pypper@25 | 70.85% | 241.1 |
-| heloc | AdaBoost:Pypper@5 | 71.07% | 53.2 |
+| heloc | AdaBoost:Pypper (defaults vote)@1 | 69.81% | 15.7 |
+| heloc | AdaBoost:Pypper (defaults vote)@10 | 70.96% | 109.0 |
+| heloc | AdaBoost:Pypper (defaults vote)@25 | 71.35% | 248.2 |
+| heloc | AdaBoost:Pypper (defaults vote)@5 | 70.83% | 57.3 |
+| heloc | AdaBoost:Pypper@1 | 69.81% | 15.7 |
+| heloc | AdaBoost:Pypper@10 | 70.48% | 109.0 |
+| heloc | AdaBoost:Pypper@25 | 70.47% | 248.2 |
+| heloc | AdaBoost:Pypper@5 | 70.77% | 57.3 |
 | heloc | Boomer@10 | 69.54% | 11.0 |
 | heloc | Boomer@100 | 71.42% | 98.0 |
 | heloc | Boomer@25 | 71.11% | 26.0 |
@@ -1274,14 +1274,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | hepatitis | AdaBoost:PFossil@10 | 84.04% | 156.8 |
 | hepatitis | AdaBoost:PFossil@25 | 78.92% | 364.3 |
 | hepatitis | AdaBoost:PFossil@5 | 82.12% | 78.6 |
-| hepatitis | AdaBoost:Pypper (defaults vote)@1 | 80.04% | 3.8 |
-| hepatitis | AdaBoost:Pypper (defaults vote)@10 | 81.42% | 42.7 |
-| hepatitis | AdaBoost:Pypper (defaults vote)@25 | 80.79% | 110.1 |
-| hepatitis | AdaBoost:Pypper (defaults vote)@5 | 79.54% | 21.4 |
-| hepatitis | AdaBoost:Pypper@1 | 80.04% | 3.8 |
-| hepatitis | AdaBoost:Pypper@10 | 74.92% | 42.7 |
-| hepatitis | AdaBoost:Pypper@25 | 78.96% | 110.1 |
-| hepatitis | AdaBoost:Pypper@5 | 75.67% | 21.4 |
+| hepatitis | AdaBoost:Pypper (defaults vote)@1 | 80.71% | 4.2 |
+| hepatitis | AdaBoost:Pypper (defaults vote)@10 | 80.88% | 52.1 |
+| hepatitis | AdaBoost:Pypper (defaults vote)@25 | 82.75% | 125.4 |
+| hepatitis | AdaBoost:Pypper (defaults vote)@5 | 78.21% | 24.0 |
+| hepatitis | AdaBoost:Pypper@1 | 80.71% | 4.2 |
+| hepatitis | AdaBoost:Pypper@10 | 76.33% | 52.1 |
+| hepatitis | AdaBoost:Pypper@25 | 79.50% | 125.4 |
+| hepatitis | AdaBoost:Pypper@5 | 75.67% | 24.0 |
 | hepatitis | Boomer@10 | 81.42% | 8.5 |
 | hepatitis | Boomer@100 | 81.46% | 45.1 |
 | hepatitis | Boomer@25 | 84.62% | 18.1 |
@@ -1315,14 +1315,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | ilpd | AdaBoost:PFossil@10 | 63.95% | 41.3 |
 | ilpd | AdaBoost:PFossil@25 | 64.97% | 106.5 |
 | ilpd | AdaBoost:PFossil@5 | 63.46% | 18.6 |
-| ilpd | AdaBoost:Pypper (defaults vote)@1 | 69.66% | 3.3 |
-| ilpd | AdaBoost:Pypper (defaults vote)@10 | 70.32% | 42.8 |
-| ilpd | AdaBoost:Pypper (defaults vote)@25 | 70.83% | 115.8 |
-| ilpd | AdaBoost:Pypper (defaults vote)@5 | 67.57% | 20.2 |
-| ilpd | AdaBoost:Pypper@1 | 69.66% | 3.3 |
-| ilpd | AdaBoost:Pypper@10 | 65.70% | 42.8 |
-| ilpd | AdaBoost:Pypper@25 | 65.34% | 115.8 |
-| ilpd | AdaBoost:Pypper@5 | 63.63% | 20.2 |
+| ilpd | AdaBoost:Pypper (defaults vote)@1 | 69.14% | 2.9 |
+| ilpd | AdaBoost:Pypper (defaults vote)@10 | 68.26% | 48.2 |
+| ilpd | AdaBoost:Pypper (defaults vote)@25 | 71.53% | 131.9 |
+| ilpd | AdaBoost:Pypper (defaults vote)@5 | 67.23% | 23.0 |
+| ilpd | AdaBoost:Pypper@1 | 69.14% | 2.9 |
+| ilpd | AdaBoost:Pypper@10 | 64.68% | 48.2 |
+| ilpd | AdaBoost:Pypper@25 | 64.48% | 131.9 |
+| ilpd | AdaBoost:Pypper@5 | 64.67% | 23.0 |
 | ilpd | Boomer@10 | 71.53% | 10.4 |
 | ilpd | Boomer@100 | 71.87% | 59.0 |
 | ilpd | Boomer@25 | 72.22% | 21.4 |
@@ -1356,14 +1356,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | ionosphere | AdaBoost:PFossil@10 | 92.02% | 148.8 |
 | ionosphere | AdaBoost:PFossil@25 | 92.87% | 347.8 |
 | ionosphere | AdaBoost:PFossil@5 | 92.87% | 73.0 |
-| ionosphere | AdaBoost:Pypper (defaults vote)@1 | 90.61% | 6.4 |
-| ionosphere | AdaBoost:Pypper (defaults vote)@10 | 92.03% | 66.9 |
-| ionosphere | AdaBoost:Pypper (defaults vote)@25 | 92.31% | 157.4 |
-| ionosphere | AdaBoost:Pypper (defaults vote)@5 | 90.04% | 35.0 |
-| ionosphere | AdaBoost:Pypper@1 | 90.61% | 6.4 |
-| ionosphere | AdaBoost:Pypper@10 | 91.18% | 66.9 |
-| ionosphere | AdaBoost:Pypper@25 | 90.60% | 157.4 |
-| ionosphere | AdaBoost:Pypper@5 | 90.05% | 35.0 |
+| ionosphere | AdaBoost:Pypper (defaults vote)@1 | 90.60% | 6.6 |
+| ionosphere | AdaBoost:Pypper (defaults vote)@10 | 92.87% | 72.5 |
+| ionosphere | AdaBoost:Pypper (defaults vote)@25 | 92.87% | 170.0 |
+| ionosphere | AdaBoost:Pypper (defaults vote)@5 | 92.02% | 39.6 |
+| ionosphere | AdaBoost:Pypper@1 | 90.60% | 6.6 |
+| ionosphere | AdaBoost:Pypper@10 | 92.60% | 72.5 |
+| ionosphere | AdaBoost:Pypper@25 | 91.17% | 170.0 |
+| ionosphere | AdaBoost:Pypper@5 | 91.16% | 39.6 |
 | ionosphere | Boomer@10 | 90.59% | 8.4 |
 | ionosphere | Boomer@100 | 93.16% | 56.8 |
 | ionosphere | Boomer@25 | 91.72% | 17.9 |
@@ -1397,14 +1397,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | iris | AdaBoost:PFossil@10 | 93.33% | 73.5 |
 | iris | AdaBoost:PFossil@25 | 93.33% | 172.2 |
 | iris | AdaBoost:PFossil@5 | 94.00% | 38.2 |
-| iris | AdaBoost:Pypper (defaults vote)@1 | 92.00% | 3.7 |
-| iris | AdaBoost:Pypper (defaults vote)@10 | 92.67% | 34.0 |
-| iris | AdaBoost:Pypper (defaults vote)@25 | 95.33% | 76.3 |
-| iris | AdaBoost:Pypper (defaults vote)@5 | 92.00% | 18.0 |
-| iris | AdaBoost:Pypper@1 | 92.00% | 3.7 |
-| iris | AdaBoost:Pypper@10 | 93.33% | 34.0 |
-| iris | AdaBoost:Pypper@25 | 92.00% | 76.3 |
-| iris | AdaBoost:Pypper@5 | 93.33% | 18.0 |
+| iris | AdaBoost:Pypper (defaults vote)@1 | 92.00% | 3.6 |
+| iris | AdaBoost:Pypper (defaults vote)@10 | 94.00% | 35.3 |
+| iris | AdaBoost:Pypper (defaults vote)@25 | 94.00% | 78.2 |
+| iris | AdaBoost:Pypper (defaults vote)@5 | 92.67% | 18.2 |
+| iris | AdaBoost:Pypper@1 | 92.00% | 3.6 |
+| iris | AdaBoost:Pypper@10 | 94.00% | 35.3 |
+| iris | AdaBoost:Pypper@25 | 90.67% | 78.2 |
+| iris | AdaBoost:Pypper@5 | 93.33% | 18.2 |
 | iris | Boomer@10 | 92.67% | 6.5 |
 | iris | Boomer@100 | 94.67% | 28.1 |
 | iris | Boomer@25 | 94.67% | 10.6 |
@@ -1438,14 +1438,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | kc1 | AdaBoost:PFossil@10 | 81.65% | 24.5 |
 | kc1 | AdaBoost:PFossil@25 | 82.46% | 64.2 |
 | kc1 | AdaBoost:PFossil@5 | 79.99% | 12.8 |
-| kc1 | AdaBoost:Pypper (defaults vote)@1 | 84.64% | 3.0 |
-| kc1 | AdaBoost:Pypper (defaults vote)@10 | 85.44% | 54.6 |
-| kc1 | AdaBoost:Pypper (defaults vote)@25 | 85.68% | 136.0 |
-| kc1 | AdaBoost:Pypper (defaults vote)@5 | 84.16% | 28.2 |
-| kc1 | AdaBoost:Pypper@1 | 84.64% | 3.0 |
-| kc1 | AdaBoost:Pypper@10 | 74.07% | 54.6 |
-| kc1 | AdaBoost:Pypper@25 | 75.49% | 136.0 |
-| kc1 | AdaBoost:Pypper@5 | 70.89% | 28.2 |
+| kc1 | AdaBoost:Pypper (defaults vote)@1 | 84.49% | 4.1 |
+| kc1 | AdaBoost:Pypper (defaults vote)@10 | 85.49% | 66.9 |
+| kc1 | AdaBoost:Pypper (defaults vote)@25 | 85.78% | 164.2 |
+| kc1 | AdaBoost:Pypper (defaults vote)@5 | 84.83% | 30.8 |
+| kc1 | AdaBoost:Pypper@1 | 84.49% | 4.1 |
+| kc1 | AdaBoost:Pypper@10 | 77.77% | 66.9 |
+| kc1 | AdaBoost:Pypper@25 | 79.57% | 164.2 |
+| kc1 | AdaBoost:Pypper@5 | 74.87% | 30.8 |
 | kc1 | Boomer@10 | 85.16% | 9.1 |
 | kc1 | Boomer@100 | 85.25% | 78.8 |
 | kc1 | Boomer@25 | 85.35% | 22.0 |
@@ -1479,14 +1479,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | kc2 | AdaBoost:PFossil@10 | 83.32% | 77.7 |
 | kc2 | AdaBoost:PFossil@25 | 82.93% | 220.2 |
 | kc2 | AdaBoost:PFossil@5 | 82.75% | 35.3 |
-| kc2 | AdaBoost:Pypper (defaults vote)@1 | 83.69% | 3.3 |
-| kc2 | AdaBoost:Pypper (defaults vote)@10 | 85.99% | 40.5 |
-| kc2 | AdaBoost:Pypper (defaults vote)@25 | 84.84% | 99.7 |
-| kc2 | AdaBoost:Pypper (defaults vote)@5 | 83.88% | 20.6 |
-| kc2 | AdaBoost:Pypper@1 | 83.69% | 3.3 |
-| kc2 | AdaBoost:Pypper@10 | 80.63% | 40.5 |
-| kc2 | AdaBoost:Pypper@25 | 81.21% | 99.7 |
-| kc2 | AdaBoost:Pypper@5 | 81.22% | 20.6 |
+| kc2 | AdaBoost:Pypper (defaults vote)@1 | 83.69% | 3.7 |
+| kc2 | AdaBoost:Pypper (defaults vote)@10 | 84.08% | 47.4 |
+| kc2 | AdaBoost:Pypper (defaults vote)@25 | 84.27% | 115.4 |
+| kc2 | AdaBoost:Pypper (defaults vote)@5 | 83.12% | 25.8 |
+| kc2 | AdaBoost:Pypper@1 | 83.69% | 3.7 |
+| kc2 | AdaBoost:Pypper@10 | 80.83% | 47.4 |
+| kc2 | AdaBoost:Pypper@25 | 81.60% | 115.4 |
+| kc2 | AdaBoost:Pypper@5 | 80.06% | 25.8 |
 | kc2 | Boomer@10 | 83.70% | 9.4 |
 | kc2 | Boomer@100 | 82.36% | 68.2 |
 | kc2 | Boomer@25 | 84.08% | 20.1 |
@@ -1520,14 +1520,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | kr-vs-kp | AdaBoost:PFossil@10 | 99.56% | 175.0 |
 | kr-vs-kp | AdaBoost:PFossil@25 | 99.66% | 421.4 |
 | kr-vs-kp | AdaBoost:PFossil@5 | 99.53% | 86.7 |
-| kr-vs-kp | AdaBoost:Pypper (defaults vote)@1 | 99.16% | 22.6 |
-| kr-vs-kp | AdaBoost:Pypper (defaults vote)@10 | 99.53% | 149.3 |
-| kr-vs-kp | AdaBoost:Pypper (defaults vote)@25 | 99.66% | 332.2 |
-| kr-vs-kp | AdaBoost:Pypper (defaults vote)@5 | 99.59% | 79.4 |
-| kr-vs-kp | AdaBoost:Pypper@1 | 99.16% | 22.6 |
-| kr-vs-kp | AdaBoost:Pypper@10 | 99.25% | 149.3 |
-| kr-vs-kp | AdaBoost:Pypper@25 | 98.75% | 332.2 |
-| kr-vs-kp | AdaBoost:Pypper@5 | 99.25% | 79.4 |
+| kr-vs-kp | AdaBoost:Pypper (defaults vote)@1 | 99.25% | 23.5 |
+| kr-vs-kp | AdaBoost:Pypper (defaults vote)@10 | 99.56% | 173.7 |
+| kr-vs-kp | AdaBoost:Pypper (defaults vote)@25 | 99.59% | 377.6 |
+| kr-vs-kp | AdaBoost:Pypper (defaults vote)@5 | 99.41% | 89.1 |
+| kr-vs-kp | AdaBoost:Pypper@1 | 99.25% | 23.5 |
+| kr-vs-kp | AdaBoost:Pypper@10 | 99.50% | 173.7 |
+| kr-vs-kp | AdaBoost:Pypper@25 | 99.31% | 377.6 |
+| kr-vs-kp | AdaBoost:Pypper@5 | 99.37% | 89.1 |
 | kr-vs-kp | Boomer@10 | 93.59% | 6.0 |
 | kr-vs-kp | Boomer@100 | 99.37% | 33.8 |
 | kr-vs-kp | Boomer@25 | 94.09% | 12.0 |
@@ -1561,14 +1561,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | led24 | AdaBoost:PFossil@10 | 69.41% | 567.5 |
 | led24 | AdaBoost:PFossil@25 | 70.31% | 2146.5 |
 | led24 | AdaBoost:PFossil@5 | 67.12% | 212.4 |
-| led24 | AdaBoost:Pypper (defaults vote)@1 | 68.00% | 25.4 |
-| led24 | AdaBoost:Pypper (defaults vote)@10 | 64.94% | 178.0 |
-| led24 | AdaBoost:Pypper (defaults vote)@25 | 63.78% | 424.9 |
-| led24 | AdaBoost:Pypper (defaults vote)@5 | 65.69% | 96.1 |
-| led24 | AdaBoost:Pypper@1 | 68.00% | 25.4 |
-| led24 | AdaBoost:Pypper@10 | 71.44% | 178.0 |
-| led24 | AdaBoost:Pypper@25 | 72.06% | 424.9 |
-| led24 | AdaBoost:Pypper@5 | 70.16% | 96.1 |
+| led24 | AdaBoost:Pypper (defaults vote)@1 | 68.25% | 33.9 |
+| led24 | AdaBoost:Pypper (defaults vote)@10 | 46.97% | 324.9 |
+| led24 | AdaBoost:Pypper (defaults vote)@25 | 31.84% | 777.8 |
+| led24 | AdaBoost:Pypper (defaults vote)@5 | 51.12% | 162.4 |
+| led24 | AdaBoost:Pypper@1 | 68.25% | 33.9 |
+| led24 | AdaBoost:Pypper@10 | 70.28% | 324.9 |
+| led24 | AdaBoost:Pypper@25 | 69.59% | 777.8 |
+| led24 | AdaBoost:Pypper@5 | 69.69% | 162.4 |
 | led24 | Boomer@10 | 66.88% | 11.0 |
 | led24 | Boomer@100 | 72.44% | 89.5 |
 | led24 | Boomer@25 | 71.00% | 25.9 |
@@ -1602,14 +1602,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | letter | AdaBoost:PFossil@10 | 87.45% | 798.6 |
 | letter | AdaBoost:PFossil@25 | 90.15% | 1855.0 |
 | letter | AdaBoost:PFossil@5 | 84.97% | 457.5 |
-| letter | AdaBoost:Pypper (defaults vote)@1 | 77.53% | 266.8 |
-| letter | AdaBoost:Pypper (defaults vote)@10 | 20.35% | 864.2 |
-| letter | AdaBoost:Pypper (defaults vote)@25 | 13.27% | 1772.9 |
-| letter | AdaBoost:Pypper (defaults vote)@5 | 50.79% | 644.4 |
-| letter | AdaBoost:Pypper@1 | 77.53% | 266.8 |
-| letter | AdaBoost:Pypper@10 | 88.27% | 864.2 |
-| letter | AdaBoost:Pypper@25 | 90.41% | 1772.9 |
-| letter | AdaBoost:Pypper@5 | 86.93% | 644.4 |
+| letter | AdaBoost:Pypper (defaults vote)@1 | 81.02% | 378.0 |
+| letter | AdaBoost:Pypper (defaults vote)@10 | 57.71% | 2418.3 |
+| letter | AdaBoost:Pypper (defaults vote)@25 | 47.44% | 5809.3 |
+| letter | AdaBoost:Pypper (defaults vote)@5 | 64.49% | 1296.1 |
+| letter | AdaBoost:Pypper@1 | 81.02% | 378.0 |
+| letter | AdaBoost:Pypper@10 | 90.18% | 2418.3 |
+| letter | AdaBoost:Pypper@25 | 89.90% | 5809.3 |
+| letter | AdaBoost:Pypper@5 | 88.74% | 1296.1 |
 | letter | Boomer@10 | 23.44% | 11.0 |
 | letter | Boomer@100 | 75.52% | 100.9 |
 | letter | Boomer@25 | 45.70% | 26.0 |
@@ -1643,14 +1643,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | lymph | AdaBoost:PFossil@10 | 83.19% | 189.5 |
 | lymph | AdaBoost:PFossil@25 | 83.86% | 447.2 |
 | lymph | AdaBoost:PFossil@5 | 83.14% | 88.2 |
-| lymph | AdaBoost:Pypper (defaults vote)@1 | 80.52% | 5.6 |
-| lymph | AdaBoost:Pypper (defaults vote)@10 | 83.90% | 49.3 |
-| lymph | AdaBoost:Pypper (defaults vote)@25 | 83.81% | 117.8 |
-| lymph | AdaBoost:Pypper (defaults vote)@5 | 83.24% | 27.5 |
-| lymph | AdaBoost:Pypper@1 | 80.52% | 5.6 |
-| lymph | AdaBoost:Pypper@10 | 79.14% | 49.3 |
-| lymph | AdaBoost:Pypper@25 | 73.76% | 117.8 |
-| lymph | AdaBoost:Pypper@5 | 77.86% | 27.5 |
+| lymph | AdaBoost:Pypper (defaults vote)@1 | 79.81% | 5.7 |
+| lymph | AdaBoost:Pypper (defaults vote)@10 | 79.81% | 51.7 |
+| lymph | AdaBoost:Pypper (defaults vote)@25 | 82.48% | 120.5 |
+| lymph | AdaBoost:Pypper (defaults vote)@5 | 79.81% | 28.5 |
+| lymph | AdaBoost:Pypper@1 | 79.81% | 5.7 |
+| lymph | AdaBoost:Pypper@10 | 77.81% | 51.7 |
+| lymph | AdaBoost:Pypper@25 | 75.81% | 120.5 |
+| lymph | AdaBoost:Pypper@5 | 79.14% | 28.5 |
 | lymph | Boomer@10 | 79.71% | 9.4 |
 | lymph | Boomer@100 | 85.86% | 55.2 |
 | lymph | Boomer@25 | 81.81% | 20.5 |
@@ -1684,14 +1684,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | mofn-3-7-10 | AdaBoost:PFossil@10 | 96.62% | 141.2 |
 | mofn-3-7-10 | AdaBoost:PFossil@25 | 99.70% | 402.8 |
 | mofn-3-7-10 | AdaBoost:PFossil@5 | 90.88% | 51.8 |
-| mofn-3-7-10 | AdaBoost:Pypper (defaults vote)@1 | 97.21% | 38.3 |
-| mofn-3-7-10 | AdaBoost:Pypper (defaults vote)@10 | 100.00% | 239.0 |
-| mofn-3-7-10 | AdaBoost:Pypper (defaults vote)@25 | 100.00% | 522.6 |
-| mofn-3-7-10 | AdaBoost:Pypper (defaults vote)@5 | 100.00% | 135.9 |
-| mofn-3-7-10 | AdaBoost:Pypper@1 | 97.21% | 38.3 |
-| mofn-3-7-10 | AdaBoost:Pypper@10 | 100.00% | 239.0 |
-| mofn-3-7-10 | AdaBoost:Pypper@25 | 100.00% | 522.6 |
-| mofn-3-7-10 | AdaBoost:Pypper@5 | 99.77% | 135.9 |
+| mofn-3-7-10 | AdaBoost:Pypper (defaults vote)@1 | 97.21% | 31.6 |
+| mofn-3-7-10 | AdaBoost:Pypper (defaults vote)@10 | 100.00% | 225.1 |
+| mofn-3-7-10 | AdaBoost:Pypper (defaults vote)@25 | 100.00% | 547.7 |
+| mofn-3-7-10 | AdaBoost:Pypper (defaults vote)@5 | 100.00% | 110.0 |
+| mofn-3-7-10 | AdaBoost:Pypper@1 | 97.21% | 31.6 |
+| mofn-3-7-10 | AdaBoost:Pypper@10 | 100.00% | 225.1 |
+| mofn-3-7-10 | AdaBoost:Pypper@25 | 100.00% | 547.7 |
+| mofn-3-7-10 | AdaBoost:Pypper@5 | 100.00% | 110.0 |
 | mofn-3-7-10 | Boomer@10 | 83.99% | 10.4 |
 | mofn-3-7-10 | Boomer@100 | 100.00% | 49.1 |
 | mofn-3-7-10 | Boomer@25 | 90.11% | 22.7 |
@@ -1725,14 +1725,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | molecular-biology_promoters | AdaBoost:PFossil@10 | 87.82% | 70.6 |
 | molecular-biology_promoters | AdaBoost:PFossil@25 | 92.55% | 173.5 |
 | molecular-biology_promoters | AdaBoost:PFossil@5 | 85.91% | 36.4 |
-| molecular-biology_promoters | AdaBoost:Pypper (defaults vote)@1 | 81.36% | 4.4 |
-| molecular-biology_promoters | AdaBoost:Pypper (defaults vote)@10 | 87.73% | 41.5 |
-| molecular-biology_promoters | AdaBoost:Pypper (defaults vote)@25 | 88.64% | 95.9 |
-| molecular-biology_promoters | AdaBoost:Pypper (defaults vote)@5 | 84.18% | 20.8 |
-| molecular-biology_promoters | AdaBoost:Pypper@1 | 81.36% | 4.4 |
-| molecular-biology_promoters | AdaBoost:Pypper@10 | 85.09% | 41.5 |
-| molecular-biology_promoters | AdaBoost:Pypper@25 | 83.82% | 95.9 |
-| molecular-biology_promoters | AdaBoost:Pypper@5 | 87.09% | 20.8 |
+| molecular-biology_promoters | AdaBoost:Pypper (defaults vote)@1 | 81.36% | 4.3 |
+| molecular-biology_promoters | AdaBoost:Pypper (defaults vote)@10 | 88.82% | 38.7 |
+| molecular-biology_promoters | AdaBoost:Pypper (defaults vote)@25 | 86.82% | 89.9 |
+| molecular-biology_promoters | AdaBoost:Pypper (defaults vote)@5 | 85.91% | 21.2 |
+| molecular-biology_promoters | AdaBoost:Pypper@1 | 81.36% | 4.3 |
+| molecular-biology_promoters | AdaBoost:Pypper@10 | 87.00% | 38.7 |
+| molecular-biology_promoters | AdaBoost:Pypper@25 | 83.18% | 89.9 |
+| molecular-biology_promoters | AdaBoost:Pypper@5 | 88.91% | 21.2 |
 | molecular-biology_promoters | Boomer@10 | 84.09% | 9.6 |
 | molecular-biology_promoters | Boomer@100 | 93.45% | 51.9 |
 | molecular-biology_promoters | Boomer@25 | 88.82% | 20.7 |
@@ -1766,14 +1766,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | monks-problems-1 | AdaBoost:PFossil@10 | 87.20% | 35.1 |
 | monks-problems-1 | AdaBoost:PFossil@25 | 93.17% | 89.1 |
 | monks-problems-1 | AdaBoost:PFossil@5 | 86.68% | 19.3 |
-| monks-problems-1 | AdaBoost:Pypper (defaults vote)@1 | 94.76% | 7.0 |
-| monks-problems-1 | AdaBoost:Pypper (defaults vote)@10 | 100.00% | 65.3 |
-| monks-problems-1 | AdaBoost:Pypper (defaults vote)@25 | 100.00% | 163.0 |
-| monks-problems-1 | AdaBoost:Pypper (defaults vote)@5 | 100.00% | 34.2 |
-| monks-problems-1 | AdaBoost:Pypper@1 | 94.76% | 7.0 |
-| monks-problems-1 | AdaBoost:Pypper@10 | 100.00% | 65.3 |
-| monks-problems-1 | AdaBoost:Pypper@25 | 100.00% | 163.0 |
-| monks-problems-1 | AdaBoost:Pypper@5 | 100.00% | 34.2 |
+| monks-problems-1 | AdaBoost:Pypper (defaults vote)@1 | 96.76% | 7.3 |
+| monks-problems-1 | AdaBoost:Pypper (defaults vote)@10 | 100.00% | 69.8 |
+| monks-problems-1 | AdaBoost:Pypper (defaults vote)@25 | 100.00% | 173.4 |
+| monks-problems-1 | AdaBoost:Pypper (defaults vote)@5 | 100.00% | 37.2 |
+| monks-problems-1 | AdaBoost:Pypper@1 | 96.76% | 7.3 |
+| monks-problems-1 | AdaBoost:Pypper@10 | 100.00% | 69.8 |
+| monks-problems-1 | AdaBoost:Pypper@25 | 100.00% | 173.4 |
+| monks-problems-1 | AdaBoost:Pypper@5 | 100.00% | 37.2 |
 | monks-problems-1 | Boomer@10 | 74.64% | 3.5 |
 | monks-problems-1 | Boomer@100 | 100.00% | 23.2 |
 | monks-problems-1 | Boomer@25 | 89.78% | 9.4 |
@@ -1807,14 +1807,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | monks-problems-2 | AdaBoost:PFossil@10 | 66.72% | 1.9 |
 | monks-problems-2 | AdaBoost:PFossil@25 | 65.72% | 4.9 |
 | monks-problems-2 | AdaBoost:PFossil@5 | 67.72% | 1.0 |
-| monks-problems-2 | AdaBoost:Pypper (defaults vote)@1 | 72.03% | 13.0 |
-| monks-problems-2 | AdaBoost:Pypper (defaults vote)@10 | 91.18% | 95.4 |
-| monks-problems-2 | AdaBoost:Pypper (defaults vote)@25 | 89.35% | 197.0 |
-| monks-problems-2 | AdaBoost:Pypper (defaults vote)@5 | 85.35% | 55.7 |
-| monks-problems-2 | AdaBoost:Pypper@1 | 72.03% | 13.0 |
-| monks-problems-2 | AdaBoost:Pypper@10 | 81.35% | 95.4 |
-| monks-problems-2 | AdaBoost:Pypper@25 | 79.20% | 197.0 |
-| monks-problems-2 | AdaBoost:Pypper@5 | 81.85% | 55.7 |
+| monks-problems-2 | AdaBoost:Pypper (defaults vote)@1 | 74.03% | 14.5 |
+| monks-problems-2 | AdaBoost:Pypper (defaults vote)@10 | 93.51% | 118.2 |
+| monks-problems-2 | AdaBoost:Pypper (defaults vote)@25 | 93.34% | 238.8 |
+| monks-problems-2 | AdaBoost:Pypper (defaults vote)@5 | 92.35% | 65.0 |
+| monks-problems-2 | AdaBoost:Pypper@1 | 74.03% | 14.5 |
+| monks-problems-2 | AdaBoost:Pypper@10 | 86.87% | 118.2 |
+| monks-problems-2 | AdaBoost:Pypper@25 | 83.37% | 238.8 |
+| monks-problems-2 | AdaBoost:Pypper@5 | 87.34% | 65.0 |
 | monks-problems-2 | Boomer@10 | 70.23% | 10.6 |
 | monks-problems-2 | Boomer@100 | 85.87% | 65.0 |
 | monks-problems-2 | Boomer@25 | 69.90% | 22.9 |
@@ -1849,13 +1849,13 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | monks-problems-3 | AdaBoost:PFossil@25 | 98.74% | 209.3 |
 | monks-problems-3 | AdaBoost:PFossil@5 | 98.20% | 43.9 |
 | monks-problems-3 | AdaBoost:Pypper (defaults vote)@1 | 98.92% | 5.0 |
-| monks-problems-3 | AdaBoost:Pypper (defaults vote)@10 | 98.20% | 55.1 |
-| monks-problems-3 | AdaBoost:Pypper (defaults vote)@25 | 98.74% | 133.9 |
-| monks-problems-3 | AdaBoost:Pypper (defaults vote)@5 | 98.38% | 29.6 |
+| monks-problems-3 | AdaBoost:Pypper (defaults vote)@10 | 98.02% | 55.9 |
+| monks-problems-3 | AdaBoost:Pypper (defaults vote)@25 | 98.38% | 133.5 |
+| monks-problems-3 | AdaBoost:Pypper (defaults vote)@5 | 97.66% | 32.7 |
 | monks-problems-3 | AdaBoost:Pypper@1 | 98.92% | 5.0 |
-| monks-problems-3 | AdaBoost:Pypper@10 | 97.48% | 55.1 |
-| monks-problems-3 | AdaBoost:Pypper@25 | 98.38% | 133.9 |
-| monks-problems-3 | AdaBoost:Pypper@5 | 97.66% | 29.6 |
+| monks-problems-3 | AdaBoost:Pypper@10 | 97.48% | 55.9 |
+| monks-problems-3 | AdaBoost:Pypper@25 | 98.20% | 133.5 |
+| monks-problems-3 | AdaBoost:Pypper@5 | 97.66% | 32.7 |
 | monks-problems-3 | Boomer@10 | 97.48% | 5.4 |
 | monks-problems-3 | Boomer@100 | 98.92% | 29.0 |
 | monks-problems-3 | Boomer@25 | 97.48% | 7.7 |
@@ -1890,13 +1890,13 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | mushroom | AdaBoost:PFossil@25 | 99.99% | 335.9 |
 | mushroom | AdaBoost:PFossil@5 | 99.98% | 66.5 |
 | mushroom | AdaBoost:Pypper (defaults vote)@1 | 99.94% | 9.7 |
-| mushroom | AdaBoost:Pypper (defaults vote)@10 | 100.00% | 107.7 |
-| mushroom | AdaBoost:Pypper (defaults vote)@25 | 100.00% | 271.7 |
-| mushroom | AdaBoost:Pypper (defaults vote)@5 | 100.00% | 53.8 |
+| mushroom | AdaBoost:Pypper (defaults vote)@10 | 100.00% | 106.9 |
+| mushroom | AdaBoost:Pypper (defaults vote)@25 | 100.00% | 269.5 |
+| mushroom | AdaBoost:Pypper (defaults vote)@5 | 100.00% | 53.5 |
 | mushroom | AdaBoost:Pypper@1 | 99.94% | 9.7 |
-| mushroom | AdaBoost:Pypper@10 | 100.00% | 107.7 |
-| mushroom | AdaBoost:Pypper@25 | 100.00% | 271.7 |
-| mushroom | AdaBoost:Pypper@5 | 100.00% | 53.8 |
+| mushroom | AdaBoost:Pypper@10 | 100.00% | 106.9 |
+| mushroom | AdaBoost:Pypper@25 | 100.00% | 269.5 |
+| mushroom | AdaBoost:Pypper@5 | 100.00% | 53.5 |
 | mushroom | Boomer@10 | 98.92% | 6.7 |
 | mushroom | Boomer@100 | 99.95% | 25.0 |
 | mushroom | Boomer@25 | 98.97% | 12.4 |
@@ -1930,14 +1930,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | optdigits | AdaBoost:PFossil@10 | 96.48% | 645.1 |
 | optdigits | AdaBoost:PFossil@25 | 96.60% | 1770.1 |
 | optdigits | AdaBoost:PFossil@5 | 95.41% | 319.6 |
-| optdigits | AdaBoost:Pypper (defaults vote)@1 | 90.18% | 62.1 |
-| optdigits | AdaBoost:Pypper (defaults vote)@10 | 88.97% | 437.5 |
-| optdigits | AdaBoost:Pypper (defaults vote)@25 | 88.02% | 977.1 |
-| optdigits | AdaBoost:Pypper (defaults vote)@5 | 88.79% | 237.7 |
-| optdigits | AdaBoost:Pypper@1 | 90.18% | 62.1 |
-| optdigits | AdaBoost:Pypper@10 | 95.80% | 437.5 |
-| optdigits | AdaBoost:Pypper@25 | 93.06% | 977.1 |
-| optdigits | AdaBoost:Pypper@5 | 95.36% | 237.7 |
+| optdigits | AdaBoost:Pypper (defaults vote)@1 | 91.39% | 81.2 |
+| optdigits | AdaBoost:Pypper (defaults vote)@10 | 92.10% | 562.9 |
+| optdigits | AdaBoost:Pypper (defaults vote)@25 | 92.86% | 1322.3 |
+| optdigits | AdaBoost:Pypper (defaults vote)@5 | 91.00% | 313.9 |
+| optdigits | AdaBoost:Pypper@1 | 91.39% | 81.2 |
+| optdigits | AdaBoost:Pypper@10 | 96.10% | 562.9 |
+| optdigits | AdaBoost:Pypper@25 | 95.66% | 1322.3 |
+| optdigits | AdaBoost:Pypper@5 | 95.32% | 313.9 |
 | optdigits | Boomer@10 | 67.58% | 11.0 |
 | optdigits | Boomer@100 | 95.48% | 100.3 |
 | optdigits | Boomer@25 | 86.96% | 26.0 |
@@ -1971,14 +1971,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | ozone-level-8hr | AdaBoost:PFossil@10 | 91.24% | 118.4 |
 | ozone-level-8hr | AdaBoost:PFossil@25 | 92.97% | 418.0 |
 | ozone-level-8hr | AdaBoost:PFossil@5 | 87.96% | 45.0 |
-| ozone-level-8hr | AdaBoost:Pypper (defaults vote)@1 | 93.33% | 6.1 |
-| ozone-level-8hr | AdaBoost:Pypper (defaults vote)@10 | 93.80% | 77.3 |
-| ozone-level-8hr | AdaBoost:Pypper (defaults vote)@25 | 93.65% | 186.3 |
-| ozone-level-8hr | AdaBoost:Pypper (defaults vote)@5 | 93.33% | 41.8 |
-| ozone-level-8hr | AdaBoost:Pypper@1 | 93.33% | 6.1 |
-| ozone-level-8hr | AdaBoost:Pypper@10 | 88.32% | 77.3 |
-| ozone-level-8hr | AdaBoost:Pypper@25 | 84.77% | 186.3 |
-| ozone-level-8hr | AdaBoost:Pypper@5 | 88.79% | 41.8 |
+| ozone-level-8hr | AdaBoost:Pypper (defaults vote)@1 | 93.37% | 7.3 |
+| ozone-level-8hr | AdaBoost:Pypper (defaults vote)@10 | 92.94% | 107.2 |
+| ozone-level-8hr | AdaBoost:Pypper (defaults vote)@25 | 93.69% | 251.4 |
+| ozone-level-8hr | AdaBoost:Pypper (defaults vote)@5 | 92.70% | 55.9 |
+| ozone-level-8hr | AdaBoost:Pypper@1 | 93.37% | 7.3 |
+| ozone-level-8hr | AdaBoost:Pypper@10 | 90.33% | 107.2 |
+| ozone-level-8hr | AdaBoost:Pypper@25 | 89.70% | 251.4 |
+| ozone-level-8hr | AdaBoost:Pypper@5 | 89.94% | 55.9 |
 | ozone-level-8hr | Boomer@10 | 93.76% | 10.4 |
 | ozone-level-8hr | Boomer@100 | 93.88% | 89.4 |
 | ozone-level-8hr | Boomer@25 | 93.76% | 24.4 |
@@ -2012,14 +2012,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | pc1 | AdaBoost:PFossil@10 | 92.70% | 64.3 |
 | pc1 | AdaBoost:PFossil@25 | 92.70% | 167.0 |
 | pc1 | AdaBoost:PFossil@5 | 92.61% | 35.5 |
-| pc1 | AdaBoost:Pypper (defaults vote)@1 | 92.61% | 4.1 |
-| pc1 | AdaBoost:Pypper (defaults vote)@10 | 92.70% | 53.7 |
-| pc1 | AdaBoost:Pypper (defaults vote)@25 | 93.06% | 124.1 |
-| pc1 | AdaBoost:Pypper (defaults vote)@5 | 92.34% | 31.7 |
-| pc1 | AdaBoost:Pypper@1 | 92.61% | 4.1 |
-| pc1 | AdaBoost:Pypper@10 | 84.12% | 53.7 |
-| pc1 | AdaBoost:Pypper@25 | 87.83% | 124.1 |
-| pc1 | AdaBoost:Pypper@5 | 83.04% | 31.7 |
+| pc1 | AdaBoost:Pypper (defaults vote)@1 | 93.15% | 4.3 |
+| pc1 | AdaBoost:Pypper (defaults vote)@10 | 93.15% | 67.8 |
+| pc1 | AdaBoost:Pypper (defaults vote)@25 | 93.24% | 148.6 |
+| pc1 | AdaBoost:Pypper (defaults vote)@5 | 93.51% | 38.9 |
+| pc1 | AdaBoost:Pypper@1 | 93.15% | 4.3 |
+| pc1 | AdaBoost:Pypper@10 | 87.74% | 67.8 |
+| pc1 | AdaBoost:Pypper@25 | 88.19% | 148.6 |
+| pc1 | AdaBoost:Pypper@5 | 87.01% | 38.9 |
 | pc1 | Boomer@10 | 93.15% | 9.4 |
 | pc1 | Boomer@100 | 93.06% | 55.8 |
 | pc1 | Boomer@25 | 92.88% | 18.6 |
@@ -2053,14 +2053,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | pc3 | AdaBoost:PFossil@10 | 86.24% | 61.0 |
 | pc3 | AdaBoost:PFossil@25 | 87.33% | 166.4 |
 | pc3 | AdaBoost:PFossil@5 | 85.86% | 24.6 |
-| pc3 | AdaBoost:Pypper (defaults vote)@1 | 88.93% | 4.1 |
-| pc3 | AdaBoost:Pypper (defaults vote)@10 | 87.01% | 66.5 |
-| pc3 | AdaBoost:Pypper (defaults vote)@25 | 88.48% | 153.5 |
-| pc3 | AdaBoost:Pypper (defaults vote)@5 | 87.72% | 35.9 |
-| pc3 | AdaBoost:Pypper@1 | 88.93% | 4.1 |
-| pc3 | AdaBoost:Pypper@10 | 79.65% | 66.5 |
-| pc3 | AdaBoost:Pypper@25 | 81.76% | 153.5 |
-| pc3 | AdaBoost:Pypper@5 | 80.48% | 35.9 |
+| pc3 | AdaBoost:Pypper (defaults vote)@1 | 88.61% | 3.9 |
+| pc3 | AdaBoost:Pypper (defaults vote)@10 | 88.10% | 83.1 |
+| pc3 | AdaBoost:Pypper (defaults vote)@25 | 88.22% | 190.5 |
+| pc3 | AdaBoost:Pypper (defaults vote)@5 | 87.58% | 46.8 |
+| pc3 | AdaBoost:Pypper@1 | 88.61% | 3.9 |
+| pc3 | AdaBoost:Pypper@10 | 79.20% | 83.1 |
+| pc3 | AdaBoost:Pypper@25 | 81.12% | 190.5 |
+| pc3 | AdaBoost:Pypper@5 | 81.12% | 46.8 |
 | pc3 | Boomer@10 | 89.57% | 10.3 |
 | pc3 | Boomer@100 | 89.51% | 77.7 |
 | pc3 | Boomer@25 | 89.63% | 21.9 |
@@ -2094,14 +2094,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | pc4 | AdaBoost:PFossil@10 | 89.71% | 114.3 |
 | pc4 | AdaBoost:PFossil@25 | 90.19% | 333.2 |
 | pc4 | AdaBoost:PFossil@5 | 88.96% | 51.9 |
-| pc4 | AdaBoost:Pypper (defaults vote)@1 | 87.79% | 7.6 |
-| pc4 | AdaBoost:Pypper (defaults vote)@10 | 89.03% | 76.5 |
-| pc4 | AdaBoost:Pypper (defaults vote)@25 | 89.44% | 168.6 |
-| pc4 | AdaBoost:Pypper (defaults vote)@5 | 88.96% | 41.0 |
-| pc4 | AdaBoost:Pypper@1 | 87.79% | 7.6 |
-| pc4 | AdaBoost:Pypper@10 | 86.49% | 76.5 |
-| pc4 | AdaBoost:Pypper@25 | 86.07% | 168.6 |
-| pc4 | AdaBoost:Pypper@5 | 86.83% | 41.0 |
+| pc4 | AdaBoost:Pypper (defaults vote)@1 | 88.55% | 8.2 |
+| pc4 | AdaBoost:Pypper (defaults vote)@10 | 89.71% | 93.8 |
+| pc4 | AdaBoost:Pypper (defaults vote)@25 | 90.54% | 206.7 |
+| pc4 | AdaBoost:Pypper (defaults vote)@5 | 89.09% | 50.9 |
+| pc4 | AdaBoost:Pypper@1 | 88.55% | 8.2 |
+| pc4 | AdaBoost:Pypper@10 | 87.04% | 93.8 |
+| pc4 | AdaBoost:Pypper@25 | 85.46% | 206.7 |
+| pc4 | AdaBoost:Pypper@5 | 86.56% | 50.9 |
 | pc4 | Boomer@10 | 89.99% | 7.9 |
 | pc4 | Boomer@100 | 90.19% | 78.8 |
 | pc4 | Boomer@25 | 89.99% | 21.7 |
@@ -2135,14 +2135,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | phoneme | AdaBoost:PFossil@10 | 78.13% | 29.8 |
 | phoneme | AdaBoost:PFossil@25 | 78.31% | 76.3 |
 | phoneme | AdaBoost:PFossil@5 | 78.15% | 15.2 |
-| phoneme | AdaBoost:Pypper (defaults vote)@1 | 83.53% | 26.9 |
-| phoneme | AdaBoost:Pypper (defaults vote)@10 | 84.09% | 141.4 |
-| phoneme | AdaBoost:Pypper (defaults vote)@25 | 84.42% | 294.9 |
-| phoneme | AdaBoost:Pypper (defaults vote)@5 | 83.86% | 97.7 |
-| phoneme | AdaBoost:Pypper@1 | 83.53% | 26.9 |
-| phoneme | AdaBoost:Pypper@10 | 80.79% | 141.4 |
-| phoneme | AdaBoost:Pypper@25 | 80.79% | 294.9 |
-| phoneme | AdaBoost:Pypper@5 | 82.46% | 97.7 |
+| phoneme | AdaBoost:Pypper (defaults vote)@1 | 83.44% | 31.0 |
+| phoneme | AdaBoost:Pypper (defaults vote)@10 | 84.29% | 146.7 |
+| phoneme | AdaBoost:Pypper (defaults vote)@25 | 84.47% | 315.2 |
+| phoneme | AdaBoost:Pypper (defaults vote)@5 | 83.97% | 101.3 |
+| phoneme | AdaBoost:Pypper@1 | 83.44% | 31.0 |
+| phoneme | AdaBoost:Pypper@10 | 82.12% | 146.7 |
+| phoneme | AdaBoost:Pypper@25 | 81.94% | 315.2 |
+| phoneme | AdaBoost:Pypper@5 | 83.31% | 101.3 |
 | phoneme | Boomer@10 | 78.35% | 10.7 |
 | phoneme | Boomer@100 | 84.84% | 86.4 |
 | phoneme | Boomer@25 | 81.09% | 24.1 |
@@ -2176,14 +2176,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | primary-tumor | AdaBoost:PFossil@10 | 36.86% | 576.5 |
 | primary-tumor | AdaBoost:PFossil@25 | 33.64% | 1256.9 |
 | primary-tumor | AdaBoost:PFossil@5 | 37.46% | 309.8 |
-| primary-tumor | AdaBoost:Pypper (defaults vote)@1 | 38.65% | 7.3 |
-| primary-tumor | AdaBoost:Pypper (defaults vote)@10 | 38.34% | 46.8 |
-| primary-tumor | AdaBoost:Pypper (defaults vote)@25 | 36.86% | 111.9 |
-| primary-tumor | AdaBoost:Pypper (defaults vote)@5 | 38.34% | 25.7 |
-| primary-tumor | AdaBoost:Pypper@1 | 38.65% | 7.3 |
-| primary-tumor | AdaBoost:Pypper@10 | 43.10% | 46.8 |
-| primary-tumor | AdaBoost:Pypper@25 | 43.67% | 111.9 |
-| primary-tumor | AdaBoost:Pypper@5 | 42.51% | 25.7 |
+| primary-tumor | AdaBoost:Pypper (defaults vote)@1 | 37.47% | 9.1 |
+| primary-tumor | AdaBoost:Pypper (defaults vote)@10 | 29.20% | 99.1 |
+| primary-tumor | AdaBoost:Pypper (defaults vote)@25 | 27.43% | 250.3 |
+| primary-tumor | AdaBoost:Pypper (defaults vote)@5 | 33.91% | 53.0 |
+| primary-tumor | AdaBoost:Pypper@1 | 37.47% | 9.1 |
+| primary-tumor | AdaBoost:Pypper@10 | 39.84% | 99.1 |
+| primary-tumor | AdaBoost:Pypper@25 | 40.15% | 250.3 |
+| primary-tumor | AdaBoost:Pypper@5 | 37.76% | 53.0 |
 | primary-tumor | Boomer@10 | 38.65% | 11.0 |
 | primary-tumor | Boomer@100 | 45.45% | 85.8 |
 | primary-tumor | Boomer@25 | 42.20% | 25.6 |
@@ -2217,14 +2217,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | qsar-biodeg | AdaBoost:PFossil@10 | 84.46% | 100.2 |
 | qsar-biodeg | AdaBoost:PFossil@25 | 85.70% | 275.7 |
 | qsar-biodeg | AdaBoost:PFossil@5 | 83.71% | 46.4 |
-| qsar-biodeg | AdaBoost:Pypper (defaults vote)@1 | 85.03% | 12.6 |
-| qsar-biodeg | AdaBoost:Pypper (defaults vote)@10 | 83.98% | 82.9 |
-| qsar-biodeg | AdaBoost:Pypper (defaults vote)@25 | 85.78% | 191.9 |
-| qsar-biodeg | AdaBoost:Pypper (defaults vote)@5 | 83.98% | 49.7 |
-| qsar-biodeg | AdaBoost:Pypper@1 | 85.03% | 12.6 |
-| qsar-biodeg | AdaBoost:Pypper@10 | 79.25% | 82.9 |
-| qsar-biodeg | AdaBoost:Pypper@25 | 80.48% | 191.9 |
-| qsar-biodeg | AdaBoost:Pypper@5 | 82.47% | 49.7 |
+| qsar-biodeg | AdaBoost:Pypper (defaults vote)@1 | 83.70% | 13.3 |
+| qsar-biodeg | AdaBoost:Pypper (defaults vote)@10 | 84.46% | 105.3 |
+| qsar-biodeg | AdaBoost:Pypper (defaults vote)@25 | 84.55% | 223.6 |
+| qsar-biodeg | AdaBoost:Pypper (defaults vote)@5 | 83.80% | 61.6 |
+| qsar-biodeg | AdaBoost:Pypper@1 | 83.70% | 13.3 |
+| qsar-biodeg | AdaBoost:Pypper@10 | 82.19% | 105.3 |
+| qsar-biodeg | AdaBoost:Pypper@25 | 81.43% | 223.6 |
+| qsar-biodeg | AdaBoost:Pypper@5 | 82.76% | 61.6 |
 | qsar-biodeg | Boomer@10 | 80.95% | 11.0 |
 | qsar-biodeg | Boomer@100 | 85.41% | 86.6 |
 | qsar-biodeg | Boomer@25 | 84.64% | 25.3 |
@@ -2258,14 +2258,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | segment | AdaBoost:PFossil@10 | 95.45% | 319.3 |
 | segment | AdaBoost:PFossil@25 | 96.49% | 753.8 |
 | segment | AdaBoost:PFossil@5 | 96.06% | 174.3 |
-| segment | AdaBoost:Pypper (defaults vote)@1 | 93.46% | 21.9 |
-| segment | AdaBoost:Pypper (defaults vote)@10 | 90.95% | 148.0 |
-| segment | AdaBoost:Pypper (defaults vote)@25 | 92.51% | 320.3 |
-| segment | AdaBoost:Pypper (defaults vote)@5 | 90.95% | 86.2 |
-| segment | AdaBoost:Pypper@1 | 93.46% | 21.9 |
-| segment | AdaBoost:Pypper@10 | 94.98% | 148.0 |
-| segment | AdaBoost:Pypper@25 | 93.42% | 320.3 |
-| segment | AdaBoost:Pypper@5 | 94.76% | 86.2 |
+| segment | AdaBoost:Pypper (defaults vote)@1 | 94.03% | 24.8 |
+| segment | AdaBoost:Pypper (defaults vote)@10 | 94.29% | 198.2 |
+| segment | AdaBoost:Pypper (defaults vote)@25 | 95.58% | 449.3 |
+| segment | AdaBoost:Pypper (defaults vote)@5 | 93.64% | 116.3 |
+| segment | AdaBoost:Pypper@1 | 94.03% | 24.8 |
+| segment | AdaBoost:Pypper@10 | 94.81% | 198.2 |
+| segment | AdaBoost:Pypper@25 | 93.90% | 449.3 |
+| segment | AdaBoost:Pypper@5 | 95.63% | 116.3 |
 | segment | Boomer@10 | 85.02% | 9.0 |
 | segment | Boomer@100 | 95.45% | 65.8 |
 | segment | Boomer@25 | 93.20% | 18.9 |
@@ -2299,14 +2299,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | sick | AdaBoost:PFossil@10 | 98.30% | 121.9 |
 | sick | AdaBoost:PFossil@25 | 98.33% | 317.3 |
 | sick | AdaBoost:PFossil@5 | 97.93% | 59.5 |
-| sick | AdaBoost:Pypper (defaults vote)@1 | 98.20% | 8.9 |
-| sick | AdaBoost:Pypper (defaults vote)@10 | 98.01% | 75.3 |
-| sick | AdaBoost:Pypper (defaults vote)@25 | 98.20% | 172.5 |
-| sick | AdaBoost:Pypper (defaults vote)@5 | 98.20% | 44.0 |
-| sick | AdaBoost:Pypper@1 | 98.20% | 8.9 |
-| sick | AdaBoost:Pypper@10 | 97.88% | 75.3 |
-| sick | AdaBoost:Pypper@25 | 97.96% | 172.5 |
-| sick | AdaBoost:Pypper@5 | 98.12% | 44.0 |
+| sick | AdaBoost:Pypper (defaults vote)@1 | 98.30% | 10.5 |
+| sick | AdaBoost:Pypper (defaults vote)@10 | 98.30% | 92.8 |
+| sick | AdaBoost:Pypper (defaults vote)@25 | 98.52% | 200.2 |
+| sick | AdaBoost:Pypper (defaults vote)@5 | 98.41% | 53.2 |
+| sick | AdaBoost:Pypper@1 | 98.30% | 10.5 |
+| sick | AdaBoost:Pypper@10 | 97.99% | 92.8 |
+| sick | AdaBoost:Pypper@25 | 97.96% | 200.2 |
+| sick | AdaBoost:Pypper@5 | 97.99% | 53.2 |
 | sick | Boomer@10 | 98.12% | 9.4 |
 | sick | Boomer@100 | 98.28% | 57.3 |
 | sick | Boomer@25 | 98.06% | 20.1 |
@@ -2340,14 +2340,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | solar-flare | AdaBoost:PFossil@10 | 72.04% | 137.9 |
 | solar-flare | AdaBoost:PFossil@25 | 72.70% | 356.2 |
 | solar-flare | AdaBoost:PFossil@5 | 72.79% | 69.6 |
-| solar-flare | AdaBoost:Pypper (defaults vote)@1 | 69.43% | 7.6 |
-| solar-flare | AdaBoost:Pypper (defaults vote)@10 | 67.08% | 71.1 |
-| solar-flare | AdaBoost:Pypper (defaults vote)@25 | 66.89% | 175.3 |
-| solar-flare | AdaBoost:Pypper (defaults vote)@5 | 68.67% | 37.2 |
-| solar-flare | AdaBoost:Pypper@1 | 69.43% | 7.6 |
-| solar-flare | AdaBoost:Pypper@10 | 75.43% | 71.1 |
-| solar-flare | AdaBoost:Pypper@25 | 75.24% | 175.3 |
-| solar-flare | AdaBoost:Pypper@5 | 73.93% | 37.2 |
+| solar-flare | AdaBoost:Pypper (defaults vote)@1 | 69.52% | 7.5 |
+| solar-flare | AdaBoost:Pypper (defaults vote)@10 | 68.67% | 114.2 |
+| solar-flare | AdaBoost:Pypper (defaults vote)@25 | 66.13% | 278.4 |
+| solar-flare | AdaBoost:Pypper (defaults vote)@5 | 68.77% | 57.5 |
+| solar-flare | AdaBoost:Pypper@1 | 69.52% | 7.5 |
+| solar-flare | AdaBoost:Pypper@10 | 73.92% | 114.2 |
+| solar-flare | AdaBoost:Pypper@25 | 73.64% | 278.4 |
+| solar-flare | AdaBoost:Pypper@5 | 73.27% | 57.5 |
 | solar-flare | Boomer@10 | 72.98% | 7.0 |
 | solar-flare | Boomer@100 | 74.11% | 58.9 |
 | solar-flare | Boomer@25 | 74.11% | 14.6 |
@@ -2381,14 +2381,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | sonar | AdaBoost:PFossil@10 | 80.36% | 144.5 |
 | sonar | AdaBoost:PFossil@25 | 80.36% | 343.9 |
 | sonar | AdaBoost:PFossil@5 | 78.38% | 75.9 |
-| sonar | AdaBoost:Pypper (defaults vote)@1 | 76.48% | 6.0 |
-| sonar | AdaBoost:Pypper (defaults vote)@10 | 79.36% | 57.7 |
-| sonar | AdaBoost:Pypper (defaults vote)@25 | 82.24% | 133.3 |
-| sonar | AdaBoost:Pypper (defaults vote)@5 | 78.90% | 29.0 |
-| sonar | AdaBoost:Pypper@1 | 76.48% | 6.0 |
-| sonar | AdaBoost:Pypper@10 | 76.95% | 57.7 |
-| sonar | AdaBoost:Pypper@25 | 81.31% | 133.3 |
-| sonar | AdaBoost:Pypper@5 | 79.43% | 29.0 |
+| sonar | AdaBoost:Pypper (defaults vote)@1 | 73.57% | 6.6 |
+| sonar | AdaBoost:Pypper (defaults vote)@10 | 83.67% | 63.1 |
+| sonar | AdaBoost:Pypper (defaults vote)@25 | 87.05% | 144.7 |
+| sonar | AdaBoost:Pypper (defaults vote)@5 | 79.83% | 34.1 |
+| sonar | AdaBoost:Pypper@1 | 73.57% | 6.6 |
+| sonar | AdaBoost:Pypper@10 | 79.31% | 63.1 |
+| sonar | AdaBoost:Pypper@25 | 80.31% | 144.7 |
+| sonar | AdaBoost:Pypper@5 | 77.40% | 34.1 |
 | sonar | Boomer@10 | 76.48% | 11.0 |
 | sonar | Boomer@100 | 85.62% | 73.7 |
 | sonar | Boomer@25 | 80.86% | 24.0 |
@@ -2422,14 +2422,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | soybean | AdaBoost:PFossil@10 | 92.55% | 444.0 |
 | soybean | AdaBoost:PFossil@25 | 91.80% | 1080.3 |
 | soybean | AdaBoost:PFossil@5 | 92.39% | 222.5 |
-| soybean | AdaBoost:Pypper (defaults vote)@1 | 89.91% | 26.0 |
-| soybean | AdaBoost:Pypper (defaults vote)@10 | 70.72% | 142.3 |
-| soybean | AdaBoost:Pypper (defaults vote)@25 | 63.96% | 323.1 |
-| soybean | AdaBoost:Pypper (defaults vote)@5 | 69.53% | 71.9 |
-| soybean | AdaBoost:Pypper@1 | 89.91% | 26.0 |
-| soybean | AdaBoost:Pypper@10 | 85.21% | 142.3 |
-| soybean | AdaBoost:Pypper@25 | 84.33% | 323.1 |
-| soybean | AdaBoost:Pypper@5 | 87.86% | 71.9 |
+| soybean | AdaBoost:Pypper (defaults vote)@1 | 90.50% | 28.2 |
+| soybean | AdaBoost:Pypper (defaults vote)@10 | 74.68% | 161.5 |
+| soybean | AdaBoost:Pypper (defaults vote)@25 | 67.79% | 383.5 |
+| soybean | AdaBoost:Pypper (defaults vote)@5 | 78.19% | 83.5 |
+| soybean | AdaBoost:Pypper@1 | 90.50% | 28.2 |
+| soybean | AdaBoost:Pypper@10 | 85.36% | 161.5 |
+| soybean | AdaBoost:Pypper@25 | 84.48% | 383.5 |
+| soybean | AdaBoost:Pypper@5 | 87.86% | 83.5 |
 | soybean | Boomer@10 | 67.65% | 11.0 |
 | soybean | Boomer@100 | 93.42% | 45.7 |
 | soybean | Boomer@25 | 90.93% | 25.7 |
@@ -2463,14 +2463,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | spambase | AdaBoost:PFossil@10 | 94.26% | 90.5 |
 | spambase | AdaBoost:PFossil@25 | 94.59% | 221.5 |
 | spambase | AdaBoost:PFossil@5 | 93.76% | 45.2 |
-| spambase | AdaBoost:Pypper (defaults vote)@1 | 92.96% | 25.7 |
-| spambase | AdaBoost:Pypper (defaults vote)@10 | 93.85% | 131.8 |
-| spambase | AdaBoost:Pypper (defaults vote)@25 | 94.68% | 267.1 |
-| spambase | AdaBoost:Pypper (defaults vote)@5 | 93.50% | 81.7 |
-| spambase | AdaBoost:Pypper@1 | 92.96% | 25.7 |
-| spambase | AdaBoost:Pypper@10 | 90.65% | 131.8 |
-| spambase | AdaBoost:Pypper@25 | 89.41% | 267.1 |
-| spambase | AdaBoost:Pypper@5 | 92.81% | 81.7 |
+| spambase | AdaBoost:Pypper (defaults vote)@1 | 93.11% | 26.4 |
+| spambase | AdaBoost:Pypper (defaults vote)@10 | 94.05% | 156.7 |
+| spambase | AdaBoost:Pypper (defaults vote)@25 | 94.37% | 314.7 |
+| spambase | AdaBoost:Pypper (defaults vote)@5 | 93.76% | 102.1 |
+| spambase | AdaBoost:Pypper@1 | 93.11% | 26.4 |
+| spambase | AdaBoost:Pypper@10 | 92.09% | 156.7 |
+| spambase | AdaBoost:Pypper@25 | 91.96% | 314.7 |
+| spambase | AdaBoost:Pypper@5 | 93.02% | 102.1 |
 | spambase | Boomer@10 | 91.33% | 11.0 |
 | spambase | Boomer@100 | 94.91% | 85.4 |
 | spambase | Boomer@25 | 93.15% | 25.6 |
@@ -2504,14 +2504,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | splice | AdaBoost:PFossil@10 | 94.86% | 321.9 |
 | splice | AdaBoost:PFossil@25 | 94.61% | 869.7 |
 | splice | AdaBoost:PFossil@5 | 94.83% | 153.5 |
-| splice | AdaBoost:Pypper (defaults vote)@1 | 93.45% | 21.1 |
-| splice | AdaBoost:Pypper (defaults vote)@10 | 93.73% | 172.2 |
-| splice | AdaBoost:Pypper (defaults vote)@25 | 94.01% | 375.6 |
-| splice | AdaBoost:Pypper (defaults vote)@5 | 92.35% | 91.2 |
-| splice | AdaBoost:Pypper@1 | 93.45% | 21.1 |
-| splice | AdaBoost:Pypper@10 | 92.88% | 172.2 |
-| splice | AdaBoost:Pypper@25 | 88.46% | 375.6 |
-| splice | AdaBoost:Pypper@5 | 94.17% | 91.2 |
+| splice | AdaBoost:Pypper (defaults vote)@1 | 93.20% | 26.8 |
+| splice | AdaBoost:Pypper (defaults vote)@10 | 94.04% | 214.3 |
+| splice | AdaBoost:Pypper (defaults vote)@25 | 95.14% | 475.2 |
+| splice | AdaBoost:Pypper (defaults vote)@5 | 92.85% | 119.0 |
+| splice | AdaBoost:Pypper@1 | 93.20% | 26.8 |
+| splice | AdaBoost:Pypper@10 | 94.42% | 214.3 |
+| splice | AdaBoost:Pypper@25 | 92.76% | 475.2 |
+| splice | AdaBoost:Pypper@5 | 94.26% | 119.0 |
 | splice | Boomer@10 | 91.66% | 10.9 |
 | splice | Boomer@100 | 96.30% | 93.9 |
 | splice | Boomer@25 | 95.20% | 22.8 |
@@ -2545,14 +2545,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | texture | AdaBoost:PFossil@10 | 96.40% | 692.8 |
 | texture | AdaBoost:PFossil@25 | 96.27% | 1674.7 |
 | texture | AdaBoost:PFossil@5 | 95.89% | 379.1 |
-| texture | AdaBoost:Pypper (defaults vote)@1 | 91.78% | 66.7 |
-| texture | AdaBoost:Pypper (defaults vote)@10 | 92.16% | 390.8 |
-| texture | AdaBoost:Pypper (defaults vote)@25 | 91.20% | 847.0 |
-| texture | AdaBoost:Pypper (defaults vote)@5 | 91.00% | 227.0 |
-| texture | AdaBoost:Pypper@1 | 91.78% | 66.7 |
-| texture | AdaBoost:Pypper@10 | 94.44% | 390.8 |
-| texture | AdaBoost:Pypper@25 | 91.78% | 847.0 |
-| texture | AdaBoost:Pypper@5 | 94.76% | 227.0 |
+| texture | AdaBoost:Pypper (defaults vote)@1 | 92.40% | 81.3 |
+| texture | AdaBoost:Pypper (defaults vote)@10 | 94.35% | 522.5 |
+| texture | AdaBoost:Pypper (defaults vote)@25 | 95.04% | 1170.3 |
+| texture | AdaBoost:Pypper (defaults vote)@5 | 93.09% | 290.8 |
+| texture | AdaBoost:Pypper@1 | 92.40% | 81.3 |
+| texture | AdaBoost:Pypper@10 | 95.27% | 522.5 |
+| texture | AdaBoost:Pypper@25 | 93.20% | 1170.3 |
+| texture | AdaBoost:Pypper@5 | 95.60% | 290.8 |
 | texture | Boomer@10 | 71.31% | 11.0 |
 | texture | Boomer@100 | 93.80% | 90.4 |
 | texture | Boomer@25 | 86.24% | 25.9 |
@@ -2586,14 +2586,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | tic-tac-toe | AdaBoost:PFossil@10 | 99.06% | 187.2 |
 | tic-tac-toe | AdaBoost:PFossil@25 | 98.85% | 588.3 |
 | tic-tac-toe | AdaBoost:PFossil@5 | 97.92% | 75.4 |
-| tic-tac-toe | AdaBoost:Pypper (defaults vote)@1 | 96.25% | 15.5 |
-| tic-tac-toe | AdaBoost:Pypper (defaults vote)@10 | 98.64% | 144.6 |
-| tic-tac-toe | AdaBoost:Pypper (defaults vote)@25 | 99.06% | 329.8 |
-| tic-tac-toe | AdaBoost:Pypper (defaults vote)@5 | 97.81% | 77.8 |
-| tic-tac-toe | AdaBoost:Pypper@1 | 96.25% | 15.5 |
-| tic-tac-toe | AdaBoost:Pypper@10 | 99.16% | 144.6 |
-| tic-tac-toe | AdaBoost:Pypper@25 | 99.37% | 329.8 |
-| tic-tac-toe | AdaBoost:Pypper@5 | 98.85% | 77.8 |
+| tic-tac-toe | AdaBoost:Pypper (defaults vote)@1 | 98.33% | 16.6 |
+| tic-tac-toe | AdaBoost:Pypper (defaults vote)@10 | 98.75% | 152.0 |
+| tic-tac-toe | AdaBoost:Pypper (defaults vote)@25 | 99.27% | 377.4 |
+| tic-tac-toe | AdaBoost:Pypper (defaults vote)@5 | 98.43% | 80.4 |
+| tic-tac-toe | AdaBoost:Pypper@1 | 98.33% | 16.6 |
+| tic-tac-toe | AdaBoost:Pypper@10 | 99.17% | 152.0 |
+| tic-tac-toe | AdaBoost:Pypper@25 | 99.79% | 377.4 |
+| tic-tac-toe | AdaBoost:Pypper@5 | 98.85% | 80.4 |
 | tic-tac-toe | Boomer@10 | 79.12% | 9.0 |
 | tic-tac-toe | Boomer@100 | 98.44% | 62.7 |
 | tic-tac-toe | Boomer@25 | 93.31% | 19.2 |
@@ -2627,14 +2627,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | vehicle | AdaBoost:PFossil@10 | 75.54% | 216.8 |
 | vehicle | AdaBoost:PFossil@25 | 76.25% | 537.6 |
 | vehicle | AdaBoost:PFossil@5 | 75.19% | 110.9 |
-| vehicle | AdaBoost:Pypper (defaults vote)@1 | 63.84% | 13.1 |
-| vehicle | AdaBoost:Pypper (defaults vote)@10 | 66.56% | 104.3 |
-| vehicle | AdaBoost:Pypper (defaults vote)@25 | 65.50% | 242.4 |
-| vehicle | AdaBoost:Pypper (defaults vote)@5 | 63.36% | 57.9 |
-| vehicle | AdaBoost:Pypper@1 | 63.84% | 13.1 |
-| vehicle | AdaBoost:Pypper@10 | 72.59% | 104.3 |
-| vehicle | AdaBoost:Pypper@25 | 73.77% | 242.4 |
-| vehicle | AdaBoost:Pypper@5 | 71.64% | 57.9 |
+| vehicle | AdaBoost:Pypper (defaults vote)@1 | 63.95% | 17.4 |
+| vehicle | AdaBoost:Pypper (defaults vote)@10 | 66.55% | 136.1 |
+| vehicle | AdaBoost:Pypper (defaults vote)@25 | 70.23% | 321.4 |
+| vehicle | AdaBoost:Pypper (defaults vote)@5 | 66.20% | 72.2 |
+| vehicle | AdaBoost:Pypper@1 | 63.95% | 17.4 |
+| vehicle | AdaBoost:Pypper@10 | 71.75% | 136.1 |
+| vehicle | AdaBoost:Pypper@25 | 74.48% | 321.4 |
+| vehicle | AdaBoost:Pypper@5 | 72.34% | 72.2 |
 | vehicle | Boomer@10 | 65.62% | 11.0 |
 | vehicle | Boomer@100 | 76.02% | 92.9 |
 | vehicle | Boomer@25 | 70.11% | 25.5 |
@@ -2668,14 +2668,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | vote | AdaBoost:PFossil@10 | 95.88% | 96.1 |
 | vote | AdaBoost:PFossil@25 | 95.18% | 252.1 |
 | vote | AdaBoost:PFossil@5 | 95.41% | 48.8 |
-| vote | AdaBoost:Pypper (defaults vote)@1 | 95.18% | 3.9 |
-| vote | AdaBoost:Pypper (defaults vote)@10 | 94.96% | 45.9 |
-| vote | AdaBoost:Pypper (defaults vote)@25 | 95.18% | 111.0 |
-| vote | AdaBoost:Pypper (defaults vote)@5 | 95.18% | 22.5 |
-| vote | AdaBoost:Pypper@1 | 95.18% | 3.9 |
-| vote | AdaBoost:Pypper@10 | 94.95% | 45.9 |
-| vote | AdaBoost:Pypper@25 | 95.42% | 111.0 |
-| vote | AdaBoost:Pypper@5 | 95.18% | 22.5 |
+| vote | AdaBoost:Pypper (defaults vote)@1 | 96.09% | 4.8 |
+| vote | AdaBoost:Pypper (defaults vote)@10 | 95.64% | 50.8 |
+| vote | AdaBoost:Pypper (defaults vote)@25 | 95.87% | 121.9 |
+| vote | AdaBoost:Pypper (defaults vote)@5 | 95.87% | 25.4 |
+| vote | AdaBoost:Pypper@1 | 96.09% | 4.8 |
+| vote | AdaBoost:Pypper@10 | 95.64% | 50.8 |
+| vote | AdaBoost:Pypper@25 | 95.88% | 121.9 |
+| vote | AdaBoost:Pypper@5 | 96.10% | 25.4 |
 | vote | Boomer@10 | 95.65% | 6.1 |
 | vote | Boomer@100 | 95.87% | 46.6 |
 | vote | Boomer@25 | 95.87% | 14.1 |
@@ -2709,14 +2709,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | vowel | AdaBoost:PFossil@10 | 90.81% | 797.6 |
 | vowel | AdaBoost:PFossil@25 | 91.41% | 1974.5 |
 | vowel | AdaBoost:PFossil@5 | 87.68% | 411.9 |
-| vowel | AdaBoost:Pypper (defaults vote)@1 | 63.84% | 41.5 |
-| vowel | AdaBoost:Pypper (defaults vote)@10 | 42.63% | 244.9 |
-| vowel | AdaBoost:Pypper (defaults vote)@25 | 32.32% | 554.4 |
-| vowel | AdaBoost:Pypper (defaults vote)@5 | 48.79% | 140.5 |
-| vowel | AdaBoost:Pypper@1 | 63.84% | 41.5 |
-| vowel | AdaBoost:Pypper@10 | 81.31% | 244.9 |
-| vowel | AdaBoost:Pypper@25 | 80.81% | 554.4 |
-| vowel | AdaBoost:Pypper@5 | 76.57% | 140.5 |
+| vowel | AdaBoost:Pypper (defaults vote)@1 | 73.84% | 68.9 |
+| vowel | AdaBoost:Pypper (defaults vote)@10 | 65.56% | 390.3 |
+| vowel | AdaBoost:Pypper (defaults vote)@25 | 66.57% | 925.2 |
+| vowel | AdaBoost:Pypper (defaults vote)@5 | 64.55% | 213.6 |
+| vowel | AdaBoost:Pypper@1 | 73.84% | 68.9 |
+| vowel | AdaBoost:Pypper@10 | 84.24% | 390.3 |
+| vowel | AdaBoost:Pypper@25 | 83.43% | 925.2 |
+| vowel | AdaBoost:Pypper@5 | 83.64% | 213.6 |
 | vowel | Boomer@10 | 46.06% | 11.0 |
 | vowel | Boomer@100 | 79.49% | 94.6 |
 | vowel | Boomer@25 | 61.92% | 26.0 |
@@ -2750,14 +2750,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | wdbc | AdaBoost:PFossil@10 | 95.25% | 168.3 |
 | wdbc | AdaBoost:PFossil@25 | 96.48% | 385.5 |
 | wdbc | AdaBoost:PFossil@5 | 95.96% | 79.7 |
-| wdbc | AdaBoost:Pypper (defaults vote)@1 | 94.91% | 6.2 |
-| wdbc | AdaBoost:Pypper (defaults vote)@10 | 95.61% | 60.9 |
-| wdbc | AdaBoost:Pypper (defaults vote)@25 | 96.84% | 150.7 |
-| wdbc | AdaBoost:Pypper (defaults vote)@5 | 96.84% | 29.3 |
-| wdbc | AdaBoost:Pypper@1 | 94.91% | 6.2 |
-| wdbc | AdaBoost:Pypper@10 | 95.43% | 60.9 |
-| wdbc | AdaBoost:Pypper@25 | 95.96% | 150.7 |
-| wdbc | AdaBoost:Pypper@5 | 94.90% | 29.3 |
+| wdbc | AdaBoost:Pypper (defaults vote)@1 | 95.44% | 7.2 |
+| wdbc | AdaBoost:Pypper (defaults vote)@10 | 96.84% | 63.0 |
+| wdbc | AdaBoost:Pypper (defaults vote)@25 | 96.84% | 153.9 |
+| wdbc | AdaBoost:Pypper (defaults vote)@5 | 95.43% | 32.6 |
+| wdbc | AdaBoost:Pypper@1 | 95.44% | 7.2 |
+| wdbc | AdaBoost:Pypper@10 | 95.08% | 63.0 |
+| wdbc | AdaBoost:Pypper@25 | 95.95% | 153.9 |
+| wdbc | AdaBoost:Pypper@5 | 95.25% | 32.6 |
 | wdbc | Boomer@10 | 92.45% | 10.4 |
 | wdbc | Boomer@100 | 96.30% | 66.8 |
 | wdbc | Boomer@25 | 95.43% | 22.3 |
@@ -2791,14 +2791,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | wilt | AdaBoost:PFossil@10 | 70.57% | 35.6 |
 | wilt | AdaBoost:PFossil@25 | 71.75% | 94.9 |
 | wilt | AdaBoost:PFossil@5 | 71.32% | 19.1 |
-| wilt | AdaBoost:Pypper (defaults vote)@1 | 97.42% | 6.1 |
-| wilt | AdaBoost:Pypper (defaults vote)@10 | 97.33% | 63.5 |
-| wilt | AdaBoost:Pypper (defaults vote)@25 | 97.33% | 134.5 |
-| wilt | AdaBoost:Pypper (defaults vote)@5 | 97.31% | 35.9 |
-| wilt | AdaBoost:Pypper@1 | 97.42% | 6.1 |
-| wilt | AdaBoost:Pypper@10 | 97.02% | 63.5 |
-| wilt | AdaBoost:Pypper@25 | 96.88% | 134.5 |
-| wilt | AdaBoost:Pypper@5 | 97.35% | 35.9 |
+| wilt | AdaBoost:Pypper (defaults vote)@1 | 97.36% | 6.5 |
+| wilt | AdaBoost:Pypper (defaults vote)@10 | 97.21% | 66.1 |
+| wilt | AdaBoost:Pypper (defaults vote)@25 | 97.31% | 143.5 |
+| wilt | AdaBoost:Pypper (defaults vote)@5 | 97.25% | 41.2 |
+| wilt | AdaBoost:Pypper@1 | 97.36% | 6.5 |
+| wilt | AdaBoost:Pypper@10 | 96.57% | 66.1 |
+| wilt | AdaBoost:Pypper@25 | 96.59% | 143.5 |
+| wilt | AdaBoost:Pypper@5 | 97.21% | 41.2 |
 | wilt | Boomer@10 | 97.07% | 8.1 |
 | wilt | Boomer@100 | 97.36% | 49.7 |
 | wilt | Boomer@25 | 97.25% | 16.4 |
@@ -2832,14 +2832,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | wine | AdaBoost:PFossil@10 | 96.05% | 78.8 |
 | wine | AdaBoost:PFossil@25 | 96.05% | 199.0 |
 | wine | AdaBoost:PFossil@5 | 94.38% | 39.9 |
-| wine | AdaBoost:Pypper (defaults vote)@1 | 92.09% | 5.2 |
-| wine | AdaBoost:Pypper (defaults vote)@10 | 96.63% | 41.2 |
-| wine | AdaBoost:Pypper (defaults vote)@25 | 96.60% | 91.2 |
-| wine | AdaBoost:Pypper (defaults vote)@5 | 95.49% | 22.6 |
-| wine | AdaBoost:Pypper@1 | 92.09% | 5.2 |
-| wine | AdaBoost:Pypper@10 | 94.97% | 41.2 |
-| wine | AdaBoost:Pypper@25 | 95.00% | 91.2 |
-| wine | AdaBoost:Pypper@5 | 94.97% | 22.6 |
+| wine | AdaBoost:Pypper (defaults vote)@1 | 92.09% | 5.3 |
+| wine | AdaBoost:Pypper (defaults vote)@10 | 96.63% | 41.8 |
+| wine | AdaBoost:Pypper (defaults vote)@25 | 96.08% | 90.4 |
+| wine | AdaBoost:Pypper (defaults vote)@5 | 95.49% | 22.9 |
+| wine | AdaBoost:Pypper@1 | 92.09% | 5.3 |
+| wine | AdaBoost:Pypper@10 | 95.52% | 41.8 |
+| wine | AdaBoost:Pypper@25 | 94.41% | 90.4 |
+| wine | AdaBoost:Pypper@5 | 95.52% | 22.9 |
 | wine | Boomer@10 | 95.49% | 8.8 |
 | wine | Boomer@100 | 97.19% | 30.7 |
 | wine | Boomer@25 | 96.11% | 14.7 |
@@ -2873,14 +2873,14 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | yeast | AdaBoost:PFossil@10 | 57.34% | 350.2 |
 | yeast | AdaBoost:PFossil@25 | 58.76% | 882.8 |
 | yeast | AdaBoost:PFossil@5 | 56.40% | 158.4 |
-| yeast | AdaBoost:Pypper (defaults vote)@1 | 59.30% | 17.5 |
-| yeast | AdaBoost:Pypper (defaults vote)@10 | 45.28% | 94.3 |
-| yeast | AdaBoost:Pypper (defaults vote)@25 | 46.36% | 235.2 |
-| yeast | AdaBoost:Pypper (defaults vote)@5 | 50.52% | 52.9 |
-| yeast | AdaBoost:Pypper@1 | 59.30% | 17.5 |
-| yeast | AdaBoost:Pypper@10 | 57.95% | 94.3 |
-| yeast | AdaBoost:Pypper@25 | 58.69% | 235.2 |
-| yeast | AdaBoost:Pypper@5 | 57.81% | 52.9 |
+| yeast | AdaBoost:Pypper (defaults vote)@1 | 59.43% | 18.5 |
+| yeast | AdaBoost:Pypper (defaults vote)@10 | 43.34% | 195.3 |
+| yeast | AdaBoost:Pypper (defaults vote)@25 | 41.51% | 479.8 |
+| yeast | AdaBoost:Pypper (defaults vote)@5 | 44.49% | 94.2 |
+| yeast | AdaBoost:Pypper@1 | 59.43% | 18.5 |
+| yeast | AdaBoost:Pypper@10 | 53.50% | 195.3 |
+| yeast | AdaBoost:Pypper@25 | 50.67% | 479.8 |
+| yeast | AdaBoost:Pypper@5 | 57.75% | 94.2 |
 | yeast | Boomer@10 | 55.93% | 10.9 |
 | yeast | Boomer@100 | 59.17% | 92.4 |
 | yeast | Boomer@25 | 58.16% | 25.7 |
@@ -2915,13 +2915,13 @@ Every learner after its last round, sorted by mean rank (accuracy rank across da
 | zoo | AdaBoost:PFossil@25 | 98.00% | 215.1 |
 | zoo | AdaBoost:PFossil@5 | 96.00% | 43.0 |
 | zoo | AdaBoost:Pypper (defaults vote)@1 | 90.09% | 6.1 |
-| zoo | AdaBoost:Pypper (defaults vote)@10 | 93.00% | 43.0 |
-| zoo | AdaBoost:Pypper (defaults vote)@25 | 90.00% | 104.6 |
-| zoo | AdaBoost:Pypper (defaults vote)@5 | 88.18% | 22.2 |
+| zoo | AdaBoost:Pypper (defaults vote)@10 | 91.00% | 44.4 |
+| zoo | AdaBoost:Pypper (defaults vote)@25 | 91.00% | 105.8 |
+| zoo | AdaBoost:Pypper (defaults vote)@5 | 91.09% | 22.5 |
 | zoo | AdaBoost:Pypper@1 | 90.09% | 6.1 |
-| zoo | AdaBoost:Pypper@10 | 94.00% | 43.0 |
-| zoo | AdaBoost:Pypper@25 | 91.00% | 104.6 |
-| zoo | AdaBoost:Pypper@5 | 92.00% | 22.2 |
+| zoo | AdaBoost:Pypper@10 | 94.00% | 44.4 |
+| zoo | AdaBoost:Pypper@25 | 93.00% | 105.8 |
+| zoo | AdaBoost:Pypper@5 | 94.00% | 22.5 |
 | zoo | Boomer@10 | 73.27% | 6.0 |
 | zoo | Boomer@100 | 97.00% | 12.3 |
 | zoo | Boomer@25 | 91.09% | 7.3 |

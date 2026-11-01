@@ -74,15 +74,15 @@ Sorted by mean rank (accuracy rank across datasets, failures last). Rules and co
 
 | model | accuracy | mean rank | rules | conditions | train (s) | failures |
 |---|--:|--:|--:|--:|--:|--:|
-| cascade (rarest first) | 78.98% | 3.69 | 32.3 | 150.2 | 0.83 | 0 |
-| decision list (per seed example) | 78.30% | 4.25 | 79.3 | 678.3 | 1.57 | 0 |
-| cascade (most frequent first) | 77.43% | 4.31 | 32.6 | 163.7 | 0.76 | 0 |
-| rule set (macro distribution voting) | 76.66% | 4.48 | 33.1 | 180.4 | 1.04 | 0 |
-| rule set (best rule) | 76.67% | 4.69 | 33.1 | 180.4 | 1.04 | 0 |
-| decision list (per refinement) | 75.28% | 5.37 | 22.0 | 99.7 | 0.45 | 0 |
-| decision list (per rule) | 75.51% | 5.37 | 17.0 | 61.1 | 1.45 | 0 |
-| rule set (voting) | 75.83% | 6.40 | 33.1 | 180.4 | 1.04 | 0 |
-| rule set (micro distribution voting) | 75.90% | 6.44 | 33.1 | 180.4 | 1.04 | 0 |
+| cascade (rarest first) | 79.48% | 3.90 | 42.5 | 203.5 | 1.27 | 0 |
+| cascade (most frequent first) | 78.23% | 4.10 | 41.6 | 215.1 | 1.13 | 0 |
+| rule set (macro distribution voting) | 77.65% | 4.35 | 44.8 | 254.5 | 1.61 | 0 |
+| rule set (best rule) | 77.66% | 4.46 | 44.8 | 254.5 | 1.61 | 0 |
+| decision list (per seed example) | 78.17% | 5.35 | 81.5 | 678.2 | 1.59 | 0 |
+| decision list (per rule) | 76.51% | 5.37 | 19.3 | 70.7 | 1.74 | 0 |
+| decision list (per refinement) | 76.38% | 5.60 | 26.1 | 116.4 | 0.57 | 0 |
+| rule set (micro distribution voting) | 76.85% | 5.88 | 44.8 | 254.5 | 1.61 | 0 |
+| rule set (voting) | 76.62% | 6.00 | 44.8 | 254.5 | 1.61 | 0 |
 
 ### All base learners together
 
@@ -90,17 +90,17 @@ Each kind of model's mean rank, averaged over the 3 base learners (ranked within
 
 | model | accuracy | mean rank |
 |---|--:|--:|
-| rule set (best rule) | 78.85% | 4.34 |
-| rule set (macro distribution voting) | 78.70% | 4.50 |
-| decision list (per rule) | 78.34% | 4.59 |
-| decision list (per refinement) | 78.07% | 4.67 |
-| cascade (rarest first) | 78.43% | 5.02 |
-| cascade (most frequent first) | 77.65% | 5.21 |
-| decision list (per seed example) | 77.85% | 5.33 |
-| rule set (micro distribution voting) | 78.10% | 5.33 |
-| rule set (voting) | 77.75% | 6.00 |
+| rule set (best rule) | 79.18% | 4.26 |
+| rule set (macro distribution voting) | 79.03% | 4.46 |
+| decision list (per rule) | 78.67% | 4.59 |
+| decision list (per refinement) | 78.44% | 4.75 |
+| cascade (rarest first) | 78.60% | 5.09 |
+| cascade (most frequent first) | 77.91% | 5.14 |
+| rule set (micro distribution voting) | 78.42% | 5.15 |
+| decision list (per seed example) | 77.81% | 5.70 |
+| rule set (voting) | 78.01% | 5.87 |
 
-Friedman test over the 78 (dataset, base learner) pairs: p = 0.0028 (9 kinds of model). Nemenyi critical difference at 5%: 1.36 -- two kinds whose mean ranks differ by less are not significantly different; the diagram joins them by a bar. The pairs of one dataset aren't independent of each other, so the test is on the optimistic side.
+Friedman test over the 78 (dataset, base learner) pairs: p = 0.0016 (9 kinds of model). Nemenyi critical difference at 5%: 1.36 -- two kinds whose mean ranks differ by less are not significantly different; the diagram joins them by a bar. The pairs of one dataset aren't independent of each other, so the test is on the optimistic side.
 
 ![critical-difference diagram, multiclass](rule_models_plots/rule_models_cd_multiclass.png)
 
@@ -140,15 +140,15 @@ A concept for one class, the other the default; the rule set of both classes; th
 
 | model | accuracy | mean rank | rules | conditions | train (s) | failures |
 |---|--:|--:|--:|--:|--:|--:|
-| rule set (macro distribution voting) | 85.26% | 4.02 | 8.7 | 27.2 | 0.16 | 0 |
-| rule set (best rule) | 85.26% | 4.20 | 8.7 | 27.2 | 0.16 | 0 |
-| rule set (voting) | 85.08% | 4.51 | 8.7 | 27.2 | 0.16 | 0 |
-| rule set (micro distribution voting) | 85.13% | 4.57 | 8.7 | 27.2 | 0.16 | 0 |
-| decision list (per refinement) | 85.13% | 4.83 | 6.4 | 25.3 | 0.06 | 0 |
-| decision list (per rule) | 85.25% | 4.89 | 9.2 | 28.7 | 0.07 | 0 |
-| concept (minority class) | 84.98% | 5.35 | 4.0 | 13.3 | 0.07 | 0 |
-| decision list (per seed example) | 84.06% | 6.28 | 14.0 | 51.3 | 0.07 | 0 |
-| concept (majority class) | 82.48% | 6.34 | 4.7 | 13.9 | 0.09 | 0 |
+| rule set (macro distribution voting) | 85.39% | 3.66 | 9.1 | 28.7 | 0.17 | 0 |
+| rule set (best rule) | 85.38% | 3.67 | 9.1 | 28.7 | 0.17 | 0 |
+| rule set (voting) | 85.15% | 4.43 | 9.1 | 28.7 | 0.17 | 0 |
+| rule set (micro distribution voting) | 85.14% | 4.60 | 9.1 | 28.7 | 0.17 | 0 |
+| decision list (per rule) | 85.15% | 5.14 | 10.1 | 29.5 | 0.08 | 0 |
+| concept (minority class) | 85.03% | 5.30 | 4.4 | 15.3 | 0.08 | 0 |
+| decision list (per refinement) | 84.83% | 5.56 | 7.4 | 28.1 | 0.07 | 0 |
+| concept (majority class) | 82.85% | 6.18 | 4.6 | 13.4 | 0.09 | 0 |
+| decision list (per seed example) | 84.00% | 6.47 | 12.6 | 42.1 | 0.07 | 0 |
 
 ### All base learners together
 
@@ -156,17 +156,17 @@ Each kind of model's mean rank, averaged over the 3 base learners (ranked within
 
 | model | accuracy | mean rank |
 |---|--:|--:|
-| rule set (best rule) | 84.81% | 3.69 |
-| rule set (macro distribution voting) | 84.70% | 3.76 |
-| rule set (micro distribution voting) | 84.38% | 4.34 |
-| rule set (voting) | 84.30% | 4.49 |
-| decision list (per rule) | 84.22% | 4.95 |
-| decision list (per refinement) | 83.91% | 5.23 |
-| decision list (per seed example) | 82.78% | 6.06 |
-| concept (minority class) | 82.11% | 6.12 |
-| concept (majority class) | 80.37% | 6.35 |
+| rule set (best rule) | 84.85% | 3.51 |
+| rule set (macro distribution voting) | 84.74% | 3.64 |
+| rule set (micro distribution voting) | 84.39% | 4.36 |
+| rule set (voting) | 84.32% | 4.47 |
+| decision list (per rule) | 84.19% | 5.03 |
+| decision list (per refinement) | 83.81% | 5.48 |
+| concept (minority class) | 82.12% | 6.11 |
+| decision list (per seed example) | 82.77% | 6.12 |
+| concept (majority class) | 80.50% | 6.30 |
 
-Friedman test over the 132 (dataset, base learner) pairs: p = 2.3e-29 (9 kinds of model). Nemenyi critical difference at 5%: 1.05 -- two kinds whose mean ranks differ by less are not significantly different; the diagram joins them by a bar. The pairs of one dataset aren't independent of each other, so the test is on the optimistic side.
+Friedman test over the 132 (dataset, base learner) pairs: p = 5.8e-33 (9 kinds of model). Nemenyi critical difference at 5%: 1.05 -- two kinds whose mean ranks differ by less are not significantly different; the diagram joins them by a bar. The pairs of one dataset aren't independent of each other, so the test is on the optimistic side.
 
 ![critical-difference diagram, twoclass](rule_models_plots/rule_models_cd_twoclass.png)
 
@@ -176,20 +176,20 @@ Per dataset and base learner, the accuracy of a decision list minus that of the 
 
 | classes | pairs | list (per refinement) | list (per rule) | list (per seed example) | best list - best set |
 |---|--:|--:|--:|--:|--:|
-| 2 | 132 | -0.91 | -0.59 | -2.03 | -0.00 |
-| 3 | 21 | -1.01 | -0.41 | -3.00 | +0.01 |
-| 4-5 | 12 | +0.26 | +0.17 | -0.83 | +1.67 |
-| 6-9 | 15 | +0.52 | -0.33 | -1.40 | +0.71 |
-| 10-26 | 30 | -1.68 | -0.94 | +0.55 | +2.03 |
+| 2 | 132 | -1.05 | -0.66 | -2.09 | -0.13 |
+| 3 | 21 | -1.08 | -0.33 | -3.03 | -0.11 |
+| 4-5 | 12 | +0.52 | +0.31 | -0.67 | +1.77 |
+| 6-9 | 15 | +0.26 | -0.55 | -1.62 | +0.34 |
+| 10-26 | 30 | -1.50 | -0.94 | -0.35 | +1.24 |
 
 Share of the pairs on which the decision list is better, and Spearman's rank correlation of the difference with the number of classes:
 
 | | ahead, two classes | ahead, more classes | correlation, all | correlation, more classes |
 |---|--:|--:|--:|--:|
-| decision list (per refinement) | 30% | 46% | +0.07 (p = 0.31) | -0.08 (p = 0.51) |
-| decision list (per rule) | 35% | 49% | +0.09 (p = 0.19) | -0.03 (p = 0.79) |
-| decision list (per seed example) | 23% | 46% | +0.13 (p = 0.053) | +0.20 (p = 0.073) |
-| best decision list - best rule set | 40% | 65% | +0.23 (p = 0.00079) | +0.16 (p = 0.17) |
+| decision list (per refinement) | 25% | 45% | +0.10 (p = 0.15) | -0.04 (p = 0.74) |
+| decision list (per rule) | 33% | 49% | +0.11 (p = 0.11) | -0.04 (p = 0.73) |
+| decision list (per seed example) | 21% | 40% | +0.09 (p = 0.19) | +0.15 (p = 0.2) |
+| best decision list - best rule set | 39% | 58% | +0.18 (p = 0.01) | +0.07 (p = 0.55) |
 
 ## Per dataset (mean across folds)
 
@@ -213,15 +213,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | SPECT | PFossil:rule set (macro distribution voting) | 77.55% | 9.7 | 0.014 |
 | SPECT | PFossil:rule set (micro distribution voting) | 78.68% | 9.7 | 0.014 |
 | SPECT | PFossil:rule set (voting) | 77.55% | 9.7 | 0.014 |
-| SPECT | Pypper:concept (majority class) | 70.81% | 3.1 | 0.040 |
-| SPECT | Pypper:concept (minority class) | 79.00% | 0.9 | 0.023 |
-| SPECT | Pypper:decision list (per refinement) | 82.38% | 1.0 | 0.021 |
-| SPECT | Pypper:decision list (per rule) | 82.38% | 1.3 | 0.023 |
-| SPECT | Pypper:decision list (per seed example) | 82.04% | 8.7 | 0.044 |
-| SPECT | Pypper:rule set (best rule) | 79.02% | 4.0 | 0.072 |
-| SPECT | Pypper:rule set (macro distribution voting) | 79.02% | 4.0 | 0.072 |
-| SPECT | Pypper:rule set (micro distribution voting) | 79.02% | 4.0 | 0.072 |
-| SPECT | Pypper:rule set (voting) | 79.02% | 4.0 | 0.072 |
+| SPECT | Pypper:concept (majority class) | 77.51% | 3.4 | 0.037 |
+| SPECT | Pypper:concept (minority class) | 80.11% | 1.0 | 0.024 |
+| SPECT | Pypper:decision list (per refinement) | 81.58% | 1.7 | 0.018 |
+| SPECT | Pypper:decision list (per rule) | 82.74% | 2.6 | 0.018 |
+| SPECT | Pypper:decision list (per seed example) | 82.02% | 7.9 | 0.027 |
+| SPECT | Pypper:rule set (best rule) | 80.85% | 4.4 | 0.051 |
+| SPECT | Pypper:rule set (macro distribution voting) | 80.85% | 4.4 | 0.051 |
+| SPECT | Pypper:rule set (micro distribution voting) | 80.85% | 4.4 | 0.051 |
+| SPECT | Pypper:rule set (voting) | 80.85% | 4.4 | 0.051 |
 | Titanic | CN2:concept (majority class) | 71.96% | 38.6 | 0.507 |
 | Titanic | CN2:concept (minority class) | 66.09% | 38.2 | 0.452 |
 | Titanic | CN2:decision list (per refinement) | 78.68% | 29.4 | 0.522 |
@@ -240,15 +240,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | Titanic | PFossil:rule set (macro distribution voting) | 77.85% | 5.1 | 0.014 |
 | Titanic | PFossil:rule set (micro distribution voting) | 76.78% | 5.1 | 0.014 |
 | Titanic | PFossil:rule set (voting) | 78.15% | 5.1 | 0.014 |
-| Titanic | Pypper:concept (majority class) | 77.54% | 4.6 | 0.071 |
-| Titanic | Pypper:concept (minority class) | 79.22% | 2.6 | 0.048 |
-| Titanic | Pypper:decision list (per refinement) | 79.22% | 7.6 | 0.038 |
-| Titanic | Pypper:decision list (per rule) | 78.08% | 11.5 | 0.064 |
-| Titanic | Pypper:decision list (per seed example) | 76.78% | 15.8 | 0.071 |
-| Titanic | Pypper:rule set (best rule) | 79.22% | 7.2 | 0.124 |
-| Titanic | Pypper:rule set (macro distribution voting) | 79.30% | 7.2 | 0.124 |
-| Titanic | Pypper:rule set (micro distribution voting) | 78.84% | 7.2 | 0.124 |
-| Titanic | Pypper:rule set (voting) | 78.84% | 7.2 | 0.124 |
+| Titanic | Pypper:concept (majority class) | 77.31% | 4.5 | 0.071 |
+| Titanic | Pypper:concept (minority class) | 79.76% | 2.6 | 0.049 |
+| Titanic | Pypper:decision list (per refinement) | 78.31% | 7.9 | 0.041 |
+| Titanic | Pypper:decision list (per rule) | 77.77% | 11.7 | 0.064 |
+| Titanic | Pypper:decision list (per seed example) | 74.56% | 15.4 | 0.075 |
+| Titanic | Pypper:rule set (best rule) | 79.68% | 7.1 | 0.114 |
+| Titanic | Pypper:rule set (macro distribution voting) | 79.68% | 7.1 | 0.114 |
+| Titanic | Pypper:rule set (micro distribution voting) | 79.37% | 7.1 | 0.114 |
+| Titanic | Pypper:rule set (voting) | 79.14% | 7.1 | 0.114 |
 | anneal | CN2:cascade (most frequent first) | 99.22% | 15.1 | 0.037 |
 | anneal | CN2:cascade (rarest first) | 96.21% | 22.4 | 0.191 |
 | anneal | CN2:decision list (per refinement) | 98.44% | 13.4 | 0.078 |
@@ -267,15 +267,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | anneal | PFossil:rule set (macro distribution voting) | 99.66% | 17.8 | 0.023 |
 | anneal | PFossil:rule set (micro distribution voting) | 98.88% | 17.8 | 0.023 |
 | anneal | PFossil:rule set (voting) | 99.66% | 17.8 | 0.023 |
-| anneal | Pypper:cascade (most frequent first) | 98.55% | 9.2 | 0.046 |
-| anneal | Pypper:cascade (rarest first) | 94.20% | 8.2 | 0.061 |
-| anneal | Pypper:decision list (per refinement) | 98.77% | 8.9 | 0.028 |
-| anneal | Pypper:decision list (per rule) | 99.00% | 10.1 | 0.066 |
-| anneal | Pypper:decision list (per seed example) | 97.77% | 10.7 | 0.027 |
-| anneal | Pypper:rule set (best rule) | 96.10% | 13.7 | 0.095 |
-| anneal | Pypper:rule set (macro distribution voting) | 96.33% | 13.7 | 0.095 |
-| anneal | Pypper:rule set (micro distribution voting) | 95.77% | 13.7 | 0.095 |
-| anneal | Pypper:rule set (voting) | 96.10% | 13.7 | 0.095 |
+| anneal | Pypper:cascade (most frequent first) | 98.66% | 9.5 | 0.052 |
+| anneal | Pypper:cascade (rarest first) | 94.32% | 8.9 | 0.069 |
+| anneal | Pypper:decision list (per refinement) | 98.88% | 8.8 | 0.031 |
+| anneal | Pypper:decision list (per rule) | 98.88% | 9.8 | 0.066 |
+| anneal | Pypper:decision list (per seed example) | 97.99% | 10.7 | 0.029 |
+| anneal | Pypper:rule set (best rule) | 95.44% | 14.3 | 0.103 |
+| anneal | Pypper:rule set (macro distribution voting) | 95.66% | 14.3 | 0.103 |
+| anneal | Pypper:rule set (micro distribution voting) | 95.10% | 14.3 | 0.103 |
+| anneal | Pypper:rule set (voting) | 95.44% | 14.3 | 0.103 |
 | audiology | CN2:cascade (most frequent first) | 70.40% | 23.2 | 0.366 |
 | audiology | CN2:cascade (rarest first) | 84.11% | 25.4 | 0.182 |
 | audiology | CN2:decision list (per refinement) | 75.69% | 20.4 | 0.812 |
@@ -294,15 +294,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | audiology | PFossil:rule set (macro distribution voting) | 77.00% | 43.3 | 0.050 |
 | audiology | PFossil:rule set (micro distribution voting) | 74.78% | 43.3 | 0.050 |
 | audiology | PFossil:rule set (voting) | 75.26% | 43.3 | 0.050 |
-| audiology | Pypper:cascade (most frequent first) | 67.27% | 10.1 | 0.088 |
-| audiology | Pypper:cascade (rarest first) | 75.28% | 10.5 | 0.083 |
-| audiology | Pypper:decision list (per refinement) | 65.59% | 7.7 | 0.038 |
-| audiology | Pypper:decision list (per rule) | 70.40% | 11.9 | 0.272 |
-| audiology | Pypper:decision list (per seed example) | 70.43% | 13.9 | 0.044 |
-| audiology | Pypper:rule set (best rule) | 64.64% | 11.2 | 0.098 |
-| audiology | Pypper:rule set (macro distribution voting) | 65.10% | 11.2 | 0.098 |
-| audiology | Pypper:rule set (micro distribution voting) | 63.75% | 11.2 | 0.098 |
-| audiology | Pypper:rule set (voting) | 62.02% | 11.2 | 0.098 |
+| audiology | Pypper:cascade (most frequent first) | 70.32% | 11.1 | 0.097 |
+| audiology | Pypper:cascade (rarest first) | 75.71% | 11.1 | 0.089 |
+| audiology | Pypper:decision list (per refinement) | 69.11% | 11.2 | 0.053 |
+| audiology | Pypper:decision list (per rule) | 71.26% | 13.7 | 0.313 |
+| audiology | Pypper:decision list (per seed example) | 70.45% | 14.9 | 0.046 |
+| audiology | Pypper:rule set (best rule) | 66.84% | 13.8 | 0.113 |
+| audiology | Pypper:rule set (macro distribution voting) | 67.73% | 13.8 | 0.113 |
+| audiology | Pypper:rule set (micro distribution voting) | 65.51% | 13.8 | 0.113 |
+| audiology | Pypper:rule set (voting) | 63.77% | 13.8 | 0.113 |
 | balance-scale | CN2:cascade (most frequent first) | 75.66% | 64.3 | 0.272 |
 | balance-scale | CN2:cascade (rarest first) | 79.03% | 80.8 | 0.526 |
 | balance-scale | CN2:decision list (per refinement) | 79.36% | 48.9 | 0.434 |
@@ -321,15 +321,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | balance-scale | PFossil:rule set (macro distribution voting) | 82.08% | 26.0 | 0.037 |
 | balance-scale | PFossil:rule set (micro distribution voting) | 80.47% | 26.0 | 0.037 |
 | balance-scale | PFossil:rule set (voting) | 79.67% | 26.0 | 0.037 |
-| balance-scale | Pypper:cascade (most frequent first) | 69.77% | 10.3 | 0.085 |
-| balance-scale | Pypper:cascade (rarest first) | 79.18% | 7.6 | 0.056 |
-| balance-scale | Pypper:decision list (per refinement) | 80.15% | 15.5 | 0.057 |
-| balance-scale | Pypper:decision list (per rule) | 81.59% | 14.4 | 0.096 |
-| balance-scale | Pypper:decision list (per seed example) | 79.19% | 19.9 | 0.062 |
-| balance-scale | Pypper:rule set (best rule) | 80.95% | 14.2 | 0.129 |
-| balance-scale | Pypper:rule set (macro distribution voting) | 80.95% | 14.2 | 0.129 |
-| balance-scale | Pypper:rule set (micro distribution voting) | 80.62% | 14.2 | 0.129 |
-| balance-scale | Pypper:rule set (voting) | 80.47% | 14.2 | 0.129 |
+| balance-scale | Pypper:cascade (most frequent first) | 70.91% | 10.5 | 0.104 |
+| balance-scale | Pypper:cascade (rarest first) | 78.38% | 7.9 | 0.075 |
+| balance-scale | Pypper:decision list (per refinement) | 81.27% | 16.9 | 0.062 |
+| balance-scale | Pypper:decision list (per rule) | 83.04% | 16.2 | 0.103 |
+| balance-scale | Pypper:decision list (per seed example) | 79.99% | 18.5 | 0.057 |
+| balance-scale | Pypper:rule set (best rule) | 81.75% | 15.8 | 0.137 |
+| balance-scale | Pypper:rule set (macro distribution voting) | 81.75% | 15.8 | 0.137 |
+| balance-scale | Pypper:rule set (micro distribution voting) | 81.26% | 15.8 | 0.137 |
+| balance-scale | Pypper:rule set (voting) | 81.26% | 15.8 | 0.137 |
 | banknote-authentication | CN2:concept (majority class) | 99.13% | 13.2 | 0.100 |
 | banknote-authentication | CN2:concept (minority class) | 98.25% | 14.6 | 0.101 |
 | banknote-authentication | CN2:decision list (per refinement) | 98.76% | 13.6 | 0.164 |
@@ -348,15 +348,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | banknote-authentication | PFossil:rule set (macro distribution voting) | 99.05% | 14.0 | 0.021 |
 | banknote-authentication | PFossil:rule set (micro distribution voting) | 94.32% | 14.0 | 0.021 |
 | banknote-authentication | PFossil:rule set (voting) | 97.89% | 14.0 | 0.021 |
-| banknote-authentication | Pypper:concept (majority class) | 98.91% | 5.0 | 0.038 |
-| banknote-authentication | Pypper:concept (minority class) | 98.54% | 4.5 | 0.032 |
-| banknote-authentication | Pypper:decision list (per refinement) | 98.54% | 5.6 | 0.026 |
-| banknote-authentication | Pypper:decision list (per rule) | 98.61% | 5.8 | 0.031 |
-| banknote-authentication | Pypper:decision list (per seed example) | 95.40% | 8.6 | 0.047 |
-| banknote-authentication | Pypper:rule set (best rule) | 98.54% | 9.5 | 0.073 |
-| banknote-authentication | Pypper:rule set (macro distribution voting) | 98.61% | 9.5 | 0.073 |
-| banknote-authentication | Pypper:rule set (micro distribution voting) | 98.54% | 9.5 | 0.073 |
-| banknote-authentication | Pypper:rule set (voting) | 98.61% | 9.5 | 0.073 |
+| banknote-authentication | Pypper:concept (majority class) | 98.91% | 5.2 | 0.043 |
+| banknote-authentication | Pypper:concept (minority class) | 98.47% | 5.2 | 0.038 |
+| banknote-authentication | Pypper:decision list (per refinement) | 98.54% | 6.8 | 0.033 |
+| banknote-authentication | Pypper:decision list (per rule) | 98.69% | 6.2 | 0.032 |
+| banknote-authentication | Pypper:decision list (per seed example) | 95.26% | 8.2 | 0.048 |
+| banknote-authentication | Pypper:rule set (best rule) | 98.61% | 10.4 | 0.077 |
+| banknote-authentication | Pypper:rule set (macro distribution voting) | 98.69% | 10.4 | 0.077 |
+| banknote-authentication | Pypper:rule set (micro distribution voting) | 98.61% | 10.4 | 0.077 |
+| banknote-authentication | Pypper:rule set (voting) | 98.69% | 10.4 | 0.077 |
 | blood-transfusion-service-center | CN2:concept (majority class) | 77.13% | 18.3 | 0.209 |
 | blood-transfusion-service-center | CN2:concept (minority class) | 53.07% | 11.1 | 0.146 |
 | blood-transfusion-service-center | CN2:decision list (per refinement) | 77.53% | 19.1 | 0.328 |
@@ -375,15 +375,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | blood-transfusion-service-center | PFossil:rule set (macro distribution voting) | 76.86% | 1.9 | 0.005 |
 | blood-transfusion-service-center | PFossil:rule set (micro distribution voting) | 76.86% | 1.9 | 0.005 |
 | blood-transfusion-service-center | PFossil:rule set (voting) | 76.86% | 1.9 | 0.005 |
-| blood-transfusion-service-center | Pypper:concept (majority class) | 79.14% | 3.0 | 0.042 |
+| blood-transfusion-service-center | Pypper:concept (majority class) | 75.54% | 2.6 | 0.038 |
 | blood-transfusion-service-center | Pypper:concept (minority class) | 78.33% | 2.0 | 0.024 |
-| blood-transfusion-service-center | Pypper:decision list (per refinement) | 78.20% | 5.9 | 0.026 |
-| blood-transfusion-service-center | Pypper:decision list (per rule) | 78.06% | 3.3 | 0.020 |
-| blood-transfusion-service-center | Pypper:decision list (per seed example) | 77.54% | 8.5 | 0.039 |
-| blood-transfusion-service-center | Pypper:rule set (best rule) | 78.60% | 5.0 | 0.066 |
-| blood-transfusion-service-center | Pypper:rule set (macro distribution voting) | 78.60% | 5.0 | 0.066 |
-| blood-transfusion-service-center | Pypper:rule set (micro distribution voting) | 78.47% | 5.0 | 0.066 |
-| blood-transfusion-service-center | Pypper:rule set (voting) | 78.47% | 5.0 | 0.066 |
+| blood-transfusion-service-center | Pypper:decision list (per refinement) | 78.06% | 6.1 | 0.029 |
+| blood-transfusion-service-center | Pypper:decision list (per rule) | 78.06% | 3.6 | 0.022 |
+| blood-transfusion-service-center | Pypper:decision list (per seed example) | 76.07% | 6.7 | 0.035 |
+| blood-transfusion-service-center | Pypper:rule set (best rule) | 78.47% | 4.6 | 0.063 |
+| blood-transfusion-service-center | Pypper:rule set (macro distribution voting) | 78.60% | 4.6 | 0.063 |
+| blood-transfusion-service-center | Pypper:rule set (micro distribution voting) | 78.34% | 4.6 | 0.063 |
+| blood-transfusion-service-center | Pypper:rule set (voting) | 78.34% | 4.6 | 0.063 |
 | breast-cancer | CN2:concept (majority class) | 63.60% | 16.2 | 0.081 |
 | breast-cancer | CN2:concept (minority class) | 67.13% | 18.8 | 0.104 |
 | breast-cancer | CN2:decision list (per refinement) | 68.95% | 13.3 | 0.086 |
@@ -402,15 +402,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | breast-cancer | PFossil:rule set (macro distribution voting) | 69.98% | 7.4 | 0.012 |
 | breast-cancer | PFossil:rule set (micro distribution voting) | 68.56% | 7.4 | 0.012 |
 | breast-cancer | PFossil:rule set (voting) | 68.92% | 7.4 | 0.012 |
-| breast-cancer | Pypper:concept (majority class) | 70.58% | 1.5 | 0.024 |
-| breast-cancer | Pypper:concept (minority class) | 74.84% | 1.0 | 0.011 |
-| breast-cancer | Pypper:decision list (per refinement) | 75.20% | 1.9 | 0.009 |
-| breast-cancer | Pypper:decision list (per rule) | 74.45% | 2.6 | 0.013 |
-| breast-cancer | Pypper:decision list (per seed example) | 70.91% | 7.8 | 0.022 |
-| breast-cancer | Pypper:rule set (best rule) | 74.84% | 2.5 | 0.034 |
-| breast-cancer | Pypper:rule set (macro distribution voting) | 74.84% | 2.5 | 0.034 |
-| breast-cancer | Pypper:rule set (micro distribution voting) | 75.20% | 2.5 | 0.034 |
-| breast-cancer | Pypper:rule set (voting) | 75.20% | 2.5 | 0.034 |
+| breast-cancer | Pypper:concept (majority class) | 70.58% | 1.4 | 0.022 |
+| breast-cancer | Pypper:concept (minority class) | 74.84% | 1.0 | 0.021 |
+| breast-cancer | Pypper:decision list (per refinement) | 74.80% | 3.3 | 0.012 |
+| breast-cancer | Pypper:decision list (per rule) | 73.72% | 4.6 | 0.022 |
+| breast-cancer | Pypper:decision list (per seed example) | 70.22% | 8.1 | 0.022 |
+| breast-cancer | Pypper:rule set (best rule) | 74.84% | 2.4 | 0.042 |
+| breast-cancer | Pypper:rule set (macro distribution voting) | 74.84% | 2.4 | 0.042 |
+| breast-cancer | Pypper:rule set (micro distribution voting) | 74.84% | 2.4 | 0.042 |
+| breast-cancer | Pypper:rule set (voting) | 74.84% | 2.4 | 0.042 |
 | breast-w | CN2:concept (majority class) | 94.57% | 19.0 | 0.075 |
 | breast-w | CN2:concept (minority class) | 94.71% | 18.1 | 0.045 |
 | breast-w | CN2:decision list (per refinement) | 94.85% | 14.2 | 0.062 |
@@ -429,15 +429,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | breast-w | PFossil:rule set (macro distribution voting) | 94.99% | 15.6 | 0.023 |
 | breast-w | PFossil:rule set (micro distribution voting) | 94.27% | 15.6 | 0.023 |
 | breast-w | PFossil:rule set (voting) | 94.99% | 15.6 | 0.023 |
-| breast-w | Pypper:concept (majority class) | 95.13% | 2.6 | 0.023 |
-| breast-w | Pypper:concept (minority class) | 95.42% | 3.6 | 0.028 |
-| breast-w | Pypper:decision list (per refinement) | 95.14% | 3.9 | 0.018 |
-| breast-w | Pypper:decision list (per rule) | 94.85% | 3.9 | 0.020 |
-| breast-w | Pypper:decision list (per seed example) | 94.85% | 6.4 | 0.020 |
-| breast-w | Pypper:rule set (best rule) | 94.57% | 6.2 | 0.051 |
-| breast-w | Pypper:rule set (macro distribution voting) | 95.00% | 6.2 | 0.051 |
-| breast-w | Pypper:rule set (micro distribution voting) | 94.57% | 6.2 | 0.051 |
-| breast-w | Pypper:rule set (voting) | 95.00% | 6.2 | 0.051 |
+| breast-w | Pypper:concept (majority class) | 95.27% | 2.5 | 0.032 |
+| breast-w | Pypper:concept (minority class) | 95.57% | 3.9 | 0.033 |
+| breast-w | Pypper:decision list (per refinement) | 95.14% | 4.3 | 0.023 |
+| breast-w | Pypper:decision list (per rule) | 95.14% | 4.6 | 0.023 |
+| breast-w | Pypper:decision list (per seed example) | 94.99% | 6.4 | 0.023 |
+| breast-w | Pypper:rule set (best rule) | 94.57% | 6.4 | 0.061 |
+| breast-w | Pypper:rule set (macro distribution voting) | 95.00% | 6.4 | 0.061 |
+| breast-w | Pypper:rule set (micro distribution voting) | 94.71% | 6.4 | 0.061 |
+| breast-w | Pypper:rule set (voting) | 95.00% | 6.4 | 0.061 |
 | car | CN2:cascade (most frequent first) | 98.90% | 31.8 | 0.123 |
 | car | CN2:cascade (rarest first) | 94.21% | 48.0 | 0.272 |
 | car | CN2:decision list (per refinement) | 96.76% | 47.0 | 0.458 |
@@ -456,15 +456,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | car | PFossil:rule set (macro distribution voting) | 93.87% | 16.2 | 0.033 |
 | car | PFossil:rule set (micro distribution voting) | 84.90% | 16.2 | 0.033 |
 | car | PFossil:rule set (voting) | 90.51% | 16.2 | 0.033 |
-| car | Pypper:cascade (most frequent first) | 97.05% | 21.7 | 0.104 |
-| car | Pypper:cascade (rarest first) | 93.63% | 17.1 | 0.181 |
-| car | Pypper:decision list (per refinement) | 94.09% | 16.8 | 0.070 |
-| car | Pypper:decision list (per rule) | 94.74% | 17.1 | 0.151 |
-| car | Pypper:decision list (per seed example) | 92.94% | 26.2 | 0.077 |
-| car | Pypper:rule set (best rule) | 91.32% | 24.1 | 0.235 |
-| car | Pypper:rule set (macro distribution voting) | 91.15% | 24.1 | 0.235 |
-| car | Pypper:rule set (micro distribution voting) | 89.99% | 24.1 | 0.235 |
-| car | Pypper:rule set (voting) | 90.39% | 24.1 | 0.235 |
+| car | Pypper:cascade (most frequent first) | 97.69% | 23.5 | 0.120 |
+| car | Pypper:cascade (rarest first) | 94.56% | 23.2 | 0.242 |
+| car | Pypper:decision list (per refinement) | 95.78% | 22.1 | 0.093 |
+| car | Pypper:decision list (per rule) | 96.30% | 20.2 | 0.169 |
+| car | Pypper:decision list (per seed example) | 93.75% | 26.5 | 0.080 |
+| car | Pypper:rule set (best rule) | 92.36% | 29.7 | 0.288 |
+| car | Pypper:rule set (macro distribution voting) | 92.24% | 29.7 | 0.288 |
+| car | Pypper:rule set (micro distribution voting) | 90.91% | 29.7 | 0.288 |
+| car | Pypper:rule set (voting) | 91.49% | 29.7 | 0.288 |
 | churn | CN2:concept (majority class) | 88.66% | 97.0 | 0.881 |
 | churn | CN2:concept (minority class) | 88.30% | 219.9 | 2.948 |
 | churn | CN2:decision list (per refinement) | 89.46% | 100.8 | 1.409 |
@@ -483,15 +483,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | churn | PFossil:rule set (macro distribution voting) | 89.98% | 9.2 | 0.053 |
 | churn | PFossil:rule set (micro distribution voting) | 89.18% | 9.2 | 0.053 |
 | churn | PFossil:rule set (voting) | 89.00% | 9.2 | 0.053 |
-| churn | Pypper:concept (majority class) | 93.08% | 7.9 | 0.266 |
-| churn | Pypper:concept (minority class) | 93.62% | 9.6 | 0.167 |
-| churn | Pypper:decision list (per refinement) | 93.48% | 12.5 | 0.138 |
-| churn | Pypper:decision list (per rule) | 92.62% | 19.5 | 0.175 |
-| churn | Pypper:decision list (per seed example) | 92.00% | 27.8 | 0.159 |
-| churn | Pypper:rule set (best rule) | 93.42% | 17.5 | 0.442 |
-| churn | Pypper:rule set (macro distribution voting) | 93.42% | 17.5 | 0.442 |
-| churn | Pypper:rule set (micro distribution voting) | 93.36% | 17.5 | 0.442 |
-| churn | Pypper:rule set (voting) | 93.28% | 17.5 | 0.442 |
+| churn | Pypper:concept (majority class) | 93.02% | 7.6 | 0.236 |
+| churn | Pypper:concept (minority class) | 93.92% | 10.6 | 0.202 |
+| churn | Pypper:decision list (per refinement) | 93.52% | 14.2 | 0.164 |
+| churn | Pypper:decision list (per rule) | 93.00% | 20.0 | 0.177 |
+| churn | Pypper:decision list (per seed example) | 92.06% | 20.9 | 0.142 |
+| churn | Pypper:rule set (best rule) | 93.66% | 18.2 | 0.439 |
+| churn | Pypper:rule set (macro distribution voting) | 93.66% | 18.2 | 0.439 |
+| churn | Pypper:rule set (micro distribution voting) | 93.52% | 18.2 | 0.439 |
+| churn | Pypper:rule set (voting) | 93.46% | 18.2 | 0.439 |
 | climate-model-simulation-crashes | CN2:concept (majority class) | 91.48% | 14.3 | 0.073 |
 | climate-model-simulation-crashes | CN2:concept (minority class) | 87.78% | 24.4 | 0.090 |
 | climate-model-simulation-crashes | CN2:decision list (per refinement) | 93.15% | 12.8 | 0.064 |
@@ -510,15 +510,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | climate-model-simulation-crashes | PFossil:rule set (macro distribution voting) | 92.96% | 8.9 | 0.016 |
 | climate-model-simulation-crashes | PFossil:rule set (micro distribution voting) | 92.78% | 8.9 | 0.016 |
 | climate-model-simulation-crashes | PFossil:rule set (voting) | 92.78% | 8.9 | 0.016 |
-| climate-model-simulation-crashes | Pypper:concept (majority class) | 93.15% | 3.7 | 0.023 |
-| climate-model-simulation-crashes | Pypper:concept (minority class) | 93.89% | 1.9 | 0.018 |
-| climate-model-simulation-crashes | Pypper:decision list (per refinement) | 94.07% | 2.1 | 0.011 |
-| climate-model-simulation-crashes | Pypper:decision list (per rule) | 93.89% | 2.7 | 0.015 |
-| climate-model-simulation-crashes | Pypper:decision list (per seed example) | 93.89% | 6.3 | 0.016 |
-| climate-model-simulation-crashes | Pypper:rule set (best rule) | 94.81% | 5.6 | 0.043 |
-| climate-model-simulation-crashes | Pypper:rule set (macro distribution voting) | 94.44% | 5.6 | 0.043 |
-| climate-model-simulation-crashes | Pypper:rule set (micro distribution voting) | 94.81% | 5.6 | 0.043 |
-| climate-model-simulation-crashes | Pypper:rule set (voting) | 94.81% | 5.6 | 0.043 |
+| climate-model-simulation-crashes | Pypper:concept (majority class) | 92.78% | 3.7 | 0.030 |
+| climate-model-simulation-crashes | Pypper:concept (minority class) | 94.07% | 2.9 | 0.027 |
+| climate-model-simulation-crashes | Pypper:decision list (per refinement) | 94.63% | 3.4 | 0.018 |
+| climate-model-simulation-crashes | Pypper:decision list (per rule) | 94.63% | 4.0 | 0.021 |
+| climate-model-simulation-crashes | Pypper:decision list (per seed example) | 94.07% | 6.0 | 0.018 |
+| climate-model-simulation-crashes | Pypper:rule set (best rule) | 95.19% | 6.6 | 0.054 |
+| climate-model-simulation-crashes | Pypper:rule set (macro distribution voting) | 94.81% | 6.6 | 0.054 |
+| climate-model-simulation-crashes | Pypper:rule set (micro distribution voting) | 95.19% | 6.6 | 0.054 |
+| climate-model-simulation-crashes | Pypper:rule set (voting) | 95.19% | 6.6 | 0.054 |
 | cmc | CN2:cascade (most frequent first) | 49.16% | 90.4 | 0.824 |
 | cmc | CN2:cascade (rarest first) | 40.33% | 131.2 | 1.388 |
 | cmc | CN2:decision list (per refinement) | 50.44% | 78.7 | 1.203 |
@@ -537,15 +537,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | cmc | PFossil:rule set (macro distribution voting) | 52.27% | 2.1 | 0.013 |
 | cmc | PFossil:rule set (micro distribution voting) | 51.73% | 2.1 | 0.013 |
 | cmc | PFossil:rule set (voting) | 51.73% | 2.1 | 0.013 |
-| cmc | Pypper:cascade (most frequent first) | 49.70% | 5.6 | 0.098 |
-| cmc | Pypper:cascade (rarest first) | 54.79% | 4.1 | 0.093 |
-| cmc | Pypper:decision list (per refinement) | 50.85% | 8.6 | 0.046 |
-| cmc | Pypper:decision list (per rule) | 49.29% | 5.0 | 0.054 |
-| cmc | Pypper:decision list (per seed example) | 52.89% | 43.5 | 0.310 |
-| cmc | Pypper:rule set (best rule) | 52.41% | 6.5 | 0.124 |
-| cmc | Pypper:rule set (macro distribution voting) | 52.48% | 6.5 | 0.124 |
-| cmc | Pypper:rule set (micro distribution voting) | 52.48% | 6.5 | 0.124 |
-| cmc | Pypper:rule set (voting) | 52.48% | 6.5 | 0.124 |
+| cmc | Pypper:cascade (most frequent first) | 50.92% | 5.9 | 0.105 |
+| cmc | Pypper:cascade (rarest first) | 54.52% | 4.2 | 0.104 |
+| cmc | Pypper:decision list (per refinement) | 49.28% | 10.1 | 0.057 |
+| cmc | Pypper:decision list (per rule) | 50.50% | 6.6 | 0.073 |
+| cmc | Pypper:decision list (per seed example) | 51.06% | 41.5 | 0.291 |
+| cmc | Pypper:rule set (best rule) | 52.21% | 6.5 | 0.140 |
+| cmc | Pypper:rule set (macro distribution voting) | 52.35% | 6.5 | 0.140 |
+| cmc | Pypper:rule set (micro distribution voting) | 52.35% | 6.5 | 0.140 |
+| cmc | Pypper:rule set (voting) | 52.35% | 6.5 | 0.140 |
 | colic | CN2:concept (majority class) | 80.46% | 32.6 | 0.101 |
 | colic | CN2:concept (minority class) | 78.82% | 32.4 | 0.116 |
 | colic | CN2:decision list (per refinement) | 76.91% | 24.8 | 0.142 |
@@ -564,15 +564,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | colic | PFossil:rule set (macro distribution voting) | 81.79% | 19.8 | 0.022 |
 | colic | PFossil:rule set (micro distribution voting) | 86.15% | 19.8 | 0.022 |
 | colic | PFossil:rule set (voting) | 82.88% | 19.8 | 0.022 |
-| colic | Pypper:concept (majority class) | 84.53% | 2.1 | 0.025 |
-| colic | Pypper:concept (minority class) | 85.08% | 1.8 | 0.018 |
-| colic | Pypper:decision list (per refinement) | 84.27% | 4.0 | 0.015 |
-| colic | Pypper:decision list (per rule) | 83.19% | 4.9 | 0.021 |
-| colic | Pypper:decision list (per seed example) | 80.45% | 8.2 | 0.021 |
-| colic | Pypper:rule set (best rule) | 85.88% | 3.9 | 0.043 |
-| colic | Pypper:rule set (macro distribution voting) | 85.88% | 3.9 | 0.043 |
-| colic | Pypper:rule set (micro distribution voting) | 85.88% | 3.9 | 0.043 |
-| colic | Pypper:rule set (voting) | 85.88% | 3.9 | 0.043 |
+| colic | Pypper:concept (majority class) | 84.80% | 2.6 | 0.037 |
+| colic | Pypper:concept (minority class) | 83.72% | 3.0 | 0.034 |
+| colic | Pypper:decision list (per refinement) | 83.19% | 5.8 | 0.021 |
+| colic | Pypper:decision list (per rule) | 81.86% | 7.1 | 0.030 |
+| colic | Pypper:decision list (per seed example) | 84.26% | 7.8 | 0.021 |
+| colic | Pypper:rule set (best rule) | 85.08% | 5.6 | 0.065 |
+| colic | Pypper:rule set (macro distribution voting) | 84.80% | 5.6 | 0.065 |
+| colic | Pypper:rule set (micro distribution voting) | 85.89% | 5.6 | 0.065 |
+| colic | Pypper:rule set (voting) | 85.35% | 5.6 | 0.065 |
 | compas-two-years | CN2:concept (majority class) | 57.35% | 55.8 | 0.792 |
 | compas-two-years | CN2:concept (minority class) | 55.89% | 80.1 | 1.325 |
 | compas-two-years | CN2:decision list (per refinement) | 67.20% | 62.6 | 1.414 |
@@ -591,15 +591,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | compas-two-years | PFossil:rule set (macro distribution voting) | 52.96% | 1.0 | 0.018 |
 | compas-two-years | PFossil:rule set (micro distribution voting) | 52.96% | 1.0 | 0.018 |
 | compas-two-years | PFossil:rule set (voting) | 52.96% | 1.0 | 0.018 |
-| compas-two-years | Pypper:concept (majority class) | 67.56% | 4.1 | 0.316 |
-| compas-two-years | Pypper:concept (minority class) | 67.01% | 4.0 | 0.205 |
-| compas-two-years | Pypper:decision list (per refinement) | 65.93% | 16.7 | 0.200 |
-| compas-two-years | Pypper:decision list (per rule) | 67.13% | 28.9 | 0.340 |
-| compas-two-years | Pypper:decision list (per seed example) | 66.64% | 23.2 | 0.247 |
-| compas-two-years | Pypper:rule set (best rule) | 67.05% | 8.1 | 0.526 |
-| compas-two-years | Pypper:rule set (macro distribution voting) | 67.05% | 8.1 | 0.526 |
-| compas-two-years | Pypper:rule set (micro distribution voting) | 67.13% | 8.1 | 0.526 |
-| compas-two-years | Pypper:rule set (voting) | 67.15% | 8.1 | 0.526 |
+| compas-two-years | Pypper:concept (majority class) | 67.32% | 3.5 | 0.250 |
+| compas-two-years | Pypper:concept (minority class) | 67.03% | 4.8 | 0.205 |
+| compas-two-years | Pypper:decision list (per refinement) | 66.80% | 15.0 | 0.191 |
+| compas-two-years | Pypper:decision list (per rule) | 67.41% | 26.9 | 0.314 |
+| compas-two-years | Pypper:decision list (per seed example) | 65.97% | 17.9 | 0.214 |
+| compas-two-years | Pypper:rule set (best rule) | 67.03% | 8.3 | 0.460 |
+| compas-two-years | Pypper:rule set (macro distribution voting) | 67.03% | 8.3 | 0.460 |
+| compas-two-years | Pypper:rule set (micro distribution voting) | 66.62% | 8.3 | 0.460 |
+| compas-two-years | Pypper:rule set (voting) | 66.62% | 8.3 | 0.460 |
 | credit-approval | CN2:concept (majority class) | 76.96% | 47.1 | 0.318 |
 | credit-approval | CN2:concept (minority class) | 82.46% | 45.0 | 0.264 |
 | credit-approval | CN2:decision list (per refinement) | 80.58% | 25.5 | 0.167 |
@@ -618,15 +618,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | credit-approval | PFossil:rule set (macro distribution voting) | 82.03% | 8.8 | 0.018 |
 | credit-approval | PFossil:rule set (micro distribution voting) | 85.07% | 8.8 | 0.018 |
 | credit-approval | PFossil:rule set (voting) | 82.46% | 8.8 | 0.018 |
-| credit-approval | Pypper:concept (majority class) | 84.93% | 2.6 | 0.034 |
-| credit-approval | Pypper:concept (minority class) | 83.91% | 3.8 | 0.037 |
-| credit-approval | Pypper:decision list (per refinement) | 83.33% | 5.9 | 0.023 |
-| credit-approval | Pypper:decision list (per rule) | 85.94% | 7.4 | 0.032 |
-| credit-approval | Pypper:decision list (per seed example) | 84.64% | 11.0 | 0.029 |
-| credit-approval | Pypper:rule set (best rule) | 84.20% | 6.4 | 0.070 |
-| credit-approval | Pypper:rule set (macro distribution voting) | 84.20% | 6.4 | 0.070 |
-| credit-approval | Pypper:rule set (micro distribution voting) | 83.77% | 6.4 | 0.070 |
-| credit-approval | Pypper:rule set (voting) | 83.04% | 6.4 | 0.070 |
+| credit-approval | Pypper:concept (majority class) | 85.94% | 2.1 | 0.037 |
+| credit-approval | Pypper:concept (minority class) | 85.36% | 2.7 | 0.035 |
+| credit-approval | Pypper:decision list (per refinement) | 83.62% | 5.8 | 0.025 |
+| credit-approval | Pypper:decision list (per rule) | 85.22% | 6.9 | 0.032 |
+| credit-approval | Pypper:decision list (per seed example) | 84.35% | 10.5 | 0.031 |
+| credit-approval | Pypper:rule set (best rule) | 86.09% | 4.8 | 0.068 |
+| credit-approval | Pypper:rule set (macro distribution voting) | 86.09% | 4.8 | 0.068 |
+| credit-approval | Pypper:rule set (micro distribution voting) | 85.51% | 4.8 | 0.068 |
+| credit-approval | Pypper:rule set (voting) | 86.09% | 4.8 | 0.068 |
 | credit-g | CN2:concept (majority class) | 73.10% | 85.4 | 0.501 |
 | credit-g | CN2:concept (minority class) | 65.60% | 102.1 | 0.495 |
 | credit-g | CN2:decision list (per refinement) | 70.60% | 51.3 | 0.314 |
@@ -645,15 +645,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | credit-g | PFossil:rule set (macro distribution voting) | 73.20% | 3.4 | 0.018 |
 | credit-g | PFossil:rule set (micro distribution voting) | 73.30% | 3.4 | 0.018 |
 | credit-g | PFossil:rule set (voting) | 73.20% | 3.4 | 0.018 |
-| credit-g | Pypper:concept (majority class) | 63.30% | 2.3 | 0.056 |
-| credit-g | Pypper:concept (minority class) | 71.10% | 2.8 | 0.042 |
-| credit-g | Pypper:decision list (per refinement) | 71.60% | 5.0 | 0.027 |
-| credit-g | Pypper:decision list (per rule) | 72.00% | 11.2 | 0.058 |
-| credit-g | Pypper:decision list (per seed example) | 72.10% | 15.8 | 0.050 |
-| credit-g | Pypper:rule set (best rule) | 71.40% | 5.1 | 0.098 |
-| credit-g | Pypper:rule set (macro distribution voting) | 71.50% | 5.1 | 0.098 |
-| credit-g | Pypper:rule set (micro distribution voting) | 71.50% | 5.1 | 0.098 |
-| credit-g | Pypper:rule set (voting) | 71.50% | 5.1 | 0.098 |
+| credit-g | Pypper:concept (majority class) | 66.40% | 3.5 | 0.076 |
+| credit-g | Pypper:concept (minority class) | 70.40% | 3.4 | 0.063 |
+| credit-g | Pypper:decision list (per refinement) | 71.10% | 7.4 | 0.041 |
+| credit-g | Pypper:decision list (per rule) | 72.60% | 13.8 | 0.069 |
+| credit-g | Pypper:decision list (per seed example) | 72.30% | 15.5 | 0.053 |
+| credit-g | Pypper:rule set (best rule) | 71.50% | 6.9 | 0.137 |
+| credit-g | Pypper:rule set (macro distribution voting) | 71.50% | 6.9 | 0.137 |
+| credit-g | Pypper:rule set (micro distribution voting) | 71.50% | 6.9 | 0.137 |
+| credit-g | Pypper:rule set (voting) | 71.60% | 6.9 | 0.137 |
 | cylinder-bands | CN2:concept (majority class) | 70.56% | 40.4 | 0.149 |
 | cylinder-bands | CN2:concept (minority class) | 67.22% | 47.9 | 0.281 |
 | cylinder-bands | CN2:decision list (per refinement) | 70.74% | 39.2 | 0.171 |
@@ -672,15 +672,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | cylinder-bands | PFossil:rule set (macro distribution voting) | 70.56% | 9.4 | 0.031 |
 | cylinder-bands | PFossil:rule set (micro distribution voting) | 68.15% | 9.4 | 0.031 |
 | cylinder-bands | PFossil:rule set (voting) | 67.96% | 9.4 | 0.031 |
-| cylinder-bands | Pypper:concept (majority class) | 73.70% | 4.9 | 0.059 |
-| cylinder-bands | Pypper:concept (minority class) | 65.37% | 4.1 | 0.050 |
-| cylinder-bands | Pypper:decision list (per refinement) | 74.81% | 7.5 | 0.034 |
-| cylinder-bands | Pypper:decision list (per rule) | 71.11% | 8.5 | 0.045 |
-| cylinder-bands | Pypper:decision list (per seed example) | 70.19% | 10.9 | 0.034 |
-| cylinder-bands | Pypper:rule set (best rule) | 68.33% | 9.0 | 0.112 |
-| cylinder-bands | Pypper:rule set (macro distribution voting) | 67.96% | 9.0 | 0.112 |
-| cylinder-bands | Pypper:rule set (micro distribution voting) | 67.41% | 9.0 | 0.112 |
-| cylinder-bands | Pypper:rule set (voting) | 68.33% | 9.0 | 0.112 |
+| cylinder-bands | Pypper:concept (majority class) | 71.67% | 4.3 | 0.055 |
+| cylinder-bands | Pypper:concept (minority class) | 66.48% | 3.7 | 0.064 |
+| cylinder-bands | Pypper:decision list (per refinement) | 73.33% | 6.4 | 0.035 |
+| cylinder-bands | Pypper:decision list (per rule) | 70.37% | 7.5 | 0.045 |
+| cylinder-bands | Pypper:decision list (per seed example) | 69.07% | 8.9 | 0.040 |
+| cylinder-bands | Pypper:rule set (best rule) | 67.59% | 8.0 | 0.120 |
+| cylinder-bands | Pypper:rule set (macro distribution voting) | 69.07% | 8.0 | 0.120 |
+| cylinder-bands | Pypper:rule set (micro distribution voting) | 66.67% | 8.0 | 0.120 |
+| cylinder-bands | Pypper:rule set (voting) | 67.78% | 8.0 | 0.120 |
 | diabetes | CN2:concept (majority class) | 71.48% | 44.7 | 0.228 |
 | diabetes | CN2:concept (minority class) | 65.87% | 61.9 | 0.600 |
 | diabetes | CN2:decision list (per refinement) | 73.06% | 37.4 | 0.239 |
@@ -699,15 +699,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | diabetes | PFossil:rule set (macro distribution voting) | 73.83% | 9.1 | 0.018 |
 | diabetes | PFossil:rule set (micro distribution voting) | 75.13% | 9.1 | 0.018 |
 | diabetes | PFossil:rule set (voting) | 74.09% | 9.1 | 0.018 |
-| diabetes | Pypper:concept (majority class) | 71.35% | 3.6 | 0.050 |
-| diabetes | Pypper:concept (minority class) | 75.52% | 3.5 | 0.042 |
-| diabetes | Pypper:decision list (per refinement) | 74.74% | 6.2 | 0.027 |
-| diabetes | Pypper:decision list (per rule) | 75.13% | 10.6 | 0.047 |
-| diabetes | Pypper:decision list (per seed example) | 72.79% | 16.1 | 0.047 |
-| diabetes | Pypper:rule set (best rule) | 76.04% | 7.1 | 0.093 |
-| diabetes | Pypper:rule set (macro distribution voting) | 76.04% | 7.1 | 0.093 |
-| diabetes | Pypper:rule set (micro distribution voting) | 75.78% | 7.1 | 0.093 |
-| diabetes | Pypper:rule set (voting) | 75.91% | 7.1 | 0.093 |
+| diabetes | Pypper:concept (majority class) | 71.35% | 3.9 | 0.062 |
+| diabetes | Pypper:concept (minority class) | 74.22% | 3.8 | 0.050 |
+| diabetes | Pypper:decision list (per refinement) | 74.35% | 6.7 | 0.033 |
+| diabetes | Pypper:decision list (per rule) | 73.43% | 10.9 | 0.058 |
+| diabetes | Pypper:decision list (per seed example) | 73.83% | 13.2 | 0.041 |
+| diabetes | Pypper:rule set (best rule) | 74.61% | 7.7 | 0.111 |
+| diabetes | Pypper:rule set (macro distribution voting) | 74.48% | 7.7 | 0.111 |
+| diabetes | Pypper:rule set (micro distribution voting) | 74.48% | 7.7 | 0.111 |
+| diabetes | Pypper:rule set (voting) | 74.35% | 7.7 | 0.111 |
 | dna | CN2:cascade (most frequent first) | 91.43% | 90.1 | 0.742 |
 | dna | CN2:cascade (rarest first) | 84.15% | 82.1 | 1.110 |
 | dna | CN2:decision list (per refinement) | 88.48% | 84.7 | 0.930 |
@@ -726,15 +726,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | dna | PFossil:rule set (macro distribution voting) | 93.53% | 27.8 | 0.100 |
 | dna | PFossil:rule set (micro distribution voting) | 89.89% | 27.8 | 0.100 |
 | dna | PFossil:rule set (voting) | 90.65% | 27.8 | 0.100 |
-| dna | Pypper:cascade (most frequent first) | 91.18% | 19.3 | 0.202 |
-| dna | Pypper:cascade (rarest first) | 92.22% | 13.2 | 0.230 |
-| dna | Pypper:decision list (per refinement) | 90.74% | 20.1 | 0.142 |
-| dna | Pypper:decision list (per rule) | 92.84% | 17.3 | 0.190 |
-| dna | Pypper:decision list (per seed example) | 91.37% | 24.1 | 0.112 |
-| dna | Pypper:rule set (best rule) | 93.75% | 22.6 | 0.374 |
-| dna | Pypper:rule set (macro distribution voting) | 93.60% | 22.6 | 0.374 |
-| dna | Pypper:rule set (micro distribution voting) | 93.31% | 22.6 | 0.374 |
-| dna | Pypper:rule set (voting) | 93.60% | 22.6 | 0.374 |
+| dna | Pypper:cascade (most frequent first) | 91.12% | 23.1 | 0.285 |
+| dna | Pypper:cascade (rarest first) | 92.12% | 15.8 | 0.323 |
+| dna | Pypper:decision list (per refinement) | 91.12% | 22.5 | 0.157 |
+| dna | Pypper:decision list (per rule) | 92.97% | 19.2 | 0.210 |
+| dna | Pypper:decision list (per seed example) | 92.09% | 23.4 | 0.108 |
+| dna | Pypper:rule set (best rule) | 93.13% | 29.0 | 0.537 |
+| dna | Pypper:rule set (macro distribution voting) | 93.13% | 29.0 | 0.537 |
+| dna | Pypper:rule set (micro distribution voting) | 93.16% | 29.0 | 0.537 |
+| dna | Pypper:rule set (voting) | 93.22% | 29.0 | 0.537 |
 | dresses-sales | CN2:concept (majority class) | 53.60% | 13.0 | 0.065 |
 | dresses-sales | CN2:concept (minority class) | 57.20% | 11.2 | 0.052 |
 | dresses-sales | CN2:decision list (per refinement) | 57.60% | 15.1 | 0.082 |
@@ -753,15 +753,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | dresses-sales | PFossil:rule set (macro distribution voting) | 59.40% | 2.2 | 0.013 |
 | dresses-sales | PFossil:rule set (micro distribution voting) | 59.20% | 2.2 | 0.013 |
 | dresses-sales | PFossil:rule set (voting) | 59.20% | 2.2 | 0.013 |
-| dresses-sales | Pypper:concept (majority class) | 51.80% | 1.0 | 0.035 |
-| dresses-sales | Pypper:concept (minority class) | 61.20% | 1.1 | 0.021 |
-| dresses-sales | Pypper:decision list (per refinement) | 59.00% | 7.2 | 0.024 |
-| dresses-sales | Pypper:decision list (per rule) | 53.40% | 7.6 | 0.035 |
-| dresses-sales | Pypper:decision list (per seed example) | 60.20% | 11.3 | 0.033 |
-| dresses-sales | Pypper:rule set (best rule) | 60.40% | 2.1 | 0.055 |
-| dresses-sales | Pypper:rule set (macro distribution voting) | 60.40% | 2.1 | 0.055 |
-| dresses-sales | Pypper:rule set (micro distribution voting) | 60.60% | 2.1 | 0.055 |
-| dresses-sales | Pypper:rule set (voting) | 60.60% | 2.1 | 0.055 |
+| dresses-sales | Pypper:concept (majority class) | 53.40% | 0.9 | 0.040 |
+| dresses-sales | Pypper:concept (minority class) | 61.00% | 0.9 | 0.023 |
+| dresses-sales | Pypper:decision list (per refinement) | 59.40% | 8.0 | 0.033 |
+| dresses-sales | Pypper:decision list (per rule) | 58.20% | 8.4 | 0.043 |
+| dresses-sales | Pypper:decision list (per seed example) | 58.40% | 10.5 | 0.034 |
+| dresses-sales | Pypper:rule set (best rule) | 61.00% | 1.8 | 0.061 |
+| dresses-sales | Pypper:rule set (macro distribution voting) | 61.00% | 1.8 | 0.061 |
+| dresses-sales | Pypper:rule set (micro distribution voting) | 60.80% | 1.8 | 0.061 |
+| dresses-sales | Pypper:rule set (voting) | 60.80% | 1.8 | 0.061 |
 | ecoli | CN2:cascade (most frequent first) | 82.76% | 19.7 | 0.193 |
 | ecoli | CN2:cascade (rarest first) | 75.96% | 21.0 | 0.209 |
 | ecoli | CN2:decision list (per refinement) | 82.82% | 14.4 | 0.376 |
@@ -780,15 +780,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | ecoli | PFossil:rule set (macro distribution voting) | 82.22% | 30.0 | 0.037 |
 | ecoli | PFossil:rule set (micro distribution voting) | 84.29% | 30.0 | 0.037 |
 | ecoli | PFossil:rule set (voting) | 83.98% | 30.0 | 0.037 |
-| ecoli | Pypper:cascade (most frequent first) | 81.92% | 8.0 | 0.057 |
-| ecoli | Pypper:cascade (rarest first) | 80.70% | 7.3 | 0.048 |
-| ecoli | Pypper:decision list (per refinement) | 81.60% | 11.5 | 0.035 |
-| ecoli | Pypper:decision list (per rule) | 80.71% | 11.6 | 0.112 |
-| ecoli | Pypper:decision list (per seed example) | 83.08% | 10.9 | 0.029 |
-| ecoli | Pypper:rule set (best rule) | 81.91% | 10.4 | 0.078 |
-| ecoli | Pypper:rule set (macro distribution voting) | 81.30% | 10.4 | 0.078 |
-| ecoli | Pypper:rule set (micro distribution voting) | 81.29% | 10.4 | 0.078 |
-| ecoli | Pypper:rule set (voting) | 81.29% | 10.4 | 0.078 |
+| ecoli | Pypper:cascade (most frequent first) | 81.61% | 8.0 | 0.058 |
+| ecoli | Pypper:cascade (rarest first) | 81.01% | 7.6 | 0.053 |
+| ecoli | Pypper:decision list (per refinement) | 82.18% | 10.9 | 0.033 |
+| ecoli | Pypper:decision list (per rule) | 81.31% | 11.2 | 0.115 |
+| ecoli | Pypper:decision list (per seed example) | 82.75% | 10.6 | 0.033 |
+| ecoli | Pypper:rule set (best rule) | 82.22% | 10.7 | 0.081 |
+| ecoli | Pypper:rule set (macro distribution voting) | 81.91% | 10.7 | 0.081 |
+| ecoli | Pypper:rule set (micro distribution voting) | 81.60% | 10.7 | 0.081 |
+| ecoli | Pypper:rule set (voting) | 81.60% | 10.7 | 0.081 |
 | glass | CN2:cascade (most frequent first) | 70.61% | 21.4 | 0.249 |
 | glass | CN2:cascade (rarest first) | 68.79% | 22.5 | 0.204 |
 | glass | CN2:decision list (per refinement) | 70.11% | 17.2 | 0.643 |
@@ -807,15 +807,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | glass | PFossil:rule set (macro distribution voting) | 70.58% | 31.2 | 0.036 |
 | glass | PFossil:rule set (micro distribution voting) | 70.11% | 31.2 | 0.036 |
 | glass | PFossil:rule set (voting) | 69.68% | 31.2 | 0.036 |
-| glass | Pypper:cascade (most frequent first) | 66.26% | 8.5 | 0.052 |
-| glass | Pypper:cascade (rarest first) | 68.33% | 6.1 | 0.044 |
-| glass | Pypper:decision list (per refinement) | 66.41% | 9.3 | 0.025 |
-| glass | Pypper:decision list (per rule) | 68.68% | 8.6 | 0.077 |
-| glass | Pypper:decision list (per seed example) | 64.94% | 12.7 | 0.033 |
-| glass | Pypper:rule set (best rule) | 64.55% | 9.1 | 0.069 |
-| glass | Pypper:rule set (macro distribution voting) | 62.68% | 9.1 | 0.069 |
-| glass | Pypper:rule set (micro distribution voting) | 62.75% | 9.1 | 0.069 |
-| glass | Pypper:rule set (voting) | 64.52% | 9.1 | 0.069 |
+| glass | Pypper:cascade (most frequent first) | 68.16% | 8.9 | 0.058 |
+| glass | Pypper:cascade (rarest first) | 67.38% | 6.2 | 0.049 |
+| glass | Pypper:decision list (per refinement) | 65.89% | 9.0 | 0.026 |
+| glass | Pypper:decision list (per rule) | 67.73% | 7.6 | 0.071 |
+| glass | Pypper:decision list (per seed example) | 65.95% | 11.5 | 0.032 |
+| glass | Pypper:rule set (best rule) | 67.77% | 9.6 | 0.085 |
+| glass | Pypper:rule set (macro distribution voting) | 65.91% | 9.6 | 0.085 |
+| glass | Pypper:rule set (micro distribution voting) | 67.32% | 9.6 | 0.085 |
+| glass | Pypper:rule set (voting) | 67.27% | 9.6 | 0.085 |
 | hayes-roth | CN2:cascade (most frequent first) | 80.62% | 11.4 | 0.057 |
 | hayes-roth | CN2:cascade (rarest first) | 82.50% | 10.7 | 0.046 |
 | hayes-roth | CN2:decision list (per refinement) | 82.50% | 9.8 | 0.062 |
@@ -834,15 +834,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | hayes-roth | PFossil:rule set (macro distribution voting) | 81.88% | 13.5 | 0.013 |
 | hayes-roth | PFossil:rule set (micro distribution voting) | 81.88% | 13.5 | 0.013 |
 | hayes-roth | PFossil:rule set (voting) | 81.25% | 13.5 | 0.013 |
-| hayes-roth | Pypper:cascade (most frequent first) | 75.62% | 4.2 | 0.021 |
-| hayes-roth | Pypper:cascade (rarest first) | 84.38% | 6.1 | 0.025 |
-| hayes-roth | Pypper:decision list (per refinement) | 78.12% | 7.7 | 0.016 |
-| hayes-roth | Pypper:decision list (per rule) | 82.50% | 8.0 | 0.028 |
-| hayes-roth | Pypper:decision list (per seed example) | 70.00% | 9.8 | 0.022 |
-| hayes-roth | Pypper:rule set (best rule) | 79.38% | 9.4 | 0.042 |
-| hayes-roth | Pypper:rule set (macro distribution voting) | 79.38% | 9.4 | 0.042 |
-| hayes-roth | Pypper:rule set (micro distribution voting) | 75.00% | 9.4 | 0.042 |
-| hayes-roth | Pypper:rule set (voting) | 75.00% | 9.4 | 0.042 |
+| hayes-roth | Pypper:cascade (most frequent first) | 76.25% | 4.8 | 0.027 |
+| hayes-roth | Pypper:cascade (rarest first) | 84.38% | 6.1 | 0.028 |
+| hayes-roth | Pypper:decision list (per refinement) | 78.12% | 7.8 | 0.018 |
+| hayes-roth | Pypper:decision list (per rule) | 81.88% | 9.0 | 0.033 |
+| hayes-roth | Pypper:decision list (per seed example) | 70.62% | 9.1 | 0.023 |
+| hayes-roth | Pypper:rule set (best rule) | 80.62% | 10.3 | 0.054 |
+| hayes-roth | Pypper:rule set (macro distribution voting) | 79.38% | 10.3 | 0.054 |
+| hayes-roth | Pypper:rule set (micro distribution voting) | 74.38% | 10.3 | 0.054 |
+| hayes-roth | Pypper:rule set (voting) | 73.12% | 10.3 | 0.054 |
 | heart-c | CN2:concept (majority class) | 75.56% | 25.1 | 0.099 |
 | heart-c | CN2:concept (minority class) | 77.95% | 26.6 | 0.124 |
 | heart-c | CN2:decision list (per refinement) | 76.90% | 19.7 | 0.109 |
@@ -861,15 +861,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | heart-c | PFossil:rule set (macro distribution voting) | 79.88% | 18.2 | 0.024 |
 | heart-c | PFossil:rule set (micro distribution voting) | 77.24% | 18.2 | 0.024 |
 | heart-c | PFossil:rule set (voting) | 78.24% | 18.2 | 0.024 |
-| heart-c | Pypper:concept (majority class) | 82.27% | 2.7 | 0.024 |
-| heart-c | Pypper:concept (minority class) | 81.55% | 3.0 | 0.022 |
-| heart-c | Pypper:decision list (per refinement) | 83.19% | 3.9 | 0.013 |
-| heart-c | Pypper:decision list (per rule) | 82.87% | 5.9 | 0.023 |
-| heart-c | Pypper:decision list (per seed example) | 82.55% | 9.1 | 0.020 |
-| heart-c | Pypper:rule set (best rule) | 82.55% | 5.7 | 0.045 |
-| heart-c | Pypper:rule set (macro distribution voting) | 82.55% | 5.7 | 0.045 |
-| heart-c | Pypper:rule set (micro distribution voting) | 82.56% | 5.7 | 0.045 |
-| heart-c | Pypper:rule set (voting) | 82.56% | 5.7 | 0.045 |
+| heart-c | Pypper:concept (majority class) | 82.60% | 2.7 | 0.031 |
+| heart-c | Pypper:concept (minority class) | 79.23% | 3.4 | 0.034 |
+| heart-c | Pypper:decision list (per refinement) | 80.87% | 5.4 | 0.017 |
+| heart-c | Pypper:decision list (per rule) | 82.91% | 5.2 | 0.022 |
+| heart-c | Pypper:decision list (per seed example) | 83.53% | 7.8 | 0.020 |
+| heart-c | Pypper:rule set (best rule) | 80.22% | 6.1 | 0.060 |
+| heart-c | Pypper:rule set (macro distribution voting) | 79.88% | 6.1 | 0.060 |
+| heart-c | Pypper:rule set (micro distribution voting) | 82.22% | 6.1 | 0.060 |
+| heart-c | Pypper:rule set (voting) | 81.89% | 6.1 | 0.060 |
 | heart-h | CN2:concept (majority class) | 78.60% | 22.4 | 0.105 |
 | heart-h | CN2:concept (minority class) | 76.20% | 27.7 | 0.178 |
 | heart-h | CN2:decision list (per refinement) | 77.60% | 15.7 | 0.105 |
@@ -888,15 +888,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | heart-h | PFossil:rule set (macro distribution voting) | 79.92% | 17.2 | 0.020 |
 | heart-h | PFossil:rule set (micro distribution voting) | 78.93% | 17.2 | 0.020 |
 | heart-h | PFossil:rule set (voting) | 80.94% | 17.2 | 0.020 |
-| heart-h | Pypper:concept (majority class) | 75.45% | 2.5 | 0.026 |
-| heart-h | Pypper:concept (minority class) | 78.54% | 1.9 | 0.017 |
-| heart-h | Pypper:decision list (per refinement) | 80.25% | 2.8 | 0.011 |
-| heart-h | Pypper:decision list (per rule) | 79.23% | 4.5 | 0.019 |
-| heart-h | Pypper:decision list (per seed example) | 75.82% | 7.8 | 0.022 |
-| heart-h | Pypper:rule set (best rule) | 78.20% | 4.4 | 0.041 |
-| heart-h | Pypper:rule set (macro distribution voting) | 78.20% | 4.4 | 0.041 |
-| heart-h | Pypper:rule set (micro distribution voting) | 77.85% | 4.4 | 0.041 |
-| heart-h | Pypper:rule set (voting) | 77.85% | 4.4 | 0.041 |
+| heart-h | Pypper:concept (majority class) | 76.14% | 3.1 | 0.028 |
+| heart-h | Pypper:concept (minority class) | 76.82% | 1.8 | 0.019 |
+| heart-h | Pypper:decision list (per refinement) | 79.90% | 3.4 | 0.013 |
+| heart-h | Pypper:decision list (per rule) | 78.23% | 5.7 | 0.023 |
+| heart-h | Pypper:decision list (per seed example) | 77.18% | 6.3 | 0.021 |
+| heart-h | Pypper:rule set (best rule) | 77.17% | 4.9 | 0.049 |
+| heart-h | Pypper:rule set (macro distribution voting) | 77.17% | 4.9 | 0.049 |
+| heart-h | Pypper:rule set (micro distribution voting) | 76.83% | 4.9 | 0.049 |
+| heart-h | Pypper:rule set (voting) | 76.83% | 4.9 | 0.049 |
 | heart-statlog | CN2:concept (majority class) | 72.96% | 23.1 | 0.098 |
 | heart-statlog | CN2:concept (minority class) | 74.44% | 24.6 | 0.116 |
 | heart-statlog | CN2:decision list (per refinement) | 75.19% | 16.2 | 0.085 |
@@ -915,15 +915,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | heart-statlog | PFossil:rule set (macro distribution voting) | 79.26% | 17.6 | 0.023 |
 | heart-statlog | PFossil:rule set (micro distribution voting) | 80.00% | 17.6 | 0.023 |
 | heart-statlog | PFossil:rule set (voting) | 79.26% | 17.6 | 0.023 |
-| heart-statlog | Pypper:concept (majority class) | 83.70% | 2.7 | 0.025 |
-| heart-statlog | Pypper:concept (minority class) | 79.26% | 2.3 | 0.020 |
-| heart-statlog | Pypper:decision list (per refinement) | 80.00% | 3.7 | 0.013 |
-| heart-statlog | Pypper:decision list (per rule) | 80.74% | 5.9 | 0.022 |
-| heart-statlog | Pypper:decision list (per seed example) | 81.11% | 7.9 | 0.018 |
-| heart-statlog | Pypper:rule set (best rule) | 79.26% | 5.0 | 0.041 |
-| heart-statlog | Pypper:rule set (macro distribution voting) | 79.63% | 5.0 | 0.041 |
-| heart-statlog | Pypper:rule set (micro distribution voting) | 80.74% | 5.0 | 0.041 |
-| heart-statlog | Pypper:rule set (voting) | 80.74% | 5.0 | 0.041 |
+| heart-statlog | Pypper:concept (majority class) | 83.33% | 2.6 | 0.026 |
+| heart-statlog | Pypper:concept (minority class) | 81.48% | 2.9 | 0.026 |
+| heart-statlog | Pypper:decision list (per refinement) | 79.26% | 4.9 | 0.016 |
+| heart-statlog | Pypper:decision list (per rule) | 80.00% | 5.0 | 0.021 |
+| heart-statlog | Pypper:decision list (per seed example) | 80.37% | 7.6 | 0.021 |
+| heart-statlog | Pypper:rule set (best rule) | 81.85% | 5.5 | 0.052 |
+| heart-statlog | Pypper:rule set (macro distribution voting) | 82.22% | 5.5 | 0.052 |
+| heart-statlog | Pypper:rule set (micro distribution voting) | 82.59% | 5.5 | 0.052 |
+| heart-statlog | Pypper:rule set (voting) | 82.59% | 5.5 | 0.052 |
 | heloc | CN2:concept (majority class) | 58.33% | 292.7 | 4.440 |
 | heloc | CN2:concept (minority class) | 61.86% | 467.9 | 8.216 |
 | heloc | CN2:decision list (per refinement) | 69.67% | 175.6 | 3.769 |
@@ -942,15 +942,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | heloc | PFossil:rule set (macro distribution voting) | 68.83% | 2.0 | 0.044 |
 | heloc | PFossil:rule set (micro distribution voting) | 68.83% | 2.0 | 0.044 |
 | heloc | PFossil:rule set (voting) | 68.83% | 2.0 | 0.044 |
-| heloc | Pypper:concept (majority class) | 70.61% | 7.3 | 0.555 |
-| heloc | Pypper:concept (minority class) | 70.12% | 6.8 | 0.589 |
-| heloc | Pypper:decision list (per refinement) | 70.14% | 24.1 | 0.552 |
-| heloc | Pypper:decision list (per rule) | 70.29% | 34.9 | 0.640 |
-| heloc | Pypper:decision list (per seed example) | 69.85% | 48.7 | 0.537 |
-| heloc | Pypper:rule set (best rule) | 70.45% | 14.1 | 1.139 |
-| heloc | Pypper:rule set (macro distribution voting) | 70.47% | 14.1 | 1.139 |
-| heloc | Pypper:rule set (micro distribution voting) | 70.23% | 14.1 | 1.139 |
-| heloc | Pypper:rule set (voting) | 70.26% | 14.1 | 1.139 |
+| heloc | Pypper:concept (majority class) | 69.80% | 7.2 | 0.552 |
+| heloc | Pypper:concept (minority class) | 70.13% | 8.5 | 0.568 |
+| heloc | Pypper:decision list (per refinement) | 70.09% | 24.8 | 0.601 |
+| heloc | Pypper:decision list (per rule) | 70.26% | 33.5 | 0.618 |
+| heloc | Pypper:decision list (per seed example) | 69.62% | 44.7 | 0.519 |
+| heloc | Pypper:rule set (best rule) | 69.81% | 15.7 | 1.128 |
+| heloc | Pypper:rule set (macro distribution voting) | 69.87% | 15.7 | 1.128 |
+| heloc | Pypper:rule set (micro distribution voting) | 69.88% | 15.7 | 1.128 |
+| heloc | Pypper:rule set (voting) | 69.75% | 15.7 | 1.128 |
 | hepatitis | CN2:concept (majority class) | 76.79% | 10.7 | 0.035 |
 | hepatitis | CN2:concept (minority class) | 74.42% | 11.5 | 0.039 |
 | hepatitis | CN2:decision list (per refinement) | 82.08% | 9.3 | 0.039 |
@@ -969,15 +969,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | hepatitis | PFossil:rule set (macro distribution voting) | 77.54% | 15.0 | 0.015 |
 | hepatitis | PFossil:rule set (micro distribution voting) | 80.04% | 15.0 | 0.015 |
 | hepatitis | PFossil:rule set (voting) | 78.75% | 15.0 | 0.015 |
-| hepatitis | Pypper:concept (majority class) | 72.17% | 2.1 | 0.015 |
-| hepatitis | Pypper:concept (minority class) | 79.42% | 1.7 | 0.010 |
-| hepatitis | Pypper:decision list (per refinement) | 80.08% | 1.8 | 0.006 |
-| hepatitis | Pypper:decision list (per rule) | 79.46% | 3.4 | 0.012 |
-| hepatitis | Pypper:decision list (per seed example) | 79.42% | 5.6 | 0.012 |
-| hepatitis | Pypper:rule set (best rule) | 80.04% | 3.8 | 0.029 |
-| hepatitis | Pypper:rule set (macro distribution voting) | 80.67% | 3.8 | 0.029 |
-| hepatitis | Pypper:rule set (micro distribution voting) | 80.04% | 3.8 | 0.029 |
-| hepatitis | Pypper:rule set (voting) | 80.67% | 3.8 | 0.029 |
+| hepatitis | Pypper:concept (majority class) | 72.17% | 2.1 | 0.016 |
+| hepatitis | Pypper:concept (minority class) | 80.75% | 2.1 | 0.015 |
+| hepatitis | Pypper:decision list (per refinement) | 78.25% | 3.4 | 0.010 |
+| hepatitis | Pypper:decision list (per rule) | 77.54% | 4.8 | 0.016 |
+| hepatitis | Pypper:decision list (per seed example) | 80.08% | 5.7 | 0.014 |
+| hepatitis | Pypper:rule set (best rule) | 80.71% | 4.2 | 0.031 |
+| hepatitis | Pypper:rule set (macro distribution voting) | 82.00% | 4.2 | 0.031 |
+| hepatitis | Pypper:rule set (micro distribution voting) | 80.04% | 4.2 | 0.031 |
+| hepatitis | Pypper:rule set (voting) | 80.67% | 4.2 | 0.031 |
 | ilpd | CN2:concept (majority class) | 69.12% | 25.5 | 0.195 |
 | ilpd | CN2:concept (minority class) | 61.22% | 54.5 | 0.482 |
 | ilpd | CN2:decision list (per refinement) | 69.63% | 20.1 | 0.137 |
@@ -996,15 +996,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | ilpd | PFossil:rule set (macro distribution voting) | 63.28% | 2.8 | 0.009 |
 | ilpd | PFossil:rule set (micro distribution voting) | 63.28% | 2.8 | 0.009 |
 | ilpd | PFossil:rule set (voting) | 63.28% | 2.8 | 0.009 |
-| ilpd | Pypper:concept (majority class) | 61.06% | 1.8 | 0.043 |
-| ilpd | Pypper:concept (minority class) | 68.97% | 1.5 | 0.019 |
-| ilpd | Pypper:decision list (per refinement) | 70.85% | 2.2 | 0.013 |
-| ilpd | Pypper:decision list (per rule) | 68.26% | 11.1 | 0.052 |
-| ilpd | Pypper:decision list (per seed example) | 70.16% | 13.5 | 0.047 |
-| ilpd | Pypper:rule set (best rule) | 69.66% | 3.3 | 0.064 |
-| ilpd | Pypper:rule set (macro distribution voting) | 69.66% | 3.3 | 0.064 |
-| ilpd | Pypper:rule set (micro distribution voting) | 69.66% | 3.3 | 0.064 |
-| ilpd | Pypper:rule set (voting) | 69.66% | 3.3 | 0.064 |
+| ilpd | Pypper:concept (majority class) | 59.35% | 1.7 | 0.042 |
+| ilpd | Pypper:concept (minority class) | 68.45% | 1.2 | 0.023 |
+| ilpd | Pypper:decision list (per refinement) | 70.68% | 2.6 | 0.016 |
+| ilpd | Pypper:decision list (per rule) | 69.28% | 10.1 | 0.047 |
+| ilpd | Pypper:decision list (per seed example) | 70.32% | 13.5 | 0.040 |
+| ilpd | Pypper:rule set (best rule) | 69.14% | 2.9 | 0.064 |
+| ilpd | Pypper:rule set (macro distribution voting) | 69.14% | 2.9 | 0.064 |
+| ilpd | Pypper:rule set (micro distribution voting) | 69.14% | 2.9 | 0.064 |
+| ilpd | Pypper:rule set (voting) | 69.14% | 2.9 | 0.064 |
 | ionosphere | CN2:concept (majority class) | 84.60% | 13.2 | 0.111 |
 | ionosphere | CN2:concept (minority class) | 91.17% | 13.9 | 0.053 |
 | ionosphere | CN2:decision list (per refinement) | 89.17% | 13.5 | 0.058 |
@@ -1023,15 +1023,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | ionosphere | PFossil:rule set (macro distribution voting) | 90.03% | 13.6 | 0.020 |
 | ionosphere | PFossil:rule set (micro distribution voting) | 89.75% | 13.6 | 0.020 |
 | ionosphere | PFossil:rule set (voting) | 90.03% | 13.6 | 0.020 |
-| ionosphere | Pypper:concept (majority class) | 89.46% | 2.6 | 0.029 |
-| ionosphere | Pypper:concept (minority class) | 89.47% | 3.8 | 0.024 |
-| ionosphere | Pypper:decision list (per refinement) | 89.47% | 4.7 | 0.016 |
-| ionosphere | Pypper:decision list (per rule) | 88.34% | 3.9 | 0.026 |
-| ionosphere | Pypper:decision list (per seed example) | 86.33% | 6.4 | 0.028 |
-| ionosphere | Pypper:rule set (best rule) | 90.61% | 6.4 | 0.050 |
-| ionosphere | Pypper:rule set (macro distribution voting) | 90.61% | 6.4 | 0.050 |
-| ionosphere | Pypper:rule set (micro distribution voting) | 91.17% | 6.4 | 0.050 |
-| ionosphere | Pypper:rule set (voting) | 90.89% | 6.4 | 0.050 |
+| ionosphere | Pypper:concept (majority class) | 90.60% | 2.2 | 0.028 |
+| ionosphere | Pypper:concept (minority class) | 89.17% | 4.4 | 0.028 |
+| ionosphere | Pypper:decision list (per refinement) | 88.89% | 5.3 | 0.018 |
+| ionosphere | Pypper:decision list (per rule) | 89.20% | 3.9 | 0.019 |
+| ionosphere | Pypper:decision list (per seed example) | 87.18% | 6.4 | 0.020 |
+| ionosphere | Pypper:rule set (best rule) | 90.60% | 6.6 | 0.054 |
+| ionosphere | Pypper:rule set (macro distribution voting) | 89.75% | 6.6 | 0.054 |
+| ionosphere | Pypper:rule set (micro distribution voting) | 90.03% | 6.6 | 0.054 |
+| ionosphere | Pypper:rule set (voting) | 90.32% | 6.6 | 0.054 |
 | iris | CN2:cascade (most frequent first) | 92.67% | 4.6 | 0.013 |
 | iris | CN2:cascade (rarest first) | 92.67% | 4.6 | 0.013 |
 | iris | CN2:decision list (per refinement) | 94.67% | 4.0 | 0.026 |
@@ -1050,15 +1050,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | iris | PFossil:rule set (macro distribution voting) | 92.00% | 5.8 | 0.006 |
 | iris | PFossil:rule set (micro distribution voting) | 92.00% | 5.8 | 0.006 |
 | iris | PFossil:rule set (voting) | 91.33% | 5.8 | 0.006 |
-| iris | Pypper:cascade (most frequent first) | 93.33% | 2.0 | 0.010 |
-| iris | Pypper:cascade (rarest first) | 93.33% | 2.0 | 0.010 |
-| iris | Pypper:decision list (per refinement) | 92.67% | 2.6 | 0.006 |
-| iris | Pypper:decision list (per rule) | 92.67% | 2.6 | 0.010 |
-| iris | Pypper:decision list (per seed example) | 92.00% | 2.9 | 0.017 |
-| iris | Pypper:rule set (best rule) | 92.00% | 3.7 | 0.020 |
-| iris | Pypper:rule set (macro distribution voting) | 92.00% | 3.7 | 0.020 |
-| iris | Pypper:rule set (micro distribution voting) | 92.00% | 3.7 | 0.020 |
-| iris | Pypper:rule set (voting) | 92.00% | 3.7 | 0.020 |
+| iris | Pypper:cascade (most frequent first) | 93.33% | 2.0 | 0.013 |
+| iris | Pypper:cascade (rarest first) | 93.33% | 2.0 | 0.011 |
+| iris | Pypper:decision list (per refinement) | 92.67% | 2.9 | 0.007 |
+| iris | Pypper:decision list (per rule) | 92.67% | 2.7 | 0.011 |
+| iris | Pypper:decision list (per seed example) | 92.00% | 2.5 | 0.023 |
+| iris | Pypper:rule set (best rule) | 92.00% | 3.6 | 0.022 |
+| iris | Pypper:rule set (macro distribution voting) | 92.00% | 3.6 | 0.022 |
+| iris | Pypper:rule set (micro distribution voting) | 92.00% | 3.6 | 0.022 |
+| iris | Pypper:rule set (voting) | 92.00% | 3.6 | 0.022 |
 | kc1 | CN2:concept (majority class) | 83.88% | 49.0 | 1.773 |
 | kc1 | CN2:concept (minority class) | 65.39% | 110.5 | 10.513 |
 | kc1 | CN2:decision list (per refinement) | 84.35% | 52.1 | 2.284 |
@@ -1077,15 +1077,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | kc1 | PFossil:rule set (macro distribution voting) | 83.31% | 3.5 | 0.018 |
 | kc1 | PFossil:rule set (micro distribution voting) | 83.31% | 3.5 | 0.018 |
 | kc1 | PFossil:rule set (voting) | 83.31% | 3.5 | 0.018 |
-| kc1 | Pypper:concept (majority class) | 64.39% | 1.0 | 0.099 |
-| kc1 | Pypper:concept (minority class) | 84.64% | 2.0 | 0.034 |
-| kc1 | Pypper:decision list (per refinement) | 84.92% | 2.8 | 0.027 |
-| kc1 | Pypper:decision list (per rule) | 85.02% | 8.7 | 0.070 |
-| kc1 | Pypper:decision list (per seed example) | 85.06% | 18.1 | 0.114 |
-| kc1 | Pypper:rule set (best rule) | 84.64% | 3.0 | 0.134 |
-| kc1 | Pypper:rule set (macro distribution voting) | 84.64% | 3.0 | 0.134 |
-| kc1 | Pypper:rule set (micro distribution voting) | 84.64% | 3.0 | 0.134 |
-| kc1 | Pypper:rule set (voting) | 84.64% | 3.0 | 0.134 |
+| kc1 | Pypper:concept (majority class) | 69.90% | 1.5 | 0.096 |
+| kc1 | Pypper:concept (minority class) | 84.07% | 2.6 | 0.051 |
+| kc1 | Pypper:decision list (per refinement) | 84.21% | 4.6 | 0.043 |
+| kc1 | Pypper:decision list (per rule) | 84.87% | 14.2 | 0.098 |
+| kc1 | Pypper:decision list (per seed example) | 85.11% | 15.9 | 0.108 |
+| kc1 | Pypper:rule set (best rule) | 84.49% | 4.1 | 0.147 |
+| kc1 | Pypper:rule set (macro distribution voting) | 84.49% | 4.1 | 0.147 |
+| kc1 | Pypper:rule set (micro distribution voting) | 84.45% | 4.1 | 0.147 |
+| kc1 | Pypper:rule set (voting) | 84.49% | 4.1 | 0.147 |
 | kc2 | CN2:concept (majority class) | 78.72% | 25.0 | 0.526 |
 | kc2 | CN2:concept (minority class) | 80.82% | 29.5 | 1.951 |
 | kc2 | CN2:decision list (per refinement) | 81.41% | 17.3 | 0.518 |
@@ -1104,15 +1104,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | kc2 | PFossil:rule set (macro distribution voting) | 82.35% | 7.4 | 0.016 |
 | kc2 | PFossil:rule set (micro distribution voting) | 81.79% | 7.4 | 0.016 |
 | kc2 | PFossil:rule set (voting) | 82.55% | 7.4 | 0.016 |
-| kc2 | Pypper:concept (majority class) | 80.63% | 1.3 | 0.033 |
-| kc2 | Pypper:concept (minority class) | 83.50% | 2.0 | 0.020 |
-| kc2 | Pypper:decision list (per refinement) | 83.13% | 2.8 | 0.014 |
-| kc2 | Pypper:decision list (per rule) | 82.94% | 7.1 | 0.034 |
-| kc2 | Pypper:decision list (per seed example) | 83.31% | 10.0 | 0.036 |
-| kc2 | Pypper:rule set (best rule) | 83.69% | 3.3 | 0.053 |
-| kc2 | Pypper:rule set (macro distribution voting) | 83.69% | 3.3 | 0.053 |
-| kc2 | Pypper:rule set (micro distribution voting) | 83.69% | 3.3 | 0.053 |
-| kc2 | Pypper:rule set (voting) | 83.69% | 3.3 | 0.053 |
+| kc2 | Pypper:concept (majority class) | 79.09% | 1.5 | 0.037 |
+| kc2 | Pypper:concept (minority class) | 83.50% | 2.2 | 0.030 |
+| kc2 | Pypper:decision list (per refinement) | 82.37% | 3.5 | 0.019 |
+| kc2 | Pypper:decision list (per rule) | 81.20% | 7.3 | 0.035 |
+| kc2 | Pypper:decision list (per seed example) | 83.31% | 8.6 | 0.033 |
+| kc2 | Pypper:rule set (best rule) | 83.69% | 3.7 | 0.068 |
+| kc2 | Pypper:rule set (macro distribution voting) | 83.69% | 3.7 | 0.068 |
+| kc2 | Pypper:rule set (micro distribution voting) | 83.69% | 3.7 | 0.068 |
+| kc2 | Pypper:rule set (voting) | 83.69% | 3.7 | 0.068 |
 | kr-vs-kp | CN2:concept (majority class) | 98.47% | 37.3 | 0.239 |
 | kr-vs-kp | CN2:concept (minority class) | 99.37% | 31.3 | 0.140 |
 | kr-vs-kp | CN2:decision list (per refinement) | 99.09% | 30.8 | 0.213 |
@@ -1131,15 +1131,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | kr-vs-kp | PFossil:rule set (macro distribution voting) | 99.41% | 14.5 | 0.041 |
 | kr-vs-kp | PFossil:rule set (micro distribution voting) | 94.31% | 14.5 | 0.041 |
 | kr-vs-kp | PFossil:rule set (voting) | 96.43% | 14.5 | 0.041 |
-| kr-vs-kp | Pypper:concept (majority class) | 99.00% | 9.0 | 0.078 |
-| kr-vs-kp | Pypper:concept (minority class) | 99.09% | 13.6 | 0.117 |
-| kr-vs-kp | Pypper:decision list (per refinement) | 98.84% | 13.9 | 0.074 |
-| kr-vs-kp | Pypper:decision list (per rule) | 98.65% | 11.3 | 0.073 |
-| kr-vs-kp | Pypper:decision list (per seed example) | 98.72% | 19.6 | 0.073 |
-| kr-vs-kp | Pypper:rule set (best rule) | 99.16% | 22.6 | 0.196 |
-| kr-vs-kp | Pypper:rule set (macro distribution voting) | 99.12% | 22.6 | 0.196 |
-| kr-vs-kp | Pypper:rule set (micro distribution voting) | 99.03% | 22.6 | 0.196 |
-| kr-vs-kp | Pypper:rule set (voting) | 98.91% | 22.6 | 0.196 |
+| kr-vs-kp | Pypper:concept (majority class) | 98.84% | 9.2 | 0.092 |
+| kr-vs-kp | Pypper:concept (minority class) | 99.12% | 14.3 | 0.130 |
+| kr-vs-kp | Pypper:decision list (per refinement) | 99.28% | 17.6 | 0.094 |
+| kr-vs-kp | Pypper:decision list (per rule) | 98.78% | 13.3 | 0.090 |
+| kr-vs-kp | Pypper:decision list (per seed example) | 98.28% | 17.3 | 0.075 |
+| kr-vs-kp | Pypper:rule set (best rule) | 99.25% | 23.5 | 0.219 |
+| kr-vs-kp | Pypper:rule set (macro distribution voting) | 99.22% | 23.5 | 0.219 |
+| kr-vs-kp | Pypper:rule set (micro distribution voting) | 99.16% | 23.5 | 0.219 |
+| kr-vs-kp | Pypper:rule set (voting) | 99.00% | 23.5 | 0.219 |
 | kropt | CN2:cascade (most frequent first) | 69.90% | 2072.4 | 34.611 |
 | kropt | CN2:cascade (rarest first) | 80.35% | 1602.4 | 27.594 |
 | kropt | CN2:decision list (per refinement) | 68.94% | 1257.7 | 117.237 |
@@ -1158,15 +1158,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | kropt | PFossil:rule set (macro distribution voting) | 24.54% | 46.4 | 0.980 |
 | kropt | PFossil:rule set (micro distribution voting) | 22.30% | 46.4 | 0.980 |
 | kropt | PFossil:rule set (voting) | 22.58% | 46.4 | 0.980 |
-| kropt | Pypper:cascade (most frequent first) | 48.72% | 240.9 | 8.634 |
-| kropt | Pypper:cascade (rarest first) | 56.44% | 276.1 | 10.862 |
-| kropt | Pypper:decision list (per refinement) | 21.82% | 44.7 | 2.960 |
-| kropt | Pypper:decision list (per rule) | 19.14% | 10.8 | 4.046 |
-| kropt | Pypper:decision list (per seed example) | 60.84% | 989.3 | 29.879 |
-| kropt | Pypper:rule set (best rule) | 34.44% | 141.1 | 8.687 |
-| kropt | Pypper:rule set (macro distribution voting) | 34.46% | 141.1 | 8.687 |
-| kropt | Pypper:rule set (micro distribution voting) | 34.30% | 141.1 | 8.687 |
-| kropt | Pypper:rule set (voting) | 34.31% | 141.1 | 8.687 |
+| kropt | Pypper:cascade (most frequent first) | 52.46% | 328.9 | 14.170 |
+| kropt | Pypper:cascade (rarest first) | 60.35% | 398.6 | 18.215 |
+| kropt | Pypper:decision list (per refinement) | 22.32% | 50.2 | 3.470 |
+| kropt | Pypper:decision list (per rule) | 20.89% | 18.7 | 6.852 |
+| kropt | Pypper:decision list (per seed example) | 60.28% | 1041.1 | 30.381 |
+| kropt | Pypper:rule set (best rule) | 37.85% | 229.9 | 14.983 |
+| kropt | Pypper:rule set (macro distribution voting) | 37.84% | 229.9 | 14.983 |
+| kropt | Pypper:rule set (micro distribution voting) | 37.54% | 229.9 | 14.983 |
+| kropt | Pypper:rule set (voting) | 37.58% | 229.9 | 14.983 |
 | led24 | CN2:cascade (most frequent first) | 60.50% | 200.3 | 1.755 |
 | led24 | CN2:cascade (rarest first) | 61.03% | 205.7 | 1.820 |
 | led24 | CN2:decision list (per refinement) | 66.41% | 141.8 | 3.076 |
@@ -1185,15 +1185,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | led24 | PFossil:rule set (macro distribution voting) | 70.28% | 45.4 | 0.155 |
 | led24 | PFossil:rule set (micro distribution voting) | 70.56% | 45.4 | 0.155 |
 | led24 | PFossil:rule set (voting) | 70.34% | 45.4 | 0.155 |
-| led24 | Pypper:cascade (most frequent first) | 71.00% | 24.8 | 0.330 |
-| led24 | Pypper:cascade (rarest first) | 71.50% | 24.3 | 0.322 |
-| led24 | Pypper:decision list (per refinement) | 65.31% | 27.5 | 0.250 |
-| led24 | Pypper:decision list (per rule) | 65.06% | 11.6 | 0.435 |
-| led24 | Pypper:decision list (per seed example) | 68.19% | 73.1 | 0.386 |
-| led24 | Pypper:rule set (best rule) | 68.00% | 25.4 | 0.477 |
-| led24 | Pypper:rule set (macro distribution voting) | 67.81% | 25.4 | 0.477 |
-| led24 | Pypper:rule set (micro distribution voting) | 67.88% | 25.4 | 0.477 |
-| led24 | Pypper:rule set (voting) | 67.47% | 25.4 | 0.477 |
+| led24 | Pypper:cascade (most frequent first) | 71.16% | 29.3 | 0.403 |
+| led24 | Pypper:cascade (rarest first) | 70.88% | 30.9 | 0.399 |
+| led24 | Pypper:decision list (per refinement) | 67.56% | 24.7 | 0.223 |
+| led24 | Pypper:decision list (per rule) | 64.44% | 10.0 | 0.399 |
+| led24 | Pypper:decision list (per seed example) | 67.66% | 74.2 | 0.370 |
+| led24 | Pypper:rule set (best rule) | 68.25% | 33.9 | 0.597 |
+| led24 | Pypper:rule set (macro distribution voting) | 68.22% | 33.9 | 0.597 |
+| led24 | Pypper:rule set (micro distribution voting) | 68.28% | 33.9 | 0.597 |
+| led24 | Pypper:rule set (voting) | 68.12% | 33.9 | 0.597 |
 | letter | CN2:cascade (most frequent first) | 86.54% | 827.2 | 21.228 |
 | letter | CN2:cascade (rarest first) | 86.27% | 897.2 | 22.317 |
 | letter | CN2:decision list (per refinement) | 87.75% | 472.9 | 91.254 |
@@ -1212,15 +1212,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | letter | PFossil:rule set (macro distribution voting) | 76.44% | 142.3 | 2.162 |
 | letter | PFossil:rule set (micro distribution voting) | 74.39% | 142.3 | 2.162 |
 | letter | PFossil:rule set (voting) | 75.29% | 142.3 | 2.162 |
-| letter | Pypper:cascade (most frequent first) | 82.00% | 249.2 | 7.099 |
-| letter | Pypper:cascade (rarest first) | 81.81% | 230.9 | 6.718 |
-| letter | Pypper:decision list (per refinement) | 68.75% | 150.2 | 5.968 |
-| letter | Pypper:decision list (per rule) | 67.90% | 95.1 | 26.184 |
-| letter | Pypper:decision list (per seed example) | 83.73% | 439.7 | 7.834 |
-| letter | Pypper:rule set (best rule) | 77.53% | 266.8 | 12.062 |
-| letter | Pypper:rule set (macro distribution voting) | 77.68% | 266.8 | 12.062 |
-| letter | Pypper:rule set (micro distribution voting) | 77.17% | 266.8 | 12.062 |
-| letter | Pypper:rule set (voting) | 77.28% | 266.8 | 12.062 |
+| letter | Pypper:cascade (most frequent first) | 83.81% | 330.0 | 10.205 |
+| letter | Pypper:cascade (rarest first) | 83.72% | 308.2 | 9.721 |
+| letter | Pypper:decision list (per refinement) | 73.75% | 204.9 | 8.190 |
+| letter | Pypper:decision list (per rule) | 70.96% | 111.2 | 30.323 |
+| letter | Pypper:decision list (per seed example) | 83.46% | 455.4 | 7.912 |
+| letter | Pypper:rule set (best rule) | 81.02% | 378.0 | 18.419 |
+| letter | Pypper:rule set (macro distribution voting) | 81.26% | 378.0 | 18.419 |
+| letter | Pypper:rule set (micro distribution voting) | 80.67% | 378.0 | 18.419 |
+| letter | Pypper:rule set (voting) | 80.88% | 378.0 | 18.419 |
 | lymph | CN2:cascade (most frequent first) | 84.52% | 8.6 | 0.029 |
 | lymph | CN2:cascade (rarest first) | 77.14% | 10.3 | 0.028 |
 | lymph | CN2:decision list (per refinement) | 83.90% | 8.5 | 0.070 |
@@ -1239,15 +1239,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | lymph | PFossil:rule set (macro distribution voting) | 79.71% | 16.2 | 0.016 |
 | lymph | PFossil:rule set (micro distribution voting) | 81.05% | 16.2 | 0.016 |
 | lymph | PFossil:rule set (voting) | 81.10% | 16.2 | 0.016 |
-| lymph | Pypper:cascade (most frequent first) | 79.10% | 3.9 | 0.022 |
-| lymph | Pypper:cascade (rarest first) | 73.71% | 2.9 | 0.021 |
-| lymph | Pypper:decision list (per refinement) | 75.05% | 4.0 | 0.011 |
-| lymph | Pypper:decision list (per rule) | 80.43% | 5.1 | 0.027 |
-| lymph | Pypper:decision list (per seed example) | 82.48% | 6.0 | 0.015 |
-| lymph | Pypper:rule set (best rule) | 80.52% | 5.6 | 0.037 |
-| lymph | Pypper:rule set (macro distribution voting) | 82.52% | 5.6 | 0.037 |
-| lymph | Pypper:rule set (micro distribution voting) | 77.81% | 5.6 | 0.037 |
-| lymph | Pypper:rule set (voting) | 78.52% | 5.6 | 0.037 |
+| lymph | Pypper:cascade (most frequent first) | 77.67% | 4.0 | 0.024 |
+| lymph | Pypper:cascade (rarest first) | 77.05% | 3.1 | 0.023 |
+| lymph | Pypper:decision list (per refinement) | 75.71% | 4.5 | 0.012 |
+| lymph | Pypper:decision list (per rule) | 80.43% | 5.3 | 0.028 |
+| lymph | Pypper:decision list (per seed example) | 81.81% | 6.0 | 0.014 |
+| lymph | Pypper:rule set (best rule) | 79.81% | 5.7 | 0.038 |
+| lymph | Pypper:rule set (macro distribution voting) | 81.81% | 5.7 | 0.038 |
+| lymph | Pypper:rule set (micro distribution voting) | 77.10% | 5.7 | 0.038 |
+| lymph | Pypper:rule set (voting) | 77.81% | 5.7 | 0.038 |
 | mofn-3-7-10 | CN2:concept (majority class) | 100.00% | 35.0 | 0.097 |
 | mofn-3-7-10 | CN2:concept (minority class) | 100.00% | 21.0 | 0.090 |
 | mofn-3-7-10 | CN2:decision list (per refinement) | 100.00% | 29.0 | 0.144 |
@@ -1266,15 +1266,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | mofn-3-7-10 | PFossil:rule set (macro distribution voting) | 83.76% | 6.4 | 0.014 |
 | mofn-3-7-10 | PFossil:rule set (micro distribution voting) | 83.31% | 6.4 | 0.014 |
 | mofn-3-7-10 | PFossil:rule set (voting) | 83.61% | 6.4 | 0.014 |
-| mofn-3-7-10 | Pypper:concept (majority class) | 96.76% | 24.3 | 0.179 |
-| mofn-3-7-10 | Pypper:concept (minority class) | 94.71% | 14.0 | 0.118 |
-| mofn-3-7-10 | Pypper:decision list (per refinement) | 94.57% | 14.2 | 0.062 |
-| mofn-3-7-10 | Pypper:decision list (per rule) | 98.26% | 15.7 | 0.067 |
-| mofn-3-7-10 | Pypper:decision list (per seed example) | 98.57% | 23.1 | 0.060 |
-| mofn-3-7-10 | Pypper:rule set (best rule) | 97.21% | 38.3 | 0.297 |
-| mofn-3-7-10 | Pypper:rule set (macro distribution voting) | 97.66% | 38.3 | 0.297 |
-| mofn-3-7-10 | Pypper:rule set (micro distribution voting) | 95.85% | 38.3 | 0.297 |
-| mofn-3-7-10 | Pypper:rule set (voting) | 96.00% | 38.3 | 0.297 |
+| mofn-3-7-10 | Pypper:concept (majority class) | 93.35% | 17.0 | 0.125 |
+| mofn-3-7-10 | Pypper:concept (minority class) | 95.16% | 14.6 | 0.128 |
+| mofn-3-7-10 | Pypper:decision list (per refinement) | 95.16% | 15.0 | 0.069 |
+| mofn-3-7-10 | Pypper:decision list (per rule) | 98.11% | 14.6 | 0.067 |
+| mofn-3-7-10 | Pypper:decision list (per seed example) | 96.83% | 20.3 | 0.063 |
+| mofn-3-7-10 | Pypper:rule set (best rule) | 97.21% | 31.6 | 0.251 |
+| mofn-3-7-10 | Pypper:rule set (macro distribution voting) | 97.43% | 31.6 | 0.251 |
+| mofn-3-7-10 | Pypper:rule set (micro distribution voting) | 93.35% | 31.6 | 0.251 |
+| mofn-3-7-10 | Pypper:rule set (voting) | 93.58% | 31.6 | 0.251 |
 | molecular-biology_promoters | CN2:concept (majority class) | 75.55% | 5.8 | 0.020 |
 | molecular-biology_promoters | CN2:concept (minority class) | 84.09% | 6.1 | 0.025 |
 | molecular-biology_promoters | CN2:decision list (per refinement) | 80.36% | 7.3 | 0.023 |
@@ -1293,15 +1293,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | molecular-biology_promoters | PFossil:rule set (macro distribution voting) | 82.18% | 7.4 | 0.009 |
 | molecular-biology_promoters | PFossil:rule set (micro distribution voting) | 81.36% | 7.4 | 0.009 |
 | molecular-biology_promoters | PFossil:rule set (voting) | 81.27% | 7.4 | 0.009 |
-| molecular-biology_promoters | Pypper:concept (majority class) | 83.18% | 2.3 | 0.014 |
-| molecular-biology_promoters | Pypper:concept (minority class) | 83.18% | 2.1 | 0.014 |
-| molecular-biology_promoters | Pypper:decision list (per refinement) | 84.00% | 2.4 | 0.008 |
-| molecular-biology_promoters | Pypper:decision list (per rule) | 84.18% | 3.0 | 0.013 |
+| molecular-biology_promoters | Pypper:concept (majority class) | 83.18% | 2.2 | 0.014 |
+| molecular-biology_promoters | Pypper:concept (minority class) | 83.18% | 2.1 | 0.015 |
+| molecular-biology_promoters | Pypper:decision list (per refinement) | 81.09% | 2.3 | 0.009 |
+| molecular-biology_promoters | Pypper:decision list (per rule) | 83.18% | 3.2 | 0.013 |
 | molecular-biology_promoters | Pypper:decision list (per seed example) | 77.82% | 3.3 | 0.012 |
-| molecular-biology_promoters | Pypper:rule set (best rule) | 81.36% | 4.4 | 0.026 |
-| molecular-biology_promoters | Pypper:rule set (macro distribution voting) | 81.36% | 4.4 | 0.026 |
-| molecular-biology_promoters | Pypper:rule set (micro distribution voting) | 82.18% | 4.4 | 0.026 |
-| molecular-biology_promoters | Pypper:rule set (voting) | 81.27% | 4.4 | 0.026 |
+| molecular-biology_promoters | Pypper:rule set (best rule) | 81.36% | 4.3 | 0.028 |
+| molecular-biology_promoters | Pypper:rule set (macro distribution voting) | 81.36% | 4.3 | 0.028 |
+| molecular-biology_promoters | Pypper:rule set (micro distribution voting) | 81.18% | 4.3 | 0.028 |
+| molecular-biology_promoters | Pypper:rule set (voting) | 80.27% | 4.3 | 0.028 |
 | monks-problems-1 | CN2:concept (majority class) | 100.00% | 4.0 | 0.010 |
 | monks-problems-1 | CN2:concept (minority class) | 100.00% | 3.9 | 0.012 |
 | monks-problems-1 | CN2:decision list (per refinement) | 100.00% | 5.6 | 0.019 |
@@ -1320,15 +1320,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | monks-problems-1 | PFossil:rule set (macro distribution voting) | 80.41% | 4.0 | 0.005 |
 | monks-problems-1 | PFossil:rule set (micro distribution voting) | 74.64% | 4.0 | 0.005 |
 | monks-problems-1 | PFossil:rule set (voting) | 75.91% | 4.0 | 0.005 |
-| monks-problems-1 | Pypper:concept (majority class) | 89.89% | 3.4 | 0.016 |
-| monks-problems-1 | Pypper:concept (minority class) | 95.30% | 3.6 | 0.020 |
-| monks-problems-1 | Pypper:decision list (per refinement) | 89.89% | 3.6 | 0.011 |
-| monks-problems-1 | Pypper:decision list (per rule) | 91.16% | 4.4 | 0.017 |
-| monks-problems-1 | Pypper:decision list (per seed example) | 81.38% | 6.5 | 0.069 |
-| monks-problems-1 | Pypper:rule set (best rule) | 94.76% | 7.0 | 0.037 |
-| monks-problems-1 | Pypper:rule set (macro distribution voting) | 94.76% | 7.0 | 0.037 |
-| monks-problems-1 | Pypper:rule set (micro distribution voting) | 92.06% | 7.0 | 0.037 |
-| monks-problems-1 | Pypper:rule set (voting) | 92.06% | 7.0 | 0.037 |
+| monks-problems-1 | Pypper:concept (majority class) | 93.34% | 3.7 | 0.020 |
+| monks-problems-1 | Pypper:concept (minority class) | 95.30% | 3.6 | 0.019 |
+| monks-problems-1 | Pypper:decision list (per refinement) | 91.34% | 4.0 | 0.014 |
+| monks-problems-1 | Pypper:decision list (per rule) | 90.80% | 4.3 | 0.022 |
+| monks-problems-1 | Pypper:decision list (per seed example) | 79.95% | 6.7 | 0.075 |
+| monks-problems-1 | Pypper:rule set (best rule) | 96.76% | 7.3 | 0.042 |
+| monks-problems-1 | Pypper:rule set (macro distribution voting) | 96.76% | 7.3 | 0.042 |
+| monks-problems-1 | Pypper:rule set (micro distribution voting) | 92.06% | 7.3 | 0.042 |
+| monks-problems-1 | Pypper:rule set (voting) | 94.06% | 7.3 | 0.042 |
 | monks-problems-2 | CN2:concept (majority class) | 97.34% | 36.2 | 0.135 |
 | monks-problems-2 | CN2:concept (minority class) | 81.05% | 48.4 | 0.271 |
 | monks-problems-2 | CN2:decision list (per refinement) | 98.33% | 33.5 | 0.167 |
@@ -1347,15 +1347,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | monks-problems-2 | PFossil:rule set (macro distribution voting) | 66.72% | 0.4 | 0.004 |
 | monks-problems-2 | PFossil:rule set (micro distribution voting) | 66.72% | 0.4 | 0.004 |
 | monks-problems-2 | PFossil:rule set (voting) | 66.72% | 0.4 | 0.004 |
-| monks-problems-2 | Pypper:concept (majority class) | 76.19% | 10.7 | 0.068 |
-| monks-problems-2 | Pypper:concept (minority class) | 70.39% | 2.3 | 0.022 |
-| monks-problems-2 | Pypper:decision list (per refinement) | 67.39% | 4.7 | 0.020 |
-| monks-problems-2 | Pypper:decision list (per rule) | 87.17% | 15.5 | 0.059 |
-| monks-problems-2 | Pypper:decision list (per seed example) | 69.40% | 15.9 | 0.039 |
-| monks-problems-2 | Pypper:rule set (best rule) | 72.03% | 13.0 | 0.092 |
-| monks-problems-2 | Pypper:rule set (macro distribution voting) | 72.03% | 13.0 | 0.092 |
-| monks-problems-2 | Pypper:rule set (micro distribution voting) | 71.87% | 13.0 | 0.092 |
-| monks-problems-2 | Pypper:rule set (voting) | 71.87% | 13.0 | 0.092 |
+| monks-problems-2 | Pypper:concept (majority class) | 77.36% | 10.1 | 0.074 |
+| monks-problems-2 | Pypper:concept (minority class) | 72.22% | 4.4 | 0.052 |
+| monks-problems-2 | Pypper:decision list (per refinement) | 66.72% | 6.8 | 0.027 |
+| monks-problems-2 | Pypper:decision list (per rule) | 88.17% | 16.4 | 0.069 |
+| monks-problems-2 | Pypper:decision list (per seed example) | 71.74% | 16.6 | 0.044 |
+| monks-problems-2 | Pypper:rule set (best rule) | 74.03% | 14.5 | 0.113 |
+| monks-problems-2 | Pypper:rule set (macro distribution voting) | 74.03% | 14.5 | 0.113 |
+| monks-problems-2 | Pypper:rule set (micro distribution voting) | 74.36% | 14.5 | 0.113 |
+| monks-problems-2 | Pypper:rule set (voting) | 74.20% | 14.5 | 0.113 |
 | monks-problems-3 | CN2:concept (majority class) | 97.48% | 13.0 | 0.054 |
 | monks-problems-3 | CN2:concept (minority class) | 96.57% | 10.0 | 0.045 |
 | monks-problems-3 | CN2:decision list (per refinement) | 98.38% | 10.1 | 0.053 |
@@ -1375,14 +1375,14 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | monks-problems-3 | PFossil:rule set (micro distribution voting) | 96.40% | 6.8 | 0.010 |
 | monks-problems-3 | PFossil:rule set (voting) | 98.38% | 6.8 | 0.010 |
 | monks-problems-3 | Pypper:concept (majority class) | 98.92% | 2.0 | 0.014 |
-| monks-problems-3 | Pypper:concept (minority class) | 98.92% | 3.0 | 0.015 |
-| monks-problems-3 | Pypper:decision list (per refinement) | 98.92% | 3.7 | 0.012 |
-| monks-problems-3 | Pypper:decision list (per rule) | 98.92% | 3.1 | 0.012 |
-| monks-problems-3 | Pypper:decision list (per seed example) | 95.15% | 4.3 | 0.021 |
-| monks-problems-3 | Pypper:rule set (best rule) | 98.92% | 5.0 | 0.030 |
-| monks-problems-3 | Pypper:rule set (macro distribution voting) | 98.92% | 5.0 | 0.030 |
-| monks-problems-3 | Pypper:rule set (micro distribution voting) | 98.92% | 5.0 | 0.030 |
-| monks-problems-3 | Pypper:rule set (voting) | 98.92% | 5.0 | 0.030 |
+| monks-problems-3 | Pypper:concept (minority class) | 98.92% | 3.0 | 0.016 |
+| monks-problems-3 | Pypper:decision list (per refinement) | 98.92% | 3.8 | 0.012 |
+| monks-problems-3 | Pypper:decision list (per rule) | 98.92% | 2.9 | 0.012 |
+| monks-problems-3 | Pypper:decision list (per seed example) | 96.22% | 3.5 | 0.022 |
+| monks-problems-3 | Pypper:rule set (best rule) | 98.92% | 5.0 | 0.029 |
+| monks-problems-3 | Pypper:rule set (macro distribution voting) | 98.92% | 5.0 | 0.029 |
+| monks-problems-3 | Pypper:rule set (micro distribution voting) | 98.92% | 5.0 | 0.029 |
+| monks-problems-3 | Pypper:rule set (voting) | 98.92% | 5.0 | 0.029 |
 | mushroom | CN2:concept (majority class) | 100.00% | 14.0 | 0.072 |
 | mushroom | CN2:concept (minority class) | 100.00% | 9.0 | 0.048 |
 | mushroom | CN2:decision list (per refinement) | 100.00% | 16.1 | 0.133 |
@@ -1401,15 +1401,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | mushroom | PFossil:rule set (macro distribution voting) | 100.00% | 12.3 | 0.068 |
 | mushroom | PFossil:rule set (micro distribution voting) | 99.95% | 12.3 | 0.068 |
 | mushroom | PFossil:rule set (voting) | 99.95% | 12.3 | 0.068 |
-| mushroom | Pypper:concept (majority class) | 99.98% | 4.5 | 0.070 |
-| mushroom | Pypper:concept (minority class) | 99.96% | 5.2 | 0.076 |
-| mushroom | Pypper:decision list (per refinement) | 99.98% | 5.5 | 0.075 |
-| mushroom | Pypper:decision list (per rule) | 99.98% | 6.3 | 0.078 |
-| mushroom | Pypper:decision list (per seed example) | 99.19% | 6.1 | 0.112 |
-| mushroom | Pypper:rule set (best rule) | 99.94% | 9.7 | 0.151 |
-| mushroom | Pypper:rule set (macro distribution voting) | 99.94% | 9.7 | 0.151 |
-| mushroom | Pypper:rule set (micro distribution voting) | 99.94% | 9.7 | 0.151 |
-| mushroom | Pypper:rule set (voting) | 99.94% | 9.7 | 0.151 |
+| mushroom | Pypper:concept (majority class) | 99.98% | 4.5 | 0.078 |
+| mushroom | Pypper:concept (minority class) | 99.96% | 5.2 | 0.079 |
+| mushroom | Pypper:decision list (per refinement) | 99.98% | 5.5 | 0.083 |
+| mushroom | Pypper:decision list (per rule) | 99.98% | 6.3 | 0.082 |
+| mushroom | Pypper:decision list (per seed example) | 99.19% | 6.1 | 0.118 |
+| mushroom | Pypper:rule set (best rule) | 99.94% | 9.7 | 0.164 |
+| mushroom | Pypper:rule set (macro distribution voting) | 99.94% | 9.7 | 0.164 |
+| mushroom | Pypper:rule set (micro distribution voting) | 99.94% | 9.7 | 0.164 |
+| mushroom | Pypper:rule set (voting) | 99.94% | 9.7 | 0.164 |
 | optdigits | CN2:cascade (most frequent first) | 90.89% | 160.9 | 2.534 |
 | optdigits | CN2:cascade (rarest first) | 88.99% | 180.8 | 2.853 |
 | optdigits | CN2:decision list (per refinement) | 92.81% | 98.3 | 3.331 |
@@ -1428,15 +1428,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | optdigits | PFossil:rule set (macro distribution voting) | 90.39% | 81.3 | 0.542 |
 | optdigits | PFossil:rule set (micro distribution voting) | 90.11% | 81.3 | 0.542 |
 | optdigits | PFossil:rule set (voting) | 90.27% | 81.3 | 0.542 |
-| optdigits | Pypper:cascade (most frequent first) | 91.74% | 44.7 | 0.862 |
-| optdigits | Pypper:cascade (rarest first) | 90.91% | 47.9 | 0.908 |
-| optdigits | Pypper:decision list (per refinement) | 90.41% | 49.0 | 0.721 |
-| optdigits | Pypper:decision list (per rule) | 91.10% | 47.7 | 2.236 |
-| optdigits | Pypper:decision list (per seed example) | 91.73% | 62.0 | 0.421 |
-| optdigits | Pypper:rule set (best rule) | 90.18% | 62.1 | 1.495 |
-| optdigits | Pypper:rule set (macro distribution voting) | 90.37% | 62.1 | 1.495 |
-| optdigits | Pypper:rule set (micro distribution voting) | 90.27% | 62.1 | 1.495 |
-| optdigits | Pypper:rule set (voting) | 90.14% | 62.1 | 1.495 |
+| optdigits | Pypper:cascade (most frequent first) | 92.24% | 56.9 | 1.139 |
+| optdigits | Pypper:cascade (rarest first) | 91.09% | 61.2 | 1.249 |
+| optdigits | Pypper:decision list (per refinement) | 91.07% | 57.9 | 0.827 |
+| optdigits | Pypper:decision list (per rule) | 91.41% | 49.0 | 2.314 |
+| optdigits | Pypper:decision list (per seed example) | 91.73% | 62.3 | 0.434 |
+| optdigits | Pypper:rule set (best rule) | 91.39% | 81.2 | 2.088 |
+| optdigits | Pypper:rule set (macro distribution voting) | 91.80% | 81.2 | 2.088 |
+| optdigits | Pypper:rule set (micro distribution voting) | 91.51% | 81.2 | 2.088 |
+| optdigits | Pypper:rule set (voting) | 91.53% | 81.2 | 2.088 |
 | ozone-level-8hr | CN2:concept (majority class) | 92.62% | 57.2 | 0.709 |
 | ozone-level-8hr | CN2:concept (minority class) | 89.50% | 92.7 | 1.003 |
 | ozone-level-8hr | CN2:decision list (per refinement) | 92.23% | 55.8 | 0.503 |
@@ -1455,15 +1455,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | ozone-level-8hr | PFossil:rule set (macro distribution voting) | 93.33% | 2.9 | 0.032 |
 | ozone-level-8hr | PFossil:rule set (micro distribution voting) | 93.33% | 2.9 | 0.032 |
 | ozone-level-8hr | PFossil:rule set (voting) | 93.33% | 2.9 | 0.032 |
-| ozone-level-8hr | Pypper:concept (majority class) | 82.47% | 3.1 | 0.115 |
-| ozone-level-8hr | Pypper:concept (minority class) | 92.94% | 3.0 | 0.060 |
-| ozone-level-8hr | Pypper:decision list (per refinement) | 93.17% | 3.1 | 0.056 |
-| ozone-level-8hr | Pypper:decision list (per rule) | 93.37% | 6.0 | 0.066 |
-| ozone-level-8hr | Pypper:decision list (per seed example) | 92.74% | 15.0 | 0.064 |
-| ozone-level-8hr | Pypper:rule set (best rule) | 93.33% | 6.1 | 0.172 |
-| ozone-level-8hr | Pypper:rule set (macro distribution voting) | 93.33% | 6.1 | 0.172 |
-| ozone-level-8hr | Pypper:rule set (micro distribution voting) | 93.33% | 6.1 | 0.172 |
-| ozone-level-8hr | Pypper:rule set (voting) | 93.37% | 6.1 | 0.172 |
+| ozone-level-8hr | Pypper:concept (majority class) | 84.96% | 3.3 | 0.107 |
+| ozone-level-8hr | Pypper:concept (minority class) | 93.02% | 4.0 | 0.095 |
+| ozone-level-8hr | Pypper:decision list (per refinement) | 92.98% | 5.4 | 0.086 |
+| ozone-level-8hr | Pypper:decision list (per rule) | 93.01% | 10.8 | 0.100 |
+| ozone-level-8hr | Pypper:decision list (per seed example) | 93.02% | 13.7 | 0.063 |
+| ozone-level-8hr | Pypper:rule set (best rule) | 93.37% | 7.3 | 0.201 |
+| ozone-level-8hr | Pypper:rule set (macro distribution voting) | 93.37% | 7.3 | 0.201 |
+| ozone-level-8hr | Pypper:rule set (micro distribution voting) | 93.37% | 7.3 | 0.201 |
+| ozone-level-8hr | Pypper:rule set (voting) | 93.37% | 7.3 | 0.201 |
 | pc1 | CN2:concept (majority class) | 89.81% | 22.1 | 0.727 |
 | pc1 | CN2:concept (minority class) | 83.31% | 36.7 | 1.736 |
 | pc1 | CN2:decision list (per refinement) | 92.25% | 22.7 | 0.606 |
@@ -1482,15 +1482,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | pc1 | PFossil:rule set (macro distribution voting) | 92.79% | 7.2 | 0.018 |
 | pc1 | PFossil:rule set (micro distribution voting) | 92.97% | 7.2 | 0.018 |
 | pc1 | PFossil:rule set (voting) | 92.88% | 7.2 | 0.018 |
-| pc1 | Pypper:concept (majority class) | 77.99% | 2.5 | 0.049 |
-| pc1 | Pypper:concept (minority class) | 92.70% | 1.6 | 0.017 |
-| pc1 | Pypper:decision list (per refinement) | 92.52% | 2.2 | 0.016 |
-| pc1 | Pypper:decision list (per rule) | 92.43% | 4.5 | 0.034 |
-| pc1 | Pypper:decision list (per seed example) | 92.52% | 10.7 | 0.063 |
-| pc1 | Pypper:rule set (best rule) | 92.61% | 4.1 | 0.068 |
-| pc1 | Pypper:rule set (macro distribution voting) | 92.61% | 4.1 | 0.068 |
-| pc1 | Pypper:rule set (micro distribution voting) | 92.61% | 4.1 | 0.068 |
-| pc1 | Pypper:rule set (voting) | 92.61% | 4.1 | 0.068 |
+| pc1 | Pypper:concept (majority class) | 79.79% | 2.5 | 0.052 |
+| pc1 | Pypper:concept (minority class) | 92.88% | 1.8 | 0.023 |
+| pc1 | Pypper:decision list (per refinement) | 92.24% | 3.1 | 0.024 |
+| pc1 | Pypper:decision list (per rule) | 92.25% | 6.4 | 0.038 |
+| pc1 | Pypper:decision list (per seed example) | 92.61% | 9.5 | 0.052 |
+| pc1 | Pypper:rule set (best rule) | 93.15% | 4.3 | 0.075 |
+| pc1 | Pypper:rule set (macro distribution voting) | 93.15% | 4.3 | 0.075 |
+| pc1 | Pypper:rule set (micro distribution voting) | 93.15% | 4.3 | 0.075 |
+| pc1 | Pypper:rule set (voting) | 93.15% | 4.3 | 0.075 |
 | pc3 | CN2:concept (majority class) | 88.10% | 39.1 | 1.041 |
 | pc3 | CN2:concept (minority class) | 81.06% | 79.8 | 9.923 |
 | pc3 | CN2:decision list (per refinement) | 88.48% | 46.3 | 0.929 |
@@ -1509,15 +1509,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | pc3 | PFossil:rule set (macro distribution voting) | 85.09% | 2.1 | 0.017 |
 | pc3 | PFossil:rule set (micro distribution voting) | 85.09% | 2.1 | 0.017 |
 | pc3 | PFossil:rule set (voting) | 85.09% | 2.1 | 0.017 |
-| pc3 | Pypper:concept (majority class) | 75.55% | 2.3 | 0.092 |
-| pc3 | Pypper:concept (minority class) | 88.87% | 1.8 | 0.032 |
-| pc3 | Pypper:decision list (per refinement) | 89.19% | 2.6 | 0.025 |
-| pc3 | Pypper:decision list (per rule) | 89.00% | 3.6 | 0.031 |
-| pc3 | Pypper:decision list (per seed example) | 88.16% | 14.7 | 0.066 |
-| pc3 | Pypper:rule set (best rule) | 88.93% | 4.1 | 0.123 |
-| pc3 | Pypper:rule set (macro distribution voting) | 88.93% | 4.1 | 0.123 |
-| pc3 | Pypper:rule set (micro distribution voting) | 88.93% | 4.1 | 0.123 |
-| pc3 | Pypper:rule set (voting) | 88.93% | 4.1 | 0.123 |
+| pc3 | Pypper:concept (majority class) | 74.14% | 1.8 | 0.083 |
+| pc3 | Pypper:concept (minority class) | 88.74% | 2.1 | 0.046 |
+| pc3 | Pypper:decision list (per refinement) | 89.12% | 3.6 | 0.036 |
+| pc3 | Pypper:decision list (per rule) | 88.99% | 5.2 | 0.043 |
+| pc3 | Pypper:decision list (per seed example) | 88.48% | 12.1 | 0.053 |
+| pc3 | Pypper:rule set (best rule) | 88.61% | 3.9 | 0.125 |
+| pc3 | Pypper:rule set (macro distribution voting) | 88.61% | 3.9 | 0.125 |
+| pc3 | Pypper:rule set (micro distribution voting) | 88.61% | 3.9 | 0.125 |
+| pc3 | Pypper:rule set (voting) | 88.61% | 3.9 | 0.125 |
 | pc4 | CN2:concept (majority class) | 88.54% | 31.7 | 0.663 |
 | pc4 | CN2:concept (minority class) | 86.41% | 72.4 | 0.791 |
 | pc4 | CN2:decision list (per refinement) | 88.48% | 33.4 | 0.246 |
@@ -1536,15 +1536,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | pc4 | PFossil:rule set (macro distribution voting) | 89.71% | 13.8 | 0.036 |
 | pc4 | PFossil:rule set (micro distribution voting) | 89.58% | 13.8 | 0.036 |
 | pc4 | PFossil:rule set (voting) | 89.78% | 13.8 | 0.036 |
-| pc4 | Pypper:concept (majority class) | 84.29% | 4.0 | 0.058 |
-| pc4 | Pypper:concept (minority class) | 87.45% | 3.6 | 0.053 |
-| pc4 | Pypper:decision list (per refinement) | 88.13% | 4.2 | 0.036 |
-| pc4 | Pypper:decision list (per rule) | 87.93% | 5.5 | 0.038 |
-| pc4 | Pypper:decision list (per seed example) | 89.50% | 15.7 | 0.051 |
-| pc4 | Pypper:rule set (best rule) | 87.79% | 7.6 | 0.112 |
-| pc4 | Pypper:rule set (macro distribution voting) | 87.79% | 7.6 | 0.112 |
-| pc4 | Pypper:rule set (micro distribution voting) | 87.79% | 7.6 | 0.112 |
-| pc4 | Pypper:rule set (voting) | 87.79% | 7.6 | 0.112 |
+| pc4 | Pypper:concept (majority class) | 83.81% | 4.1 | 0.070 |
+| pc4 | Pypper:concept (minority class) | 88.00% | 4.1 | 0.070 |
+| pc4 | Pypper:decision list (per refinement) | 88.06% | 5.6 | 0.048 |
+| pc4 | Pypper:decision list (per rule) | 87.79% | 5.6 | 0.042 |
+| pc4 | Pypper:decision list (per seed example) | 88.55% | 15.5 | 0.057 |
+| pc4 | Pypper:rule set (best rule) | 88.55% | 8.2 | 0.139 |
+| pc4 | Pypper:rule set (macro distribution voting) | 88.55% | 8.2 | 0.139 |
+| pc4 | Pypper:rule set (micro distribution voting) | 88.55% | 8.2 | 0.139 |
+| pc4 | Pypper:rule set (voting) | 88.55% | 8.2 | 0.139 |
 | phoneme | CN2:concept (majority class) | 76.42% | 131.6 | 1.768 |
 | phoneme | CN2:concept (minority class) | 63.67% | 194.9 | 2.611 |
 | phoneme | CN2:decision list (per refinement) | 83.46% | 119.9 | 2.681 |
@@ -1563,15 +1563,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | phoneme | PFossil:rule set (macro distribution voting) | 78.39% | 4.4 | 0.026 |
 | phoneme | PFossil:rule set (micro distribution voting) | 78.35% | 4.4 | 0.026 |
 | phoneme | PFossil:rule set (voting) | 78.46% | 4.4 | 0.026 |
-| phoneme | Pypper:concept (majority class) | 82.66% | 14.6 | 0.480 |
-| phoneme | Pypper:concept (minority class) | 82.90% | 12.3 | 0.406 |
-| phoneme | Pypper:decision list (per refinement) | 82.85% | 26.4 | 0.303 |
-| phoneme | Pypper:decision list (per rule) | 82.81% | 41.3 | 0.408 |
-| phoneme | Pypper:decision list (per seed example) | 82.16% | 51.0 | 0.380 |
-| phoneme | Pypper:rule set (best rule) | 83.53% | 26.9 | 0.892 |
-| phoneme | Pypper:rule set (macro distribution voting) | 83.40% | 26.9 | 0.892 |
-| phoneme | Pypper:rule set (micro distribution voting) | 83.24% | 26.9 | 0.892 |
-| phoneme | Pypper:rule set (voting) | 83.40% | 26.9 | 0.892 |
+| phoneme | Pypper:concept (majority class) | 82.98% | 15.1 | 0.444 |
+| phoneme | Pypper:concept (minority class) | 83.18% | 15.9 | 0.499 |
+| phoneme | Pypper:decision list (per refinement) | 83.27% | 29.3 | 0.343 |
+| phoneme | Pypper:decision list (per rule) | 83.68% | 42.0 | 0.413 |
+| phoneme | Pypper:decision list (per seed example) | 81.68% | 43.2 | 0.312 |
+| phoneme | Pypper:rule set (best rule) | 83.44% | 31.0 | 0.955 |
+| phoneme | Pypper:rule set (macro distribution voting) | 83.46% | 31.0 | 0.955 |
+| phoneme | Pypper:rule set (micro distribution voting) | 83.40% | 31.0 | 0.955 |
+| phoneme | Pypper:rule set (voting) | 83.49% | 31.0 | 0.955 |
 | primary-tumor | CN2:cascade (most frequent first) | 31.85% | 55.6 | 0.547 |
 | primary-tumor | CN2:cascade (rarest first) | 29.79% | 61.3 | 0.585 |
 | primary-tumor | CN2:decision list (per refinement) | 37.77% | 25.9 | 0.830 |
@@ -1590,15 +1590,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | primary-tumor | PFossil:rule set (macro distribution voting) | 41.61% | 66.3 | 0.106 |
 | primary-tumor | PFossil:rule set (micro distribution voting) | 41.01% | 66.3 | 0.106 |
 | primary-tumor | PFossil:rule set (voting) | 41.01% | 66.3 | 0.106 |
-| primary-tumor | Pypper:cascade (most frequent first) | 35.70% | 10.0 | 0.104 |
-| primary-tumor | Pypper:cascade (rarest first) | 39.25% | 7.3 | 0.092 |
-| primary-tumor | Pypper:decision list (per refinement) | 35.10% | 6.8 | 0.042 |
-| primary-tumor | Pypper:decision list (per rule) | 35.42% | 4.1 | 0.156 |
-| primary-tumor | Pypper:decision list (per seed example) | 41.60% | 22.3 | 0.186 |
-| primary-tumor | Pypper:rule set (best rule) | 38.65% | 7.3 | 0.091 |
-| primary-tumor | Pypper:rule set (macro distribution voting) | 38.07% | 7.3 | 0.091 |
-| primary-tumor | Pypper:rule set (micro distribution voting) | 38.95% | 7.3 | 0.091 |
-| primary-tumor | Pypper:rule set (voting) | 37.77% | 7.3 | 0.091 |
+| primary-tumor | Pypper:cascade (most frequent first) | 35.70% | 11.5 | 0.130 |
+| primary-tumor | Pypper:cascade (rarest first) | 38.66% | 8.6 | 0.109 |
+| primary-tumor | Pypper:decision list (per refinement) | 35.98% | 7.6 | 0.046 |
+| primary-tumor | Pypper:decision list (per rule) | 36.27% | 5.9 | 0.208 |
+| primary-tumor | Pypper:decision list (per seed example) | 38.02% | 25.2 | 0.173 |
+| primary-tumor | Pypper:rule set (best rule) | 37.47% | 9.1 | 0.123 |
+| primary-tumor | Pypper:rule set (macro distribution voting) | 36.88% | 9.1 | 0.123 |
+| primary-tumor | Pypper:rule set (micro distribution voting) | 38.07% | 9.1 | 0.123 |
+| primary-tumor | Pypper:rule set (voting) | 36.59% | 9.1 | 0.123 |
 | qsar-biodeg | CN2:concept (majority class) | 83.90% | 66.7 | 3.050 |
 | qsar-biodeg | CN2:concept (minority class) | 77.18% | 67.0 | 0.798 |
 | qsar-biodeg | CN2:decision list (per refinement) | 79.62% | 46.8 | 0.296 |
@@ -1617,15 +1617,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | qsar-biodeg | PFossil:rule set (macro distribution voting) | 84.74% | 12.7 | 0.041 |
 | qsar-biodeg | PFossil:rule set (micro distribution voting) | 84.17% | 12.7 | 0.041 |
 | qsar-biodeg | PFossil:rule set (voting) | 83.60% | 12.7 | 0.041 |
-| qsar-biodeg | Pypper:concept (majority class) | 82.08% | 7.5 | 0.086 |
-| qsar-biodeg | Pypper:concept (minority class) | 83.70% | 5.1 | 0.065 |
-| qsar-biodeg | Pypper:decision list (per refinement) | 83.99% | 6.1 | 0.040 |
-| qsar-biodeg | Pypper:decision list (per rule) | 82.57% | 9.2 | 0.057 |
-| qsar-biodeg | Pypper:decision list (per seed example) | 82.37% | 17.7 | 0.059 |
-| qsar-biodeg | Pypper:rule set (best rule) | 85.03% | 12.6 | 0.150 |
-| qsar-biodeg | Pypper:rule set (macro distribution voting) | 85.03% | 12.6 | 0.150 |
-| qsar-biodeg | Pypper:rule set (micro distribution voting) | 84.36% | 12.6 | 0.150 |
-| qsar-biodeg | Pypper:rule set (voting) | 84.65% | 12.6 | 0.150 |
+| qsar-biodeg | Pypper:concept (majority class) | 83.04% | 8.1 | 0.105 |
+| qsar-biodeg | Pypper:concept (minority class) | 83.22% | 5.2 | 0.083 |
+| qsar-biodeg | Pypper:decision list (per refinement) | 83.89% | 7.4 | 0.051 |
+| qsar-biodeg | Pypper:decision list (per rule) | 80.76% | 10.8 | 0.066 |
+| qsar-biodeg | Pypper:decision list (per seed example) | 81.99% | 17.2 | 0.060 |
+| qsar-biodeg | Pypper:rule set (best rule) | 83.70% | 13.3 | 0.183 |
+| qsar-biodeg | Pypper:rule set (macro distribution voting) | 83.32% | 13.3 | 0.183 |
+| qsar-biodeg | Pypper:rule set (micro distribution voting) | 83.12% | 13.3 | 0.183 |
+| qsar-biodeg | Pypper:rule set (voting) | 83.03% | 13.3 | 0.183 |
 | segment | CN2:cascade (most frequent first) | 93.42% | 57.9 | 0.739 |
 | segment | CN2:cascade (rarest first) | 93.42% | 57.9 | 0.741 |
 | segment | CN2:decision list (per refinement) | 95.19% | 34.9 | 1.533 |
@@ -1644,15 +1644,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | segment | PFossil:rule set (macro distribution voting) | 93.16% | 30.5 | 0.084 |
 | segment | PFossil:rule set (micro distribution voting) | 93.12% | 30.5 | 0.084 |
 | segment | PFossil:rule set (voting) | 92.73% | 30.5 | 0.084 |
-| segment | Pypper:cascade (most frequent first) | 94.72% | 14.5 | 0.143 |
-| segment | Pypper:cascade (rarest first) | 94.72% | 14.5 | 0.143 |
-| segment | Pypper:decision list (per refinement) | 94.89% | 18.6 | 0.097 |
-| segment | Pypper:decision list (per rule) | 94.59% | 16.3 | 0.225 |
-| segment | Pypper:decision list (per seed example) | 94.03% | 24.4 | 0.104 |
-| segment | Pypper:rule set (best rule) | 93.46% | 21.9 | 0.255 |
-| segment | Pypper:rule set (macro distribution voting) | 93.51% | 21.9 | 0.255 |
-| segment | Pypper:rule set (micro distribution voting) | 93.20% | 21.9 | 0.255 |
-| segment | Pypper:rule set (voting) | 93.29% | 21.9 | 0.255 |
+| segment | Pypper:cascade (most frequent first) | 94.81% | 16.1 | 0.165 |
+| segment | Pypper:cascade (rarest first) | 94.81% | 16.1 | 0.169 |
+| segment | Pypper:decision list (per refinement) | 94.94% | 19.7 | 0.108 |
+| segment | Pypper:decision list (per rule) | 94.63% | 18.0 | 0.251 |
+| segment | Pypper:decision list (per seed example) | 94.46% | 23.9 | 0.094 |
+| segment | Pypper:rule set (best rule) | 94.03% | 24.8 | 0.310 |
+| segment | Pypper:rule set (macro distribution voting) | 93.90% | 24.8 | 0.310 |
+| segment | Pypper:rule set (micro distribution voting) | 93.72% | 24.8 | 0.310 |
+| segment | Pypper:rule set (voting) | 93.68% | 24.8 | 0.310 |
 | sick | CN2:concept (majority class) | 97.77% | 41.3 | 0.433 |
 | sick | CN2:concept (minority class) | 96.55% | 42.5 | 0.458 |
 | sick | CN2:decision list (per refinement) | 97.51% | 29.2 | 0.494 |
@@ -1671,15 +1671,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | sick | PFossil:rule set (macro distribution voting) | 98.25% | 16.4 | 0.053 |
 | sick | PFossil:rule set (micro distribution voting) | 98.20% | 16.4 | 0.053 |
 | sick | PFossil:rule set (voting) | 98.20% | 16.4 | 0.053 |
-| sick | Pypper:concept (majority class) | 98.01% | 5.4 | 0.079 |
-| sick | Pypper:concept (minority class) | 98.22% | 3.5 | 0.052 |
-| sick | Pypper:decision list (per refinement) | 98.22% | 4.8 | 0.045 |
-| sick | Pypper:decision list (per rule) | 98.17% | 4.9 | 0.053 |
-| sick | Pypper:decision list (per seed example) | 98.09% | 14.7 | 0.061 |
-| sick | Pypper:rule set (best rule) | 98.20% | 8.9 | 0.135 |
-| sick | Pypper:rule set (macro distribution voting) | 98.20% | 8.9 | 0.135 |
-| sick | Pypper:rule set (micro distribution voting) | 98.22% | 8.9 | 0.135 |
-| sick | Pypper:rule set (voting) | 98.22% | 8.9 | 0.135 |
+| sick | Pypper:concept (majority class) | 97.96% | 6.3 | 0.091 |
+| sick | Pypper:concept (minority class) | 98.20% | 4.2 | 0.060 |
+| sick | Pypper:decision list (per refinement) | 98.14% | 5.4 | 0.052 |
+| sick | Pypper:decision list (per rule) | 98.04% | 6.2 | 0.065 |
+| sick | Pypper:decision list (per seed example) | 97.93% | 12.4 | 0.058 |
+| sick | Pypper:rule set (best rule) | 98.30% | 10.5 | 0.152 |
+| sick | Pypper:rule set (macro distribution voting) | 98.30% | 10.5 | 0.152 |
+| sick | Pypper:rule set (micro distribution voting) | 98.30% | 10.5 | 0.152 |
+| sick | Pypper:rule set (voting) | 98.33% | 10.5 | 0.152 |
 | solar-flare | CN2:cascade (most frequent first) | 67.16% | 53.4 | 0.868 |
 | solar-flare | CN2:cascade (rarest first) | 61.63% | 67.9 | 0.863 |
 | solar-flare | CN2:decision list (per refinement) | 72.42% | 30.9 | 1.628 |
@@ -1698,15 +1698,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | solar-flare | PFossil:rule set (macro distribution voting) | 74.77% | 14.5 | 0.035 |
 | solar-flare | PFossil:rule set (micro distribution voting) | 74.30% | 14.5 | 0.035 |
 | solar-flare | PFossil:rule set (voting) | 70.07% | 14.5 | 0.035 |
-| solar-flare | Pypper:cascade (most frequent first) | 72.24% | 8.2 | 0.085 |
-| solar-flare | Pypper:cascade (rarest first) | 74.77% | 4.9 | 0.064 |
-| solar-flare | Pypper:decision list (per refinement) | 73.83% | 6.8 | 0.037 |
-| solar-flare | Pypper:decision list (per rule) | 70.93% | 3.8 | 0.054 |
-| solar-flare | Pypper:decision list (per seed example) | 74.58% | 19.3 | 0.142 |
-| solar-flare | Pypper:rule set (best rule) | 69.43% | 7.6 | 0.104 |
-| solar-flare | Pypper:rule set (macro distribution voting) | 69.52% | 7.6 | 0.104 |
-| solar-flare | Pypper:rule set (micro distribution voting) | 69.24% | 7.6 | 0.104 |
-| solar-flare | Pypper:rule set (voting) | 69.14% | 7.6 | 0.104 |
+| solar-flare | Pypper:cascade (most frequent first) | 72.42% | 8.3 | 0.092 |
+| solar-flare | Pypper:cascade (rarest first) | 74.39% | 5.5 | 0.069 |
+| solar-flare | Pypper:decision list (per refinement) | 73.93% | 7.8 | 0.043 |
+| solar-flare | Pypper:decision list (per rule) | 72.23% | 5.8 | 0.073 |
+| solar-flare | Pypper:decision list (per seed example) | 74.30% | 19.7 | 0.135 |
+| solar-flare | Pypper:rule set (best rule) | 69.52% | 7.5 | 0.111 |
+| solar-flare | Pypper:rule set (macro distribution voting) | 69.43% | 7.5 | 0.111 |
+| solar-flare | Pypper:rule set (micro distribution voting) | 69.43% | 7.5 | 0.111 |
+| solar-flare | Pypper:rule set (voting) | 69.24% | 7.5 | 0.111 |
 | sonar | CN2:concept (majority class) | 69.67% | 18.7 | 0.092 |
 | sonar | CN2:concept (minority class) | 69.71% | 17.9 | 0.075 |
 | sonar | CN2:decision list (per refinement) | 71.62% | 14.1 | 0.057 |
@@ -1725,15 +1725,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | sonar | PFossil:rule set (macro distribution voting) | 75.07% | 16.7 | 0.026 |
 | sonar | PFossil:rule set (micro distribution voting) | 74.02% | 16.7 | 0.026 |
 | sonar | PFossil:rule set (voting) | 75.52% | 16.7 | 0.026 |
-| sonar | Pypper:concept (majority class) | 70.26% | 3.2 | 0.030 |
-| sonar | Pypper:concept (minority class) | 77.43% | 2.8 | 0.028 |
-| sonar | Pypper:decision list (per refinement) | 77.90% | 3.6 | 0.014 |
-| sonar | Pypper:decision list (per rule) | 71.19% | 3.9 | 0.020 |
-| sonar | Pypper:decision list (per seed example) | 76.60% | 6.0 | 0.023 |
-| sonar | Pypper:rule set (best rule) | 76.48% | 6.0 | 0.057 |
-| sonar | Pypper:rule set (macro distribution voting) | 75.52% | 6.0 | 0.057 |
-| sonar | Pypper:rule set (micro distribution voting) | 75.50% | 6.0 | 0.057 |
-| sonar | Pypper:rule set (voting) | 73.14% | 6.0 | 0.057 |
+| sonar | Pypper:concept (majority class) | 69.79% | 3.6 | 0.037 |
+| sonar | Pypper:concept (minority class) | 75.05% | 3.0 | 0.031 |
+| sonar | Pypper:decision list (per refinement) | 74.12% | 4.0 | 0.017 |
+| sonar | Pypper:decision list (per rule) | 69.21% | 4.4 | 0.024 |
+| sonar | Pypper:decision list (per seed example) | 73.69% | 5.4 | 0.027 |
+| sonar | Pypper:rule set (best rule) | 73.57% | 6.6 | 0.066 |
+| sonar | Pypper:rule set (macro distribution voting) | 72.62% | 6.6 | 0.066 |
+| sonar | Pypper:rule set (micro distribution voting) | 74.05% | 6.6 | 0.066 |
+| sonar | Pypper:rule set (voting) | 71.21% | 6.6 | 0.066 |
 | soybean | CN2:cascade (most frequent first) | 89.90% | 31.6 | 0.255 |
 | soybean | CN2:cascade (rarest first) | 90.20% | 29.1 | 0.251 |
 | soybean | CN2:decision list (per refinement) | 90.64% | 26.6 | 0.699 |
@@ -1752,15 +1752,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | soybean | PFossil:rule set (macro distribution voting) | 91.36% | 42.1 | 0.064 |
 | soybean | PFossil:rule set (micro distribution voting) | 91.66% | 42.1 | 0.064 |
 | soybean | PFossil:rule set (voting) | 90.34% | 42.1 | 0.064 |
-| soybean | Pypper:cascade (most frequent first) | 87.43% | 26.0 | 0.144 |
-| soybean | Pypper:cascade (rarest first) | 90.93% | 23.9 | 0.143 |
-| soybean | Pypper:decision list (per refinement) | 89.17% | 25.8 | 0.100 |
-| soybean | Pypper:decision list (per rule) | 89.61% | 27.2 | 0.479 |
-| soybean | Pypper:decision list (per seed example) | 88.42% | 28.6 | 0.069 |
-| soybean | Pypper:rule set (best rule) | 89.91% | 26.0 | 0.185 |
-| soybean | Pypper:rule set (macro distribution voting) | 89.91% | 26.0 | 0.185 |
-| soybean | Pypper:rule set (micro distribution voting) | 87.28% | 26.0 | 0.185 |
-| soybean | Pypper:rule set (voting) | 86.84% | 26.0 | 0.185 |
+| soybean | Pypper:cascade (most frequent first) | 88.16% | 26.9 | 0.153 |
+| soybean | Pypper:cascade (rarest first) | 91.07% | 25.8 | 0.156 |
+| soybean | Pypper:decision list (per refinement) | 91.08% | 28.5 | 0.110 |
+| soybean | Pypper:decision list (per rule) | 90.20% | 28.5 | 0.500 |
+| soybean | Pypper:decision list (per seed example) | 87.27% | 28.0 | 0.065 |
+| soybean | Pypper:rule set (best rule) | 90.50% | 28.2 | 0.205 |
+| soybean | Pypper:rule set (macro distribution voting) | 90.50% | 28.2 | 0.205 |
+| soybean | Pypper:rule set (micro distribution voting) | 88.15% | 28.2 | 0.205 |
+| soybean | Pypper:rule set (voting) | 87.71% | 28.2 | 0.205 |
 | spambase | CN2:concept (majority class) | 90.94% | 195.5 | 33.539 |
 | spambase | CN2:concept (minority class) | 85.74% | 213.8 | 20.578 |
 | spambase | CN2:decision list (per refinement) | 93.02% | 101.9 | 1.545 |
@@ -1779,15 +1779,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | spambase | PFossil:rule set (macro distribution voting) | 92.76% | 12.1 | 0.094 |
 | spambase | PFossil:rule set (micro distribution voting) | 91.81% | 12.1 | 0.094 |
 | spambase | PFossil:rule set (voting) | 92.41% | 12.1 | 0.094 |
-| spambase | Pypper:concept (majority class) | 92.11% | 15.3 | 0.433 |
-| spambase | Pypper:concept (minority class) | 92.70% | 10.4 | 0.279 |
-| spambase | Pypper:decision list (per refinement) | 92.35% | 15.9 | 0.243 |
-| spambase | Pypper:decision list (per rule) | 92.50% | 26.9 | 0.276 |
-| spambase | Pypper:decision list (per seed example) | 92.91% | 32.5 | 0.234 |
-| spambase | Pypper:rule set (best rule) | 92.96% | 25.7 | 0.704 |
-| spambase | Pypper:rule set (macro distribution voting) | 92.87% | 25.7 | 0.704 |
-| spambase | Pypper:rule set (micro distribution voting) | 92.76% | 25.7 | 0.704 |
-| spambase | Pypper:rule set (voting) | 92.68% | 25.7 | 0.704 |
+| spambase | Pypper:concept (majority class) | 92.37% | 15.2 | 0.460 |
+| spambase | Pypper:concept (minority class) | 92.59% | 11.2 | 0.318 |
+| spambase | Pypper:decision list (per refinement) | 92.76% | 17.8 | 0.295 |
+| spambase | Pypper:decision list (per rule) | 93.09% | 30.8 | 0.319 |
+| spambase | Pypper:decision list (per seed example) | 92.83% | 29.3 | 0.205 |
+| spambase | Pypper:rule set (best rule) | 93.11% | 26.4 | 0.780 |
+| spambase | Pypper:rule set (macro distribution voting) | 93.00% | 26.4 | 0.780 |
+| spambase | Pypper:rule set (micro distribution voting) | 92.59% | 26.4 | 0.780 |
+| spambase | Pypper:rule set (voting) | 92.83% | 26.4 | 0.780 |
 | splice | CN2:cascade (most frequent first) | 91.76% | 80.2 | 0.703 |
 | splice | CN2:cascade (rarest first) | 90.16% | 50.8 | 0.743 |
 | splice | CN2:decision list (per refinement) | 91.10% | 69.1 | 0.817 |
@@ -1806,15 +1806,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | splice | PFossil:rule set (macro distribution voting) | 94.29% | 23.7 | 0.092 |
 | splice | PFossil:rule set (micro distribution voting) | 90.38% | 23.7 | 0.092 |
 | splice | PFossil:rule set (voting) | 89.09% | 23.7 | 0.092 |
-| splice | Pypper:cascade (most frequent first) | 93.01% | 12.6 | 0.154 |
-| splice | Pypper:cascade (rarest first) | 93.82% | 11.4 | 0.198 |
-| splice | Pypper:decision list (per refinement) | 93.86% | 15.6 | 0.119 |
-| splice | Pypper:decision list (per rule) | 93.20% | 14.8 | 0.172 |
-| splice | Pypper:decision list (per seed example) | 92.54% | 24.5 | 0.109 |
-| splice | Pypper:rule set (best rule) | 93.45% | 21.1 | 0.350 |
-| splice | Pypper:rule set (macro distribution voting) | 93.70% | 21.1 | 0.350 |
-| splice | Pypper:rule set (micro distribution voting) | 93.42% | 21.1 | 0.350 |
-| splice | Pypper:rule set (voting) | 93.51% | 21.1 | 0.350 |
+| splice | Pypper:cascade (most frequent first) | 93.39% | 17.6 | 0.269 |
+| splice | Pypper:cascade (rarest first) | 93.10% | 12.1 | 0.227 |
+| splice | Pypper:decision list (per refinement) | 93.89% | 16.5 | 0.133 |
+| splice | Pypper:decision list (per rule) | 93.07% | 17.0 | 0.196 |
+| splice | Pypper:decision list (per seed example) | 92.60% | 22.3 | 0.101 |
+| splice | Pypper:rule set (best rule) | 93.20% | 26.8 | 0.502 |
+| splice | Pypper:rule set (macro distribution voting) | 93.39% | 26.8 | 0.502 |
+| splice | Pypper:rule set (micro distribution voting) | 93.39% | 26.8 | 0.502 |
+| splice | Pypper:rule set (voting) | 93.26% | 26.8 | 0.502 |
 | texture | CN2:cascade (most frequent first) | 92.00% | 131.4 | 5.013 |
 | texture | CN2:cascade (rarest first) | 92.00% | 131.4 | 4.970 |
 | texture | CN2:decision list (per refinement) | 94.31% | 87.4 | 18.936 |
@@ -1833,15 +1833,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | texture | PFossil:rule set (macro distribution voting) | 92.45% | 77.9 | 0.400 |
 | texture | PFossil:rule set (micro distribution voting) | 90.29% | 77.9 | 0.400 |
 | texture | PFossil:rule set (voting) | 91.65% | 77.9 | 0.400 |
-| texture | Pypper:cascade (most frequent first) | 91.56% | 45.6 | 0.749 |
-| texture | Pypper:cascade (rarest first) | 91.56% | 45.6 | 0.752 |
-| texture | Pypper:decision list (per refinement) | 91.16% | 51.0 | 0.602 |
-| texture | Pypper:decision list (per rule) | 91.38% | 43.5 | 1.578 |
-| texture | Pypper:decision list (per seed example) | 92.27% | 65.7 | 0.397 |
-| texture | Pypper:rule set (best rule) | 91.78% | 66.7 | 1.279 |
-| texture | Pypper:rule set (macro distribution voting) | 92.04% | 66.7 | 1.279 |
-| texture | Pypper:rule set (micro distribution voting) | 91.49% | 66.7 | 1.279 |
-| texture | Pypper:rule set (voting) | 91.71% | 66.7 | 1.279 |
+| texture | Pypper:cascade (most frequent first) | 92.33% | 56.0 | 0.966 |
+| texture | Pypper:cascade (rarest first) | 92.33% | 56.0 | 0.966 |
+| texture | Pypper:decision list (per refinement) | 91.33% | 54.6 | 0.642 |
+| texture | Pypper:decision list (per rule) | 91.73% | 45.2 | 1.667 |
+| texture | Pypper:decision list (per seed example) | 92.16% | 63.4 | 0.390 |
+| texture | Pypper:rule set (best rule) | 92.40% | 81.3 | 1.654 |
+| texture | Pypper:rule set (macro distribution voting) | 92.82% | 81.3 | 1.654 |
+| texture | Pypper:rule set (micro distribution voting) | 92.05% | 81.3 | 1.654 |
+| texture | Pypper:rule set (voting) | 92.38% | 81.3 | 1.654 |
 | tic-tac-toe | CN2:concept (majority class) | 99.69% | 10.3 | 0.034 |
 | tic-tac-toe | CN2:concept (minority class) | 96.56% | 18.3 | 0.077 |
 | tic-tac-toe | CN2:decision list (per refinement) | 94.36% | 33.6 | 0.175 |
@@ -1860,15 +1860,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | tic-tac-toe | PFossil:rule set (macro distribution voting) | 95.10% | 14.7 | 0.023 |
 | tic-tac-toe | PFossil:rule set (micro distribution voting) | 83.72% | 14.7 | 0.023 |
 | tic-tac-toe | PFossil:rule set (voting) | 85.29% | 14.7 | 0.023 |
-| tic-tac-toe | Pypper:concept (majority class) | 99.69% | 8.0 | 0.048 |
-| tic-tac-toe | Pypper:concept (minority class) | 96.25% | 7.5 | 0.044 |
-| tic-tac-toe | Pypper:decision list (per refinement) | 96.25% | 7.8 | 0.029 |
-| tic-tac-toe | Pypper:decision list (per rule) | 97.50% | 12.1 | 0.049 |
-| tic-tac-toe | Pypper:decision list (per seed example) | 91.45% | 17.3 | 0.047 |
-| tic-tac-toe | Pypper:rule set (best rule) | 96.25% | 15.5 | 0.091 |
-| tic-tac-toe | Pypper:rule set (macro distribution voting) | 96.25% | 15.5 | 0.091 |
-| tic-tac-toe | Pypper:rule set (micro distribution voting) | 96.25% | 15.5 | 0.091 |
-| tic-tac-toe | Pypper:rule set (voting) | 96.25% | 15.5 | 0.091 |
+| tic-tac-toe | Pypper:concept (majority class) | 99.69% | 8.0 | 0.059 |
+| tic-tac-toe | Pypper:concept (minority class) | 98.02% | 8.6 | 0.058 |
+| tic-tac-toe | Pypper:decision list (per refinement) | 97.81% | 9.4 | 0.036 |
+| tic-tac-toe | Pypper:decision list (per rule) | 97.71% | 13.4 | 0.054 |
+| tic-tac-toe | Pypper:decision list (per seed example) | 93.01% | 17.2 | 0.047 |
+| tic-tac-toe | Pypper:rule set (best rule) | 98.33% | 16.6 | 0.105 |
+| tic-tac-toe | Pypper:rule set (macro distribution voting) | 98.33% | 16.6 | 0.105 |
+| tic-tac-toe | Pypper:rule set (micro distribution voting) | 98.33% | 16.6 | 0.105 |
+| tic-tac-toe | Pypper:rule set (voting) | 98.33% | 16.6 | 0.105 |
 | vehicle | CN2:cascade (most frequent first) | 68.92% | 80.5 | 0.842 |
 | vehicle | CN2:cascade (rarest first) | 69.75% | 78.0 | 0.787 |
 | vehicle | CN2:decision list (per refinement) | 71.39% | 72.6 | 2.046 |
@@ -1887,15 +1887,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | vehicle | PFossil:rule set (macro distribution voting) | 72.82% | 26.1 | 0.054 |
 | vehicle | PFossil:rule set (micro distribution voting) | 70.93% | 26.1 | 0.054 |
 | vehicle | PFossil:rule set (voting) | 71.53% | 26.1 | 0.054 |
-| vehicle | Pypper:cascade (most frequent first) | 70.46% | 9.8 | 0.088 |
-| vehicle | Pypper:cascade (rarest first) | 68.21% | 11.8 | 0.098 |
-| vehicle | Pypper:decision list (per refinement) | 68.81% | 14.8 | 0.060 |
-| vehicle | Pypper:decision list (per rule) | 69.76% | 13.6 | 0.122 |
-| vehicle | Pypper:decision list (per seed example) | 68.33% | 24.8 | 0.076 |
-| vehicle | Pypper:rule set (best rule) | 63.84% | 13.1 | 0.144 |
-| vehicle | Pypper:rule set (macro distribution voting) | 64.19% | 13.1 | 0.144 |
-| vehicle | Pypper:rule set (micro distribution voting) | 62.30% | 13.1 | 0.144 |
-| vehicle | Pypper:rule set (voting) | 63.72% | 13.1 | 0.144 |
+| vehicle | Pypper:cascade (most frequent first) | 71.53% | 12.2 | 0.114 |
+| vehicle | Pypper:cascade (rarest first) | 67.74% | 14.0 | 0.127 |
+| vehicle | Pypper:decision list (per refinement) | 69.28% | 13.5 | 0.057 |
+| vehicle | Pypper:decision list (per rule) | 69.76% | 16.5 | 0.147 |
+| vehicle | Pypper:decision list (per seed example) | 69.63% | 21.5 | 0.068 |
+| vehicle | Pypper:rule set (best rule) | 63.95% | 17.4 | 0.206 |
+| vehicle | Pypper:rule set (macro distribution voting) | 64.19% | 17.4 | 0.206 |
+| vehicle | Pypper:rule set (micro distribution voting) | 62.65% | 17.4 | 0.206 |
+| vehicle | Pypper:rule set (voting) | 62.90% | 17.4 | 0.206 |
 | vote | CN2:concept (majority class) | 94.25% | 14.3 | 0.043 |
 | vote | CN2:concept (minority class) | 92.65% | 12.0 | 0.046 |
 | vote | CN2:decision list (per refinement) | 93.56% | 10.4 | 0.054 |
@@ -1914,15 +1914,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | vote | PFossil:rule set (macro distribution voting) | 93.57% | 10.2 | 0.012 |
 | vote | PFossil:rule set (micro distribution voting) | 95.42% | 10.2 | 0.012 |
 | vote | PFossil:rule set (voting) | 94.03% | 10.2 | 0.012 |
-| vote | Pypper:concept (majority class) | 94.25% | 2.2 | 0.013 |
-| vote | Pypper:concept (minority class) | 95.18% | 1.7 | 0.015 |
-| vote | Pypper:decision list (per refinement) | 94.02% | 5.7 | 0.015 |
-| vote | Pypper:decision list (per rule) | 95.40% | 5.2 | 0.017 |
-| vote | Pypper:decision list (per seed example) | 95.87% | 5.8 | 0.012 |
-| vote | Pypper:rule set (best rule) | 95.18% | 3.9 | 0.028 |
-| vote | Pypper:rule set (macro distribution voting) | 94.95% | 3.9 | 0.028 |
-| vote | Pypper:rule set (micro distribution voting) | 95.18% | 3.9 | 0.028 |
-| vote | Pypper:rule set (voting) | 94.95% | 3.9 | 0.028 |
+| vote | Pypper:concept (majority class) | 96.09% | 3.0 | 0.017 |
+| vote | Pypper:concept (minority class) | 95.18% | 1.8 | 0.016 |
+| vote | Pypper:decision list (per refinement) | 94.49% | 6.1 | 0.015 |
+| vote | Pypper:decision list (per rule) | 95.16% | 5.5 | 0.019 |
+| vote | Pypper:decision list (per seed example) | 95.40% | 5.5 | 0.012 |
+| vote | Pypper:rule set (best rule) | 96.09% | 4.8 | 0.033 |
+| vote | Pypper:rule set (macro distribution voting) | 95.86% | 4.8 | 0.033 |
+| vote | Pypper:rule set (micro distribution voting) | 95.18% | 4.8 | 0.033 |
+| vote | Pypper:rule set (voting) | 95.86% | 4.8 | 0.033 |
 | vowel | CN2:cascade (most frequent first) | 81.92% | 88.1 | 0.548 |
 | vowel | CN2:cascade (rarest first) | 81.92% | 88.1 | 0.558 |
 | vowel | CN2:decision list (per refinement) | 79.29% | 61.7 | 1.644 |
@@ -1941,15 +1941,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | vowel | PFossil:rule set (macro distribution voting) | 79.80% | 94.9 | 0.165 |
 | vowel | PFossil:rule set (micro distribution voting) | 74.24% | 94.9 | 0.165 |
 | vowel | PFossil:rule set (voting) | 78.89% | 94.9 | 0.165 |
-| vowel | Pypper:cascade (most frequent first) | 69.70% | 33.1 | 0.251 |
-| vowel | Pypper:cascade (rarest first) | 69.70% | 33.1 | 0.250 |
-| vowel | Pypper:decision list (per refinement) | 55.25% | 23.4 | 0.122 |
-| vowel | Pypper:decision list (per rule) | 52.02% | 22.7 | 0.531 |
-| vowel | Pypper:decision list (per seed example) | 71.11% | 50.4 | 0.160 |
-| vowel | Pypper:rule set (best rule) | 63.84% | 41.5 | 0.357 |
-| vowel | Pypper:rule set (macro distribution voting) | 64.04% | 41.5 | 0.357 |
-| vowel | Pypper:rule set (micro distribution voting) | 62.53% | 41.5 | 0.357 |
-| vowel | Pypper:rule set (voting) | 62.53% | 41.5 | 0.357 |
+| vowel | Pypper:cascade (most frequent first) | 74.85% | 48.1 | 0.370 |
+| vowel | Pypper:cascade (rarest first) | 74.85% | 48.1 | 0.371 |
+| vowel | Pypper:decision list (per refinement) | 66.16% | 40.0 | 0.194 |
+| vowel | Pypper:decision list (per rule) | 61.82% | 30.7 | 0.699 |
+| vowel | Pypper:decision list (per seed example) | 72.22% | 49.8 | 0.159 |
+| vowel | Pypper:rule set (best rule) | 73.84% | 68.9 | 0.584 |
+| vowel | Pypper:rule set (macro distribution voting) | 74.85% | 68.9 | 0.584 |
+| vowel | Pypper:rule set (micro distribution voting) | 72.02% | 68.9 | 0.584 |
+| vowel | Pypper:rule set (voting) | 72.02% | 68.9 | 0.584 |
 | wdbc | CN2:concept (majority class) | 94.37% | 12.5 | 0.049 |
 | wdbc | CN2:concept (minority class) | 93.85% | 13.1 | 0.058 |
 | wdbc | CN2:decision list (per refinement) | 94.55% | 11.0 | 0.061 |
@@ -1968,15 +1968,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | wdbc | PFossil:rule set (macro distribution voting) | 94.91% | 11.7 | 0.018 |
 | wdbc | PFossil:rule set (micro distribution voting) | 93.85% | 11.7 | 0.018 |
 | wdbc | PFossil:rule set (voting) | 94.56% | 11.7 | 0.018 |
-| wdbc | Pypper:concept (majority class) | 93.13% | 3.0 | 0.024 |
-| wdbc | Pypper:concept (minority class) | 94.56% | 3.2 | 0.021 |
-| wdbc | Pypper:decision list (per refinement) | 94.38% | 3.4 | 0.014 |
-| wdbc | Pypper:decision list (per rule) | 94.73% | 3.9 | 0.019 |
-| wdbc | Pypper:decision list (per seed example) | 95.26% | 5.9 | 0.018 |
-| wdbc | Pypper:rule set (best rule) | 94.91% | 6.2 | 0.045 |
-| wdbc | Pypper:rule set (macro distribution voting) | 95.08% | 6.2 | 0.045 |
-| wdbc | Pypper:rule set (micro distribution voting) | 94.90% | 6.2 | 0.045 |
-| wdbc | Pypper:rule set (voting) | 94.72% | 6.2 | 0.045 |
+| wdbc | Pypper:concept (majority class) | 93.83% | 3.4 | 0.031 |
+| wdbc | Pypper:concept (minority class) | 95.08% | 3.8 | 0.029 |
+| wdbc | Pypper:decision list (per refinement) | 95.08% | 4.8 | 0.020 |
+| wdbc | Pypper:decision list (per rule) | 95.26% | 5.5 | 0.027 |
+| wdbc | Pypper:decision list (per seed example) | 95.44% | 5.7 | 0.017 |
+| wdbc | Pypper:rule set (best rule) | 95.44% | 7.2 | 0.059 |
+| wdbc | Pypper:rule set (macro distribution voting) | 95.44% | 7.2 | 0.059 |
+| wdbc | Pypper:rule set (micro distribution voting) | 95.43% | 7.2 | 0.059 |
+| wdbc | Pypper:rule set (voting) | 95.08% | 7.2 | 0.059 |
 | wilt | CN2:concept (majority class) | 96.63% | 43.4 | 0.635 |
 | wilt | CN2:concept (minority class) | 71.01% | 38.0 | 0.626 |
 | wilt | CN2:decision list (per refinement) | 97.02% | 38.5 | 1.120 |
@@ -1995,15 +1995,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | wilt | PFossil:rule set (macro distribution voting) | 97.02% | 1.0 | 0.014 |
 | wilt | PFossil:rule set (micro distribution voting) | 97.02% | 1.0 | 0.014 |
 | wilt | PFossil:rule set (voting) | 97.02% | 1.0 | 0.014 |
-| wilt | Pypper:concept (majority class) | 97.40% | 4.4 | 0.099 |
-| wilt | Pypper:concept (minority class) | 97.21% | 1.7 | 0.038 |
-| wilt | Pypper:decision list (per refinement) | 97.23% | 4.8 | 0.051 |
-| wilt | Pypper:decision list (per rule) | 97.15% | 3.7 | 0.048 |
-| wilt | Pypper:decision list (per seed example) | 96.74% | 17.6 | 0.113 |
-| wilt | Pypper:rule set (best rule) | 97.42% | 6.1 | 0.139 |
-| wilt | Pypper:rule set (macro distribution voting) | 97.42% | 6.1 | 0.139 |
-| wilt | Pypper:rule set (micro distribution voting) | 97.42% | 6.1 | 0.139 |
-| wilt | Pypper:rule set (voting) | 97.42% | 6.1 | 0.139 |
+| wilt | Pypper:concept (majority class) | 97.33% | 4.5 | 0.079 |
+| wilt | Pypper:concept (minority class) | 97.31% | 2.0 | 0.046 |
+| wilt | Pypper:decision list (per refinement) | 97.25% | 6.8 | 0.072 |
+| wilt | Pypper:decision list (per rule) | 97.29% | 6.6 | 0.071 |
+| wilt | Pypper:decision list (per seed example) | 97.31% | 12.2 | 0.088 |
+| wilt | Pypper:rule set (best rule) | 97.36% | 6.5 | 0.132 |
+| wilt | Pypper:rule set (macro distribution voting) | 97.38% | 6.5 | 0.132 |
+| wilt | Pypper:rule set (micro distribution voting) | 97.36% | 6.5 | 0.132 |
+| wilt | Pypper:rule set (voting) | 97.38% | 6.5 | 0.132 |
 | wine | CN2:cascade (most frequent first) | 92.68% | 5.8 | 0.011 |
 | wine | CN2:cascade (rarest first) | 94.38% | 4.2 | 0.011 |
 | wine | CN2:decision list (per refinement) | 93.86% | 5.5 | 0.018 |
@@ -2022,15 +2022,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | wine | PFossil:rule set (macro distribution voting) | 93.82% | 9.4 | 0.008 |
 | wine | PFossil:rule set (micro distribution voting) | 93.24% | 9.4 | 0.008 |
 | wine | PFossil:rule set (voting) | 93.79% | 9.4 | 0.008 |
-| wine | Pypper:cascade (most frequent first) | 88.20% | 3.4 | 0.016 |
-| wine | Pypper:cascade (rarest first) | 92.09% | 2.7 | 0.015 |
-| wine | Pypper:decision list (per refinement) | 90.42% | 2.7 | 0.008 |
-| wine | Pypper:decision list (per rule) | 87.65% | 3.4 | 0.016 |
-| wine | Pypper:decision list (per seed example) | 86.01% | 4.4 | 0.011 |
-| wine | Pypper:rule set (best rule) | 92.09% | 5.2 | 0.027 |
-| wine | Pypper:rule set (macro distribution voting) | 90.98% | 5.2 | 0.027 |
-| wine | Pypper:rule set (micro distribution voting) | 90.92% | 5.2 | 0.027 |
-| wine | Pypper:rule set (voting) | 88.69% | 5.2 | 0.027 |
+| wine | Pypper:cascade (most frequent first) | 88.20% | 3.5 | 0.018 |
+| wine | Pypper:cascade (rarest first) | 92.09% | 2.8 | 0.016 |
+| wine | Pypper:decision list (per refinement) | 89.87% | 3.0 | 0.008 |
+| wine | Pypper:decision list (per rule) | 88.24% | 3.6 | 0.017 |
+| wine | Pypper:decision list (per seed example) | 86.01% | 4.4 | 0.012 |
+| wine | Pypper:rule set (best rule) | 92.09% | 5.3 | 0.029 |
+| wine | Pypper:rule set (macro distribution voting) | 90.98% | 5.3 | 0.029 |
+| wine | Pypper:rule set (micro distribution voting) | 90.92% | 5.3 | 0.029 |
+| wine | Pypper:rule set (voting) | 88.69% | 5.3 | 0.029 |
 | yeast | CN2:cascade (most frequent first) | 50.41% | 141.1 | 2.291 |
 | yeast | CN2:cascade (rarest first) | 46.09% | 152.5 | 2.663 |
 | yeast | CN2:decision list (per refinement) | 55.18% | 69.3 | 3.432 |
@@ -2049,15 +2049,15 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | yeast | PFossil:rule set (macro distribution voting) | 57.54% | 31.2 | 0.089 |
 | yeast | PFossil:rule set (micro distribution voting) | 55.52% | 31.2 | 0.089 |
 | yeast | PFossil:rule set (voting) | 54.31% | 31.2 | 0.089 |
-| yeast | Pypper:cascade (most frequent first) | 53.84% | 18.1 | 0.244 |
-| yeast | Pypper:cascade (rarest first) | 58.96% | 14.9 | 0.203 |
-| yeast | Pypper:decision list (per refinement) | 52.49% | 16.6 | 0.119 |
-| yeast | Pypper:decision list (per rule) | 52.76% | 10.0 | 0.281 |
-| yeast | Pypper:decision list (per seed example) | 56.20% | 47.5 | 0.338 |
-| yeast | Pypper:rule set (best rule) | 59.30% | 17.5 | 0.298 |
-| yeast | Pypper:rule set (macro distribution voting) | 59.30% | 17.5 | 0.298 |
-| yeast | Pypper:rule set (micro distribution voting) | 58.62% | 17.5 | 0.298 |
-| yeast | Pypper:rule set (voting) | 58.69% | 17.5 | 0.298 |
+| yeast | Pypper:cascade (most frequent first) | 53.30% | 19.8 | 0.258 |
+| yeast | Pypper:cascade (rarest first) | 59.57% | 15.6 | 0.227 |
+| yeast | Pypper:decision list (per refinement) | 52.77% | 16.5 | 0.117 |
+| yeast | Pypper:decision list (per rule) | 56.67% | 14.9 | 0.376 |
+| yeast | Pypper:decision list (per seed example) | 55.06% | 45.6 | 0.297 |
+| yeast | Pypper:rule set (best rule) | 59.43% | 18.5 | 0.313 |
+| yeast | Pypper:rule set (macro distribution voting) | 59.02% | 18.5 | 0.313 |
+| yeast | Pypper:rule set (micro distribution voting) | 57.88% | 18.5 | 0.313 |
+| yeast | Pypper:rule set (voting) | 58.15% | 18.5 | 0.313 |
 | zoo | CN2:cascade (most frequent first) | 96.00% | 6.7 | 0.028 |
 | zoo | CN2:cascade (rarest first) | 95.00% | 7.1 | 0.015 |
 | zoo | CN2:decision list (per refinement) | 96.00% | 6.3 | 0.031 |
@@ -2076,13 +2076,13 @@ Share of the pairs on which the decision list is better, and Spearman's rank cor
 | zoo | PFossil:rule set (macro distribution voting) | 92.00% | 8.9 | 0.008 |
 | zoo | PFossil:rule set (micro distribution voting) | 94.00% | 8.9 | 0.008 |
 | zoo | PFossil:rule set (voting) | 93.00% | 8.9 | 0.008 |
-| zoo | Pypper:cascade (most frequent first) | 93.09% | 5.2 | 0.026 |
-| zoo | Pypper:cascade (rarest first) | 89.09% | 5.3 | 0.027 |
+| zoo | Pypper:cascade (most frequent first) | 93.09% | 5.2 | 0.025 |
+| zoo | Pypper:cascade (rarest first) | 89.09% | 5.4 | 0.030 |
 | zoo | Pypper:decision list (per refinement) | 92.00% | 6.0 | 0.012 |
-| zoo | Pypper:decision list (per rule) | 90.00% | 6.1 | 0.038 |
-| zoo | Pypper:decision list (per seed example) | 89.09% | 6.2 | 0.011 |
-| zoo | Pypper:rule set (best rule) | 90.09% | 6.1 | 0.032 |
-| zoo | Pypper:rule set (macro distribution voting) | 90.09% | 6.1 | 0.032 |
-| zoo | Pypper:rule set (micro distribution voting) | 91.09% | 6.1 | 0.032 |
-| zoo | Pypper:rule set (voting) | 90.09% | 6.1 | 0.032 |
+| zoo | Pypper:decision list (per rule) | 90.00% | 6.1 | 0.043 |
+| zoo | Pypper:decision list (per seed example) | 89.09% | 6.3 | 0.013 |
+| zoo | Pypper:rule set (best rule) | 90.09% | 6.1 | 0.038 |
+| zoo | Pypper:rule set (macro distribution voting) | 90.09% | 6.1 | 0.038 |
+| zoo | Pypper:rule set (micro distribution voting) | 91.09% | 6.1 | 0.038 |
+| zoo | Pypper:rule set (voting) | 90.09% | 6.1 | 0.038 |
 

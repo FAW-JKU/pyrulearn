@@ -25,7 +25,7 @@ companion demo, [heuristic_isometrics](heuristic_isometrics_report.md).
 Datasets: 36 of the paper's datasets that are in
 `pyrulearn.experiments.catalog` (20 binary,
 16 multi-class). Numeric attributes are discretized per
-training fold (`build_dataspec(max_intervals=8)`) instead
+training fold (`build_dataspec(discretizer=TreeDiscretizer(max_intervals=8))`) instead
 of the paper's tests at every midpoint. Each fit is capped at
 600s; a timeout counts as a failure.
 
@@ -43,22 +43,22 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 
 | learner | accuracy | n_rules | n_conditions | conds/rule | fit_time (s) | wins | mean rank | failures |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|
-| m-estimate (m=16) | 83.82% | 17.2 | 60.8 | 3.3 | 0.08 | 5.3 | 6.43 | 0 |
-| m-estimate (m=8) | 83.42% | 22.4 | 77.3 | 3.1 | 0.09 | 2.1 | 7.83 | 0 |
+| m-estimate (m=16) | 83.82% | 17.2 | 60.8 | 3.3 | 0.08 | 6.3 | 6.40 | 0 |
+| m-estimate (m=8) | 83.42% | 22.4 | 77.3 | 3.1 | 0.09 | 1.1 | 7.88 | 0 |
+| Pypper | 83.36% | 7.1 | 19.0 | 2.4 | 0.07 | 4.7 | 6.62 | 0 |
 | m-estimate (m=32) | 83.36% | 12.9 | 48.4 | 3.6 | 0.08 | 2.3 | 6.72 | 0 |
-| Pypper | 83.23% | 6.1 | 16.2 | 2.4 | 0.08 | 8.2 | 6.42 | 0 |
-| m-estimate (m=22.466) | 83.17% | 14.9 | 54.4 | 3.4 | 0.08 | 1.3 | 7.39 | 0 |
+| m-estimate (m=22.466) | 83.17% | 14.9 | 54.4 | 3.4 | 0.08 | 1.3 | 7.42 | 0 |
 | m-estimate (m=4) | 82.92% | 28.2 | 91.9 | 3.0 | 0.09 | 1.4 | 8.08 | 0 |
-| Weka:JRip | 82.67% | 7.7 | 20.3 | 2.4 | 0.70 | 4.2 | 7.68 | 0 |
-| Correlation | 82.65% | 14.4 | 52.1 | 3.3 | 0.06 | 3.1 | 8.42 | 0 |
+| Weka:JRip | 82.67% | 7.7 | 20.3 | 2.4 | 0.52 | 6.2 | 7.65 | 0 |
+| Correlation | 82.65% | 14.4 | 52.1 | 3.3 | 0.06 | 4.1 | 8.31 | 0 |
 | m-estimate (m=2) | 82.62% | 35.6 | 115.3 | 2.9 | 0.09 | 1.4 | 8.24 | 0 |
-| relative cost (c_r=0.342) | 82.30% | 9.6 | 35.3 | 3.3 | 0.06 | 1.0 | 8.89 | 0 |
-| F-measure (beta=0.5) | 81.77% | 19.5 | 61.5 | 2.9 | 0.08 | 1.1 | 9.24 | 0 |
+| relative cost (c_r=0.342) | 82.30% | 9.6 | 35.3 | 3.3 | 0.06 | 0.5 | 8.88 | 0 |
+| F-measure (beta=0.5) | 81.77% | 19.5 | 61.5 | 2.9 | 0.08 | 1.1 | 9.22 | 0 |
 | Laplace | 81.67% | 43.6 | 134.0 | 2.7 | 0.09 | 0.4 | 10.43 | 0 |
 | Precision | 81.53% | 68.0 | 205.5 | 2.7 | 0.15 | 1.1 | 10.57 | 0 |
-| cost (c=0.437) | 81.40% | 44.4 | 143.1 | 2.6 | 0.10 | 1.1 | 9.94 | 0 |
-| Accuracy | 81.14% | 39.1 | 126.2 | 2.6 | 0.10 | 0.1 | 10.21 | 0 |
-| WRA | 80.51% | 4.7 | 16.2 | 3.2 | 0.04 | 2.0 | 9.51 | 0 |
+| cost (c=0.437) | 81.40% | 44.4 | 143.1 | 2.6 | 0.10 | 1.1 | 9.93 | 0 |
+| Accuracy | 81.14% | 39.1 | 126.2 | 2.6 | 0.10 | 0.1 | 10.18 | 0 |
+| WRA | 80.51% | 4.7 | 16.2 | 3.2 | 0.04 | 3.0 | 9.47 | 0 |
 
 `wins` -- datasets where a learner's mean accuracy was (tied-for-)best, a tie split evenly; `mean rank` -- average accuracy rank across datasets, failures tied for last.
 
@@ -71,9 +71,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | anneal | F-measure (beta=0.5) | 96.43% | 17.3 | 36.2 | 0.066 |
 | anneal | Laplace | 96.32% | 22.1 | 55.6 | 0.068 |
 | anneal | Precision | 96.32% | 26.8 | 73.0 | 0.069 |
-| anneal | Pypper | 94.20% | 8.2 | 20.1 | 0.141 |
+| anneal | Pypper | 94.32% | 8.9 | 22.5 | 0.096 |
 | anneal | WRA | 91.64% | 6.1 | 15.5 | 0.032 |
-| anneal | Weka:JRip | 89.98% | 6.7 | 10.9 | 0.701 |
+| anneal | Weka:JRip | 89.98% | 6.7 | 10.9 | 0.545 |
 | anneal | cost (c=0.437) | 94.20% | 16.9 | 30.6 | 0.037 |
 | anneal | m-estimate (m=16) | 96.55% | 15.3 | 32.1 | 0.068 |
 | anneal | m-estimate (m=2) | 96.99% | 21.8 | 50.9 | 0.078 |
@@ -87,9 +87,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | audiology | F-measure (beta=0.5) | 77.49% | 42.3 | 85.5 | 0.081 |
 | audiology | Laplace | 74.33% | 55.0 | 105.2 | 0.076 |
 | audiology | Precision | 75.22% | 67.0 | 130.3 | 0.113 |
-| audiology | Pypper | 75.28% | 10.5 | 16.0 | 0.153 |
+| audiology | Pypper | 75.71% | 11.1 | 17.3 | 0.111 |
 | audiology | WRA | 82.77% | 23.2 | 59.1 | 0.117 |
-| audiology | Weka:JRip | 74.84% | 14.7 | 26.2 | 0.662 |
+| audiology | Weka:JRip | 74.84% | 14.7 | 26.2 | 0.459 |
 | audiology | cost (c=0.437) | 79.17% | 44.0 | 93.3 | 0.066 |
 | audiology | m-estimate (m=16) | 83.18% | 31.8 | 70.0 | 0.077 |
 | audiology | m-estimate (m=2) | 77.94% | 44.6 | 88.2 | 0.082 |
@@ -103,9 +103,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | balance-scale | F-measure (beta=0.5) | 80.63% | 16.2 | 47.5 | 0.049 |
 | balance-scale | Laplace | 78.88% | 92.7 | 326.9 | 0.167 |
 | balance-scale | Precision | 77.27% | 125.4 | 425.5 | 0.234 |
-| balance-scale | Pypper | 79.18% | 7.6 | 22.8 | 0.082 |
+| balance-scale | Pypper | 78.38% | 7.9 | 23.8 | 0.072 |
 | balance-scale | WRA | 72.65% | 2.5 | 6.5 | 0.014 |
-| balance-scale | Weka:JRip | 80.31% | 8.1 | 25.2 | 0.582 |
+| balance-scale | Weka:JRip | 80.31% | 8.1 | 25.2 | 0.439 |
 | balance-scale | cost (c=0.437) | 80.63% | 70.1 | 255.3 | 0.129 |
 | balance-scale | m-estimate (m=16) | 82.70% | 13.0 | 39.2 | 0.045 |
 | balance-scale | m-estimate (m=2) | 73.10% | 78.0 | 335.2 | 0.180 |
@@ -119,9 +119,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | breast-cancer | F-measure (beta=0.5) | 67.54% | 8.4 | 38.3 | 0.052 |
 | breast-cancer | Laplace | 70.58% | 22.7 | 58.4 | 0.033 |
 | breast-cancer | Precision | 68.84% | 36.3 | 95.1 | 0.057 |
-| breast-cancer | Pypper | 74.84% | 1.0 | 2.0 | 0.036 |
+| breast-cancer | Pypper | 74.84% | 1.0 | 2.0 | 0.025 |
 | breast-cancer | WRA | 68.46% | 1.2 | 6.1 | 0.015 |
-| breast-cancer | Weka:JRip | 71.37% | 1.3 | 2.5 | 0.505 |
+| breast-cancer | Weka:JRip | 71.37% | 1.3 | 2.5 | 0.370 |
 | breast-cancer | cost (c=0.437) | 71.32% | 14.8 | 34.9 | 0.024 |
 | breast-cancer | m-estimate (m=16) | 63.26% | 8.9 | 41.3 | 0.052 |
 | breast-cancer | m-estimate (m=2) | 70.23% | 24.4 | 69.8 | 0.046 |
@@ -135,9 +135,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | breast-w | F-measure (beta=0.5) | 95.57% | 11.0 | 23.5 | 0.033 |
 | breast-w | Laplace | 94.99% | 21.0 | 34.1 | 0.040 |
 | breast-w | Precision | 94.57% | 42.9 | 69.2 | 0.072 |
-| breast-w | Pypper | 95.42% | 3.6 | 7.9 | 0.040 |
+| breast-w | Pypper | 95.57% | 3.9 | 8.1 | 0.032 |
 | breast-w | WRA | 94.56% | 2.9 | 7.1 | 0.024 |
-| breast-w | Weka:JRip | 95.42% | 4.5 | 8.5 | 0.669 |
+| breast-w | Weka:JRip | 95.42% | 4.5 | 8.5 | 0.499 |
 | breast-w | cost (c=0.437) | 96.00% | 10.0 | 17.0 | 0.025 |
 | breast-w | m-estimate (m=16) | 95.28% | 6.7 | 24.8 | 0.035 |
 | breast-w | m-estimate (m=2) | 95.28% | 16.8 | 29.8 | 0.033 |
@@ -151,9 +151,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | colic | F-measure (beta=0.5) | 82.35% | 15.9 | 44.2 | 0.050 |
 | colic | Laplace | 76.39% | 37.8 | 98.3 | 0.072 |
 | colic | Precision | 76.91% | 61.7 | 158.2 | 0.116 |
-| colic | Pypper | 85.08% | 1.8 | 4.0 | 0.030 |
+| colic | Pypper | 83.72% | 3.0 | 7.0 | 0.038 |
 | colic | WRA | 83.72% | 1.4 | 3.5 | 0.013 |
-| colic | Weka:JRip | 84.50% | 3.4 | 8.4 | 0.564 |
+| colic | Weka:JRip | 84.50% | 3.4 | 8.4 | 0.398 |
 | colic | cost (c=0.437) | 79.08% | 26.8 | 64.2 | 0.046 |
 | colic | m-estimate (m=16) | 79.08% | 10.6 | 39.3 | 0.051 |
 | colic | m-estimate (m=2) | 76.12% | 28.4 | 84.5 | 0.073 |
@@ -167,9 +167,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | credit-approval | F-measure (beta=0.5) | 81.74% | 22.8 | 82.4 | 0.111 |
 | credit-approval | Laplace | 80.14% | 49.7 | 144.3 | 0.104 |
 | credit-approval | Precision | 80.29% | 97.1 | 273.0 | 0.212 |
-| credit-approval | Pypper | 83.91% | 3.8 | 11.0 | 0.057 |
+| credit-approval | Pypper | 85.36% | 2.7 | 6.3 | 0.055 |
 | credit-approval | WRA | 83.62% | 1.0 | 3.4 | 0.018 |
-| credit-approval | Weka:JRip | 84.78% | 4.2 | 10.1 | 0.640 |
+| credit-approval | Weka:JRip | 84.78% | 4.2 | 10.1 | 0.459 |
 | credit-approval | cost (c=0.437) | 83.04% | 21.2 | 54.1 | 0.053 |
 | credit-approval | m-estimate (m=16) | 83.48% | 14.7 | 81.6 | 0.110 |
 | credit-approval | m-estimate (m=2) | 82.46% | 41.8 | 131.5 | 0.108 |
@@ -183,9 +183,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | credit-g | F-measure (beta=0.5) | 67.40% | 34.0 | 182.0 | 0.181 |
 | credit-g | Laplace | 68.10% | 134.0 | 431.3 | 0.264 |
 | credit-g | Precision | 69.40% | 193.0 | 619.1 | 0.410 |
-| credit-g | Pypper | 71.10% | 2.8 | 10.0 | 0.061 |
+| credit-g | Pypper | 70.40% | 3.4 | 13.0 | 0.065 |
 | credit-g | WRA | 69.00% | 1.2 | 9.1 | 0.021 |
-| credit-g | Weka:JRip | 71.20% | 3.6 | 12.9 | 0.706 |
+| credit-g | Weka:JRip | 71.20% | 3.6 | 12.9 | 0.553 |
 | credit-g | cost (c=0.437) | 68.10% | 159.5 | 513.3 | 0.328 |
 | credit-g | m-estimate (m=16) | 66.20% | 45.0 | 244.4 | 0.229 |
 | credit-g | m-estimate (m=2) | 70.90% | 100.6 | 338.7 | 0.210 |
@@ -199,9 +199,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | diabetes | F-measure (beta=0.5) | 73.05% | 7.0 | 34.1 | 0.054 |
 | diabetes | Laplace | 72.53% | 59.7 | 219.4 | 0.137 |
 | diabetes | Precision | 72.14% | 101.7 | 375.0 | 0.234 |
-| diabetes | Pypper | 75.52% | 3.5 | 11.9 | 0.063 |
+| diabetes | Pypper | 74.22% | 3.8 | 12.6 | 0.053 |
 | diabetes | WRA | 73.29% | 1.1 | 2.6 | 0.014 |
-| diabetes | Weka:JRip | 72.53% | 3.9 | 12.4 | 0.649 |
+| diabetes | Weka:JRip | 72.53% | 3.9 | 12.4 | 0.452 |
 | diabetes | cost (c=0.437) | 74.62% | 29.5 | 85.7 | 0.069 |
 | diabetes | m-estimate (m=16) | 75.26% | 15.1 | 79.7 | 0.086 |
 | diabetes | m-estimate (m=2) | 71.48% | 53.8 | 232.3 | 0.158 |
@@ -215,9 +215,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | glass | F-measure (beta=0.5) | 65.91% | 28.0 | 81.0 | 0.073 |
 | glass | Laplace | 65.04% | 33.7 | 91.9 | 0.053 |
 | glass | Precision | 66.97% | 50.0 | 139.7 | 0.078 |
-| glass | Pypper | 68.33% | 6.1 | 14.3 | 0.062 |
+| glass | Pypper | 67.38% | 6.2 | 14.3 | 0.061 |
 | glass | WRA | 69.70% | 4.7 | 20.0 | 0.040 |
-| glass | Weka:JRip | 66.84% | 6.6 | 16.1 | 0.443 |
+| glass | Weka:JRip | 66.84% | 6.6 | 16.1 | 0.400 |
 | glass | cost (c=0.437) | 62.19% | 30.2 | 81.3 | 0.047 |
 | glass | m-estimate (m=16) | 72.03% | 17.9 | 58.0 | 0.067 |
 | glass | m-estimate (m=2) | 66.95% | 30.2 | 85.7 | 0.061 |
@@ -231,9 +231,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | hayes-roth | F-measure (beta=0.5) | 82.50% | 7.5 | 12.7 | 0.016 |
 | hayes-roth | Laplace | 83.75% | 9.4 | 18.9 | 0.012 |
 | hayes-roth | Precision | 83.75% | 11.8 | 24.8 | 0.015 |
-| hayes-roth | Pypper | 84.38% | 6.1 | 9.6 | 0.036 |
+| hayes-roth | Pypper | 84.38% | 6.1 | 9.6 | 0.031 |
 | hayes-roth | WRA | 75.00% | 5.0 | 6.1 | 0.010 |
-| hayes-roth | Weka:JRip | 83.12% | 5.8 | 8.5 | 0.453 |
+| hayes-roth | Weka:JRip | 83.12% | 5.8 | 8.5 | 0.336 |
 | hayes-roth | cost (c=0.437) | 84.38% | 8.2 | 15.1 | 0.012 |
 | hayes-roth | m-estimate (m=16) | 84.38% | 7.1 | 11.5 | 0.013 |
 | hayes-roth | m-estimate (m=2) | 85.00% | 8.9 | 17.0 | 0.013 |
@@ -247,9 +247,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | heart-c | F-measure (beta=0.5) | 74.28% | 15.7 | 53.4 | 0.050 |
 | heart-c | Laplace | 75.97% | 33.9 | 96.0 | 0.054 |
 | heart-c | Precision | 74.96% | 59.5 | 154.2 | 0.094 |
-| heart-c | Pypper | 81.55% | 3.0 | 7.6 | 0.033 |
+| heart-c | Pypper | 79.23% | 3.4 | 9.0 | 0.033 |
 | heart-c | WRA | 73.96% | 2.4 | 9.7 | 0.019 |
-| heart-c | Weka:JRip | 81.23% | 3.4 | 7.6 | 0.519 |
+| heart-c | Weka:JRip | 81.23% | 3.4 | 7.6 | 0.395 |
 | heart-c | cost (c=0.437) | 76.26% | 28.2 | 80.6 | 0.052 |
 | heart-c | m-estimate (m=16) | 75.61% | 13.3 | 55.9 | 0.052 |
 | heart-c | m-estimate (m=2) | 78.56% | 25.8 | 78.7 | 0.047 |
@@ -263,9 +263,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | heart-h | F-measure (beta=0.5) | 76.85% | 13.3 | 51.6 | 0.051 |
 | heart-h | Laplace | 77.90% | 30.0 | 82.4 | 0.050 |
 | heart-h | Precision | 75.83% | 46.7 | 119.2 | 0.068 |
-| heart-h | Pypper | 78.54% | 1.9 | 4.5 | 0.023 |
+| heart-h | Pypper | 76.82% | 1.8 | 4.0 | 0.021 |
 | heart-h | WRA | 75.53% | 1.7 | 6.4 | 0.018 |
-| heart-h | Weka:JRip | 77.89% | 2.2 | 4.3 | 0.483 |
+| heart-h | Weka:JRip | 77.89% | 2.2 | 4.3 | 0.377 |
 | heart-h | cost (c=0.437) | 75.54% | 22.8 | 65.7 | 0.042 |
 | heart-h | m-estimate (m=16) | 77.87% | 10.2 | 37.9 | 0.047 |
 | heart-h | m-estimate (m=2) | 78.61% | 22.7 | 68.1 | 0.050 |
@@ -279,9 +279,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | heart-statlog | F-measure (beta=0.5) | 75.56% | 14.3 | 45.3 | 0.046 |
 | heart-statlog | Laplace | 74.07% | 29.6 | 81.6 | 0.045 |
 | heart-statlog | Precision | 72.22% | 54.2 | 139.2 | 0.080 |
-| heart-statlog | Pypper | 79.26% | 2.3 | 5.7 | 0.030 |
+| heart-statlog | Pypper | 81.48% | 2.9 | 6.9 | 0.028 |
 | heart-statlog | WRA | 75.93% | 2.3 | 9.0 | 0.017 |
-| heart-statlog | Weka:JRip | 79.26% | 3.4 | 7.6 | 0.490 |
+| heart-statlog | Weka:JRip | 79.26% | 3.4 | 7.6 | 0.370 |
 | heart-statlog | cost (c=0.437) | 73.70% | 23.5 | 63.9 | 0.035 |
 | heart-statlog | m-estimate (m=16) | 77.04% | 11.3 | 41.9 | 0.040 |
 | heart-statlog | m-estimate (m=2) | 74.44% | 24.1 | 69.2 | 0.040 |
@@ -295,9 +295,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | hepatitis | F-measure (beta=0.5) | 73.21% | 8.5 | 22.9 | 0.021 |
 | hepatitis | Laplace | 73.83% | 12.6 | 27.5 | 0.016 |
 | hepatitis | Precision | 73.21% | 18.2 | 39.6 | 0.022 |
-| hepatitis | Pypper | 79.42% | 1.7 | 3.4 | 0.016 |
+| hepatitis | Pypper | 80.75% | 2.1 | 4.5 | 0.020 |
 | hepatitis | WRA | 76.75% | 1.2 | 4.9 | 0.007 |
-| hepatitis | Weka:JRip | 78.75% | 2.1 | 4.0 | 0.400 |
+| hepatitis | Weka:JRip | 78.75% | 2.1 | 4.0 | 0.341 |
 | hepatitis | cost (c=0.437) | 75.75% | 11.9 | 27.0 | 0.017 |
 | hepatitis | m-estimate (m=16) | 77.75% | 5.6 | 16.5 | 0.017 |
 | hepatitis | m-estimate (m=2) | 77.58% | 9.8 | 24.5 | 0.016 |
@@ -311,9 +311,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | hypothyroid | F-measure (beta=0.5) | 98.83% | 13.9 | 42.9 | 0.111 |
 | hypothyroid | Laplace | 98.28% | 33.2 | 107.4 | 0.176 |
 | hypothyroid | Precision | 98.25% | 82.7 | 267.9 | 0.354 |
-| hypothyroid | Pypper | 99.28% | 3.3 | 8.9 | 0.111 |
+| hypothyroid | Pypper | 99.36% | 3.9 | 9.8 | 0.075 |
 | hypothyroid | WRA | 97.08% | 2.1 | 7.7 | 0.045 |
-| hypothyroid | Weka:JRip | 99.20% | 3.4 | 8.9 | 1.125 |
+| hypothyroid | Weka:JRip | 99.20% | 3.4 | 8.9 | 0.775 |
 | hypothyroid | cost (c=0.437) | 98.78% | 17.0 | 48.2 | 0.098 |
 | hypothyroid | m-estimate (m=16) | 99.13% | 10.9 | 39.2 | 0.111 |
 | hypothyroid | m-estimate (m=2) | 98.67% | 23.0 | 81.0 | 0.134 |
@@ -327,9 +327,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | ionosphere | F-measure (beta=0.5) | 90.90% | 13.0 | 24.0 | 0.050 |
 | ionosphere | Laplace | 91.47% | 15.7 | 25.9 | 0.023 |
 | ionosphere | Precision | 92.32% | 19.4 | 33.0 | 0.033 |
-| ionosphere | Pypper | 89.47% | 3.8 | 6.0 | 0.029 |
+| ionosphere | Pypper | 89.17% | 4.4 | 7.0 | 0.032 |
 | ionosphere | WRA | 89.17% | 2.0 | 2.3 | 0.046 |
-| ionosphere | Weka:JRip | 86.88% | 5.8 | 10.0 | 0.498 |
+| ionosphere | Weka:JRip | 86.88% | 5.8 | 10.0 | 0.454 |
 | ionosphere | cost (c=0.437) | 88.90% | 14.6 | 25.4 | 0.030 |
 | ionosphere | m-estimate (m=16) | 90.59% | 9.8 | 20.2 | 0.052 |
 | ionosphere | m-estimate (m=2) | 92.02% | 14.5 | 24.3 | 0.022 |
@@ -343,9 +343,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | iris | F-measure (beta=0.5) | 92.00% | 4.8 | 10.3 | 0.012 |
 | iris | Laplace | 92.00% | 7.1 | 13.6 | 0.011 |
 | iris | Precision | 92.00% | 10.9 | 18.8 | 0.017 |
-| iris | Pypper | 93.33% | 2.0 | 2.8 | 0.020 |
+| iris | Pypper | 93.33% | 2.0 | 2.8 | 0.016 |
 | iris | WRA | 93.33% | 2.3 | 3.9 | 0.010 |
-| iris | Weka:JRip | 95.33% | 2.5 | 3.9 | 0.593 |
+| iris | Weka:JRip | 95.33% | 2.5 | 3.9 | 0.354 |
 | iris | cost (c=0.437) | 92.00% | 4.6 | 9.6 | 0.009 |
 | iris | m-estimate (m=16) | 92.67% | 3.8 | 8.1 | 0.009 |
 | iris | m-estimate (m=2) | 92.67% | 5.6 | 11.1 | 0.010 |
@@ -359,9 +359,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | kr-vs-kp | F-measure (beta=0.5) | 98.12% | 13.4 | 43.7 | 0.077 |
 | kr-vs-kp | Laplace | 99.28% | 40.7 | 139.6 | 0.139 |
 | kr-vs-kp | Precision | 99.22% | 67.8 | 224.9 | 0.239 |
-| kr-vs-kp | Pypper | 99.09% | 13.6 | 44.0 | 0.182 |
+| kr-vs-kp | Pypper | 99.12% | 14.3 | 45.4 | 0.152 |
 | kr-vs-kp | WRA | 94.34% | 3.0 | 8.1 | 0.029 |
-| kr-vs-kp | Weka:JRip | 99.31% | 14.6 | 46.2 | 0.999 |
+| kr-vs-kp | Weka:JRip | 99.31% | 14.6 | 46.2 | 0.812 |
 | kr-vs-kp | cost (c=0.437) | 96.75% | 51.1 | 235.4 | 0.198 |
 | kr-vs-kp | m-estimate (m=16) | 99.50% | 21.5 | 67.3 | 0.093 |
 | kr-vs-kp | m-estimate (m=2) | 99.28% | 32.1 | 108.5 | 0.119 |
@@ -375,9 +375,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | lymph | F-measure (beta=0.5) | 83.86% | 11.2 | 26.4 | 0.022 |
 | lymph | Laplace | 76.33% | 19.6 | 42.0 | 0.027 |
 | lymph | Precision | 77.81% | 29.3 | 62.4 | 0.038 |
-| lymph | Pypper | 73.71% | 2.9 | 5.9 | 0.035 |
+| lymph | Pypper | 77.05% | 3.1 | 6.8 | 0.029 |
 | lymph | WRA | 85.00% | 5.6 | 17.7 | 0.020 |
-| lymph | Weka:JRip | 79.86% | 4.6 | 9.2 | 0.481 |
+| lymph | Weka:JRip | 79.86% | 4.6 | 9.2 | 0.351 |
 | lymph | cost (c=0.437) | 83.67% | 14.9 | 34.4 | 0.022 |
 | lymph | m-estimate (m=16) | 79.14% | 9.2 | 25.2 | 0.027 |
 | lymph | m-estimate (m=2) | 79.00% | 15.4 | 32.6 | 0.022 |
@@ -391,9 +391,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | molecular-biology_promoters | F-measure (beta=0.5) | 78.64% | 5.4 | 12.0 | 0.015 |
 | molecular-biology_promoters | Laplace | 73.45% | 6.7 | 13.0 | 0.014 |
 | molecular-biology_promoters | Precision | 77.36% | 13.9 | 27.5 | 0.030 |
-| molecular-biology_promoters | Pypper | 83.18% | 2.1 | 3.8 | 0.020 |
+| molecular-biology_promoters | Pypper | 83.18% | 2.1 | 3.8 | 0.016 |
 | molecular-biology_promoters | WRA | 80.45% | 2.3 | 9.0 | 0.011 |
-| molecular-biology_promoters | Weka:JRip | 77.45% | 2.5 | 5.4 | 0.465 |
+| molecular-biology_promoters | Weka:JRip | 77.45% | 2.5 | 5.4 | 0.349 |
 | molecular-biology_promoters | cost (c=0.437) | 78.36% | 5.2 | 12.3 | 0.013 |
 | molecular-biology_promoters | m-estimate (m=16) | 85.00% | 4.1 | 10.4 | 0.012 |
 | molecular-biology_promoters | m-estimate (m=2) | 72.64% | 6.2 | 12.3 | 0.015 |
@@ -407,9 +407,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | monks-problems-1 | F-measure (beta=0.5) | 80.78% | 2.4 | 5.3 | 0.008 |
 | monks-problems-1 | Laplace | 100.00% | 10.6 | 33.0 | 0.019 |
 | monks-problems-1 | Precision | 99.82% | 17.3 | 53.3 | 0.031 |
-| monks-problems-1 | Pypper | 95.30% | 3.6 | 10.2 | 0.036 |
+| monks-problems-1 | Pypper | 95.30% | 3.6 | 10.3 | 0.025 |
 | monks-problems-1 | WRA | 77.00% | 1.4 | 1.8 | 0.005 |
-| monks-problems-1 | Weka:JRip | 93.04% | 3.7 | 10.4 | 0.480 |
+| monks-problems-1 | Weka:JRip | 93.04% | 3.7 | 10.4 | 0.364 |
 | monks-problems-1 | cost (c=0.437) | 84.60% | 3.3 | 7.8 | 0.007 |
 | monks-problems-1 | m-estimate (m=16) | 92.79% | 6.9 | 22.0 | 0.019 |
 | monks-problems-1 | m-estimate (m=2) | 100.00% | 11.2 | 36.6 | 0.025 |
@@ -423,9 +423,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | monks-problems-2 | F-measure (beta=0.5) | 67.24% | 0.9 | 3.9 | 0.007 |
 | monks-problems-2 | Laplace | 67.23% | 84.6 | 491.3 | 0.164 |
 | monks-problems-2 | Precision | 63.07% | 127.3 | 741.5 | 0.288 |
-| monks-problems-2 | Pypper | 70.39% | 2.3 | 13.3 | 0.032 |
+| monks-problems-2 | Pypper | 72.22% | 4.4 | 24.2 | 0.058 |
 | monks-problems-2 | WRA | 65.74% | 0.9 | 3.6 | 0.005 |
-| monks-problems-2 | Weka:JRip | 80.57% | 7.6 | 44.6 | 0.517 |
+| monks-problems-2 | Weka:JRip | 80.57% | 7.6 | 44.6 | 0.398 |
 | monks-problems-2 | cost (c=0.437) | 68.39% | 105.2 | 615.8 | 0.223 |
 | monks-problems-2 | m-estimate (m=16) | 82.87% | 14.3 | 84.9 | 0.038 |
 | monks-problems-2 | m-estimate (m=2) | 74.22% | 58.6 | 357.5 | 0.158 |
@@ -439,9 +439,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | monks-problems-3 | F-measure (beta=0.5) | 96.40% | 2.8 | 5.7 | 0.009 |
 | monks-problems-3 | Laplace | 95.67% | 6.5 | 13.9 | 0.011 |
 | monks-problems-3 | Precision | 97.10% | 9.3 | 18.9 | 0.016 |
-| monks-problems-3 | Pypper | 98.92% | 3.0 | 5.0 | 0.028 |
+| monks-problems-3 | Pypper | 98.92% | 3.0 | 5.0 | 0.020 |
 | monks-problems-3 | WRA | 96.40% | 2.0 | 2.0 | 0.007 |
-| monks-problems-3 | Weka:JRip | 98.92% | 3.0 | 5.0 | 0.532 |
+| monks-problems-3 | Weka:JRip | 98.92% | 3.0 | 5.0 | 0.352 |
 | monks-problems-3 | cost (c=0.437) | 96.04% | 2.2 | 3.2 | 0.007 |
 | monks-problems-3 | m-estimate (m=16) | 98.92% | 3.0 | 5.0 | 0.008 |
 | monks-problems-3 | m-estimate (m=2) | 97.48% | 5.9 | 13.3 | 0.013 |
@@ -455,9 +455,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | mushroom | F-measure (beta=0.5) | 100.00% | 10.9 | 12.9 | 0.079 |
 | mushroom | Laplace | 100.00% | 10.9 | 12.9 | 0.071 |
 | mushroom | Precision | 100.00% | 15.0 | 18.0 | 0.099 |
-| mushroom | Pypper | 99.96% | 5.2 | 10.6 | 0.122 |
+| mushroom | Pypper | 99.96% | 5.2 | 10.6 | 0.091 |
 | mushroom | WRA | 99.96% | 3.0 | 11.1 | 0.045 |
-| mushroom | Weka:JRip | 99.98% | 6.0 | 10.1 | 2.146 |
+| mushroom | Weka:JRip | 99.98% | 6.0 | 10.1 | 1.593 |
 | mushroom | cost (c=0.437) | 100.00% | 7.8 | 13.6 | 0.067 |
 | mushroom | m-estimate (m=16) | 100.00% | 10.9 | 12.9 | 0.090 |
 | mushroom | m-estimate (m=2) | 100.00% | 10.9 | 12.9 | 0.086 |
@@ -471,9 +471,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | primary-tumor | F-measure (beta=0.5) | 39.53% | 67.9 | 279.9 | 0.250 |
 | primary-tumor | Laplace | 34.81% | 89.3 | 351.5 | 0.204 |
 | primary-tumor | Precision | 35.98% | 117.2 | 455.9 | 0.277 |
-| primary-tumor | Pypper | 39.25% | 7.3 | 20.5 | 0.126 |
+| primary-tumor | Pypper | 38.66% | 8.6 | 24.8 | 0.128 |
 | primary-tumor | WRA | 41.91% | 9.9 | 40.2 | 0.077 |
-| primary-tumor | Weka:JRip | 36.00% | 6.4 | 21.9 | 0.559 |
+| primary-tumor | Weka:JRip | 36.00% | 6.4 | 21.9 | 0.418 |
 | primary-tumor | cost (c=0.437) | 32.74% | 76.2 | 273.3 | 0.187 |
 | primary-tumor | m-estimate (m=16) | 41.90% | 39.5 | 179.3 | 0.185 |
 | primary-tumor | m-estimate (m=2) | 38.05% | 77.8 | 323.1 | 0.235 |
@@ -487,9 +487,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | segment | F-measure (beta=0.5) | 93.98% | 39.6 | 144.8 | 0.255 |
 | segment | Laplace | 93.81% | 90.9 | 298.9 | 0.277 |
 | segment | Precision | 93.16% | 170.1 | 536.4 | 0.537 |
-| segment | Pypper | 94.72% | 14.5 | 45.6 | 0.202 |
+| segment | Pypper | 94.81% | 16.1 | 51.3 | 0.180 |
 | segment | WRA | 90.69% | 7.8 | 29.8 | 0.112 |
-| segment | Weka:JRip | 94.59% | 21.5 | 65.0 | 1.678 |
+| segment | Weka:JRip | 94.59% | 21.5 | 65.0 | 1.354 |
 | segment | cost (c=0.437) | 90.35% | 173.5 | 588.2 | 0.541 |
 | segment | m-estimate (m=16) | 93.85% | 38.7 | 138.5 | 0.252 |
 | segment | m-estimate (m=2) | 94.20% | 70.5 | 234.4 | 0.257 |
@@ -503,9 +503,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | solar-flare | F-measure (beta=0.5) | 71.58% | 12.0 | 48.9 | 0.102 |
 | solar-flare | Laplace | 74.39% | 43.4 | 136.4 | 0.126 |
 | solar-flare | Precision | 74.48% | 67.9 | 215.4 | 0.164 |
-| solar-flare | Pypper | 74.77% | 4.9 | 8.3 | 0.087 |
+| solar-flare | Pypper | 74.39% | 5.5 | 10.7 | 0.078 |
 | solar-flare | WRA | 73.46% | 3.0 | 4.2 | 0.040 |
-| solar-flare | Weka:JRip | 71.21% | 6.5 | 16.9 | 0.694 |
+| solar-flare | Weka:JRip | 71.21% | 6.5 | 16.9 | 0.524 |
 | solar-flare | cost (c=0.437) | 73.83% | 20.7 | 48.7 | 0.060 |
 | solar-flare | m-estimate (m=16) | 73.17% | 10.9 | 38.4 | 0.092 |
 | solar-flare | m-estimate (m=2) | 73.45% | 38.3 | 141.3 | 0.158 |
@@ -519,9 +519,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | sonar | F-measure (beta=0.5) | 74.05% | 11.8 | 26.7 | 0.059 |
 | sonar | Laplace | 64.93% | 25.3 | 42.7 | 0.085 |
 | sonar | Precision | 61.02% | 49.4 | 87.3 | 0.165 |
-| sonar | Pypper | 77.43% | 2.8 | 5.6 | 0.055 |
+| sonar | Pypper | 75.05% | 3.0 | 5.8 | 0.035 |
 | sonar | WRA | 75.57% | 3.5 | 24.7 | 0.162 |
-| sonar | Weka:JRip | 72.60% | 4.7 | 10.1 | 0.806 |
+| sonar | Weka:JRip | 72.60% | 4.7 | 10.1 | 0.455 |
 | sonar | cost (c=0.437) | 66.33% | 18.5 | 36.3 | 0.080 |
 | sonar | m-estimate (m=16) | 74.50% | 8.6 | 22.6 | 0.042 |
 | sonar | m-estimate (m=2) | 67.81% | 19.5 | 33.6 | 0.062 |
@@ -535,9 +535,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | soybean | F-measure (beta=0.5) | 91.38% | 46.6 | 101.3 | 0.137 |
 | soybean | Laplace | 89.76% | 62.6 | 142.5 | 0.113 |
 | soybean | Precision | 88.45% | 96.4 | 213.7 | 0.162 |
-| soybean | Pypper | 90.93% | 23.9 | 45.9 | 0.201 |
+| soybean | Pypper | 91.07% | 25.8 | 49.2 | 0.187 |
 | soybean | WRA | 93.86% | 20.5 | 52.7 | 0.086 |
-| soybean | Weka:JRip | 77.77% | 25.5 | 46.0 | 0.736 |
+| soybean | Weka:JRip | 77.77% | 25.5 | 46.0 | 0.600 |
 | soybean | cost (c=0.437) | 89.77% | 60.1 | 139.1 | 0.124 |
 | soybean | m-estimate (m=16) | 92.99% | 37.5 | 81.3 | 0.115 |
 | soybean | m-estimate (m=2) | 90.78% | 52.7 | 119.7 | 0.122 |
@@ -551,9 +551,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | tic-tac-toe | F-measure (beta=0.5) | 82.46% | 10.8 | 38.6 | 0.029 |
 | tic-tac-toe | Laplace | 96.97% | 20.9 | 78.0 | 0.045 |
 | tic-tac-toe | Precision | 97.39% | 25.5 | 95.3 | 0.056 |
-| tic-tac-toe | Pypper | 96.25% | 7.5 | 23.1 | 0.068 |
+| tic-tac-toe | Pypper | 98.02% | 8.6 | 27.5 | 0.063 |
 | tic-tac-toe | WRA | 69.00% | 1.5 | 3.0 | 0.009 |
-| tic-tac-toe | Weka:JRip | 98.12% | 8.4 | 26.6 | 0.624 |
+| tic-tac-toe | Weka:JRip | 98.12% | 8.4 | 26.6 | 0.468 |
 | tic-tac-toe | cost (c=0.437) | 86.02% | 94.6 | 393.4 | 0.175 |
 | tic-tac-toe | m-estimate (m=16) | 97.29% | 11.4 | 40.5 | 0.032 |
 | tic-tac-toe | m-estimate (m=2) | 96.45% | 15.6 | 60.7 | 0.041 |
@@ -567,9 +567,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | vehicle | F-measure (beta=0.5) | 70.58% | 43.2 | 168.5 | 0.434 |
 | vehicle | Laplace | 70.71% | 137.0 | 411.8 | 0.318 |
 | vehicle | Precision | 72.36% | 219.6 | 633.1 | 0.517 |
-| vehicle | Pypper | 68.21% | 11.8 | 32.9 | 0.153 |
+| vehicle | Pypper | 67.74% | 14.0 | 39.3 | 0.132 |
 | vehicle | WRA | 60.04% | 5.4 | 31.5 | 0.140 |
-| vehicle | Weka:JRip | 68.45% | 13.9 | 38.4 | 1.036 |
+| vehicle | Weka:JRip | 68.45% | 13.9 | 38.4 | 0.720 |
 | vehicle | cost (c=0.437) | 66.90% | 179.2 | 556.1 | 0.508 |
 | vehicle | m-estimate (m=16) | 72.46% | 37.8 | 169.0 | 0.590 |
 | vehicle | m-estimate (m=2) | 71.53% | 102.2 | 325.9 | 0.334 |
@@ -583,9 +583,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | vote | F-measure (beta=0.5) | 94.71% | 4.6 | 13.8 | 0.016 |
 | vote | Laplace | 94.02% | 10.4 | 38.5 | 0.020 |
 | vote | Precision | 94.25% | 17.6 | 63.0 | 0.031 |
-| vote | Pypper | 95.18% | 1.7 | 3.3 | 0.024 |
+| vote | Pypper | 95.18% | 1.8 | 3.5 | 0.019 |
 | vote | WRA | 94.04% | 2.7 | 8.5 | 0.008 |
-| vote | Weka:JRip | 95.42% | 3.1 | 7.6 | 0.514 |
+| vote | Weka:JRip | 95.42% | 3.1 | 7.6 | 0.353 |
 | vote | cost (c=0.437) | 94.50% | 3.7 | 10.7 | 0.008 |
 | vote | m-estimate (m=16) | 93.57% | 5.6 | 18.3 | 0.015 |
 | vote | m-estimate (m=2) | 94.03% | 8.5 | 31.1 | 0.021 |
@@ -599,9 +599,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | vowel | F-measure (beta=0.5) | 82.32% | 108.7 | 333.8 | 0.275 |
 | vowel | Laplace | 80.10% | 195.3 | 528.2 | 0.340 |
 | vowel | Precision | 79.09% | 277.4 | 749.7 | 0.478 |
-| vowel | Pypper | 69.70% | 33.1 | 123.4 | 0.357 |
+| vowel | Pypper | 74.85% | 48.1 | 173.6 | 0.416 |
 | vowel | WRA | 62.12% | 23.3 | 132.3 | 0.189 |
-| vowel | Weka:JRip | 76.06% | 49.4 | 162.8 | 1.215 |
+| vowel | Weka:JRip | 76.06% | 49.4 | 162.8 | 0.983 |
 | vowel | cost (c=0.437) | 79.90% | 212.7 | 585.4 | 0.349 |
 | vowel | m-estimate (m=16) | 80.10% | 93.0 | 303.9 | 0.260 |
 | vowel | m-estimate (m=2) | 81.11% | 165.4 | 458.1 | 0.301 |
@@ -615,9 +615,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | wine | F-measure (beta=0.5) | 92.75% | 5.7 | 10.2 | 0.012 |
 | wine | Laplace | 92.19% | 6.7 | 11.3 | 0.010 |
 | wine | Precision | 92.19% | 11.1 | 19.1 | 0.016 |
-| wine | Pypper | 92.09% | 2.7 | 4.1 | 0.026 |
+| wine | Pypper | 92.09% | 2.8 | 4.3 | 0.022 |
 | wine | WRA | 96.63% | 3.5 | 7.3 | 0.008 |
-| wine | Weka:JRip | 94.41% | 2.7 | 5.1 | 0.519 |
+| wine | Weka:JRip | 94.41% | 2.7 | 5.1 | 0.360 |
 | wine | cost (c=0.437) | 96.67% | 4.8 | 9.4 | 0.008 |
 | wine | m-estimate (m=16) | 94.38% | 5.7 | 10.0 | 0.011 |
 | wine | m-estimate (m=2) | 92.19% | 6.4 | 11.0 | 0.012 |
@@ -631,9 +631,9 @@ Every learner runs single-threaded; fits run 10 at a time (`run_cv`'s `n_jobs`),
 | zoo | F-measure (beta=0.5) | 93.00% | 8.8 | 19.5 | 0.014 |
 | zoo | Laplace | 92.00% | 9.4 | 21.1 | 0.013 |
 | zoo | Precision | 92.00% | 12.4 | 27.9 | 0.018 |
-| zoo | Pypper | 89.09% | 5.3 | 7.8 | 0.046 |
+| zoo | Pypper | 89.09% | 5.4 | 8.1 | 0.035 |
 | zoo | WRA | 96.00% | 6.2 | 13.2 | 0.011 |
-| zoo | Weka:JRip | 89.00% | 6.6 | 11.1 | 0.511 |
+| zoo | Weka:JRip | 89.00% | 6.6 | 11.1 | 0.325 |
 | zoo | cost (c=0.437) | 92.00% | 9.8 | 22.8 | 0.014 |
 | zoo | m-estimate (m=16) | 93.00% | 8.2 | 18.4 | 0.015 |
 | zoo | m-estimate (m=2) | 93.00% | 8.7 | 19.4 | 0.015 |

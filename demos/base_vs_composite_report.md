@@ -35,21 +35,21 @@ Accuracy averaged over the datasets and the three base learners.
 
 | conflict resolution | single | two-level @10 | one-level @10 | two-level @25 | one-level @25 | two-level @50 | one-level @50 |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| best rule | 83.23% | 85.04% | 83.45% | 85.38% | 83.04% | 85.45% | 82.67% |
-| voting | 82.05% | 84.30% | 84.90% | 84.75% | 85.18% | 84.87% | 85.31% |
-| micro distribution voting | 82.17% | 84.24% | 83.66% | 84.63% | 83.80% | 84.79% | 83.89% |
-| macro distribution voting | 83.15% | 85.04% | 85.38% | 85.40% | 85.68% | 85.49% | 85.76% |
+| best rule | 83.36% | 85.14% | 83.41% | 85.49% | 82.96% | 85.57% | 82.62% |
+| voting | 82.15% | 84.41% | 85.07% | 84.85% | 85.32% | 84.97% | 85.43% |
+| micro distribution voting | 82.27% | 84.37% | 83.73% | 84.75% | 83.89% | 84.89% | 84.01% |
+| macro distribution voting | 83.29% | 85.17% | 85.53% | 85.55% | 85.78% | 85.63% | 85.89% |
 
 ## Pypper
 
-Rules of the single concept set: 16.0; of the ensembles: 138.0 (10 members), 344.2 (25 members), 688.8 (50 members).
+Rules of the single concept set: 19.4; of the ensembles: 187.7 (10 members), 470.3 (25 members), 940.4 (50 members).
 
 | conflict resolution | single | two-level @10 | one-level @10 | two-level @25 | one-level @25 | two-level @50 | one-level @50 |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| best rule | 82.76% | 84.79% (3.88) | 84.01% (5.34) | 85.11% (3.87) | 83.76% (6.03) | 85.19% (3.84) | 83.46% (6.28) |
-| voting | 82.33% | 84.34% (4.78) | 84.75% (3.93) | 84.77% (4.60) | 85.09% (3.81) | 84.87% (4.30) | 85.14% (3.70) |
-| micro distribution voting | 82.39% | 84.20% (5.35) | 83.66% (6.07) | 84.59% (4.98) | 83.69% (6.38) | 84.78% (4.86) | 83.82% (6.38) |
-| macro distribution voting | 82.76% | 84.86% (3.47) | 85.09% (3.17) | 85.18% (3.32) | 85.30% (3.01) | 85.26% (3.60) | 85.40% (3.03) |
+| best rule | 83.16% | 85.08% (3.98) | 83.91% (6.14) | 85.43% (3.96) | 83.51% (6.34) | 85.54% (3.90) | 83.31% (6.38) |
+| voting | 82.63% | 84.67% (4.62) | 85.26% (3.66) | 85.07% (4.58) | 85.49% (3.45) | 85.19% (4.43) | 85.52% (3.78) |
+| micro distribution voting | 82.71% | 84.60% (5.04) | 83.85% (6.28) | 84.95% (5.25) | 83.95% (6.22) | 85.07% (5.01) | 84.17% (6.37) |
+| macro distribution voting | 83.17% | 85.24% (3.56) | 85.53% (2.73) | 85.60% (3.33) | 85.63% (2.87) | 85.69% (3.30) | 85.79% (2.83) |
 
 Accuracy, and in parentheses the mean rank among the eight ensemble variants of the same size (four conflict resolutions at two levels).
 
@@ -85,18 +85,18 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 
 | conflict resolution | members | mean difference | two-level ahead | one-level ahead | ties |
 |---|--:|--:|--:|--:|--:|
-| best rule | 10 | +1.60 | 150 | 50 | 7 |
-| best rule | 25 | +2.34 | 159 | 41 | 7 |
-| best rule | 50 | +2.79 | 162 | 39 | 6 |
-| voting | 10 | -0.59 | 60 | 132 | 15 |
-| voting | 25 | -0.44 | 64 | 121 | 22 |
-| voting | 50 | -0.44 | 69 | 114 | 24 |
-| micro distribution voting | 10 | +0.58 | 130 | 63 | 14 |
-| micro distribution voting | 25 | +0.83 | 144 | 48 | 15 |
-| micro distribution voting | 50 | +0.90 | 146 | 42 | 19 |
-| macro distribution voting | 10 | -0.34 | 67 | 118 | 22 |
-| macro distribution voting | 25 | -0.27 | 67 | 109 | 31 |
-| macro distribution voting | 50 | -0.27 | 85 | 98 | 24 |
+| best rule | 10 | +1.72 | 156 | 44 | 7 |
+| best rule | 25 | +2.54 | 162 | 38 | 7 |
+| best rule | 50 | +2.95 | 160 | 40 | 7 |
+| voting | 10 | -0.65 | 61 | 131 | 15 |
+| voting | 25 | -0.47 | 61 | 126 | 20 |
+| voting | 50 | -0.46 | 74 | 114 | 19 |
+| micro distribution voting | 10 | +0.65 | 134 | 60 | 13 |
+| micro distribution voting | 25 | +0.86 | 140 | 54 | 13 |
+| micro distribution voting | 50 | +0.88 | 145 | 45 | 17 |
+| macro distribution voting | 10 | -0.36 | 61 | 126 | 20 |
+| macro distribution voting | 25 | -0.24 | 68 | 110 | 29 |
+| macro distribution voting | 50 | -0.26 | 84 | 97 | 26 |
 
 ## Per dataset (mean across folds)
 
@@ -158,34 +158,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | SPECT | PFossil:two-level@50 (macro distribution voting) | 80.90% | 547.6 |
 | SPECT | PFossil:two-level@50 (micro distribution voting) | 81.27% | 547.6 |
 | SPECT | PFossil:two-level@50 (voting) | 81.27% | 547.6 |
-| SPECT | Pypper:one-level@10 (best rule) | 83.89% | 50.8 |
-| SPECT | Pypper:one-level@10 (macro distribution voting) | 83.13% | 50.8 |
-| SPECT | Pypper:one-level@10 (micro distribution voting) | 82.76% | 50.8 |
-| SPECT | Pypper:one-level@10 (voting) | 79.76% | 50.8 |
-| SPECT | Pypper:one-level@25 (best rule) | 84.29% | 129.5 |
-| SPECT | Pypper:one-level@25 (macro distribution voting) | 83.87% | 129.5 |
-| SPECT | Pypper:one-level@25 (micro distribution voting) | 83.87% | 129.5 |
-| SPECT | Pypper:one-level@25 (voting) | 81.64% | 129.5 |
-| SPECT | Pypper:one-level@50 (best rule) | 84.29% | 253.2 |
-| SPECT | Pypper:one-level@50 (macro distribution voting) | 84.25% | 253.2 |
-| SPECT | Pypper:one-level@50 (micro distribution voting) | 83.52% | 253.2 |
-| SPECT | Pypper:one-level@50 (voting) | 81.28% | 253.2 |
-| SPECT | Pypper:single (best rule) | 79.02% | 4.0 |
-| SPECT | Pypper:single (macro distribution voting) | 79.02% | 4.0 |
-| SPECT | Pypper:single (micro distribution voting) | 79.02% | 4.0 |
-| SPECT | Pypper:single (voting) | 79.02% | 4.0 |
-| SPECT | Pypper:two-level@10 (best rule) | 80.53% | 50.8 |
-| SPECT | Pypper:two-level@10 (macro distribution voting) | 80.53% | 50.8 |
-| SPECT | Pypper:two-level@10 (micro distribution voting) | 80.53% | 50.8 |
-| SPECT | Pypper:two-level@10 (voting) | 80.53% | 50.8 |
-| SPECT | Pypper:two-level@25 (best rule) | 82.38% | 129.5 |
-| SPECT | Pypper:two-level@25 (macro distribution voting) | 82.38% | 129.5 |
-| SPECT | Pypper:two-level@25 (micro distribution voting) | 82.38% | 129.5 |
-| SPECT | Pypper:two-level@25 (voting) | 82.38% | 129.5 |
-| SPECT | Pypper:two-level@50 (best rule) | 80.90% | 253.2 |
-| SPECT | Pypper:two-level@50 (macro distribution voting) | 80.90% | 253.2 |
-| SPECT | Pypper:two-level@50 (micro distribution voting) | 80.90% | 253.2 |
-| SPECT | Pypper:two-level@50 (voting) | 80.90% | 253.2 |
+| SPECT | Pypper:one-level@10 (best rule) | 83.89% | 54.6 |
+| SPECT | Pypper:one-level@10 (macro distribution voting) | 83.50% | 54.6 |
+| SPECT | Pypper:one-level@10 (micro distribution voting) | 82.76% | 54.6 |
+| SPECT | Pypper:one-level@10 (voting) | 80.87% | 54.6 |
+| SPECT | Pypper:one-level@25 (best rule) | 84.29% | 138.3 |
+| SPECT | Pypper:one-level@25 (macro distribution voting) | 83.50% | 138.3 |
+| SPECT | Pypper:one-level@25 (micro distribution voting) | 83.87% | 138.3 |
+| SPECT | Pypper:one-level@25 (voting) | 82.76% | 138.3 |
+| SPECT | Pypper:one-level@50 (best rule) | 84.29% | 269.6 |
+| SPECT | Pypper:one-level@50 (macro distribution voting) | 83.87% | 269.6 |
+| SPECT | Pypper:one-level@50 (micro distribution voting) | 83.52% | 269.6 |
+| SPECT | Pypper:one-level@50 (voting) | 81.65% | 269.6 |
+| SPECT | Pypper:single (best rule) | 80.85% | 4.4 |
+| SPECT | Pypper:single (macro distribution voting) | 80.85% | 4.4 |
+| SPECT | Pypper:single (micro distribution voting) | 80.85% | 4.4 |
+| SPECT | Pypper:single (voting) | 80.85% | 4.4 |
+| SPECT | Pypper:two-level@10 (best rule) | 81.64% | 54.6 |
+| SPECT | Pypper:two-level@10 (macro distribution voting) | 81.64% | 54.6 |
+| SPECT | Pypper:two-level@10 (micro distribution voting) | 81.64% | 54.6 |
+| SPECT | Pypper:two-level@10 (voting) | 81.64% | 54.6 |
+| SPECT | Pypper:two-level@25 (best rule) | 83.12% | 138.3 |
+| SPECT | Pypper:two-level@25 (macro distribution voting) | 83.12% | 138.3 |
+| SPECT | Pypper:two-level@25 (micro distribution voting) | 83.12% | 138.3 |
+| SPECT | Pypper:two-level@25 (voting) | 83.12% | 138.3 |
+| SPECT | Pypper:two-level@50 (best rule) | 81.28% | 269.6 |
+| SPECT | Pypper:two-level@50 (macro distribution voting) | 81.28% | 269.6 |
+| SPECT | Pypper:two-level@50 (micro distribution voting) | 81.28% | 269.6 |
+| SPECT | Pypper:two-level@50 (voting) | 81.28% | 269.6 |
 | Titanic | PFoil:one-level@10 (best rule) | 78.23% | 1000.1 |
 | Titanic | PFoil:one-level@10 (macro distribution voting) | 79.14% | 1000.1 |
 | Titanic | PFoil:one-level@10 (micro distribution voting) | 75.94% | 1000.1 |
@@ -242,34 +242,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | Titanic | PFossil:two-level@50 (macro distribution voting) | 78.68% | 314.8 |
 | Titanic | PFossil:two-level@50 (micro distribution voting) | 78.38% | 314.8 |
 | Titanic | PFossil:two-level@50 (voting) | 78.15% | 314.8 |
-| Titanic | Pypper:one-level@10 (best rule) | 78.91% | 69.1 |
-| Titanic | Pypper:one-level@10 (macro distribution voting) | 78.53% | 69.1 |
-| Titanic | Pypper:one-level@10 (micro distribution voting) | 78.38% | 69.1 |
-| Titanic | Pypper:one-level@10 (voting) | 78.30% | 69.1 |
-| Titanic | Pypper:one-level@25 (best rule) | 79.52% | 171.0 |
-| Titanic | Pypper:one-level@25 (macro distribution voting) | 78.53% | 171.0 |
-| Titanic | Pypper:one-level@25 (micro distribution voting) | 78.38% | 171.0 |
-| Titanic | Pypper:one-level@25 (voting) | 78.61% | 171.0 |
-| Titanic | Pypper:one-level@50 (best rule) | 79.75% | 336.9 |
-| Titanic | Pypper:one-level@50 (macro distribution voting) | 78.91% | 336.9 |
-| Titanic | Pypper:one-level@50 (micro distribution voting) | 78.76% | 336.9 |
-| Titanic | Pypper:one-level@50 (voting) | 79.14% | 336.9 |
-| Titanic | Pypper:single (best rule) | 79.22% | 7.2 |
-| Titanic | Pypper:single (macro distribution voting) | 79.30% | 7.2 |
-| Titanic | Pypper:single (micro distribution voting) | 78.84% | 7.2 |
-| Titanic | Pypper:single (voting) | 78.84% | 7.2 |
-| Titanic | Pypper:two-level@10 (best rule) | 78.53% | 69.1 |
-| Titanic | Pypper:two-level@10 (macro distribution voting) | 78.84% | 69.1 |
-| Titanic | Pypper:two-level@10 (micro distribution voting) | 78.84% | 69.1 |
-| Titanic | Pypper:two-level@10 (voting) | 78.76% | 69.1 |
-| Titanic | Pypper:two-level@25 (best rule) | 78.76% | 171.0 |
-| Titanic | Pypper:two-level@25 (macro distribution voting) | 78.92% | 171.0 |
-| Titanic | Pypper:two-level@25 (micro distribution voting) | 78.61% | 171.0 |
-| Titanic | Pypper:two-level@25 (voting) | 78.69% | 171.0 |
-| Titanic | Pypper:two-level@50 (best rule) | 79.14% | 336.9 |
-| Titanic | Pypper:two-level@50 (macro distribution voting) | 79.14% | 336.9 |
-| Titanic | Pypper:two-level@50 (micro distribution voting) | 79.07% | 336.9 |
-| Titanic | Pypper:two-level@50 (voting) | 78.99% | 336.9 |
+| Titanic | Pypper:one-level@10 (best rule) | 79.68% | 74.5 |
+| Titanic | Pypper:one-level@10 (macro distribution voting) | 78.46% | 74.5 |
+| Titanic | Pypper:one-level@10 (micro distribution voting) | 78.99% | 74.5 |
+| Titanic | Pypper:one-level@10 (voting) | 78.61% | 74.5 |
+| Titanic | Pypper:one-level@25 (best rule) | 79.52% | 182.8 |
+| Titanic | Pypper:one-level@25 (macro distribution voting) | 78.99% | 182.8 |
+| Titanic | Pypper:one-level@25 (micro distribution voting) | 78.61% | 182.8 |
+| Titanic | Pypper:one-level@25 (voting) | 78.84% | 182.8 |
+| Titanic | Pypper:one-level@50 (best rule) | 79.22% | 364.7 |
+| Titanic | Pypper:one-level@50 (macro distribution voting) | 79.14% | 364.7 |
+| Titanic | Pypper:one-level@50 (micro distribution voting) | 79.07% | 364.7 |
+| Titanic | Pypper:one-level@50 (voting) | 79.07% | 364.7 |
+| Titanic | Pypper:single (best rule) | 79.68% | 7.1 |
+| Titanic | Pypper:single (macro distribution voting) | 79.68% | 7.1 |
+| Titanic | Pypper:single (micro distribution voting) | 79.37% | 7.1 |
+| Titanic | Pypper:single (voting) | 79.14% | 7.1 |
+| Titanic | Pypper:two-level@10 (best rule) | 78.69% | 74.5 |
+| Titanic | Pypper:two-level@10 (macro distribution voting) | 78.69% | 74.5 |
+| Titanic | Pypper:two-level@10 (micro distribution voting) | 78.92% | 74.5 |
+| Titanic | Pypper:two-level@10 (voting) | 78.76% | 74.5 |
+| Titanic | Pypper:two-level@25 (best rule) | 78.76% | 182.8 |
+| Titanic | Pypper:two-level@25 (macro distribution voting) | 78.76% | 182.8 |
+| Titanic | Pypper:two-level@25 (micro distribution voting) | 78.91% | 182.8 |
+| Titanic | Pypper:two-level@25 (voting) | 78.99% | 182.8 |
+| Titanic | Pypper:two-level@50 (best rule) | 79.07% | 364.7 |
+| Titanic | Pypper:two-level@50 (macro distribution voting) | 79.07% | 364.7 |
+| Titanic | Pypper:two-level@50 (micro distribution voting) | 79.14% | 364.7 |
+| Titanic | Pypper:two-level@50 (voting) | 79.14% | 364.7 |
 | anneal | PFoil:one-level@10 (best rule) | 96.99% | 240.8 |
 | anneal | PFoil:one-level@10 (macro distribution voting) | 98.33% | 240.8 |
 | anneal | PFoil:one-level@10 (micro distribution voting) | 93.21% | 240.8 |
@@ -326,34 +326,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | anneal | PFossil:two-level@50 (macro distribution voting) | 99.55% | 886.7 |
 | anneal | PFossil:two-level@50 (micro distribution voting) | 99.11% | 886.7 |
 | anneal | PFossil:two-level@50 (voting) | 99.55% | 886.7 |
-| anneal | Pypper:one-level@10 (best rule) | 97.21% | 118.6 |
-| anneal | Pypper:one-level@10 (macro distribution voting) | 98.33% | 118.6 |
-| anneal | Pypper:one-level@10 (micro distribution voting) | 97.10% | 118.6 |
-| anneal | Pypper:one-level@10 (voting) | 98.22% | 118.6 |
-| anneal | Pypper:one-level@25 (best rule) | 97.77% | 297.4 |
-| anneal | Pypper:one-level@25 (macro distribution voting) | 98.66% | 297.4 |
-| anneal | Pypper:one-level@25 (micro distribution voting) | 97.44% | 297.4 |
-| anneal | Pypper:one-level@25 (voting) | 98.55% | 297.4 |
-| anneal | Pypper:one-level@50 (best rule) | 96.77% | 594.3 |
-| anneal | Pypper:one-level@50 (macro distribution voting) | 98.77% | 594.3 |
-| anneal | Pypper:one-level@50 (micro distribution voting) | 97.32% | 594.3 |
-| anneal | Pypper:one-level@50 (voting) | 98.55% | 594.3 |
-| anneal | Pypper:single (best rule) | 96.10% | 13.7 |
-| anneal | Pypper:single (macro distribution voting) | 96.33% | 13.7 |
-| anneal | Pypper:single (micro distribution voting) | 95.77% | 13.7 |
-| anneal | Pypper:single (voting) | 96.10% | 13.7 |
-| anneal | Pypper:two-level@10 (best rule) | 97.99% | 118.6 |
-| anneal | Pypper:two-level@10 (macro distribution voting) | 98.22% | 118.6 |
-| anneal | Pypper:two-level@10 (micro distribution voting) | 97.99% | 118.6 |
-| anneal | Pypper:two-level@10 (voting) | 98.22% | 118.6 |
-| anneal | Pypper:two-level@25 (best rule) | 98.55% | 297.4 |
-| anneal | Pypper:two-level@25 (macro distribution voting) | 98.66% | 297.4 |
-| anneal | Pypper:two-level@25 (micro distribution voting) | 98.55% | 297.4 |
-| anneal | Pypper:two-level@25 (voting) | 98.44% | 297.4 |
-| anneal | Pypper:two-level@50 (best rule) | 98.66% | 594.3 |
-| anneal | Pypper:two-level@50 (macro distribution voting) | 98.66% | 594.3 |
-| anneal | Pypper:two-level@50 (micro distribution voting) | 98.55% | 594.3 |
-| anneal | Pypper:two-level@50 (voting) | 98.55% | 594.3 |
+| anneal | Pypper:one-level@10 (best rule) | 97.21% | 145.0 |
+| anneal | Pypper:one-level@10 (macro distribution voting) | 98.66% | 145.0 |
+| anneal | Pypper:one-level@10 (micro distribution voting) | 97.10% | 145.0 |
+| anneal | Pypper:one-level@10 (voting) | 98.22% | 145.0 |
+| anneal | Pypper:one-level@25 (best rule) | 96.88% | 361.3 |
+| anneal | Pypper:one-level@25 (macro distribution voting) | 98.66% | 361.3 |
+| anneal | Pypper:one-level@25 (micro distribution voting) | 97.10% | 361.3 |
+| anneal | Pypper:one-level@25 (voting) | 98.22% | 361.3 |
+| anneal | Pypper:one-level@50 (best rule) | 96.21% | 725.2 |
+| anneal | Pypper:one-level@50 (macro distribution voting) | 98.66% | 725.2 |
+| anneal | Pypper:one-level@50 (micro distribution voting) | 97.32% | 725.2 |
+| anneal | Pypper:one-level@50 (voting) | 98.66% | 725.2 |
+| anneal | Pypper:single (best rule) | 95.44% | 14.3 |
+| anneal | Pypper:single (macro distribution voting) | 95.66% | 14.3 |
+| anneal | Pypper:single (micro distribution voting) | 95.10% | 14.3 |
+| anneal | Pypper:single (voting) | 95.44% | 14.3 |
+| anneal | Pypper:two-level@10 (best rule) | 98.22% | 145.0 |
+| anneal | Pypper:two-level@10 (macro distribution voting) | 98.33% | 145.0 |
+| anneal | Pypper:two-level@10 (micro distribution voting) | 98.10% | 145.0 |
+| anneal | Pypper:two-level@10 (voting) | 98.22% | 145.0 |
+| anneal | Pypper:two-level@25 (best rule) | 98.33% | 361.3 |
+| anneal | Pypper:two-level@25 (macro distribution voting) | 98.55% | 361.3 |
+| anneal | Pypper:two-level@25 (micro distribution voting) | 98.22% | 361.3 |
+| anneal | Pypper:two-level@25 (voting) | 98.44% | 361.3 |
+| anneal | Pypper:two-level@50 (best rule) | 98.66% | 725.2 |
+| anneal | Pypper:two-level@50 (macro distribution voting) | 98.89% | 725.2 |
+| anneal | Pypper:two-level@50 (micro distribution voting) | 98.66% | 725.2 |
+| anneal | Pypper:two-level@50 (voting) | 98.89% | 725.2 |
 | audiology | PFoil:one-level@10 (best rule) | 70.40% | 374.1 |
 | audiology | PFoil:one-level@10 (macro distribution voting) | 82.37% | 374.1 |
 | audiology | PFoil:one-level@10 (micro distribution voting) | 71.32% | 374.1 |
@@ -410,34 +410,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | audiology | PFossil:two-level@50 (macro distribution voting) | 81.50% | 1817.6 |
 | audiology | PFossil:two-level@50 (micro distribution voting) | 80.12% | 1817.6 |
 | audiology | PFossil:two-level@50 (voting) | 80.18% | 1817.6 |
-| audiology | Pypper:one-level@10 (best rule) | 73.56% | 120.0 |
-| audiology | Pypper:one-level@10 (macro distribution voting) | 75.28% | 120.0 |
-| audiology | Pypper:one-level@10 (micro distribution voting) | 70.83% | 120.0 |
-| audiology | Pypper:one-level@10 (voting) | 74.82% | 120.0 |
-| audiology | Pypper:one-level@25 (best rule) | 69.49% | 295.8 |
-| audiology | Pypper:one-level@25 (macro distribution voting) | 75.28% | 295.8 |
-| audiology | Pypper:one-level@25 (micro distribution voting) | 69.94% | 295.8 |
-| audiology | Pypper:one-level@25 (voting) | 73.89% | 295.8 |
-| audiology | Pypper:one-level@50 (best rule) | 69.96% | 594.8 |
-| audiology | Pypper:one-level@50 (macro distribution voting) | 73.95% | 594.8 |
-| audiology | Pypper:one-level@50 (micro distribution voting) | 71.28% | 594.8 |
-| audiology | Pypper:one-level@50 (voting) | 73.04% | 594.8 |
-| audiology | Pypper:single (best rule) | 64.64% | 11.2 |
-| audiology | Pypper:single (macro distribution voting) | 65.10% | 11.2 |
-| audiology | Pypper:single (micro distribution voting) | 63.75% | 11.2 |
-| audiology | Pypper:single (voting) | 62.02% | 11.2 |
-| audiology | Pypper:two-level@10 (best rule) | 74.80% | 120.0 |
-| audiology | Pypper:two-level@10 (macro distribution voting) | 75.69% | 120.0 |
-| audiology | Pypper:two-level@10 (micro distribution voting) | 74.82% | 120.0 |
-| audiology | Pypper:two-level@10 (voting) | 75.75% | 120.0 |
-| audiology | Pypper:two-level@25 (best rule) | 74.33% | 295.8 |
-| audiology | Pypper:two-level@25 (macro distribution voting) | 75.22% | 295.8 |
-| audiology | Pypper:two-level@25 (micro distribution voting) | 73.02% | 295.8 |
-| audiology | Pypper:two-level@25 (voting) | 73.91% | 295.8 |
-| audiology | Pypper:two-level@50 (best rule) | 73.48% | 594.8 |
-| audiology | Pypper:two-level@50 (macro distribution voting) | 73.91% | 594.8 |
-| audiology | Pypper:two-level@50 (micro distribution voting) | 73.52% | 594.8 |
-| audiology | Pypper:two-level@50 (voting) | 74.39% | 594.8 |
+| audiology | Pypper:one-level@10 (best rule) | 72.65% | 156.8 |
+| audiology | Pypper:one-level@10 (macro distribution voting) | 76.58% | 156.8 |
+| audiology | Pypper:one-level@10 (micro distribution voting) | 72.65% | 156.8 |
+| audiology | Pypper:one-level@10 (voting) | 75.69% | 156.8 |
+| audiology | Pypper:one-level@25 (best rule) | 69.94% | 391.7 |
+| audiology | Pypper:one-level@25 (macro distribution voting) | 76.17% | 391.7 |
+| audiology | Pypper:one-level@25 (micro distribution voting) | 70.81% | 391.7 |
+| audiology | Pypper:one-level@25 (voting) | 74.82% | 391.7 |
+| audiology | Pypper:one-level@50 (best rule) | 69.07% | 791.6 |
+| audiology | Pypper:one-level@50 (macro distribution voting) | 76.60% | 791.6 |
+| audiology | Pypper:one-level@50 (micro distribution voting) | 72.61% | 791.6 |
+| audiology | Pypper:one-level@50 (voting) | 74.82% | 791.6 |
+| audiology | Pypper:single (best rule) | 66.84% | 13.8 |
+| audiology | Pypper:single (macro distribution voting) | 67.73% | 13.8 |
+| audiology | Pypper:single (micro distribution voting) | 65.51% | 13.8 |
+| audiology | Pypper:single (voting) | 63.77% | 13.8 |
+| audiology | Pypper:two-level@10 (best rule) | 76.58% | 156.8 |
+| audiology | Pypper:two-level@10 (macro distribution voting) | 77.47% | 156.8 |
+| audiology | Pypper:two-level@10 (micro distribution voting) | 75.71% | 156.8 |
+| audiology | Pypper:two-level@10 (voting) | 74.41% | 156.8 |
+| audiology | Pypper:two-level@25 (best rule) | 75.69% | 391.7 |
+| audiology | Pypper:two-level@25 (macro distribution voting) | 76.15% | 391.7 |
+| audiology | Pypper:two-level@25 (micro distribution voting) | 73.91% | 391.7 |
+| audiology | Pypper:two-level@25 (voting) | 73.02% | 391.7 |
+| audiology | Pypper:two-level@50 (best rule) | 76.17% | 791.6 |
+| audiology | Pypper:two-level@50 (macro distribution voting) | 77.49% | 791.6 |
+| audiology | Pypper:two-level@50 (micro distribution voting) | 73.91% | 791.6 |
+| audiology | Pypper:two-level@50 (voting) | 73.02% | 791.6 |
 | balance-scale | PFoil:one-level@10 (best rule) | 85.60% | 600.8 |
 | balance-scale | PFoil:one-level@10 (macro distribution voting) | 88.16% | 600.8 |
 | balance-scale | PFoil:one-level@10 (micro distribution voting) | 88.48% | 600.8 |
@@ -494,34 +494,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | balance-scale | PFossil:two-level@50 (macro distribution voting) | 87.20% | 1222.8 |
 | balance-scale | PFossil:two-level@50 (micro distribution voting) | 87.36% | 1222.8 |
 | balance-scale | PFossil:two-level@50 (voting) | 87.85% | 1222.8 |
-| balance-scale | Pypper:one-level@10 (best rule) | 84.95% | 115.0 |
-| balance-scale | Pypper:one-level@10 (macro distribution voting) | 86.40% | 115.0 |
-| balance-scale | Pypper:one-level@10 (micro distribution voting) | 85.92% | 115.0 |
-| balance-scale | Pypper:one-level@10 (voting) | 86.09% | 115.0 |
-| balance-scale | Pypper:one-level@25 (best rule) | 84.31% | 290.2 |
-| balance-scale | Pypper:one-level@25 (macro distribution voting) | 88.01% | 290.2 |
-| balance-scale | Pypper:one-level@25 (micro distribution voting) | 87.20% | 290.2 |
-| balance-scale | Pypper:one-level@25 (voting) | 88.33% | 290.2 |
-| balance-scale | Pypper:one-level@50 (best rule) | 85.12% | 585.6 |
-| balance-scale | Pypper:one-level@50 (macro distribution voting) | 88.01% | 585.6 |
-| balance-scale | Pypper:one-level@50 (micro distribution voting) | 87.37% | 585.6 |
-| balance-scale | Pypper:one-level@50 (voting) | 87.85% | 585.6 |
-| balance-scale | Pypper:single (best rule) | 80.95% | 14.2 |
-| balance-scale | Pypper:single (macro distribution voting) | 80.95% | 14.2 |
-| balance-scale | Pypper:single (micro distribution voting) | 80.62% | 14.2 |
-| balance-scale | Pypper:single (voting) | 80.47% | 14.2 |
-| balance-scale | Pypper:two-level@10 (best rule) | 86.08% | 115.0 |
-| balance-scale | Pypper:two-level@10 (macro distribution voting) | 85.92% | 115.0 |
-| balance-scale | Pypper:two-level@10 (micro distribution voting) | 85.92% | 115.0 |
-| balance-scale | Pypper:two-level@10 (voting) | 86.08% | 115.0 |
-| balance-scale | Pypper:two-level@25 (best rule) | 87.37% | 290.2 |
-| balance-scale | Pypper:two-level@25 (macro distribution voting) | 87.53% | 290.2 |
-| balance-scale | Pypper:two-level@25 (micro distribution voting) | 86.57% | 290.2 |
-| balance-scale | Pypper:two-level@25 (voting) | 88.00% | 290.2 |
-| balance-scale | Pypper:two-level@50 (best rule) | 87.53% | 585.6 |
-| balance-scale | Pypper:two-level@50 (macro distribution voting) | 87.53% | 585.6 |
-| balance-scale | Pypper:two-level@50 (micro distribution voting) | 87.21% | 585.6 |
-| balance-scale | Pypper:two-level@50 (voting) | 87.53% | 585.6 |
+| balance-scale | Pypper:one-level@10 (best rule) | 85.11% | 157.2 |
+| balance-scale | Pypper:one-level@10 (macro distribution voting) | 87.52% | 157.2 |
+| balance-scale | Pypper:one-level@10 (micro distribution voting) | 86.88% | 157.2 |
+| balance-scale | Pypper:one-level@10 (voting) | 87.68% | 157.2 |
+| balance-scale | Pypper:one-level@25 (best rule) | 84.16% | 393.7 |
+| balance-scale | Pypper:one-level@25 (macro distribution voting) | 88.01% | 393.7 |
+| balance-scale | Pypper:one-level@25 (micro distribution voting) | 87.53% | 393.7 |
+| balance-scale | Pypper:one-level@25 (voting) | 88.01% | 393.7 |
+| balance-scale | Pypper:one-level@50 (best rule) | 84.96% | 776.5 |
+| balance-scale | Pypper:one-level@50 (macro distribution voting) | 88.65% | 776.5 |
+| balance-scale | Pypper:one-level@50 (micro distribution voting) | 87.69% | 776.5 |
+| balance-scale | Pypper:one-level@50 (voting) | 88.49% | 776.5 |
+| balance-scale | Pypper:single (best rule) | 81.75% | 15.8 |
+| balance-scale | Pypper:single (macro distribution voting) | 81.75% | 15.8 |
+| balance-scale | Pypper:single (micro distribution voting) | 81.26% | 15.8 |
+| balance-scale | Pypper:single (voting) | 81.26% | 15.8 |
+| balance-scale | Pypper:two-level@10 (best rule) | 87.04% | 157.2 |
+| balance-scale | Pypper:two-level@10 (macro distribution voting) | 86.72% | 157.2 |
+| balance-scale | Pypper:two-level@10 (micro distribution voting) | 85.92% | 157.2 |
+| balance-scale | Pypper:two-level@10 (voting) | 86.56% | 157.2 |
+| balance-scale | Pypper:two-level@25 (best rule) | 87.85% | 393.7 |
+| balance-scale | Pypper:two-level@25 (macro distribution voting) | 87.69% | 393.7 |
+| balance-scale | Pypper:two-level@25 (micro distribution voting) | 87.84% | 393.7 |
+| balance-scale | Pypper:two-level@25 (voting) | 88.16% | 393.7 |
+| balance-scale | Pypper:two-level@50 (best rule) | 87.69% | 776.5 |
+| balance-scale | Pypper:two-level@50 (macro distribution voting) | 87.69% | 776.5 |
+| balance-scale | Pypper:two-level@50 (micro distribution voting) | 87.37% | 776.5 |
+| balance-scale | Pypper:two-level@50 (voting) | 88.33% | 776.5 |
 | banknote-authentication | PFoil:one-level@10 (best rule) | 98.25% | 207.6 |
 | banknote-authentication | PFoil:one-level@10 (macro distribution voting) | 98.91% | 207.6 |
 | banknote-authentication | PFoil:one-level@10 (micro distribution voting) | 98.62% | 207.6 |
@@ -578,34 +578,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | banknote-authentication | PFossil:two-level@50 (macro distribution voting) | 99.20% | 586.5 |
 | banknote-authentication | PFossil:two-level@50 (micro distribution voting) | 94.32% | 586.5 |
 | banknote-authentication | PFossil:two-level@50 (voting) | 97.89% | 586.5 |
-| banknote-authentication | Pypper:one-level@10 (best rule) | 98.25% | 90.4 |
-| banknote-authentication | Pypper:one-level@10 (macro distribution voting) | 98.69% | 90.4 |
-| banknote-authentication | Pypper:one-level@10 (micro distribution voting) | 98.32% | 90.4 |
-| banknote-authentication | Pypper:one-level@10 (voting) | 98.76% | 90.4 |
-| banknote-authentication | Pypper:one-level@25 (best rule) | 98.03% | 223.5 |
-| banknote-authentication | Pypper:one-level@25 (macro distribution voting) | 98.69% | 223.5 |
-| banknote-authentication | Pypper:one-level@25 (micro distribution voting) | 98.25% | 223.5 |
-| banknote-authentication | Pypper:one-level@25 (voting) | 98.76% | 223.5 |
-| banknote-authentication | Pypper:one-level@50 (best rule) | 97.67% | 445.6 |
-| banknote-authentication | Pypper:one-level@50 (macro distribution voting) | 98.61% | 445.6 |
-| banknote-authentication | Pypper:one-level@50 (micro distribution voting) | 98.25% | 445.6 |
-| banknote-authentication | Pypper:one-level@50 (voting) | 98.61% | 445.6 |
-| banknote-authentication | Pypper:single (best rule) | 98.54% | 9.5 |
-| banknote-authentication | Pypper:single (macro distribution voting) | 98.61% | 9.5 |
-| banknote-authentication | Pypper:single (micro distribution voting) | 98.54% | 9.5 |
-| banknote-authentication | Pypper:single (voting) | 98.61% | 9.5 |
-| banknote-authentication | Pypper:two-level@10 (best rule) | 98.69% | 90.4 |
-| banknote-authentication | Pypper:two-level@10 (macro distribution voting) | 98.91% | 90.4 |
-| banknote-authentication | Pypper:two-level@10 (micro distribution voting) | 98.61% | 90.4 |
-| banknote-authentication | Pypper:two-level@10 (voting) | 98.83% | 90.4 |
-| banknote-authentication | Pypper:two-level@25 (best rule) | 98.61% | 223.5 |
-| banknote-authentication | Pypper:two-level@25 (macro distribution voting) | 98.76% | 223.5 |
-| banknote-authentication | Pypper:two-level@25 (micro distribution voting) | 98.61% | 223.5 |
-| banknote-authentication | Pypper:two-level@25 (voting) | 98.76% | 223.5 |
-| banknote-authentication | Pypper:two-level@50 (best rule) | 98.54% | 445.6 |
-| banknote-authentication | Pypper:two-level@50 (macro distribution voting) | 98.69% | 445.6 |
-| banknote-authentication | Pypper:two-level@50 (micro distribution voting) | 98.54% | 445.6 |
-| banknote-authentication | Pypper:two-level@50 (voting) | 98.61% | 445.6 |
+| banknote-authentication | Pypper:one-level@10 (best rule) | 98.25% | 103.2 |
+| banknote-authentication | Pypper:one-level@10 (macro distribution voting) | 98.61% | 103.2 |
+| banknote-authentication | Pypper:one-level@10 (micro distribution voting) | 98.18% | 103.2 |
+| banknote-authentication | Pypper:one-level@10 (voting) | 98.69% | 103.2 |
+| banknote-authentication | Pypper:one-level@25 (best rule) | 97.96% | 260.2 |
+| banknote-authentication | Pypper:one-level@25 (macro distribution voting) | 98.69% | 260.2 |
+| banknote-authentication | Pypper:one-level@25 (micro distribution voting) | 98.25% | 260.2 |
+| banknote-authentication | Pypper:one-level@25 (voting) | 98.69% | 260.2 |
+| banknote-authentication | Pypper:one-level@50 (best rule) | 97.59% | 517.2 |
+| banknote-authentication | Pypper:one-level@50 (macro distribution voting) | 98.76% | 517.2 |
+| banknote-authentication | Pypper:one-level@50 (micro distribution voting) | 98.25% | 517.2 |
+| banknote-authentication | Pypper:one-level@50 (voting) | 98.76% | 517.2 |
+| banknote-authentication | Pypper:single (best rule) | 98.61% | 10.4 |
+| banknote-authentication | Pypper:single (macro distribution voting) | 98.69% | 10.4 |
+| banknote-authentication | Pypper:single (micro distribution voting) | 98.61% | 10.4 |
+| banknote-authentication | Pypper:single (voting) | 98.69% | 10.4 |
+| banknote-authentication | Pypper:two-level@10 (best rule) | 98.69% | 103.2 |
+| banknote-authentication | Pypper:two-level@10 (macro distribution voting) | 98.98% | 103.2 |
+| banknote-authentication | Pypper:two-level@10 (micro distribution voting) | 98.62% | 103.2 |
+| banknote-authentication | Pypper:two-level@10 (voting) | 98.91% | 103.2 |
+| banknote-authentication | Pypper:two-level@25 (best rule) | 98.61% | 260.2 |
+| banknote-authentication | Pypper:two-level@25 (macro distribution voting) | 98.83% | 260.2 |
+| banknote-authentication | Pypper:two-level@25 (micro distribution voting) | 98.54% | 260.2 |
+| banknote-authentication | Pypper:two-level@25 (voting) | 98.83% | 260.2 |
+| banknote-authentication | Pypper:two-level@50 (best rule) | 98.61% | 517.2 |
+| banknote-authentication | Pypper:two-level@50 (macro distribution voting) | 98.76% | 517.2 |
+| banknote-authentication | Pypper:two-level@50 (micro distribution voting) | 98.61% | 517.2 |
+| banknote-authentication | Pypper:two-level@50 (voting) | 98.83% | 517.2 |
 | blood-transfusion-service-center | PFoil:one-level@10 (best rule) | 76.47% | 536.1 |
 | blood-transfusion-service-center | PFoil:one-level@10 (macro distribution voting) | 76.61% | 536.1 |
 | blood-transfusion-service-center | PFoil:one-level@10 (micro distribution voting) | 76.07% | 536.1 |
@@ -662,34 +662,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | blood-transfusion-service-center | PFossil:two-level@50 (macro distribution voting) | 68.99% | 105.1 |
 | blood-transfusion-service-center | PFossil:two-level@50 (micro distribution voting) | 68.99% | 105.1 |
 | blood-transfusion-service-center | PFossil:two-level@50 (voting) | 68.99% | 105.1 |
-| blood-transfusion-service-center | Pypper:one-level@10 (best rule) | 78.47% | 41.9 |
-| blood-transfusion-service-center | Pypper:one-level@10 (macro distribution voting) | 78.60% | 41.9 |
-| blood-transfusion-service-center | Pypper:one-level@10 (micro distribution voting) | 78.34% | 41.9 |
-| blood-transfusion-service-center | Pypper:one-level@10 (voting) | 78.73% | 41.9 |
-| blood-transfusion-service-center | Pypper:one-level@25 (best rule) | 77.80% | 109.2 |
-| blood-transfusion-service-center | Pypper:one-level@25 (macro distribution voting) | 78.74% | 109.2 |
-| blood-transfusion-service-center | Pypper:one-level@25 (micro distribution voting) | 77.67% | 109.2 |
-| blood-transfusion-service-center | Pypper:one-level@25 (voting) | 79.00% | 109.2 |
-| blood-transfusion-service-center | Pypper:one-level@50 (best rule) | 77.27% | 216.2 |
-| blood-transfusion-service-center | Pypper:one-level@50 (macro distribution voting) | 78.60% | 216.2 |
-| blood-transfusion-service-center | Pypper:one-level@50 (micro distribution voting) | 77.94% | 216.2 |
-| blood-transfusion-service-center | Pypper:one-level@50 (voting) | 79.27% | 216.2 |
-| blood-transfusion-service-center | Pypper:single (best rule) | 78.60% | 5.0 |
-| blood-transfusion-service-center | Pypper:single (macro distribution voting) | 78.60% | 5.0 |
-| blood-transfusion-service-center | Pypper:single (micro distribution voting) | 78.47% | 5.0 |
-| blood-transfusion-service-center | Pypper:single (voting) | 78.47% | 5.0 |
-| blood-transfusion-service-center | Pypper:two-level@10 (best rule) | 78.86% | 41.9 |
-| blood-transfusion-service-center | Pypper:two-level@10 (macro distribution voting) | 78.86% | 41.9 |
-| blood-transfusion-service-center | Pypper:two-level@10 (micro distribution voting) | 78.73% | 41.9 |
-| blood-transfusion-service-center | Pypper:two-level@10 (voting) | 78.73% | 41.9 |
-| blood-transfusion-service-center | Pypper:two-level@25 (best rule) | 79.27% | 109.2 |
-| blood-transfusion-service-center | Pypper:two-level@25 (macro distribution voting) | 79.27% | 109.2 |
-| blood-transfusion-service-center | Pypper:two-level@25 (micro distribution voting) | 79.14% | 109.2 |
-| blood-transfusion-service-center | Pypper:two-level@25 (voting) | 79.14% | 109.2 |
-| blood-transfusion-service-center | Pypper:two-level@50 (best rule) | 79.27% | 216.2 |
-| blood-transfusion-service-center | Pypper:two-level@50 (macro distribution voting) | 79.27% | 216.2 |
-| blood-transfusion-service-center | Pypper:two-level@50 (micro distribution voting) | 79.27% | 216.2 |
-| blood-transfusion-service-center | Pypper:two-level@50 (voting) | 79.27% | 216.2 |
+| blood-transfusion-service-center | Pypper:one-level@10 (best rule) | 78.34% | 44.2 |
+| blood-transfusion-service-center | Pypper:one-level@10 (macro distribution voting) | 78.74% | 44.2 |
+| blood-transfusion-service-center | Pypper:one-level@10 (micro distribution voting) | 78.07% | 44.2 |
+| blood-transfusion-service-center | Pypper:one-level@10 (voting) | 79.13% | 44.2 |
+| blood-transfusion-service-center | Pypper:one-level@25 (best rule) | 77.80% | 111.7 |
+| blood-transfusion-service-center | Pypper:one-level@25 (macro distribution voting) | 78.60% | 111.7 |
+| blood-transfusion-service-center | Pypper:one-level@25 (micro distribution voting) | 78.07% | 111.7 |
+| blood-transfusion-service-center | Pypper:one-level@25 (voting) | 79.27% | 111.7 |
+| blood-transfusion-service-center | Pypper:one-level@50 (best rule) | 77.00% | 221.6 |
+| blood-transfusion-service-center | Pypper:one-level@50 (macro distribution voting) | 78.60% | 221.6 |
+| blood-transfusion-service-center | Pypper:one-level@50 (micro distribution voting) | 78.47% | 221.6 |
+| blood-transfusion-service-center | Pypper:one-level@50 (voting) | 79.27% | 221.6 |
+| blood-transfusion-service-center | Pypper:single (best rule) | 78.47% | 4.6 |
+| blood-transfusion-service-center | Pypper:single (macro distribution voting) | 78.60% | 4.6 |
+| blood-transfusion-service-center | Pypper:single (micro distribution voting) | 78.34% | 4.6 |
+| blood-transfusion-service-center | Pypper:single (voting) | 78.34% | 4.6 |
+| blood-transfusion-service-center | Pypper:two-level@10 (best rule) | 79.13% | 44.2 |
+| blood-transfusion-service-center | Pypper:two-level@10 (macro distribution voting) | 79.13% | 44.2 |
+| blood-transfusion-service-center | Pypper:two-level@10 (micro distribution voting) | 79.13% | 44.2 |
+| blood-transfusion-service-center | Pypper:two-level@10 (voting) | 79.13% | 44.2 |
+| blood-transfusion-service-center | Pypper:two-level@25 (best rule) | 79.27% | 111.7 |
+| blood-transfusion-service-center | Pypper:two-level@25 (macro distribution voting) | 79.27% | 111.7 |
+| blood-transfusion-service-center | Pypper:two-level@25 (micro distribution voting) | 79.27% | 111.7 |
+| blood-transfusion-service-center | Pypper:two-level@25 (voting) | 79.27% | 111.7 |
+| blood-transfusion-service-center | Pypper:two-level@50 (best rule) | 79.27% | 221.6 |
+| blood-transfusion-service-center | Pypper:two-level@50 (macro distribution voting) | 79.27% | 221.6 |
+| blood-transfusion-service-center | Pypper:two-level@50 (micro distribution voting) | 79.27% | 221.6 |
+| blood-transfusion-service-center | Pypper:two-level@50 (voting) | 79.27% | 221.6 |
 | breast-cancer | PFoil:one-level@10 (best rule) | 75.20% | 357.7 |
 | breast-cancer | PFoil:one-level@10 (macro distribution voting) | 74.11% | 357.7 |
 | breast-cancer | PFoil:one-level@10 (micro distribution voting) | 73.45% | 357.7 |
@@ -746,34 +746,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | breast-cancer | PFossil:two-level@50 (macro distribution voting) | 74.47% | 590.1 |
 | breast-cancer | PFossil:two-level@50 (micro distribution voting) | 74.48% | 590.1 |
 | breast-cancer | PFossil:two-level@50 (voting) | 74.11% | 590.1 |
-| breast-cancer | Pypper:one-level@10 (best rule) | 73.05% | 36.9 |
-| breast-cancer | Pypper:one-level@10 (macro distribution voting) | 74.47% | 36.9 |
-| breast-cancer | Pypper:one-level@10 (micro distribution voting) | 73.44% | 36.9 |
-| breast-cancer | Pypper:one-level@10 (voting) | 73.41% | 36.9 |
-| breast-cancer | Pypper:one-level@25 (best rule) | 73.40% | 94.4 |
-| breast-cancer | Pypper:one-level@25 (macro distribution voting) | 75.16% | 94.4 |
-| breast-cancer | Pypper:one-level@25 (micro distribution voting) | 73.42% | 94.4 |
-| breast-cancer | Pypper:one-level@25 (voting) | 74.13% | 94.4 |
-| breast-cancer | Pypper:one-level@50 (best rule) | 72.72% | 188.5 |
-| breast-cancer | Pypper:one-level@50 (macro distribution voting) | 75.86% | 188.5 |
-| breast-cancer | Pypper:one-level@50 (micro distribution voting) | 72.72% | 188.5 |
-| breast-cancer | Pypper:one-level@50 (voting) | 74.48% | 188.5 |
-| breast-cancer | Pypper:single (best rule) | 74.84% | 2.5 |
-| breast-cancer | Pypper:single (macro distribution voting) | 74.84% | 2.5 |
-| breast-cancer | Pypper:single (micro distribution voting) | 75.20% | 2.5 |
-| breast-cancer | Pypper:single (voting) | 75.20% | 2.5 |
-| breast-cancer | Pypper:two-level@10 (best rule) | 73.76% | 36.9 |
-| breast-cancer | Pypper:two-level@10 (macro distribution voting) | 73.76% | 36.9 |
-| breast-cancer | Pypper:two-level@10 (micro distribution voting) | 73.42% | 36.9 |
-| breast-cancer | Pypper:two-level@10 (voting) | 73.42% | 36.9 |
-| breast-cancer | Pypper:two-level@25 (best rule) | 74.46% | 94.4 |
-| breast-cancer | Pypper:two-level@25 (macro distribution voting) | 74.82% | 94.4 |
-| breast-cancer | Pypper:two-level@25 (micro distribution voting) | 74.47% | 94.4 |
-| breast-cancer | Pypper:two-level@25 (voting) | 74.47% | 94.4 |
-| breast-cancer | Pypper:two-level@50 (best rule) | 74.48% | 188.5 |
-| breast-cancer | Pypper:two-level@50 (macro distribution voting) | 74.48% | 188.5 |
-| breast-cancer | Pypper:two-level@50 (micro distribution voting) | 74.84% | 188.5 |
-| breast-cancer | Pypper:two-level@50 (voting) | 74.84% | 188.5 |
+| breast-cancer | Pypper:one-level@10 (best rule) | 70.94% | 47.0 |
+| breast-cancer | Pypper:one-level@10 (macro distribution voting) | 74.45% | 47.0 |
+| breast-cancer | Pypper:one-level@10 (micro distribution voting) | 73.77% | 47.0 |
+| breast-cancer | Pypper:one-level@10 (voting) | 73.40% | 47.0 |
+| breast-cancer | Pypper:one-level@25 (best rule) | 72.33% | 118.4 |
+| breast-cancer | Pypper:one-level@25 (macro distribution voting) | 74.11% | 118.4 |
+| breast-cancer | Pypper:one-level@25 (micro distribution voting) | 72.75% | 118.4 |
+| breast-cancer | Pypper:one-level@25 (voting) | 74.13% | 118.4 |
+| breast-cancer | Pypper:one-level@50 (best rule) | 71.65% | 235.3 |
+| breast-cancer | Pypper:one-level@50 (macro distribution voting) | 75.17% | 235.3 |
+| breast-cancer | Pypper:one-level@50 (micro distribution voting) | 73.08% | 235.3 |
+| breast-cancer | Pypper:one-level@50 (voting) | 74.14% | 235.3 |
+| breast-cancer | Pypper:single (best rule) | 74.84% | 2.4 |
+| breast-cancer | Pypper:single (macro distribution voting) | 74.84% | 2.4 |
+| breast-cancer | Pypper:single (micro distribution voting) | 74.84% | 2.4 |
+| breast-cancer | Pypper:single (voting) | 74.84% | 2.4 |
+| breast-cancer | Pypper:two-level@10 (best rule) | 72.35% | 47.0 |
+| breast-cancer | Pypper:two-level@10 (macro distribution voting) | 72.35% | 47.0 |
+| breast-cancer | Pypper:two-level@10 (micro distribution voting) | 73.08% | 47.0 |
+| breast-cancer | Pypper:two-level@10 (voting) | 72.72% | 47.0 |
+| breast-cancer | Pypper:two-level@25 (best rule) | 74.11% | 118.4 |
+| breast-cancer | Pypper:two-level@25 (macro distribution voting) | 74.11% | 118.4 |
+| breast-cancer | Pypper:two-level@25 (micro distribution voting) | 73.44% | 118.4 |
+| breast-cancer | Pypper:two-level@25 (voting) | 73.44% | 118.4 |
+| breast-cancer | Pypper:two-level@50 (best rule) | 74.83% | 235.3 |
+| breast-cancer | Pypper:two-level@50 (macro distribution voting) | 74.48% | 235.3 |
+| breast-cancer | Pypper:two-level@50 (micro distribution voting) | 74.48% | 235.3 |
+| breast-cancer | Pypper:two-level@50 (voting) | 74.83% | 235.3 |
 | breast-w | PFoil:one-level@10 (best rule) | 91.56% | 144.6 |
 | breast-w | PFoil:one-level@10 (macro distribution voting) | 96.28% | 144.6 |
 | breast-w | PFoil:one-level@10 (micro distribution voting) | 94.71% | 144.6 |
@@ -830,34 +830,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | breast-w | PFossil:two-level@50 (macro distribution voting) | 95.99% | 608.5 |
 | breast-w | PFossil:two-level@50 (micro distribution voting) | 95.85% | 608.5 |
 | breast-w | PFossil:two-level@50 (voting) | 95.99% | 608.5 |
-| breast-w | Pypper:one-level@10 (best rule) | 94.13% | 57.0 |
-| breast-w | Pypper:one-level@10 (macro distribution voting) | 96.85% | 57.0 |
-| breast-w | Pypper:one-level@10 (micro distribution voting) | 96.14% | 57.0 |
-| breast-w | Pypper:one-level@10 (voting) | 96.85% | 57.0 |
-| breast-w | Pypper:one-level@25 (best rule) | 93.42% | 138.8 |
-| breast-w | Pypper:one-level@25 (macro distribution voting) | 96.57% | 138.8 |
-| breast-w | Pypper:one-level@25 (micro distribution voting) | 95.42% | 138.8 |
-| breast-w | Pypper:one-level@25 (voting) | 96.57% | 138.8 |
-| breast-w | Pypper:one-level@50 (best rule) | 91.85% | 280.1 |
-| breast-w | Pypper:one-level@50 (macro distribution voting) | 96.71% | 280.1 |
-| breast-w | Pypper:one-level@50 (micro distribution voting) | 95.42% | 280.1 |
-| breast-w | Pypper:one-level@50 (voting) | 96.71% | 280.1 |
-| breast-w | Pypper:single (best rule) | 94.57% | 6.2 |
-| breast-w | Pypper:single (macro distribution voting) | 95.00% | 6.2 |
-| breast-w | Pypper:single (micro distribution voting) | 94.57% | 6.2 |
-| breast-w | Pypper:single (voting) | 95.00% | 6.2 |
-| breast-w | Pypper:two-level@10 (best rule) | 96.57% | 57.0 |
-| breast-w | Pypper:two-level@10 (macro distribution voting) | 96.71% | 57.0 |
-| breast-w | Pypper:two-level@10 (micro distribution voting) | 96.42% | 57.0 |
-| breast-w | Pypper:two-level@10 (voting) | 96.71% | 57.0 |
-| breast-w | Pypper:two-level@25 (best rule) | 96.13% | 138.8 |
-| breast-w | Pypper:two-level@25 (macro distribution voting) | 96.42% | 138.8 |
-| breast-w | Pypper:two-level@25 (micro distribution voting) | 95.99% | 138.8 |
-| breast-w | Pypper:two-level@25 (voting) | 96.28% | 138.8 |
-| breast-w | Pypper:two-level@50 (best rule) | 95.85% | 280.1 |
-| breast-w | Pypper:two-level@50 (macro distribution voting) | 96.42% | 280.1 |
-| breast-w | Pypper:two-level@50 (micro distribution voting) | 95.85% | 280.1 |
-| breast-w | Pypper:two-level@50 (voting) | 96.28% | 280.1 |
+| breast-w | Pypper:one-level@10 (best rule) | 93.85% | 68.5 |
+| breast-w | Pypper:one-level@10 (macro distribution voting) | 96.85% | 68.5 |
+| breast-w | Pypper:one-level@10 (micro distribution voting) | 95.85% | 68.5 |
+| breast-w | Pypper:one-level@10 (voting) | 96.85% | 68.5 |
+| breast-w | Pypper:one-level@25 (best rule) | 92.84% | 170.7 |
+| breast-w | Pypper:one-level@25 (macro distribution voting) | 96.57% | 170.7 |
+| breast-w | Pypper:one-level@25 (micro distribution voting) | 95.28% | 170.7 |
+| breast-w | Pypper:one-level@25 (voting) | 96.57% | 170.7 |
+| breast-w | Pypper:one-level@50 (best rule) | 91.56% | 343.2 |
+| breast-w | Pypper:one-level@50 (macro distribution voting) | 96.57% | 343.2 |
+| breast-w | Pypper:one-level@50 (micro distribution voting) | 95.42% | 343.2 |
+| breast-w | Pypper:one-level@50 (voting) | 96.57% | 343.2 |
+| breast-w | Pypper:single (best rule) | 94.57% | 6.4 |
+| breast-w | Pypper:single (macro distribution voting) | 95.00% | 6.4 |
+| breast-w | Pypper:single (micro distribution voting) | 94.71% | 6.4 |
+| breast-w | Pypper:single (voting) | 95.00% | 6.4 |
+| breast-w | Pypper:two-level@10 (best rule) | 96.42% | 68.5 |
+| breast-w | Pypper:two-level@10 (macro distribution voting) | 96.42% | 68.5 |
+| breast-w | Pypper:two-level@10 (micro distribution voting) | 96.57% | 68.5 |
+| breast-w | Pypper:two-level@10 (voting) | 96.28% | 68.5 |
+| breast-w | Pypper:two-level@25 (best rule) | 95.71% | 170.7 |
+| breast-w | Pypper:two-level@25 (macro distribution voting) | 96.42% | 170.7 |
+| breast-w | Pypper:two-level@25 (micro distribution voting) | 95.56% | 170.7 |
+| breast-w | Pypper:two-level@25 (voting) | 96.28% | 170.7 |
+| breast-w | Pypper:two-level@50 (best rule) | 95.99% | 343.2 |
+| breast-w | Pypper:two-level@50 (macro distribution voting) | 96.28% | 343.2 |
+| breast-w | Pypper:two-level@50 (micro distribution voting) | 95.71% | 343.2 |
+| breast-w | Pypper:two-level@50 (voting) | 96.28% | 343.2 |
 | car | PFoil:one-level@10 (best rule) | 95.49% | 682.0 |
 | car | PFoil:one-level@10 (macro distribution voting) | 96.87% | 682.0 |
 | car | PFoil:one-level@10 (micro distribution voting) | 94.85% | 682.0 |
@@ -914,34 +914,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | car | PFossil:two-level@50 (macro distribution voting) | 94.16% | 917.2 |
 | car | PFossil:two-level@50 (micro distribution voting) | 85.59% | 917.2 |
 | car | PFossil:two-level@50 (voting) | 90.80% | 917.2 |
-| car | Pypper:one-level@10 (best rule) | 93.98% | 191.6 |
-| car | Pypper:one-level@10 (macro distribution voting) | 94.21% | 191.6 |
-| car | Pypper:one-level@10 (micro distribution voting) | 91.49% | 191.6 |
-| car | Pypper:one-level@10 (voting) | 93.06% | 191.6 |
-| car | Pypper:one-level@25 (best rule) | 94.50% | 481.8 |
-| car | Pypper:one-level@25 (macro distribution voting) | 94.33% | 481.8 |
-| car | Pypper:one-level@25 (micro distribution voting) | 90.91% | 481.8 |
-| car | Pypper:one-level@25 (voting) | 93.40% | 481.8 |
-| car | Pypper:one-level@50 (best rule) | 94.79% | 953.0 |
-| car | Pypper:one-level@50 (macro distribution voting) | 94.44% | 953.0 |
-| car | Pypper:one-level@50 (micro distribution voting) | 90.97% | 953.0 |
-| car | Pypper:one-level@50 (voting) | 93.40% | 953.0 |
-| car | Pypper:single (best rule) | 91.32% | 24.1 |
-| car | Pypper:single (macro distribution voting) | 91.15% | 24.1 |
-| car | Pypper:single (micro distribution voting) | 89.99% | 24.1 |
-| car | Pypper:single (voting) | 90.39% | 24.1 |
-| car | Pypper:two-level@10 (best rule) | 94.39% | 191.6 |
-| car | Pypper:two-level@10 (macro distribution voting) | 93.98% | 191.6 |
-| car | Pypper:two-level@10 (micro distribution voting) | 92.59% | 191.6 |
-| car | Pypper:two-level@10 (voting) | 93.23% | 191.6 |
-| car | Pypper:two-level@25 (best rule) | 94.44% | 481.8 |
-| car | Pypper:two-level@25 (macro distribution voting) | 94.21% | 481.8 |
-| car | Pypper:two-level@25 (micro distribution voting) | 92.77% | 481.8 |
-| car | Pypper:two-level@25 (voting) | 93.75% | 481.8 |
-| car | Pypper:two-level@50 (best rule) | 95.14% | 953.0 |
-| car | Pypper:two-level@50 (macro distribution voting) | 94.85% | 953.0 |
-| car | Pypper:two-level@50 (micro distribution voting) | 93.34% | 953.0 |
-| car | Pypper:two-level@50 (voting) | 93.98% | 953.0 |
+| car | Pypper:one-level@10 (best rule) | 94.79% | 250.3 |
+| car | Pypper:one-level@10 (macro distribution voting) | 95.83% | 250.3 |
+| car | Pypper:one-level@10 (micro distribution voting) | 91.84% | 250.3 |
+| car | Pypper:one-level@10 (voting) | 94.44% | 250.3 |
+| car | Pypper:one-level@25 (best rule) | 95.20% | 634.2 |
+| car | Pypper:one-level@25 (macro distribution voting) | 95.77% | 634.2 |
+| car | Pypper:one-level@25 (micro distribution voting) | 91.32% | 634.2 |
+| car | Pypper:one-level@25 (voting) | 95.20% | 634.2 |
+| car | Pypper:one-level@50 (best rule) | 94.50% | 1255.0 |
+| car | Pypper:one-level@50 (macro distribution voting) | 96.12% | 1255.0 |
+| car | Pypper:one-level@50 (micro distribution voting) | 91.20% | 1255.0 |
+| car | Pypper:one-level@50 (voting) | 95.08% | 1255.0 |
+| car | Pypper:single (best rule) | 92.36% | 29.7 |
+| car | Pypper:single (macro distribution voting) | 92.24% | 29.7 |
+| car | Pypper:single (micro distribution voting) | 90.91% | 29.7 |
+| car | Pypper:single (voting) | 91.49% | 29.7 |
+| car | Pypper:two-level@10 (best rule) | 95.66% | 250.3 |
+| car | Pypper:two-level@10 (macro distribution voting) | 95.26% | 250.3 |
+| car | Pypper:two-level@10 (micro distribution voting) | 93.57% | 250.3 |
+| car | Pypper:two-level@10 (voting) | 94.73% | 250.3 |
+| car | Pypper:two-level@25 (best rule) | 96.24% | 634.2 |
+| car | Pypper:two-level@25 (macro distribution voting) | 96.06% | 634.2 |
+| car | Pypper:two-level@25 (micro distribution voting) | 93.92% | 634.2 |
+| car | Pypper:two-level@25 (voting) | 95.43% | 634.2 |
+| car | Pypper:two-level@50 (best rule) | 96.47% | 1255.0 |
+| car | Pypper:two-level@50 (macro distribution voting) | 96.35% | 1255.0 |
+| car | Pypper:two-level@50 (micro distribution voting) | 94.62% | 1255.0 |
+| car | Pypper:two-level@50 (voting) | 95.54% | 1255.0 |
 | churn | PFoil:one-level@10 (best rule) | 90.88% | 1440.8 |
 | churn | PFoil:one-level@10 (macro distribution voting) | 92.62% | 1440.8 |
 | churn | PFoil:one-level@10 (micro distribution voting) | 86.20% | 1440.8 |
@@ -998,34 +998,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | churn | PFossil:two-level@50 (macro distribution voting) | 91.74% | 557.7 |
 | churn | PFossil:two-level@50 (micro distribution voting) | 90.68% | 557.7 |
 | churn | PFossil:two-level@50 (voting) | 90.76% | 557.7 |
-| churn | Pypper:one-level@10 (best rule) | 93.02% | 154.4 |
-| churn | Pypper:one-level@10 (macro distribution voting) | 93.72% | 154.4 |
-| churn | Pypper:one-level@10 (micro distribution voting) | 92.20% | 154.4 |
-| churn | Pypper:one-level@10 (voting) | 93.76% | 154.4 |
-| churn | Pypper:one-level@25 (best rule) | 92.74% | 390.3 |
-| churn | Pypper:one-level@25 (macro distribution voting) | 93.70% | 390.3 |
-| churn | Pypper:one-level@25 (micro distribution voting) | 91.28% | 390.3 |
-| churn | Pypper:one-level@25 (voting) | 93.70% | 390.3 |
-| churn | Pypper:one-level@50 (best rule) | 93.00% | 782.2 |
-| churn | Pypper:one-level@50 (macro distribution voting) | 93.74% | 782.2 |
-| churn | Pypper:one-level@50 (micro distribution voting) | 91.26% | 782.2 |
-| churn | Pypper:one-level@50 (voting) | 93.72% | 782.2 |
-| churn | Pypper:single (best rule) | 93.42% | 17.5 |
-| churn | Pypper:single (macro distribution voting) | 93.42% | 17.5 |
-| churn | Pypper:single (micro distribution voting) | 93.36% | 17.5 |
-| churn | Pypper:single (voting) | 93.28% | 17.5 |
-| churn | Pypper:two-level@10 (best rule) | 93.74% | 154.4 |
-| churn | Pypper:two-level@10 (macro distribution voting) | 93.78% | 154.4 |
-| churn | Pypper:two-level@10 (micro distribution voting) | 93.64% | 154.4 |
-| churn | Pypper:two-level@10 (voting) | 93.68% | 154.4 |
-| churn | Pypper:two-level@25 (best rule) | 93.60% | 390.3 |
-| churn | Pypper:two-level@25 (macro distribution voting) | 93.66% | 390.3 |
-| churn | Pypper:two-level@25 (micro distribution voting) | 93.58% | 390.3 |
-| churn | Pypper:two-level@25 (voting) | 93.56% | 390.3 |
-| churn | Pypper:two-level@50 (best rule) | 93.64% | 782.2 |
-| churn | Pypper:two-level@50 (macro distribution voting) | 93.66% | 782.2 |
-| churn | Pypper:two-level@50 (micro distribution voting) | 93.56% | 782.2 |
-| churn | Pypper:two-level@50 (voting) | 93.54% | 782.2 |
+| churn | Pypper:one-level@10 (best rule) | 92.94% | 187.2 |
+| churn | Pypper:one-level@10 (macro distribution voting) | 93.62% | 187.2 |
+| churn | Pypper:one-level@10 (micro distribution voting) | 92.22% | 187.2 |
+| churn | Pypper:one-level@10 (voting) | 93.80% | 187.2 |
+| churn | Pypper:one-level@25 (best rule) | 92.74% | 468.5 |
+| churn | Pypper:one-level@25 (macro distribution voting) | 93.76% | 468.5 |
+| churn | Pypper:one-level@25 (micro distribution voting) | 91.08% | 468.5 |
+| churn | Pypper:one-level@25 (voting) | 93.82% | 468.5 |
+| churn | Pypper:one-level@50 (best rule) | 93.10% | 927.0 |
+| churn | Pypper:one-level@50 (macro distribution voting) | 93.72% | 927.0 |
+| churn | Pypper:one-level@50 (micro distribution voting) | 91.14% | 927.0 |
+| churn | Pypper:one-level@50 (voting) | 93.68% | 927.0 |
+| churn | Pypper:single (best rule) | 93.66% | 18.2 |
+| churn | Pypper:single (macro distribution voting) | 93.66% | 18.2 |
+| churn | Pypper:single (micro distribution voting) | 93.52% | 18.2 |
+| churn | Pypper:single (voting) | 93.46% | 18.2 |
+| churn | Pypper:two-level@10 (best rule) | 93.72% | 187.2 |
+| churn | Pypper:two-level@10 (macro distribution voting) | 93.74% | 187.2 |
+| churn | Pypper:two-level@10 (micro distribution voting) | 93.70% | 187.2 |
+| churn | Pypper:two-level@10 (voting) | 93.58% | 187.2 |
+| churn | Pypper:two-level@25 (best rule) | 93.70% | 468.5 |
+| churn | Pypper:two-level@25 (macro distribution voting) | 93.70% | 468.5 |
+| churn | Pypper:two-level@25 (micro distribution voting) | 93.64% | 468.5 |
+| churn | Pypper:two-level@25 (voting) | 93.66% | 468.5 |
+| churn | Pypper:two-level@50 (best rule) | 93.72% | 927.0 |
+| churn | Pypper:two-level@50 (macro distribution voting) | 93.76% | 927.0 |
+| churn | Pypper:two-level@50 (micro distribution voting) | 93.70% | 927.0 |
+| churn | Pypper:two-level@50 (voting) | 93.64% | 927.0 |
 | climate-model-simulation-crashes | PFoil:one-level@10 (best rule) | 91.85% | 153.7 |
 | climate-model-simulation-crashes | PFoil:one-level@10 (macro distribution voting) | 93.52% | 153.7 |
 | climate-model-simulation-crashes | PFoil:one-level@10 (micro distribution voting) | 91.85% | 153.7 |
@@ -1082,34 +1082,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | climate-model-simulation-crashes | PFossil:two-level@50 (macro distribution voting) | 93.33% | 555.6 |
 | climate-model-simulation-crashes | PFossil:two-level@50 (micro distribution voting) | 92.59% | 555.6 |
 | climate-model-simulation-crashes | PFossil:two-level@50 (voting) | 92.78% | 555.6 |
-| climate-model-simulation-crashes | Pypper:one-level@10 (best rule) | 92.96% | 52.4 |
-| climate-model-simulation-crashes | Pypper:one-level@10 (macro distribution voting) | 94.81% | 52.4 |
-| climate-model-simulation-crashes | Pypper:one-level@10 (micro distribution voting) | 93.15% | 52.4 |
-| climate-model-simulation-crashes | Pypper:one-level@10 (voting) | 94.63% | 52.4 |
-| climate-model-simulation-crashes | Pypper:one-level@25 (best rule) | 92.41% | 130.0 |
-| climate-model-simulation-crashes | Pypper:one-level@25 (macro distribution voting) | 94.44% | 130.0 |
-| climate-model-simulation-crashes | Pypper:one-level@25 (micro distribution voting) | 92.78% | 130.0 |
-| climate-model-simulation-crashes | Pypper:one-level@25 (voting) | 94.63% | 130.0 |
-| climate-model-simulation-crashes | Pypper:one-level@50 (best rule) | 91.67% | 255.7 |
-| climate-model-simulation-crashes | Pypper:one-level@50 (macro distribution voting) | 94.81% | 255.7 |
-| climate-model-simulation-crashes | Pypper:one-level@50 (micro distribution voting) | 92.59% | 255.7 |
-| climate-model-simulation-crashes | Pypper:one-level@50 (voting) | 94.81% | 255.7 |
-| climate-model-simulation-crashes | Pypper:single (best rule) | 94.81% | 5.6 |
-| climate-model-simulation-crashes | Pypper:single (macro distribution voting) | 94.44% | 5.6 |
-| climate-model-simulation-crashes | Pypper:single (micro distribution voting) | 94.81% | 5.6 |
-| climate-model-simulation-crashes | Pypper:single (voting) | 94.81% | 5.6 |
-| climate-model-simulation-crashes | Pypper:two-level@10 (best rule) | 94.26% | 52.4 |
-| climate-model-simulation-crashes | Pypper:two-level@10 (macro distribution voting) | 94.26% | 52.4 |
-| climate-model-simulation-crashes | Pypper:two-level@10 (micro distribution voting) | 94.26% | 52.4 |
-| climate-model-simulation-crashes | Pypper:two-level@10 (voting) | 94.26% | 52.4 |
-| climate-model-simulation-crashes | Pypper:two-level@25 (best rule) | 94.44% | 130.0 |
-| climate-model-simulation-crashes | Pypper:two-level@25 (macro distribution voting) | 94.44% | 130.0 |
-| climate-model-simulation-crashes | Pypper:two-level@25 (micro distribution voting) | 94.44% | 130.0 |
-| climate-model-simulation-crashes | Pypper:two-level@25 (voting) | 94.44% | 130.0 |
-| climate-model-simulation-crashes | Pypper:two-level@50 (best rule) | 94.63% | 255.7 |
-| climate-model-simulation-crashes | Pypper:two-level@50 (macro distribution voting) | 94.63% | 255.7 |
-| climate-model-simulation-crashes | Pypper:two-level@50 (micro distribution voting) | 94.63% | 255.7 |
-| climate-model-simulation-crashes | Pypper:two-level@50 (voting) | 94.63% | 255.7 |
+| climate-model-simulation-crashes | Pypper:one-level@10 (best rule) | 92.96% | 66.9 |
+| climate-model-simulation-crashes | Pypper:one-level@10 (macro distribution voting) | 94.81% | 66.9 |
+| climate-model-simulation-crashes | Pypper:one-level@10 (micro distribution voting) | 93.33% | 66.9 |
+| climate-model-simulation-crashes | Pypper:one-level@10 (voting) | 94.81% | 66.9 |
+| climate-model-simulation-crashes | Pypper:one-level@25 (best rule) | 92.22% | 166.9 |
+| climate-model-simulation-crashes | Pypper:one-level@25 (macro distribution voting) | 95.00% | 166.9 |
+| climate-model-simulation-crashes | Pypper:one-level@25 (micro distribution voting) | 92.78% | 166.9 |
+| climate-model-simulation-crashes | Pypper:one-level@25 (voting) | 95.00% | 166.9 |
+| climate-model-simulation-crashes | Pypper:one-level@50 (best rule) | 91.67% | 334.2 |
+| climate-model-simulation-crashes | Pypper:one-level@50 (macro distribution voting) | 95.19% | 334.2 |
+| climate-model-simulation-crashes | Pypper:one-level@50 (micro distribution voting) | 92.96% | 334.2 |
+| climate-model-simulation-crashes | Pypper:one-level@50 (voting) | 95.00% | 334.2 |
+| climate-model-simulation-crashes | Pypper:single (best rule) | 95.19% | 6.6 |
+| climate-model-simulation-crashes | Pypper:single (macro distribution voting) | 94.81% | 6.6 |
+| climate-model-simulation-crashes | Pypper:single (micro distribution voting) | 95.19% | 6.6 |
+| climate-model-simulation-crashes | Pypper:single (voting) | 95.19% | 6.6 |
+| climate-model-simulation-crashes | Pypper:two-level@10 (best rule) | 94.07% | 66.9 |
+| climate-model-simulation-crashes | Pypper:two-level@10 (macro distribution voting) | 93.89% | 66.9 |
+| climate-model-simulation-crashes | Pypper:two-level@10 (micro distribution voting) | 94.07% | 66.9 |
+| climate-model-simulation-crashes | Pypper:two-level@10 (voting) | 94.07% | 66.9 |
+| climate-model-simulation-crashes | Pypper:two-level@25 (best rule) | 94.63% | 166.9 |
+| climate-model-simulation-crashes | Pypper:two-level@25 (macro distribution voting) | 94.63% | 166.9 |
+| climate-model-simulation-crashes | Pypper:two-level@25 (micro distribution voting) | 94.63% | 166.9 |
+| climate-model-simulation-crashes | Pypper:two-level@25 (voting) | 94.81% | 166.9 |
+| climate-model-simulation-crashes | Pypper:two-level@50 (best rule) | 95.00% | 334.2 |
+| climate-model-simulation-crashes | Pypper:two-level@50 (macro distribution voting) | 95.37% | 334.2 |
+| climate-model-simulation-crashes | Pypper:two-level@50 (micro distribution voting) | 95.00% | 334.2 |
+| climate-model-simulation-crashes | Pypper:two-level@50 (voting) | 95.00% | 334.2 |
 | cmc | PFoil:one-level@10 (best rule) | 53.64% | 2078.5 |
 | cmc | PFoil:one-level@10 (macro distribution voting) | 53.78% | 2078.5 |
 | cmc | PFoil:one-level@10 (micro distribution voting) | 53.10% | 2078.5 |
@@ -1166,34 +1166,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | cmc | PFossil:two-level@50 (macro distribution voting) | 51.94% | 192.0 |
 | cmc | PFossil:two-level@50 (micro distribution voting) | 51.94% | 192.0 |
 | cmc | PFossil:two-level@50 (voting) | 51.67% | 192.0 |
-| cmc | Pypper:one-level@10 (best rule) | 54.18% | 82.1 |
-| cmc | Pypper:one-level@10 (macro distribution voting) | 54.18% | 82.1 |
-| cmc | Pypper:one-level@10 (micro distribution voting) | 54.39% | 82.1 |
-| cmc | Pypper:one-level@10 (voting) | 54.45% | 82.1 |
-| cmc | Pypper:one-level@25 (best rule) | 53.97% | 205.9 |
-| cmc | Pypper:one-level@25 (macro distribution voting) | 55.20% | 205.9 |
-| cmc | Pypper:one-level@25 (micro distribution voting) | 55.40% | 205.9 |
-| cmc | Pypper:one-level@25 (voting) | 55.00% | 205.9 |
-| cmc | Pypper:one-level@50 (best rule) | 53.57% | 415.0 |
-| cmc | Pypper:one-level@50 (macro distribution voting) | 54.86% | 415.0 |
-| cmc | Pypper:one-level@50 (micro distribution voting) | 55.13% | 415.0 |
-| cmc | Pypper:one-level@50 (voting) | 55.74% | 415.0 |
-| cmc | Pypper:single (best rule) | 52.41% | 6.5 |
-| cmc | Pypper:single (macro distribution voting) | 52.48% | 6.5 |
-| cmc | Pypper:single (micro distribution voting) | 52.48% | 6.5 |
-| cmc | Pypper:single (voting) | 52.48% | 6.5 |
-| cmc | Pypper:two-level@10 (best rule) | 54.45% | 82.1 |
-| cmc | Pypper:two-level@10 (macro distribution voting) | 54.38% | 82.1 |
-| cmc | Pypper:two-level@10 (micro distribution voting) | 54.52% | 82.1 |
-| cmc | Pypper:two-level@10 (voting) | 54.38% | 82.1 |
-| cmc | Pypper:two-level@25 (best rule) | 54.93% | 205.9 |
-| cmc | Pypper:two-level@25 (macro distribution voting) | 55.27% | 205.9 |
-| cmc | Pypper:two-level@25 (micro distribution voting) | 55.61% | 205.9 |
-| cmc | Pypper:two-level@25 (voting) | 55.13% | 205.9 |
-| cmc | Pypper:two-level@50 (best rule) | 55.40% | 415.0 |
-| cmc | Pypper:two-level@50 (macro distribution voting) | 55.00% | 415.0 |
-| cmc | Pypper:two-level@50 (micro distribution voting) | 55.13% | 415.0 |
-| cmc | Pypper:two-level@50 (voting) | 54.93% | 415.0 |
+| cmc | Pypper:one-level@10 (best rule) | 53.77% | 91.0 |
+| cmc | Pypper:one-level@10 (macro distribution voting) | 54.18% | 91.0 |
+| cmc | Pypper:one-level@10 (micro distribution voting) | 54.59% | 91.0 |
+| cmc | Pypper:one-level@10 (voting) | 54.99% | 91.0 |
+| cmc | Pypper:one-level@25 (best rule) | 53.36% | 230.9 |
+| cmc | Pypper:one-level@25 (macro distribution voting) | 55.40% | 230.9 |
+| cmc | Pypper:one-level@25 (micro distribution voting) | 56.15% | 230.9 |
+| cmc | Pypper:one-level@25 (voting) | 55.74% | 230.9 |
+| cmc | Pypper:one-level@50 (best rule) | 53.16% | 467.0 |
+| cmc | Pypper:one-level@50 (macro distribution voting) | 55.47% | 467.0 |
+| cmc | Pypper:one-level@50 (micro distribution voting) | 55.54% | 467.0 |
+| cmc | Pypper:one-level@50 (voting) | 56.29% | 467.0 |
+| cmc | Pypper:single (best rule) | 52.21% | 6.5 |
+| cmc | Pypper:single (macro distribution voting) | 52.35% | 6.5 |
+| cmc | Pypper:single (micro distribution voting) | 52.35% | 6.5 |
+| cmc | Pypper:single (voting) | 52.35% | 6.5 |
+| cmc | Pypper:two-level@10 (best rule) | 55.33% | 91.0 |
+| cmc | Pypper:two-level@10 (macro distribution voting) | 55.33% | 91.0 |
+| cmc | Pypper:two-level@10 (micro distribution voting) | 55.40% | 91.0 |
+| cmc | Pypper:two-level@10 (voting) | 55.33% | 91.0 |
+| cmc | Pypper:two-level@25 (best rule) | 55.81% | 230.9 |
+| cmc | Pypper:two-level@25 (macro distribution voting) | 55.40% | 230.9 |
+| cmc | Pypper:two-level@25 (micro distribution voting) | 55.60% | 230.9 |
+| cmc | Pypper:two-level@25 (voting) | 55.40% | 230.9 |
+| cmc | Pypper:two-level@50 (best rule) | 56.08% | 467.0 |
+| cmc | Pypper:two-level@50 (macro distribution voting) | 55.94% | 467.0 |
+| cmc | Pypper:two-level@50 (micro distribution voting) | 55.95% | 467.0 |
+| cmc | Pypper:two-level@50 (voting) | 55.74% | 467.0 |
 | colic | PFoil:one-level@10 (best rule) | 85.35% | 313.4 |
 | colic | PFoil:one-level@10 (macro distribution voting) | 84.80% | 313.4 |
 | colic | PFoil:one-level@10 (micro distribution voting) | 85.34% | 313.4 |
@@ -1250,34 +1250,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | colic | PFossil:two-level@50 (macro distribution voting) | 85.62% | 859.2 |
 | colic | PFossil:two-level@50 (micro distribution voting) | 86.43% | 859.2 |
 | colic | PFossil:two-level@50 (voting) | 85.89% | 859.2 |
-| colic | Pypper:one-level@10 (best rule) | 83.45% | 51.1 |
-| colic | Pypper:one-level@10 (macro distribution voting) | 86.15% | 51.1 |
-| colic | Pypper:one-level@10 (micro distribution voting) | 85.88% | 51.1 |
-| colic | Pypper:one-level@10 (voting) | 85.88% | 51.1 |
-| colic | Pypper:one-level@25 (best rule) | 84.53% | 126.7 |
-| colic | Pypper:one-level@25 (macro distribution voting) | 86.15% | 126.7 |
-| colic | Pypper:one-level@25 (micro distribution voting) | 85.88% | 126.7 |
-| colic | Pypper:one-level@25 (voting) | 86.15% | 126.7 |
-| colic | Pypper:one-level@50 (best rule) | 83.43% | 251.7 |
-| colic | Pypper:one-level@50 (macro distribution voting) | 85.88% | 251.7 |
-| colic | Pypper:one-level@50 (micro distribution voting) | 85.88% | 251.7 |
-| colic | Pypper:one-level@50 (voting) | 85.88% | 251.7 |
-| colic | Pypper:single (best rule) | 85.88% | 3.9 |
-| colic | Pypper:single (macro distribution voting) | 85.88% | 3.9 |
-| colic | Pypper:single (micro distribution voting) | 85.88% | 3.9 |
-| colic | Pypper:single (voting) | 85.88% | 3.9 |
-| colic | Pypper:two-level@10 (best rule) | 85.61% | 51.1 |
-| colic | Pypper:two-level@10 (macro distribution voting) | 85.88% | 51.1 |
-| colic | Pypper:two-level@10 (micro distribution voting) | 85.88% | 51.1 |
-| colic | Pypper:two-level@10 (voting) | 85.06% | 51.1 |
-| colic | Pypper:two-level@25 (best rule) | 85.88% | 126.7 |
-| colic | Pypper:two-level@25 (macro distribution voting) | 85.88% | 126.7 |
-| colic | Pypper:two-level@25 (micro distribution voting) | 85.88% | 126.7 |
-| colic | Pypper:two-level@25 (voting) | 85.61% | 126.7 |
-| colic | Pypper:two-level@50 (best rule) | 85.88% | 251.7 |
-| colic | Pypper:two-level@50 (macro distribution voting) | 85.88% | 251.7 |
-| colic | Pypper:two-level@50 (micro distribution voting) | 85.88% | 251.7 |
-| colic | Pypper:two-level@50 (voting) | 85.88% | 251.7 |
+| colic | Pypper:one-level@10 (best rule) | 83.16% | 72.5 |
+| colic | Pypper:one-level@10 (macro distribution voting) | 85.34% | 72.5 |
+| colic | Pypper:one-level@10 (micro distribution voting) | 85.61% | 72.5 |
+| colic | Pypper:one-level@10 (voting) | 85.34% | 72.5 |
+| colic | Pypper:one-level@25 (best rule) | 84.26% | 175.7 |
+| colic | Pypper:one-level@25 (macro distribution voting) | 85.88% | 175.7 |
+| colic | Pypper:one-level@25 (micro distribution voting) | 85.88% | 175.7 |
+| colic | Pypper:one-level@25 (voting) | 85.88% | 175.7 |
+| colic | Pypper:one-level@50 (best rule) | 83.16% | 348.1 |
+| colic | Pypper:one-level@50 (macro distribution voting) | 86.15% | 348.1 |
+| colic | Pypper:one-level@50 (micro distribution voting) | 85.88% | 348.1 |
+| colic | Pypper:one-level@50 (voting) | 86.15% | 348.1 |
+| colic | Pypper:single (best rule) | 85.08% | 5.6 |
+| colic | Pypper:single (macro distribution voting) | 84.80% | 5.6 |
+| colic | Pypper:single (micro distribution voting) | 85.89% | 5.6 |
+| colic | Pypper:single (voting) | 85.35% | 5.6 |
+| colic | Pypper:two-level@10 (best rule) | 86.15% | 72.5 |
+| colic | Pypper:two-level@10 (macro distribution voting) | 86.15% | 72.5 |
+| colic | Pypper:two-level@10 (micro distribution voting) | 86.15% | 72.5 |
+| colic | Pypper:two-level@10 (voting) | 85.34% | 72.5 |
+| colic | Pypper:two-level@25 (best rule) | 85.61% | 175.7 |
+| colic | Pypper:two-level@25 (macro distribution voting) | 85.61% | 175.7 |
+| colic | Pypper:two-level@25 (micro distribution voting) | 85.88% | 175.7 |
+| colic | Pypper:two-level@25 (voting) | 85.61% | 175.7 |
+| colic | Pypper:two-level@50 (best rule) | 85.61% | 348.1 |
+| colic | Pypper:two-level@50 (macro distribution voting) | 85.88% | 348.1 |
+| colic | Pypper:two-level@50 (micro distribution voting) | 85.88% | 348.1 |
+| colic | Pypper:two-level@50 (voting) | 85.61% | 348.1 |
 | compas-two-years | PFoil:one-level@10 (best rule) | 67.09% | 3583.1 |
 | compas-two-years | PFoil:one-level@10 (macro distribution voting) | 67.18% | 3583.1 |
 | compas-two-years | PFoil:one-level@10 (micro distribution voting) | 63.57% | 3583.1 |
@@ -1334,34 +1334,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | compas-two-years | PFossil:two-level@50 (macro distribution voting) | 64.68% | 63.6 |
 | compas-two-years | PFossil:two-level@50 (micro distribution voting) | 64.68% | 63.6 |
 | compas-two-years | PFossil:two-level@50 (voting) | 64.68% | 63.6 |
-| compas-two-years | Pypper:one-level@10 (best rule) | 68.13% | 90.5 |
-| compas-two-years | Pypper:one-level@10 (macro distribution voting) | 67.81% | 90.5 |
-| compas-two-years | Pypper:one-level@10 (micro distribution voting) | 67.26% | 90.5 |
-| compas-two-years | Pypper:one-level@10 (voting) | 67.89% | 90.5 |
-| compas-two-years | Pypper:one-level@25 (best rule) | 68.06% | 219.2 |
-| compas-two-years | Pypper:one-level@25 (macro distribution voting) | 67.75% | 219.2 |
-| compas-two-years | Pypper:one-level@25 (micro distribution voting) | 67.20% | 219.2 |
-| compas-two-years | Pypper:one-level@25 (voting) | 67.75% | 219.2 |
-| compas-two-years | Pypper:one-level@50 (best rule) | 67.81% | 436.7 |
-| compas-two-years | Pypper:one-level@50 (macro distribution voting) | 67.77% | 436.7 |
-| compas-two-years | Pypper:one-level@50 (micro distribution voting) | 67.39% | 436.7 |
-| compas-two-years | Pypper:one-level@50 (voting) | 67.77% | 436.7 |
-| compas-two-years | Pypper:single (best rule) | 67.05% | 8.1 |
-| compas-two-years | Pypper:single (macro distribution voting) | 67.05% | 8.1 |
-| compas-two-years | Pypper:single (micro distribution voting) | 67.13% | 8.1 |
-| compas-two-years | Pypper:single (voting) | 67.15% | 8.1 |
-| compas-two-years | Pypper:two-level@10 (best rule) | 67.75% | 90.5 |
-| compas-two-years | Pypper:two-level@10 (macro distribution voting) | 67.73% | 90.5 |
-| compas-two-years | Pypper:two-level@10 (micro distribution voting) | 67.51% | 90.5 |
-| compas-two-years | Pypper:two-level@10 (voting) | 67.53% | 90.5 |
-| compas-two-years | Pypper:two-level@25 (best rule) | 67.71% | 219.2 |
-| compas-two-years | Pypper:two-level@25 (macro distribution voting) | 67.70% | 219.2 |
-| compas-two-years | Pypper:two-level@25 (micro distribution voting) | 67.56% | 219.2 |
-| compas-two-years | Pypper:two-level@25 (voting) | 67.49% | 219.2 |
-| compas-two-years | Pypper:two-level@50 (best rule) | 67.60% | 436.7 |
-| compas-two-years | Pypper:two-level@50 (macro distribution voting) | 67.58% | 436.7 |
-| compas-two-years | Pypper:two-level@50 (micro distribution voting) | 67.64% | 436.7 |
-| compas-two-years | Pypper:two-level@50 (voting) | 67.85% | 436.7 |
+| compas-two-years | Pypper:one-level@10 (best rule) | 68.15% | 91.0 |
+| compas-two-years | Pypper:one-level@10 (macro distribution voting) | 67.92% | 91.0 |
+| compas-two-years | Pypper:one-level@10 (micro distribution voting) | 67.22% | 91.0 |
+| compas-two-years | Pypper:one-level@10 (voting) | 67.89% | 91.0 |
+| compas-two-years | Pypper:one-level@25 (best rule) | 68.07% | 224.2 |
+| compas-two-years | Pypper:one-level@25 (macro distribution voting) | 67.85% | 224.2 |
+| compas-two-years | Pypper:one-level@25 (micro distribution voting) | 67.20% | 224.2 |
+| compas-two-years | Pypper:one-level@25 (voting) | 67.92% | 224.2 |
+| compas-two-years | Pypper:one-level@50 (best rule) | 68.00% | 450.0 |
+| compas-two-years | Pypper:one-level@50 (macro distribution voting) | 67.81% | 450.0 |
+| compas-two-years | Pypper:one-level@50 (micro distribution voting) | 67.28% | 450.0 |
+| compas-two-years | Pypper:one-level@50 (voting) | 67.85% | 450.0 |
+| compas-two-years | Pypper:single (best rule) | 67.03% | 8.3 |
+| compas-two-years | Pypper:single (macro distribution voting) | 67.03% | 8.3 |
+| compas-two-years | Pypper:single (micro distribution voting) | 66.62% | 8.3 |
+| compas-two-years | Pypper:single (voting) | 66.62% | 8.3 |
+| compas-two-years | Pypper:two-level@10 (best rule) | 67.77% | 91.0 |
+| compas-two-years | Pypper:two-level@10 (macro distribution voting) | 67.79% | 91.0 |
+| compas-two-years | Pypper:two-level@10 (micro distribution voting) | 67.70% | 91.0 |
+| compas-two-years | Pypper:two-level@10 (voting) | 67.58% | 91.0 |
+| compas-two-years | Pypper:two-level@25 (best rule) | 67.73% | 224.2 |
+| compas-two-years | Pypper:two-level@25 (macro distribution voting) | 67.81% | 224.2 |
+| compas-two-years | Pypper:two-level@25 (micro distribution voting) | 67.77% | 224.2 |
+| compas-two-years | Pypper:two-level@25 (voting) | 67.62% | 224.2 |
+| compas-two-years | Pypper:two-level@50 (best rule) | 67.70% | 450.0 |
+| compas-two-years | Pypper:two-level@50 (macro distribution voting) | 67.70% | 450.0 |
+| compas-two-years | Pypper:two-level@50 (micro distribution voting) | 67.77% | 450.0 |
+| compas-two-years | Pypper:two-level@50 (voting) | 67.66% | 450.0 |
 | credit-approval | PFoil:one-level@10 (best rule) | 86.38% | 460.0 |
 | credit-approval | PFoil:one-level@10 (macro distribution voting) | 85.94% | 460.0 |
 | credit-approval | PFoil:one-level@10 (micro distribution voting) | 87.39% | 460.0 |
@@ -1418,34 +1418,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | credit-approval | PFossil:two-level@50 (macro distribution voting) | 85.51% | 709.6 |
 | credit-approval | PFossil:two-level@50 (micro distribution voting) | 85.65% | 709.6 |
 | credit-approval | PFossil:two-level@50 (voting) | 85.65% | 709.6 |
-| credit-approval | Pypper:one-level@10 (best rule) | 86.23% | 58.6 |
-| credit-approval | Pypper:one-level@10 (macro distribution voting) | 85.80% | 58.6 |
-| credit-approval | Pypper:one-level@10 (micro distribution voting) | 85.51% | 58.6 |
-| credit-approval | Pypper:one-level@10 (voting) | 85.65% | 58.6 |
-| credit-approval | Pypper:one-level@25 (best rule) | 86.81% | 143.2 |
-| credit-approval | Pypper:one-level@25 (macro distribution voting) | 85.94% | 143.2 |
-| credit-approval | Pypper:one-level@25 (micro distribution voting) | 85.36% | 143.2 |
-| credit-approval | Pypper:one-level@25 (voting) | 85.65% | 143.2 |
-| credit-approval | Pypper:one-level@50 (best rule) | 85.22% | 275.4 |
-| credit-approval | Pypper:one-level@50 (macro distribution voting) | 85.22% | 275.4 |
-| credit-approval | Pypper:one-level@50 (micro distribution voting) | 85.65% | 275.4 |
-| credit-approval | Pypper:one-level@50 (voting) | 85.07% | 275.4 |
-| credit-approval | Pypper:single (best rule) | 84.20% | 6.4 |
-| credit-approval | Pypper:single (macro distribution voting) | 84.20% | 6.4 |
-| credit-approval | Pypper:single (micro distribution voting) | 83.77% | 6.4 |
-| credit-approval | Pypper:single (voting) | 83.04% | 6.4 |
-| credit-approval | Pypper:two-level@10 (best rule) | 86.09% | 58.6 |
-| credit-approval | Pypper:two-level@10 (macro distribution voting) | 86.09% | 58.6 |
-| credit-approval | Pypper:two-level@10 (micro distribution voting) | 85.22% | 58.6 |
-| credit-approval | Pypper:two-level@10 (voting) | 85.94% | 58.6 |
-| credit-approval | Pypper:two-level@25 (best rule) | 85.94% | 143.2 |
-| credit-approval | Pypper:two-level@25 (macro distribution voting) | 86.09% | 143.2 |
-| credit-approval | Pypper:two-level@25 (micro distribution voting) | 85.65% | 143.2 |
-| credit-approval | Pypper:two-level@25 (voting) | 85.36% | 143.2 |
-| credit-approval | Pypper:two-level@50 (best rule) | 85.07% | 275.4 |
-| credit-approval | Pypper:two-level@50 (macro distribution voting) | 85.07% | 275.4 |
-| credit-approval | Pypper:two-level@50 (micro distribution voting) | 85.36% | 275.4 |
-| credit-approval | Pypper:two-level@50 (voting) | 85.36% | 275.4 |
+| credit-approval | Pypper:one-level@10 (best rule) | 85.80% | 72.8 |
+| credit-approval | Pypper:one-level@10 (macro distribution voting) | 86.23% | 72.8 |
+| credit-approval | Pypper:one-level@10 (micro distribution voting) | 85.51% | 72.8 |
+| credit-approval | Pypper:one-level@10 (voting) | 86.09% | 72.8 |
+| credit-approval | Pypper:one-level@25 (best rule) | 86.23% | 184.3 |
+| credit-approval | Pypper:one-level@25 (macro distribution voting) | 85.94% | 184.3 |
+| credit-approval | Pypper:one-level@25 (micro distribution voting) | 85.36% | 184.3 |
+| credit-approval | Pypper:one-level@25 (voting) | 85.65% | 184.3 |
+| credit-approval | Pypper:one-level@50 (best rule) | 86.23% | 359.7 |
+| credit-approval | Pypper:one-level@50 (macro distribution voting) | 85.80% | 359.7 |
+| credit-approval | Pypper:one-level@50 (micro distribution voting) | 85.36% | 359.7 |
+| credit-approval | Pypper:one-level@50 (voting) | 85.65% | 359.7 |
+| credit-approval | Pypper:single (best rule) | 86.09% | 4.8 |
+| credit-approval | Pypper:single (macro distribution voting) | 86.09% | 4.8 |
+| credit-approval | Pypper:single (micro distribution voting) | 85.51% | 4.8 |
+| credit-approval | Pypper:single (voting) | 86.09% | 4.8 |
+| credit-approval | Pypper:two-level@10 (best rule) | 86.52% | 72.8 |
+| credit-approval | Pypper:two-level@10 (macro distribution voting) | 86.81% | 72.8 |
+| credit-approval | Pypper:two-level@10 (micro distribution voting) | 85.65% | 72.8 |
+| credit-approval | Pypper:two-level@10 (voting) | 85.94% | 72.8 |
+| credit-approval | Pypper:two-level@25 (best rule) | 85.80% | 184.3 |
+| credit-approval | Pypper:two-level@25 (macro distribution voting) | 85.94% | 184.3 |
+| credit-approval | Pypper:two-level@25 (micro distribution voting) | 85.22% | 184.3 |
+| credit-approval | Pypper:two-level@25 (voting) | 85.80% | 184.3 |
+| credit-approval | Pypper:two-level@50 (best rule) | 85.51% | 359.7 |
+| credit-approval | Pypper:two-level@50 (macro distribution voting) | 85.51% | 359.7 |
+| credit-approval | Pypper:two-level@50 (micro distribution voting) | 85.07% | 359.7 |
+| credit-approval | Pypper:two-level@50 (voting) | 85.80% | 359.7 |
 | credit-g | PFoil:one-level@10 (best rule) | 72.70% | 748.9 |
 | credit-g | PFoil:one-level@10 (macro distribution voting) | 76.40% | 748.9 |
 | credit-g | PFoil:one-level@10 (micro distribution voting) | 72.90% | 748.9 |
@@ -1502,34 +1502,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | credit-g | PFossil:two-level@50 (macro distribution voting) | 74.90% | 401.7 |
 | credit-g | PFossil:two-level@50 (micro distribution voting) | 74.40% | 401.7 |
 | credit-g | PFossil:two-level@50 (voting) | 74.50% | 401.7 |
-| credit-g | Pypper:one-level@10 (best rule) | 74.30% | 79.1 |
-| credit-g | Pypper:one-level@10 (macro distribution voting) | 74.30% | 79.1 |
-| credit-g | Pypper:one-level@10 (micro distribution voting) | 72.70% | 79.1 |
-| credit-g | Pypper:one-level@10 (voting) | 74.20% | 79.1 |
-| credit-g | Pypper:one-level@25 (best rule) | 74.10% | 197.0 |
-| credit-g | Pypper:one-level@25 (macro distribution voting) | 73.90% | 197.0 |
-| credit-g | Pypper:one-level@25 (micro distribution voting) | 72.70% | 197.0 |
-| credit-g | Pypper:one-level@25 (voting) | 73.60% | 197.0 |
-| credit-g | Pypper:one-level@50 (best rule) | 74.30% | 384.1 |
-| credit-g | Pypper:one-level@50 (macro distribution voting) | 74.30% | 384.1 |
-| credit-g | Pypper:one-level@50 (micro distribution voting) | 72.90% | 384.1 |
-| credit-g | Pypper:one-level@50 (voting) | 72.50% | 384.1 |
-| credit-g | Pypper:single (best rule) | 71.40% | 5.1 |
-| credit-g | Pypper:single (macro distribution voting) | 71.50% | 5.1 |
-| credit-g | Pypper:single (micro distribution voting) | 71.50% | 5.1 |
-| credit-g | Pypper:single (voting) | 71.50% | 5.1 |
-| credit-g | Pypper:two-level@10 (best rule) | 74.10% | 79.1 |
-| credit-g | Pypper:two-level@10 (macro distribution voting) | 73.70% | 79.1 |
-| credit-g | Pypper:two-level@10 (micro distribution voting) | 74.20% | 79.1 |
-| credit-g | Pypper:two-level@10 (voting) | 74.00% | 79.1 |
-| credit-g | Pypper:two-level@25 (best rule) | 74.10% | 197.0 |
-| credit-g | Pypper:two-level@25 (macro distribution voting) | 74.30% | 197.0 |
-| credit-g | Pypper:two-level@25 (micro distribution voting) | 74.30% | 197.0 |
-| credit-g | Pypper:two-level@25 (voting) | 74.60% | 197.0 |
-| credit-g | Pypper:two-level@50 (best rule) | 73.70% | 384.1 |
-| credit-g | Pypper:two-level@50 (macro distribution voting) | 73.50% | 384.1 |
-| credit-g | Pypper:two-level@50 (micro distribution voting) | 73.70% | 384.1 |
-| credit-g | Pypper:two-level@50 (voting) | 73.20% | 384.1 |
+| credit-g | Pypper:one-level@10 (best rule) | 73.10% | 98.5 |
+| credit-g | Pypper:one-level@10 (macro distribution voting) | 74.10% | 98.5 |
+| credit-g | Pypper:one-level@10 (micro distribution voting) | 72.40% | 98.5 |
+| credit-g | Pypper:one-level@10 (voting) | 73.10% | 98.5 |
+| credit-g | Pypper:one-level@25 (best rule) | 74.60% | 240.5 |
+| credit-g | Pypper:one-level@25 (macro distribution voting) | 74.40% | 240.5 |
+| credit-g | Pypper:one-level@25 (micro distribution voting) | 72.00% | 240.5 |
+| credit-g | Pypper:one-level@25 (voting) | 74.10% | 240.5 |
+| credit-g | Pypper:one-level@50 (best rule) | 74.00% | 467.4 |
+| credit-g | Pypper:one-level@50 (macro distribution voting) | 74.10% | 467.4 |
+| credit-g | Pypper:one-level@50 (micro distribution voting) | 73.00% | 467.4 |
+| credit-g | Pypper:one-level@50 (voting) | 73.50% | 467.4 |
+| credit-g | Pypper:single (best rule) | 71.50% | 6.9 |
+| credit-g | Pypper:single (macro distribution voting) | 71.50% | 6.9 |
+| credit-g | Pypper:single (micro distribution voting) | 71.50% | 6.9 |
+| credit-g | Pypper:single (voting) | 71.60% | 6.9 |
+| credit-g | Pypper:two-level@10 (best rule) | 73.90% | 98.5 |
+| credit-g | Pypper:two-level@10 (macro distribution voting) | 73.70% | 98.5 |
+| credit-g | Pypper:two-level@10 (micro distribution voting) | 73.40% | 98.5 |
+| credit-g | Pypper:two-level@10 (voting) | 73.40% | 98.5 |
+| credit-g | Pypper:two-level@25 (best rule) | 74.40% | 240.5 |
+| credit-g | Pypper:two-level@25 (macro distribution voting) | 75.10% | 240.5 |
+| credit-g | Pypper:two-level@25 (micro distribution voting) | 74.30% | 240.5 |
+| credit-g | Pypper:two-level@25 (voting) | 74.60% | 240.5 |
+| credit-g | Pypper:two-level@50 (best rule) | 73.90% | 467.4 |
+| credit-g | Pypper:two-level@50 (macro distribution voting) | 73.90% | 467.4 |
+| credit-g | Pypper:two-level@50 (micro distribution voting) | 74.10% | 467.4 |
+| credit-g | Pypper:two-level@50 (voting) | 73.80% | 467.4 |
 | cylinder-bands | PFoil:one-level@10 (best rule) | 73.52% | 407.2 |
 | cylinder-bands | PFoil:one-level@10 (macro distribution voting) | 81.48% | 407.2 |
 | cylinder-bands | PFoil:one-level@10 (micro distribution voting) | 77.59% | 407.2 |
@@ -1586,34 +1586,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | cylinder-bands | PFossil:two-level@50 (macro distribution voting) | 74.63% | 526.1 |
 | cylinder-bands | PFossil:two-level@50 (micro distribution voting) | 72.59% | 526.1 |
 | cylinder-bands | PFossil:two-level@50 (voting) | 71.67% | 526.1 |
-| cylinder-bands | Pypper:one-level@10 (best rule) | 75.93% | 81.3 |
-| cylinder-bands | Pypper:one-level@10 (macro distribution voting) | 75.37% | 81.3 |
-| cylinder-bands | Pypper:one-level@10 (micro distribution voting) | 70.19% | 81.3 |
-| cylinder-bands | Pypper:one-level@10 (voting) | 74.26% | 81.3 |
-| cylinder-bands | Pypper:one-level@25 (best rule) | 74.81% | 205.3 |
-| cylinder-bands | Pypper:one-level@25 (macro distribution voting) | 78.15% | 205.3 |
-| cylinder-bands | Pypper:one-level@25 (micro distribution voting) | 69.81% | 205.3 |
-| cylinder-bands | Pypper:one-level@25 (voting) | 78.33% | 205.3 |
-| cylinder-bands | Pypper:one-level@50 (best rule) | 74.26% | 414.1 |
-| cylinder-bands | Pypper:one-level@50 (macro distribution voting) | 77.04% | 414.1 |
-| cylinder-bands | Pypper:one-level@50 (micro distribution voting) | 70.93% | 414.1 |
-| cylinder-bands | Pypper:one-level@50 (voting) | 77.78% | 414.1 |
-| cylinder-bands | Pypper:single (best rule) | 68.33% | 9.0 |
-| cylinder-bands | Pypper:single (macro distribution voting) | 67.96% | 9.0 |
-| cylinder-bands | Pypper:single (micro distribution voting) | 67.41% | 9.0 |
-| cylinder-bands | Pypper:single (voting) | 68.33% | 9.0 |
-| cylinder-bands | Pypper:two-level@10 (best rule) | 77.59% | 81.3 |
-| cylinder-bands | Pypper:two-level@10 (macro distribution voting) | 76.48% | 81.3 |
-| cylinder-bands | Pypper:two-level@10 (micro distribution voting) | 72.41% | 81.3 |
-| cylinder-bands | Pypper:two-level@10 (voting) | 72.96% | 81.3 |
-| cylinder-bands | Pypper:two-level@25 (best rule) | 78.89% | 205.3 |
-| cylinder-bands | Pypper:two-level@25 (macro distribution voting) | 79.07% | 205.3 |
-| cylinder-bands | Pypper:two-level@25 (micro distribution voting) | 74.44% | 205.3 |
-| cylinder-bands | Pypper:two-level@25 (voting) | 75.56% | 205.3 |
-| cylinder-bands | Pypper:two-level@50 (best rule) | 78.70% | 414.1 |
-| cylinder-bands | Pypper:two-level@50 (macro distribution voting) | 78.33% | 414.1 |
-| cylinder-bands | Pypper:two-level@50 (micro distribution voting) | 73.89% | 414.1 |
-| cylinder-bands | Pypper:two-level@50 (voting) | 74.44% | 414.1 |
+| cylinder-bands | Pypper:one-level@10 (best rule) | 75.00% | 99.4 |
+| cylinder-bands | Pypper:one-level@10 (macro distribution voting) | 77.22% | 99.4 |
+| cylinder-bands | Pypper:one-level@10 (micro distribution voting) | 70.19% | 99.4 |
+| cylinder-bands | Pypper:one-level@10 (voting) | 77.04% | 99.4 |
+| cylinder-bands | Pypper:one-level@25 (best rule) | 71.67% | 253.6 |
+| cylinder-bands | Pypper:one-level@25 (macro distribution voting) | 78.52% | 253.6 |
+| cylinder-bands | Pypper:one-level@25 (micro distribution voting) | 71.30% | 253.6 |
+| cylinder-bands | Pypper:one-level@25 (voting) | 77.96% | 253.6 |
+| cylinder-bands | Pypper:one-level@50 (best rule) | 74.81% | 513.3 |
+| cylinder-bands | Pypper:one-level@50 (macro distribution voting) | 78.70% | 513.3 |
+| cylinder-bands | Pypper:one-level@50 (micro distribution voting) | 70.93% | 513.3 |
+| cylinder-bands | Pypper:one-level@50 (voting) | 78.70% | 513.3 |
+| cylinder-bands | Pypper:single (best rule) | 67.59% | 8.0 |
+| cylinder-bands | Pypper:single (macro distribution voting) | 69.07% | 8.0 |
+| cylinder-bands | Pypper:single (micro distribution voting) | 66.67% | 8.0 |
+| cylinder-bands | Pypper:single (voting) | 67.78% | 8.0 |
+| cylinder-bands | Pypper:two-level@10 (best rule) | 76.30% | 99.4 |
+| cylinder-bands | Pypper:two-level@10 (macro distribution voting) | 76.85% | 99.4 |
+| cylinder-bands | Pypper:two-level@10 (micro distribution voting) | 73.33% | 99.4 |
+| cylinder-bands | Pypper:two-level@10 (voting) | 73.89% | 99.4 |
+| cylinder-bands | Pypper:two-level@25 (best rule) | 78.33% | 253.6 |
+| cylinder-bands | Pypper:two-level@25 (macro distribution voting) | 78.33% | 253.6 |
+| cylinder-bands | Pypper:two-level@25 (micro distribution voting) | 73.89% | 253.6 |
+| cylinder-bands | Pypper:two-level@25 (voting) | 74.26% | 253.6 |
+| cylinder-bands | Pypper:two-level@50 (best rule) | 78.33% | 513.3 |
+| cylinder-bands | Pypper:two-level@50 (macro distribution voting) | 77.78% | 513.3 |
+| cylinder-bands | Pypper:two-level@50 (micro distribution voting) | 73.15% | 513.3 |
+| cylinder-bands | Pypper:two-level@50 (voting) | 75.00% | 513.3 |
 | diabetes | PFoil:one-level@10 (best rule) | 73.82% | 709.9 |
 | diabetes | PFoil:one-level@10 (macro distribution voting) | 75.39% | 709.9 |
 | diabetes | PFoil:one-level@10 (micro distribution voting) | 74.47% | 709.9 |
@@ -1670,34 +1670,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | diabetes | PFossil:two-level@50 (macro distribution voting) | 75.65% | 661.5 |
 | diabetes | PFossil:two-level@50 (micro distribution voting) | 76.05% | 661.5 |
 | diabetes | PFossil:two-level@50 (voting) | 75.52% | 661.5 |
-| diabetes | Pypper:one-level@10 (best rule) | 74.73% | 75.5 |
-| diabetes | Pypper:one-level@10 (macro distribution voting) | 74.08% | 75.5 |
-| diabetes | Pypper:one-level@10 (micro distribution voting) | 75.25% | 75.5 |
-| diabetes | Pypper:one-level@10 (voting) | 74.34% | 75.5 |
-| diabetes | Pypper:one-level@25 (best rule) | 74.34% | 182.4 |
-| diabetes | Pypper:one-level@25 (macro distribution voting) | 74.87% | 182.4 |
-| diabetes | Pypper:one-level@25 (micro distribution voting) | 74.47% | 182.4 |
-| diabetes | Pypper:one-level@25 (voting) | 74.22% | 182.4 |
-| diabetes | Pypper:one-level@50 (best rule) | 74.08% | 361.6 |
-| diabetes | Pypper:one-level@50 (macro distribution voting) | 74.21% | 361.6 |
-| diabetes | Pypper:one-level@50 (micro distribution voting) | 73.82% | 361.6 |
-| diabetes | Pypper:one-level@50 (voting) | 74.21% | 361.6 |
-| diabetes | Pypper:single (best rule) | 76.04% | 7.1 |
-| diabetes | Pypper:single (macro distribution voting) | 76.04% | 7.1 |
-| diabetes | Pypper:single (micro distribution voting) | 75.78% | 7.1 |
-| diabetes | Pypper:single (voting) | 75.91% | 7.1 |
-| diabetes | Pypper:two-level@10 (best rule) | 74.60% | 75.5 |
-| diabetes | Pypper:two-level@10 (macro distribution voting) | 74.21% | 75.5 |
-| diabetes | Pypper:two-level@10 (micro distribution voting) | 74.08% | 75.5 |
-| diabetes | Pypper:two-level@10 (voting) | 73.95% | 75.5 |
-| diabetes | Pypper:two-level@25 (best rule) | 73.82% | 182.4 |
-| diabetes | Pypper:two-level@25 (macro distribution voting) | 73.56% | 182.4 |
-| diabetes | Pypper:two-level@25 (micro distribution voting) | 74.60% | 182.4 |
-| diabetes | Pypper:two-level@25 (voting) | 74.08% | 182.4 |
-| diabetes | Pypper:two-level@50 (best rule) | 74.09% | 361.6 |
-| diabetes | Pypper:two-level@50 (macro distribution voting) | 73.83% | 361.6 |
-| diabetes | Pypper:two-level@50 (micro distribution voting) | 74.47% | 361.6 |
-| diabetes | Pypper:two-level@50 (voting) | 73.95% | 361.6 |
+| diabetes | Pypper:one-level@10 (best rule) | 74.98% | 88.8 |
+| diabetes | Pypper:one-level@10 (macro distribution voting) | 74.22% | 88.8 |
+| diabetes | Pypper:one-level@10 (micro distribution voting) | 75.65% | 88.8 |
+| diabetes | Pypper:one-level@10 (voting) | 74.87% | 88.8 |
+| diabetes | Pypper:one-level@25 (best rule) | 74.73% | 210.3 |
+| diabetes | Pypper:one-level@25 (macro distribution voting) | 74.61% | 210.3 |
+| diabetes | Pypper:one-level@25 (micro distribution voting) | 74.61% | 210.3 |
+| diabetes | Pypper:one-level@25 (voting) | 74.73% | 210.3 |
+| diabetes | Pypper:one-level@50 (best rule) | 74.73% | 418.5 |
+| diabetes | Pypper:one-level@50 (macro distribution voting) | 75.00% | 418.5 |
+| diabetes | Pypper:one-level@50 (micro distribution voting) | 74.60% | 418.5 |
+| diabetes | Pypper:one-level@50 (voting) | 74.35% | 418.5 |
+| diabetes | Pypper:single (best rule) | 74.61% | 7.7 |
+| diabetes | Pypper:single (macro distribution voting) | 74.48% | 7.7 |
+| diabetes | Pypper:single (micro distribution voting) | 74.48% | 7.7 |
+| diabetes | Pypper:single (voting) | 74.35% | 7.7 |
+| diabetes | Pypper:two-level@10 (best rule) | 74.61% | 88.8 |
+| diabetes | Pypper:two-level@10 (macro distribution voting) | 74.74% | 88.8 |
+| diabetes | Pypper:two-level@10 (micro distribution voting) | 74.48% | 88.8 |
+| diabetes | Pypper:two-level@10 (voting) | 74.87% | 88.8 |
+| diabetes | Pypper:two-level@25 (best rule) | 74.73% | 210.3 |
+| diabetes | Pypper:two-level@25 (macro distribution voting) | 74.48% | 210.3 |
+| diabetes | Pypper:two-level@25 (micro distribution voting) | 74.34% | 210.3 |
+| diabetes | Pypper:two-level@25 (voting) | 74.35% | 210.3 |
+| diabetes | Pypper:two-level@50 (best rule) | 74.21% | 418.5 |
+| diabetes | Pypper:two-level@50 (macro distribution voting) | 74.48% | 418.5 |
+| diabetes | Pypper:two-level@50 (micro distribution voting) | 74.08% | 418.5 |
+| diabetes | Pypper:two-level@50 (voting) | 74.48% | 418.5 |
 | dna | PFoil:one-level@10 (best rule) | 92.91% | 699.4 |
 | dna | PFoil:one-level@10 (macro distribution voting) | 95.13% | 699.4 |
 | dna | PFoil:one-level@10 (micro distribution voting) | 94.76% | 699.4 |
@@ -1754,34 +1754,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | dna | PFossil:two-level@50 (macro distribution voting) | 95.57% | 1657.7 |
 | dna | PFossil:two-level@50 (micro distribution voting) | 90.58% | 1657.7 |
 | dna | PFossil:two-level@50 (voting) | 91.18% | 1657.7 |
-| dna | Pypper:one-level@10 (best rule) | 92.37% | 183.4 |
-| dna | Pypper:one-level@10 (macro distribution voting) | 93.19% | 183.4 |
-| dna | Pypper:one-level@10 (micro distribution voting) | 91.59% | 183.4 |
-| dna | Pypper:one-level@10 (voting) | 93.19% | 183.4 |
-| dna | Pypper:one-level@25 (best rule) | 92.56% | 459.0 |
-| dna | Pypper:one-level@25 (macro distribution voting) | 93.50% | 459.0 |
-| dna | Pypper:one-level@25 (micro distribution voting) | 91.81% | 459.0 |
-| dna | Pypper:one-level@25 (voting) | 93.38% | 459.0 |
-| dna | Pypper:one-level@50 (best rule) | 92.91% | 928.9 |
-| dna | Pypper:one-level@50 (macro distribution voting) | 93.31% | 928.9 |
-| dna | Pypper:one-level@50 (micro distribution voting) | 92.03% | 928.9 |
-| dna | Pypper:one-level@50 (voting) | 93.25% | 928.9 |
-| dna | Pypper:single (best rule) | 93.75% | 22.6 |
-| dna | Pypper:single (macro distribution voting) | 93.60% | 22.6 |
-| dna | Pypper:single (micro distribution voting) | 93.31% | 22.6 |
-| dna | Pypper:single (voting) | 93.60% | 22.6 |
-| dna | Pypper:two-level@10 (best rule) | 93.44% | 183.4 |
-| dna | Pypper:two-level@10 (macro distribution voting) | 93.47% | 183.4 |
-| dna | Pypper:two-level@10 (micro distribution voting) | 92.40% | 183.4 |
-| dna | Pypper:two-level@10 (voting) | 93.31% | 183.4 |
-| dna | Pypper:two-level@25 (best rule) | 93.72% | 459.0 |
-| dna | Pypper:two-level@25 (macro distribution voting) | 93.75% | 459.0 |
-| dna | Pypper:two-level@25 (micro distribution voting) | 92.72% | 459.0 |
-| dna | Pypper:two-level@25 (voting) | 93.50% | 459.0 |
-| dna | Pypper:two-level@50 (best rule) | 93.69% | 928.9 |
-| dna | Pypper:two-level@50 (macro distribution voting) | 93.63% | 928.9 |
-| dna | Pypper:two-level@50 (micro distribution voting) | 92.84% | 928.9 |
-| dna | Pypper:two-level@50 (voting) | 93.60% | 928.9 |
+| dna | Pypper:one-level@10 (best rule) | 92.50% | 266.0 |
+| dna | Pypper:one-level@10 (macro distribution voting) | 93.69% | 266.0 |
+| dna | Pypper:one-level@10 (micro distribution voting) | 91.90% | 266.0 |
+| dna | Pypper:one-level@10 (voting) | 93.53% | 266.0 |
+| dna | Pypper:one-level@25 (best rule) | 92.72% | 653.9 |
+| dna | Pypper:one-level@25 (macro distribution voting) | 94.07% | 653.9 |
+| dna | Pypper:one-level@25 (micro distribution voting) | 92.25% | 653.9 |
+| dna | Pypper:one-level@25 (voting) | 93.88% | 653.9 |
+| dna | Pypper:one-level@50 (best rule) | 93.03% | 1325.0 |
+| dna | Pypper:one-level@50 (macro distribution voting) | 94.13% | 1325.0 |
+| dna | Pypper:one-level@50 (micro distribution voting) | 92.34% | 1325.0 |
+| dna | Pypper:one-level@50 (voting) | 93.97% | 1325.0 |
+| dna | Pypper:single (best rule) | 93.13% | 29.0 |
+| dna | Pypper:single (macro distribution voting) | 93.13% | 29.0 |
+| dna | Pypper:single (micro distribution voting) | 93.16% | 29.0 |
+| dna | Pypper:single (voting) | 93.22% | 29.0 |
+| dna | Pypper:two-level@10 (best rule) | 93.82% | 266.0 |
+| dna | Pypper:two-level@10 (macro distribution voting) | 93.60% | 266.0 |
+| dna | Pypper:two-level@10 (micro distribution voting) | 92.69% | 266.0 |
+| dna | Pypper:two-level@10 (voting) | 93.60% | 266.0 |
+| dna | Pypper:two-level@25 (best rule) | 94.22% | 653.9 |
+| dna | Pypper:two-level@25 (macro distribution voting) | 94.23% | 653.9 |
+| dna | Pypper:two-level@25 (micro distribution voting) | 92.91% | 653.9 |
+| dna | Pypper:two-level@25 (voting) | 93.97% | 653.9 |
+| dna | Pypper:two-level@50 (best rule) | 94.19% | 1325.0 |
+| dna | Pypper:two-level@50 (macro distribution voting) | 94.10% | 1325.0 |
+| dna | Pypper:two-level@50 (micro distribution voting) | 93.13% | 1325.0 |
+| dna | Pypper:two-level@50 (voting) | 94.07% | 1325.0 |
 | dresses-sales | PFoil:one-level@10 (best rule) | 56.60% | 598.7 |
 | dresses-sales | PFoil:one-level@10 (macro distribution voting) | 58.60% | 598.7 |
 | dresses-sales | PFoil:one-level@10 (micro distribution voting) | 61.00% | 598.7 |
@@ -1838,34 +1838,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | dresses-sales | PFossil:two-level@50 (macro distribution voting) | 61.40% | 250.9 |
 | dresses-sales | PFossil:two-level@50 (micro distribution voting) | 61.40% | 250.9 |
 | dresses-sales | PFossil:two-level@50 (voting) | 61.40% | 250.9 |
-| dresses-sales | Pypper:one-level@10 (best rule) | 60.40% | 42.8 |
-| dresses-sales | Pypper:one-level@10 (macro distribution voting) | 62.40% | 42.8 |
-| dresses-sales | Pypper:one-level@10 (micro distribution voting) | 60.20% | 42.8 |
-| dresses-sales | Pypper:one-level@10 (voting) | 62.00% | 42.8 |
-| dresses-sales | Pypper:one-level@25 (best rule) | 59.20% | 106.3 |
-| dresses-sales | Pypper:one-level@25 (macro distribution voting) | 61.80% | 106.3 |
-| dresses-sales | Pypper:one-level@25 (micro distribution voting) | 61.20% | 106.3 |
-| dresses-sales | Pypper:one-level@25 (voting) | 61.60% | 106.3 |
-| dresses-sales | Pypper:one-level@50 (best rule) | 59.20% | 213.2 |
-| dresses-sales | Pypper:one-level@50 (macro distribution voting) | 62.20% | 213.2 |
-| dresses-sales | Pypper:one-level@50 (micro distribution voting) | 60.20% | 213.2 |
-| dresses-sales | Pypper:one-level@50 (voting) | 61.40% | 213.2 |
-| dresses-sales | Pypper:single (best rule) | 60.40% | 2.1 |
-| dresses-sales | Pypper:single (macro distribution voting) | 60.40% | 2.1 |
-| dresses-sales | Pypper:single (micro distribution voting) | 60.60% | 2.1 |
-| dresses-sales | Pypper:single (voting) | 60.60% | 2.1 |
-| dresses-sales | Pypper:two-level@10 (best rule) | 62.60% | 42.8 |
-| dresses-sales | Pypper:two-level@10 (macro distribution voting) | 62.60% | 42.8 |
-| dresses-sales | Pypper:two-level@10 (micro distribution voting) | 62.80% | 42.8 |
-| dresses-sales | Pypper:two-level@10 (voting) | 62.20% | 42.8 |
-| dresses-sales | Pypper:two-level@25 (best rule) | 62.40% | 106.3 |
-| dresses-sales | Pypper:two-level@25 (macro distribution voting) | 61.80% | 106.3 |
-| dresses-sales | Pypper:two-level@25 (micro distribution voting) | 61.00% | 106.3 |
-| dresses-sales | Pypper:two-level@25 (voting) | 60.80% | 106.3 |
-| dresses-sales | Pypper:two-level@50 (best rule) | 62.40% | 213.2 |
-| dresses-sales | Pypper:two-level@50 (macro distribution voting) | 62.40% | 213.2 |
-| dresses-sales | Pypper:two-level@50 (micro distribution voting) | 60.80% | 213.2 |
-| dresses-sales | Pypper:two-level@50 (voting) | 61.00% | 213.2 |
+| dresses-sales | Pypper:one-level@10 (best rule) | 59.60% | 47.4 |
+| dresses-sales | Pypper:one-level@10 (macro distribution voting) | 61.60% | 47.4 |
+| dresses-sales | Pypper:one-level@10 (micro distribution voting) | 59.40% | 47.4 |
+| dresses-sales | Pypper:one-level@10 (voting) | 62.60% | 47.4 |
+| dresses-sales | Pypper:one-level@25 (best rule) | 58.80% | 120.3 |
+| dresses-sales | Pypper:one-level@25 (macro distribution voting) | 61.80% | 120.3 |
+| dresses-sales | Pypper:one-level@25 (micro distribution voting) | 61.00% | 120.3 |
+| dresses-sales | Pypper:one-level@25 (voting) | 62.20% | 120.3 |
+| dresses-sales | Pypper:one-level@50 (best rule) | 60.00% | 237.6 |
+| dresses-sales | Pypper:one-level@50 (macro distribution voting) | 63.00% | 237.6 |
+| dresses-sales | Pypper:one-level@50 (micro distribution voting) | 60.40% | 237.6 |
+| dresses-sales | Pypper:one-level@50 (voting) | 61.40% | 237.6 |
+| dresses-sales | Pypper:single (best rule) | 61.00% | 1.8 |
+| dresses-sales | Pypper:single (macro distribution voting) | 61.00% | 1.8 |
+| dresses-sales | Pypper:single (micro distribution voting) | 60.80% | 1.8 |
+| dresses-sales | Pypper:single (voting) | 60.80% | 1.8 |
+| dresses-sales | Pypper:two-level@10 (best rule) | 62.40% | 47.4 |
+| dresses-sales | Pypper:two-level@10 (macro distribution voting) | 62.80% | 47.4 |
+| dresses-sales | Pypper:two-level@10 (micro distribution voting) | 62.80% | 47.4 |
+| dresses-sales | Pypper:two-level@10 (voting) | 61.60% | 47.4 |
+| dresses-sales | Pypper:two-level@25 (best rule) | 62.00% | 120.3 |
+| dresses-sales | Pypper:two-level@25 (macro distribution voting) | 62.60% | 120.3 |
+| dresses-sales | Pypper:two-level@25 (micro distribution voting) | 61.40% | 120.3 |
+| dresses-sales | Pypper:two-level@25 (voting) | 60.60% | 120.3 |
+| dresses-sales | Pypper:two-level@50 (best rule) | 62.80% | 237.6 |
+| dresses-sales | Pypper:two-level@50 (macro distribution voting) | 62.40% | 237.6 |
+| dresses-sales | Pypper:two-level@50 (micro distribution voting) | 60.80% | 237.6 |
+| dresses-sales | Pypper:two-level@50 (voting) | 60.80% | 237.6 |
 | ecoli | PFoil:one-level@10 (best rule) | 82.47% | 342.2 |
 | ecoli | PFoil:one-level@10 (macro distribution voting) | 86.65% | 342.2 |
 | ecoli | PFoil:one-level@10 (micro distribution voting) | 85.16% | 342.2 |
@@ -1922,34 +1922,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | ecoli | PFossil:two-level@50 (macro distribution voting) | 86.07% | 1183.1 |
 | ecoli | PFossil:two-level@50 (micro distribution voting) | 85.18% | 1183.1 |
 | ecoli | PFossil:two-level@50 (voting) | 86.35% | 1183.1 |
-| ecoli | Pypper:one-level@10 (best rule) | 83.68% | 87.5 |
-| ecoli | Pypper:one-level@10 (macro distribution voting) | 85.78% | 87.5 |
-| ecoli | Pypper:one-level@10 (micro distribution voting) | 82.17% | 87.5 |
-| ecoli | Pypper:one-level@10 (voting) | 85.78% | 87.5 |
-| ecoli | Pypper:one-level@25 (best rule) | 83.35% | 219.1 |
-| ecoli | Pypper:one-level@25 (macro distribution voting) | 86.37% | 219.1 |
-| ecoli | Pypper:one-level@25 (micro distribution voting) | 80.65% | 219.1 |
-| ecoli | Pypper:one-level@25 (voting) | 84.88% | 219.1 |
-| ecoli | Pypper:one-level@50 (best rule) | 83.38% | 434.3 |
-| ecoli | Pypper:one-level@50 (macro distribution voting) | 85.77% | 434.3 |
-| ecoli | Pypper:one-level@50 (micro distribution voting) | 82.77% | 434.3 |
-| ecoli | Pypper:one-level@50 (voting) | 85.47% | 434.3 |
-| ecoli | Pypper:single (best rule) | 81.91% | 10.4 |
-| ecoli | Pypper:single (macro distribution voting) | 81.30% | 10.4 |
-| ecoli | Pypper:single (micro distribution voting) | 81.29% | 10.4 |
-| ecoli | Pypper:single (voting) | 81.29% | 10.4 |
-| ecoli | Pypper:two-level@10 (best rule) | 85.78% | 87.5 |
-| ecoli | Pypper:two-level@10 (macro distribution voting) | 86.08% | 87.5 |
-| ecoli | Pypper:two-level@10 (micro distribution voting) | 83.96% | 87.5 |
-| ecoli | Pypper:two-level@10 (voting) | 84.26% | 87.5 |
-| ecoli | Pypper:two-level@25 (best rule) | 86.97% | 219.1 |
-| ecoli | Pypper:two-level@25 (macro distribution voting) | 86.68% | 219.1 |
-| ecoli | Pypper:two-level@25 (micro distribution voting) | 85.15% | 219.1 |
-| ecoli | Pypper:two-level@25 (voting) | 85.15% | 219.1 |
-| ecoli | Pypper:two-level@50 (best rule) | 85.45% | 434.3 |
-| ecoli | Pypper:two-level@50 (macro distribution voting) | 86.07% | 434.3 |
-| ecoli | Pypper:two-level@50 (micro distribution voting) | 85.46% | 434.3 |
-| ecoli | Pypper:two-level@50 (voting) | 85.76% | 434.3 |
+| ecoli | Pypper:one-level@10 (best rule) | 83.07% | 109.5 |
+| ecoli | Pypper:one-level@10 (macro distribution voting) | 86.07% | 109.5 |
+| ecoli | Pypper:one-level@10 (micro distribution voting) | 83.66% | 109.5 |
+| ecoli | Pypper:one-level@10 (voting) | 86.67% | 109.5 |
+| ecoli | Pypper:one-level@25 (best rule) | 82.77% | 272.9 |
+| ecoli | Pypper:one-level@25 (macro distribution voting) | 86.68% | 272.9 |
+| ecoli | Pypper:one-level@25 (micro distribution voting) | 82.44% | 272.9 |
+| ecoli | Pypper:one-level@25 (voting) | 86.38% | 272.9 |
+| ecoli | Pypper:one-level@50 (best rule) | 83.98% | 542.3 |
+| ecoli | Pypper:one-level@50 (macro distribution voting) | 86.37% | 542.3 |
+| ecoli | Pypper:one-level@50 (micro distribution voting) | 83.38% | 542.3 |
+| ecoli | Pypper:one-level@50 (voting) | 85.47% | 542.3 |
+| ecoli | Pypper:single (best rule) | 82.22% | 10.7 |
+| ecoli | Pypper:single (macro distribution voting) | 81.91% | 10.7 |
+| ecoli | Pypper:single (micro distribution voting) | 81.60% | 10.7 |
+| ecoli | Pypper:single (voting) | 81.60% | 10.7 |
+| ecoli | Pypper:two-level@10 (best rule) | 85.77% | 109.5 |
+| ecoli | Pypper:two-level@10 (macro distribution voting) | 86.08% | 109.5 |
+| ecoli | Pypper:two-level@10 (micro distribution voting) | 84.55% | 109.5 |
+| ecoli | Pypper:two-level@10 (voting) | 85.46% | 109.5 |
+| ecoli | Pypper:two-level@25 (best rule) | 86.37% | 272.9 |
+| ecoli | Pypper:two-level@25 (macro distribution voting) | 86.68% | 272.9 |
+| ecoli | Pypper:two-level@25 (micro distribution voting) | 85.77% | 272.9 |
+| ecoli | Pypper:two-level@25 (voting) | 86.37% | 272.9 |
+| ecoli | Pypper:two-level@50 (best rule) | 86.67% | 542.3 |
+| ecoli | Pypper:two-level@50 (macro distribution voting) | 86.07% | 542.3 |
+| ecoli | Pypper:two-level@50 (micro distribution voting) | 85.76% | 542.3 |
+| ecoli | Pypper:two-level@50 (voting) | 86.95% | 542.3 |
 | glass | PFoil:one-level@10 (best rule) | 70.67% | 279.3 |
 | glass | PFoil:one-level@10 (macro distribution voting) | 74.81% | 279.3 |
 | glass | PFoil:one-level@10 (micro distribution voting) | 69.26% | 279.3 |
@@ -2006,34 +2006,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | glass | PFossil:two-level@50 (macro distribution voting) | 72.01% | 1211.7 |
 | glass | PFossil:two-level@50 (micro distribution voting) | 73.85% | 1211.7 |
 | glass | PFossil:two-level@50 (voting) | 72.45% | 1211.7 |
-| glass | Pypper:one-level@10 (best rule) | 72.47% | 80.8 |
-| glass | Pypper:one-level@10 (macro distribution voting) | 72.49% | 80.8 |
-| glass | Pypper:one-level@10 (micro distribution voting) | 68.77% | 80.8 |
-| glass | Pypper:one-level@10 (voting) | 70.63% | 80.8 |
-| glass | Pypper:one-level@25 (best rule) | 69.20% | 204.9 |
-| glass | Pypper:one-level@25 (macro distribution voting) | 74.83% | 204.9 |
-| glass | Pypper:one-level@25 (micro distribution voting) | 69.26% | 204.9 |
-| glass | Pypper:one-level@25 (voting) | 73.90% | 204.9 |
-| glass | Pypper:one-level@50 (best rule) | 68.33% | 410.2 |
-| glass | Pypper:one-level@50 (macro distribution voting) | 73.42% | 410.2 |
-| glass | Pypper:one-level@50 (micro distribution voting) | 69.24% | 410.2 |
-| glass | Pypper:one-level@50 (voting) | 74.83% | 410.2 |
-| glass | Pypper:single (best rule) | 64.55% | 9.1 |
-| glass | Pypper:single (macro distribution voting) | 62.68% | 9.1 |
-| glass | Pypper:single (micro distribution voting) | 62.75% | 9.1 |
-| glass | Pypper:single (voting) | 64.52% | 9.1 |
-| glass | Pypper:two-level@10 (best rule) | 72.99% | 80.8 |
-| glass | Pypper:two-level@10 (macro distribution voting) | 73.01% | 80.8 |
-| glass | Pypper:two-level@10 (micro distribution voting) | 69.76% | 80.8 |
-| glass | Pypper:two-level@10 (voting) | 69.72% | 80.8 |
-| glass | Pypper:two-level@25 (best rule) | 72.97% | 204.9 |
-| glass | Pypper:two-level@25 (macro distribution voting) | 73.90% | 204.9 |
-| glass | Pypper:two-level@25 (micro distribution voting) | 70.19% | 204.9 |
-| glass | Pypper:two-level@25 (voting) | 71.56% | 204.9 |
-| glass | Pypper:two-level@50 (best rule) | 72.51% | 410.2 |
-| glass | Pypper:two-level@50 (macro distribution voting) | 73.90% | 410.2 |
-| glass | Pypper:two-level@50 (micro distribution voting) | 71.60% | 410.2 |
-| glass | Pypper:two-level@50 (voting) | 71.58% | 410.2 |
+| glass | Pypper:one-level@10 (best rule) | 69.70% | 106.7 |
+| glass | Pypper:one-level@10 (macro distribution voting) | 72.01% | 106.7 |
+| glass | Pypper:one-level@10 (micro distribution voting) | 66.43% | 106.7 |
+| glass | Pypper:one-level@10 (voting) | 72.49% | 106.7 |
+| glass | Pypper:one-level@25 (best rule) | 67.84% | 279.9 |
+| glass | Pypper:one-level@25 (macro distribution voting) | 74.39% | 279.9 |
+| glass | Pypper:one-level@25 (micro distribution voting) | 69.26% | 279.9 |
+| glass | Pypper:one-level@25 (voting) | 75.78% | 279.9 |
+| glass | Pypper:one-level@50 (best rule) | 67.38% | 553.1 |
+| glass | Pypper:one-level@50 (macro distribution voting) | 75.32% | 553.1 |
+| glass | Pypper:one-level@50 (micro distribution voting) | 69.70% | 553.1 |
+| glass | Pypper:one-level@50 (voting) | 76.23% | 553.1 |
+| glass | Pypper:single (best rule) | 67.77% | 9.6 |
+| glass | Pypper:single (macro distribution voting) | 65.91% | 9.6 |
+| glass | Pypper:single (micro distribution voting) | 67.32% | 9.6 |
+| glass | Pypper:single (voting) | 67.27% | 9.6 |
+| glass | Pypper:two-level@10 (best rule) | 71.58% | 106.7 |
+| glass | Pypper:two-level@10 (macro distribution voting) | 71.58% | 106.7 |
+| glass | Pypper:two-level@10 (micro distribution voting) | 68.83% | 106.7 |
+| glass | Pypper:two-level@10 (voting) | 70.17% | 106.7 |
+| glass | Pypper:two-level@25 (best rule) | 73.44% | 279.9 |
+| glass | Pypper:two-level@25 (macro distribution voting) | 73.92% | 279.9 |
+| glass | Pypper:two-level@25 (micro distribution voting) | 72.53% | 279.9 |
+| glass | Pypper:two-level@25 (voting) | 72.55% | 279.9 |
+| glass | Pypper:two-level@50 (best rule) | 73.46% | 553.1 |
+| glass | Pypper:two-level@50 (macro distribution voting) | 74.87% | 553.1 |
+| glass | Pypper:two-level@50 (micro distribution voting) | 72.49% | 553.1 |
+| glass | Pypper:two-level@50 (voting) | 73.94% | 553.1 |
 | hayes-roth | PFoil:one-level@10 (best rule) | 77.50% | 229.1 |
 | hayes-roth | PFoil:one-level@10 (macro distribution voting) | 78.75% | 229.1 |
 | hayes-roth | PFoil:one-level@10 (micro distribution voting) | 79.38% | 229.1 |
@@ -2090,34 +2090,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | hayes-roth | PFossil:two-level@50 (macro distribution voting) | 81.25% | 675.3 |
 | hayes-roth | PFossil:two-level@50 (micro distribution voting) | 83.12% | 675.3 |
 | hayes-roth | PFossil:two-level@50 (voting) | 76.88% | 675.3 |
-| hayes-roth | Pypper:one-level@10 (best rule) | 80.62% | 86.1 |
-| hayes-roth | Pypper:one-level@10 (macro distribution voting) | 83.12% | 86.1 |
-| hayes-roth | Pypper:one-level@10 (micro distribution voting) | 77.50% | 86.1 |
-| hayes-roth | Pypper:one-level@10 (voting) | 83.12% | 86.1 |
-| hayes-roth | Pypper:one-level@25 (best rule) | 80.00% | 209.5 |
-| hayes-roth | Pypper:one-level@25 (macro distribution voting) | 85.00% | 209.5 |
-| hayes-roth | Pypper:one-level@25 (micro distribution voting) | 78.75% | 209.5 |
-| hayes-roth | Pypper:one-level@25 (voting) | 83.75% | 209.5 |
-| hayes-roth | Pypper:one-level@50 (best rule) | 78.75% | 418.6 |
-| hayes-roth | Pypper:one-level@50 (macro distribution voting) | 83.12% | 418.6 |
-| hayes-roth | Pypper:one-level@50 (micro distribution voting) | 78.75% | 418.6 |
-| hayes-roth | Pypper:one-level@50 (voting) | 80.00% | 418.6 |
-| hayes-roth | Pypper:single (best rule) | 79.38% | 9.4 |
-| hayes-roth | Pypper:single (macro distribution voting) | 79.38% | 9.4 |
-| hayes-roth | Pypper:single (micro distribution voting) | 75.00% | 9.4 |
-| hayes-roth | Pypper:single (voting) | 75.00% | 9.4 |
-| hayes-roth | Pypper:two-level@10 (best rule) | 83.12% | 86.1 |
-| hayes-roth | Pypper:two-level@10 (macro distribution voting) | 81.88% | 86.1 |
-| hayes-roth | Pypper:two-level@10 (micro distribution voting) | 80.00% | 86.1 |
-| hayes-roth | Pypper:two-level@10 (voting) | 78.12% | 86.1 |
-| hayes-roth | Pypper:two-level@25 (best rule) | 83.12% | 209.5 |
-| hayes-roth | Pypper:two-level@25 (macro distribution voting) | 81.88% | 209.5 |
-| hayes-roth | Pypper:two-level@25 (micro distribution voting) | 79.38% | 209.5 |
-| hayes-roth | Pypper:two-level@25 (voting) | 79.38% | 209.5 |
-| hayes-roth | Pypper:two-level@50 (best rule) | 82.50% | 418.6 |
-| hayes-roth | Pypper:two-level@50 (macro distribution voting) | 80.00% | 418.6 |
-| hayes-roth | Pypper:two-level@50 (micro distribution voting) | 80.00% | 418.6 |
-| hayes-roth | Pypper:two-level@50 (voting) | 76.88% | 418.6 |
+| hayes-roth | Pypper:one-level@10 (best rule) | 80.62% | 98.3 |
+| hayes-roth | Pypper:one-level@10 (macro distribution voting) | 85.00% | 98.3 |
+| hayes-roth | Pypper:one-level@10 (micro distribution voting) | 77.50% | 98.3 |
+| hayes-roth | Pypper:one-level@10 (voting) | 83.75% | 98.3 |
+| hayes-roth | Pypper:one-level@25 (best rule) | 81.25% | 237.7 |
+| hayes-roth | Pypper:one-level@25 (macro distribution voting) | 85.00% | 237.7 |
+| hayes-roth | Pypper:one-level@25 (micro distribution voting) | 75.00% | 237.7 |
+| hayes-roth | Pypper:one-level@25 (voting) | 81.88% | 237.7 |
+| hayes-roth | Pypper:one-level@50 (best rule) | 80.62% | 471.2 |
+| hayes-roth | Pypper:one-level@50 (macro distribution voting) | 81.25% | 471.2 |
+| hayes-roth | Pypper:one-level@50 (micro distribution voting) | 76.25% | 471.2 |
+| hayes-roth | Pypper:one-level@50 (voting) | 80.62% | 471.2 |
+| hayes-roth | Pypper:single (best rule) | 80.62% | 10.3 |
+| hayes-roth | Pypper:single (macro distribution voting) | 79.38% | 10.3 |
+| hayes-roth | Pypper:single (micro distribution voting) | 74.38% | 10.3 |
+| hayes-roth | Pypper:single (voting) | 73.12% | 10.3 |
+| hayes-roth | Pypper:two-level@10 (best rule) | 83.75% | 98.3 |
+| hayes-roth | Pypper:two-level@10 (macro distribution voting) | 83.12% | 98.3 |
+| hayes-roth | Pypper:two-level@10 (micro distribution voting) | 79.38% | 98.3 |
+| hayes-roth | Pypper:two-level@10 (voting) | 78.12% | 98.3 |
+| hayes-roth | Pypper:two-level@25 (best rule) | 83.12% | 237.7 |
+| hayes-roth | Pypper:two-level@25 (macro distribution voting) | 81.88% | 237.7 |
+| hayes-roth | Pypper:two-level@25 (micro distribution voting) | 79.38% | 237.7 |
+| hayes-roth | Pypper:two-level@25 (voting) | 77.50% | 237.7 |
+| hayes-roth | Pypper:two-level@50 (best rule) | 82.50% | 471.2 |
+| hayes-roth | Pypper:two-level@50 (macro distribution voting) | 80.62% | 471.2 |
+| hayes-roth | Pypper:two-level@50 (micro distribution voting) | 80.62% | 471.2 |
+| hayes-roth | Pypper:two-level@50 (voting) | 75.62% | 471.2 |
 | heart-c | PFoil:one-level@10 (best rule) | 79.58% | 231.0 |
 | heart-c | PFoil:one-level@10 (macro distribution voting) | 83.52% | 231.0 |
 | heart-c | PFoil:one-level@10 (micro distribution voting) | 84.19% | 231.0 |
@@ -2174,34 +2174,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | heart-c | PFossil:two-level@50 (macro distribution voting) | 83.87% | 786.6 |
 | heart-c | PFossil:two-level@50 (micro distribution voting) | 81.22% | 786.6 |
 | heart-c | PFossil:two-level@50 (voting) | 81.22% | 786.6 |
-| heart-c | Pypper:one-level@10 (best rule) | 79.90% | 58.5 |
-| heart-c | Pypper:one-level@10 (macro distribution voting) | 83.22% | 58.5 |
-| heart-c | Pypper:one-level@10 (micro distribution voting) | 83.54% | 58.5 |
-| heart-c | Pypper:one-level@10 (voting) | 82.55% | 58.5 |
-| heart-c | Pypper:one-level@25 (best rule) | 79.56% | 148.5 |
-| heart-c | Pypper:one-level@25 (macro distribution voting) | 82.54% | 148.5 |
-| heart-c | Pypper:one-level@25 (micro distribution voting) | 81.56% | 148.5 |
-| heart-c | Pypper:one-level@25 (voting) | 82.20% | 148.5 |
-| heart-c | Pypper:one-level@50 (best rule) | 80.22% | 294.8 |
-| heart-c | Pypper:one-level@50 (macro distribution voting) | 83.53% | 294.8 |
-| heart-c | Pypper:one-level@50 (micro distribution voting) | 81.88% | 294.8 |
-| heart-c | Pypper:one-level@50 (voting) | 82.86% | 294.8 |
-| heart-c | Pypper:single (best rule) | 82.55% | 5.7 |
-| heart-c | Pypper:single (macro distribution voting) | 82.55% | 5.7 |
-| heart-c | Pypper:single (micro distribution voting) | 82.56% | 5.7 |
-| heart-c | Pypper:single (voting) | 82.56% | 5.7 |
-| heart-c | Pypper:two-level@10 (best rule) | 82.24% | 58.5 |
-| heart-c | Pypper:two-level@10 (macro distribution voting) | 82.89% | 58.5 |
-| heart-c | Pypper:two-level@10 (micro distribution voting) | 83.56% | 58.5 |
-| heart-c | Pypper:two-level@10 (voting) | 83.56% | 58.5 |
-| heart-c | Pypper:two-level@25 (best rule) | 82.22% | 148.5 |
-| heart-c | Pypper:two-level@25 (macro distribution voting) | 82.54% | 148.5 |
-| heart-c | Pypper:two-level@25 (micro distribution voting) | 81.57% | 148.5 |
-| heart-c | Pypper:two-level@25 (voting) | 81.88% | 148.5 |
-| heart-c | Pypper:two-level@50 (best rule) | 84.19% | 294.8 |
-| heart-c | Pypper:two-level@50 (macro distribution voting) | 83.54% | 294.8 |
-| heart-c | Pypper:two-level@50 (micro distribution voting) | 83.20% | 294.8 |
-| heart-c | Pypper:two-level@50 (voting) | 84.52% | 294.8 |
+| heart-c | Pypper:one-level@10 (best rule) | 79.25% | 70.1 |
+| heart-c | Pypper:one-level@10 (macro distribution voting) | 83.52% | 70.1 |
+| heart-c | Pypper:one-level@10 (micro distribution voting) | 81.55% | 70.1 |
+| heart-c | Pypper:one-level@10 (voting) | 81.55% | 70.1 |
+| heart-c | Pypper:one-level@25 (best rule) | 78.91% | 178.0 |
+| heart-c | Pypper:one-level@25 (macro distribution voting) | 82.88% | 178.0 |
+| heart-c | Pypper:one-level@25 (micro distribution voting) | 82.56% | 178.0 |
+| heart-c | Pypper:one-level@25 (voting) | 82.55% | 178.0 |
+| heart-c | Pypper:one-level@50 (best rule) | 79.23% | 357.7 |
+| heart-c | Pypper:one-level@50 (macro distribution voting) | 84.18% | 357.7 |
+| heart-c | Pypper:one-level@50 (micro distribution voting) | 82.86% | 357.7 |
+| heart-c | Pypper:one-level@50 (voting) | 83.53% | 357.7 |
+| heart-c | Pypper:single (best rule) | 80.22% | 6.1 |
+| heart-c | Pypper:single (macro distribution voting) | 79.88% | 6.1 |
+| heart-c | Pypper:single (micro distribution voting) | 82.22% | 6.1 |
+| heart-c | Pypper:single (voting) | 81.89% | 6.1 |
+| heart-c | Pypper:two-level@10 (best rule) | 82.20% | 70.1 |
+| heart-c | Pypper:two-level@10 (macro distribution voting) | 82.53% | 70.1 |
+| heart-c | Pypper:two-level@10 (micro distribution voting) | 82.23% | 70.1 |
+| heart-c | Pypper:two-level@10 (voting) | 80.90% | 70.1 |
+| heart-c | Pypper:two-level@25 (best rule) | 83.22% | 178.0 |
+| heart-c | Pypper:two-level@25 (macro distribution voting) | 83.20% | 178.0 |
+| heart-c | Pypper:two-level@25 (micro distribution voting) | 81.56% | 178.0 |
+| heart-c | Pypper:two-level@25 (voting) | 82.23% | 178.0 |
+| heart-c | Pypper:two-level@50 (best rule) | 83.53% | 357.7 |
+| heart-c | Pypper:two-level@50 (macro distribution voting) | 83.53% | 357.7 |
+| heart-c | Pypper:two-level@50 (micro distribution voting) | 83.19% | 357.7 |
+| heart-c | Pypper:two-level@50 (voting) | 83.86% | 357.7 |
 | heart-h | PFoil:one-level@10 (best rule) | 78.90% | 264.1 |
 | heart-h | PFoil:one-level@10 (macro distribution voting) | 80.28% | 264.1 |
 | heart-h | PFoil:one-level@10 (micro distribution voting) | 79.57% | 264.1 |
@@ -2258,34 +2258,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | heart-h | PFossil:two-level@50 (macro distribution voting) | 80.29% | 736.2 |
 | heart-h | PFossil:two-level@50 (micro distribution voting) | 81.30% | 736.2 |
 | heart-h | PFossil:two-level@50 (voting) | 78.91% | 736.2 |
-| heart-h | Pypper:one-level@10 (best rule) | 80.25% | 49.2 |
-| heart-h | Pypper:one-level@10 (macro distribution voting) | 80.61% | 49.2 |
-| heart-h | Pypper:one-level@10 (micro distribution voting) | 80.95% | 49.2 |
-| heart-h | Pypper:one-level@10 (voting) | 80.61% | 49.2 |
-| heart-h | Pypper:one-level@25 (best rule) | 82.31% | 122.0 |
-| heart-h | Pypper:one-level@25 (macro distribution voting) | 81.99% | 122.0 |
-| heart-h | Pypper:one-level@25 (micro distribution voting) | 79.61% | 122.0 |
-| heart-h | Pypper:one-level@25 (voting) | 81.31% | 122.0 |
-| heart-h | Pypper:one-level@50 (best rule) | 80.93% | 245.0 |
-| heart-h | Pypper:one-level@50 (macro distribution voting) | 81.99% | 245.0 |
-| heart-h | Pypper:one-level@50 (micro distribution voting) | 80.30% | 245.0 |
-| heart-h | Pypper:one-level@50 (voting) | 81.31% | 245.0 |
-| heart-h | Pypper:single (best rule) | 78.20% | 4.4 |
-| heart-h | Pypper:single (macro distribution voting) | 78.20% | 4.4 |
-| heart-h | Pypper:single (micro distribution voting) | 77.85% | 4.4 |
-| heart-h | Pypper:single (voting) | 77.85% | 4.4 |
-| heart-h | Pypper:two-level@10 (best rule) | 80.60% | 49.2 |
-| heart-h | Pypper:two-level@10 (macro distribution voting) | 80.94% | 49.2 |
-| heart-h | Pypper:two-level@10 (micro distribution voting) | 80.26% | 49.2 |
-| heart-h | Pypper:two-level@10 (voting) | 80.60% | 49.2 |
-| heart-h | Pypper:two-level@25 (best rule) | 81.31% | 122.0 |
-| heart-h | Pypper:two-level@25 (macro distribution voting) | 81.31% | 122.0 |
-| heart-h | Pypper:two-level@25 (micro distribution voting) | 80.29% | 122.0 |
-| heart-h | Pypper:two-level@25 (voting) | 80.97% | 122.0 |
-| heart-h | Pypper:two-level@50 (best rule) | 81.31% | 245.0 |
-| heart-h | Pypper:two-level@50 (macro distribution voting) | 80.97% | 245.0 |
-| heart-h | Pypper:two-level@50 (micro distribution voting) | 80.99% | 245.0 |
-| heart-h | Pypper:two-level@50 (voting) | 81.31% | 245.0 |
+| heart-h | Pypper:one-level@10 (best rule) | 81.94% | 61.3 |
+| heart-h | Pypper:one-level@10 (macro distribution voting) | 82.31% | 61.3 |
+| heart-h | Pypper:one-level@10 (micro distribution voting) | 81.95% | 61.3 |
+| heart-h | Pypper:one-level@10 (voting) | 82.31% | 61.3 |
+| heart-h | Pypper:one-level@25 (best rule) | 80.93% | 148.0 |
+| heart-h | Pypper:one-level@25 (macro distribution voting) | 81.31% | 148.0 |
+| heart-h | Pypper:one-level@25 (micro distribution voting) | 79.95% | 148.0 |
+| heart-h | Pypper:one-level@25 (voting) | 81.66% | 148.0 |
+| heart-h | Pypper:one-level@50 (best rule) | 80.93% | 298.4 |
+| heart-h | Pypper:one-level@50 (macro distribution voting) | 81.66% | 298.4 |
+| heart-h | Pypper:one-level@50 (micro distribution voting) | 79.62% | 298.4 |
+| heart-h | Pypper:one-level@50 (voting) | 81.31% | 298.4 |
+| heart-h | Pypper:single (best rule) | 77.17% | 4.9 |
+| heart-h | Pypper:single (macro distribution voting) | 77.17% | 4.9 |
+| heart-h | Pypper:single (micro distribution voting) | 76.83% | 4.9 |
+| heart-h | Pypper:single (voting) | 76.83% | 4.9 |
+| heart-h | Pypper:two-level@10 (best rule) | 81.29% | 61.3 |
+| heart-h | Pypper:two-level@10 (macro distribution voting) | 82.31% | 61.3 |
+| heart-h | Pypper:two-level@10 (micro distribution voting) | 81.95% | 61.3 |
+| heart-h | Pypper:two-level@10 (voting) | 82.64% | 61.3 |
+| heart-h | Pypper:two-level@25 (best rule) | 80.28% | 148.0 |
+| heart-h | Pypper:two-level@25 (macro distribution voting) | 80.28% | 148.0 |
+| heart-h | Pypper:two-level@25 (micro distribution voting) | 79.61% | 148.0 |
+| heart-h | Pypper:two-level@25 (voting) | 80.62% | 148.0 |
+| heart-h | Pypper:two-level@50 (best rule) | 79.94% | 298.4 |
+| heart-h | Pypper:two-level@50 (macro distribution voting) | 80.29% | 298.4 |
+| heart-h | Pypper:two-level@50 (micro distribution voting) | 80.31% | 298.4 |
+| heart-h | Pypper:two-level@50 (voting) | 80.63% | 298.4 |
 | heart-statlog | PFoil:one-level@10 (best rule) | 83.33% | 214.4 |
 | heart-statlog | PFoil:one-level@10 (macro distribution voting) | 83.70% | 214.4 |
 | heart-statlog | PFoil:one-level@10 (micro distribution voting) | 82.96% | 214.4 |
@@ -2342,34 +2342,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | heart-statlog | PFossil:two-level@50 (macro distribution voting) | 81.85% | 750.4 |
 | heart-statlog | PFossil:two-level@50 (micro distribution voting) | 82.59% | 750.4 |
 | heart-statlog | PFossil:two-level@50 (voting) | 81.11% | 750.4 |
-| heart-statlog | Pypper:one-level@10 (best rule) | 79.63% | 56.1 |
-| heart-statlog | Pypper:one-level@10 (macro distribution voting) | 82.59% | 56.1 |
-| heart-statlog | Pypper:one-level@10 (micro distribution voting) | 81.48% | 56.1 |
-| heart-statlog | Pypper:one-level@10 (voting) | 83.33% | 56.1 |
-| heart-statlog | Pypper:one-level@25 (best rule) | 80.37% | 138.5 |
-| heart-statlog | Pypper:one-level@25 (macro distribution voting) | 83.33% | 138.5 |
-| heart-statlog | Pypper:one-level@25 (micro distribution voting) | 82.96% | 138.5 |
-| heart-statlog | Pypper:one-level@25 (voting) | 83.70% | 138.5 |
-| heart-statlog | Pypper:one-level@50 (best rule) | 80.00% | 275.0 |
-| heart-statlog | Pypper:one-level@50 (macro distribution voting) | 83.70% | 275.0 |
-| heart-statlog | Pypper:one-level@50 (micro distribution voting) | 81.85% | 275.0 |
-| heart-statlog | Pypper:one-level@50 (voting) | 83.70% | 275.0 |
-| heart-statlog | Pypper:single (best rule) | 79.26% | 5.0 |
-| heart-statlog | Pypper:single (macro distribution voting) | 79.63% | 5.0 |
-| heart-statlog | Pypper:single (micro distribution voting) | 80.74% | 5.0 |
-| heart-statlog | Pypper:single (voting) | 80.74% | 5.0 |
-| heart-statlog | Pypper:two-level@10 (best rule) | 82.22% | 56.1 |
-| heart-statlog | Pypper:two-level@10 (macro distribution voting) | 82.59% | 56.1 |
-| heart-statlog | Pypper:two-level@10 (micro distribution voting) | 81.11% | 56.1 |
-| heart-statlog | Pypper:two-level@10 (voting) | 82.22% | 56.1 |
-| heart-statlog | Pypper:two-level@25 (best rule) | 82.59% | 138.5 |
-| heart-statlog | Pypper:two-level@25 (macro distribution voting) | 82.96% | 138.5 |
-| heart-statlog | Pypper:two-level@25 (micro distribution voting) | 82.96% | 138.5 |
-| heart-statlog | Pypper:two-level@25 (voting) | 83.70% | 138.5 |
-| heart-statlog | Pypper:two-level@50 (best rule) | 84.44% | 275.0 |
-| heart-statlog | Pypper:two-level@50 (macro distribution voting) | 84.07% | 275.0 |
-| heart-statlog | Pypper:two-level@50 (micro distribution voting) | 82.96% | 275.0 |
-| heart-statlog | Pypper:two-level@50 (voting) | 82.96% | 275.0 |
+| heart-statlog | Pypper:one-level@10 (best rule) | 80.00% | 72.0 |
+| heart-statlog | Pypper:one-level@10 (macro distribution voting) | 84.81% | 72.0 |
+| heart-statlog | Pypper:one-level@10 (micro distribution voting) | 81.11% | 72.0 |
+| heart-statlog | Pypper:one-level@10 (voting) | 83.70% | 72.0 |
+| heart-statlog | Pypper:one-level@25 (best rule) | 81.48% | 169.5 |
+| heart-statlog | Pypper:one-level@25 (macro distribution voting) | 84.81% | 169.5 |
+| heart-statlog | Pypper:one-level@25 (micro distribution voting) | 83.33% | 169.5 |
+| heart-statlog | Pypper:one-level@25 (voting) | 84.81% | 169.5 |
+| heart-statlog | Pypper:one-level@50 (best rule) | 80.74% | 339.5 |
+| heart-statlog | Pypper:one-level@50 (macro distribution voting) | 84.07% | 339.5 |
+| heart-statlog | Pypper:one-level@50 (micro distribution voting) | 82.22% | 339.5 |
+| heart-statlog | Pypper:one-level@50 (voting) | 84.07% | 339.5 |
+| heart-statlog | Pypper:single (best rule) | 81.85% | 5.5 |
+| heart-statlog | Pypper:single (macro distribution voting) | 82.22% | 5.5 |
+| heart-statlog | Pypper:single (micro distribution voting) | 82.59% | 5.5 |
+| heart-statlog | Pypper:single (voting) | 82.59% | 5.5 |
+| heart-statlog | Pypper:two-level@10 (best rule) | 82.22% | 72.0 |
+| heart-statlog | Pypper:two-level@10 (macro distribution voting) | 82.96% | 72.0 |
+| heart-statlog | Pypper:two-level@10 (micro distribution voting) | 81.85% | 72.0 |
+| heart-statlog | Pypper:two-level@10 (voting) | 82.22% | 72.0 |
+| heart-statlog | Pypper:two-level@25 (best rule) | 84.07% | 169.5 |
+| heart-statlog | Pypper:two-level@25 (macro distribution voting) | 84.07% | 169.5 |
+| heart-statlog | Pypper:two-level@25 (micro distribution voting) | 84.07% | 169.5 |
+| heart-statlog | Pypper:two-level@25 (voting) | 83.70% | 169.5 |
+| heart-statlog | Pypper:two-level@50 (best rule) | 84.44% | 339.5 |
+| heart-statlog | Pypper:two-level@50 (macro distribution voting) | 84.44% | 339.5 |
+| heart-statlog | Pypper:two-level@50 (micro distribution voting) | 83.33% | 339.5 |
+| heart-statlog | Pypper:two-level@50 (voting) | 82.59% | 339.5 |
 | heloc | PFoil:one-level@10 (best rule) | 71.16% | 5792.0 |
 | heloc | PFoil:one-level@10 (macro distribution voting) | 71.24% | 5792.0 |
 | heloc | PFoil:one-level@10 (micro distribution voting) | 70.13% | 5792.0 |
@@ -2426,34 +2426,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | heloc | PFossil:two-level@50 (macro distribution voting) | 69.33% | 101.4 |
 | heloc | PFossil:two-level@50 (micro distribution voting) | 69.33% | 101.4 |
 | heloc | PFossil:two-level@50 (voting) | 69.33% | 101.4 |
-| heloc | Pypper:one-level@10 (best rule) | 71.42% | 167.9 |
-| heloc | Pypper:one-level@10 (macro distribution voting) | 71.36% | 167.9 |
-| heloc | Pypper:one-level@10 (micro distribution voting) | 70.90% | 167.9 |
-| heloc | Pypper:one-level@10 (voting) | 71.37% | 167.9 |
-| heloc | Pypper:one-level@25 (best rule) | 71.71% | 416.4 |
-| heloc | Pypper:one-level@25 (macro distribution voting) | 71.42% | 416.4 |
-| heloc | Pypper:one-level@25 (micro distribution voting) | 70.83% | 416.4 |
-| heloc | Pypper:one-level@25 (voting) | 71.34% | 416.4 |
-| heloc | Pypper:one-level@50 (best rule) | 71.61% | 833.5 |
-| heloc | Pypper:one-level@50 (macro distribution voting) | 71.39% | 833.5 |
-| heloc | Pypper:one-level@50 (micro distribution voting) | 71.08% | 833.5 |
-| heloc | Pypper:one-level@50 (voting) | 71.32% | 833.5 |
-| heloc | Pypper:single (best rule) | 70.45% | 14.1 |
-| heloc | Pypper:single (macro distribution voting) | 70.47% | 14.1 |
-| heloc | Pypper:single (micro distribution voting) | 70.23% | 14.1 |
-| heloc | Pypper:single (voting) | 70.26% | 14.1 |
-| heloc | Pypper:two-level@10 (best rule) | 71.44% | 167.9 |
-| heloc | Pypper:two-level@10 (macro distribution voting) | 71.47% | 167.9 |
-| heloc | Pypper:two-level@10 (micro distribution voting) | 71.10% | 167.9 |
-| heloc | Pypper:two-level@10 (voting) | 71.33% | 167.9 |
-| heloc | Pypper:two-level@25 (best rule) | 71.47% | 416.4 |
-| heloc | Pypper:two-level@25 (macro distribution voting) | 71.34% | 416.4 |
-| heloc | Pypper:two-level@25 (micro distribution voting) | 71.11% | 416.4 |
-| heloc | Pypper:two-level@25 (voting) | 71.32% | 416.4 |
-| heloc | Pypper:two-level@50 (best rule) | 71.40% | 833.5 |
-| heloc | Pypper:two-level@50 (macro distribution voting) | 71.32% | 833.5 |
-| heloc | Pypper:two-level@50 (micro distribution voting) | 71.26% | 833.5 |
-| heloc | Pypper:two-level@50 (voting) | 71.48% | 833.5 |
+| heloc | Pypper:one-level@10 (best rule) | 71.31% | 163.6 |
+| heloc | Pypper:one-level@10 (macro distribution voting) | 71.46% | 163.6 |
+| heloc | Pypper:one-level@10 (micro distribution voting) | 71.03% | 163.6 |
+| heloc | Pypper:one-level@10 (voting) | 71.28% | 163.6 |
+| heloc | Pypper:one-level@25 (best rule) | 71.49% | 414.9 |
+| heloc | Pypper:one-level@25 (macro distribution voting) | 71.50% | 414.9 |
+| heloc | Pypper:one-level@25 (micro distribution voting) | 71.00% | 414.9 |
+| heloc | Pypper:one-level@25 (voting) | 71.38% | 414.9 |
+| heloc | Pypper:one-level@50 (best rule) | 71.63% | 839.6 |
+| heloc | Pypper:one-level@50 (macro distribution voting) | 71.42% | 839.6 |
+| heloc | Pypper:one-level@50 (micro distribution voting) | 71.05% | 839.6 |
+| heloc | Pypper:one-level@50 (voting) | 71.41% | 839.6 |
+| heloc | Pypper:single (best rule) | 69.81% | 15.7 |
+| heloc | Pypper:single (macro distribution voting) | 69.87% | 15.7 |
+| heloc | Pypper:single (micro distribution voting) | 69.88% | 15.7 |
+| heloc | Pypper:single (voting) | 69.75% | 15.7 |
+| heloc | Pypper:two-level@10 (best rule) | 71.26% | 163.6 |
+| heloc | Pypper:two-level@10 (macro distribution voting) | 71.26% | 163.6 |
+| heloc | Pypper:two-level@10 (micro distribution voting) | 71.10% | 163.6 |
+| heloc | Pypper:two-level@10 (voting) | 71.32% | 163.6 |
+| heloc | Pypper:two-level@25 (best rule) | 71.25% | 414.9 |
+| heloc | Pypper:two-level@25 (macro distribution voting) | 71.31% | 414.9 |
+| heloc | Pypper:two-level@25 (micro distribution voting) | 71.24% | 414.9 |
+| heloc | Pypper:two-level@25 (voting) | 71.30% | 414.9 |
+| heloc | Pypper:two-level@50 (best rule) | 71.33% | 839.6 |
+| heloc | Pypper:two-level@50 (macro distribution voting) | 71.42% | 839.6 |
+| heloc | Pypper:two-level@50 (micro distribution voting) | 71.26% | 839.6 |
+| heloc | Pypper:two-level@50 (voting) | 71.58% | 839.6 |
 | hepatitis | PFoil:one-level@10 (best rule) | 82.62% | 131.6 |
 | hepatitis | PFoil:one-level@10 (macro distribution voting) | 84.04% | 131.6 |
 | hepatitis | PFoil:one-level@10 (micro distribution voting) | 82.00% | 131.6 |
@@ -2510,34 +2510,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | hepatitis | PFossil:two-level@50 (macro distribution voting) | 80.17% | 565.8 |
 | hepatitis | PFossil:two-level@50 (micro distribution voting) | 82.04% | 565.8 |
 | hepatitis | PFossil:two-level@50 (voting) | 82.67% | 565.8 |
-| hepatitis | Pypper:one-level@10 (best rule) | 80.79% | 41.4 |
-| hepatitis | Pypper:one-level@10 (macro distribution voting) | 80.12% | 41.4 |
-| hepatitis | Pypper:one-level@10 (micro distribution voting) | 80.71% | 41.4 |
-| hepatitis | Pypper:one-level@10 (voting) | 81.42% | 41.4 |
-| hepatitis | Pypper:one-level@25 (best rule) | 80.04% | 100.4 |
-| hepatitis | Pypper:one-level@25 (macro distribution voting) | 80.83% | 100.4 |
-| hepatitis | Pypper:one-level@25 (micro distribution voting) | 80.00% | 100.4 |
-| hepatitis | Pypper:one-level@25 (voting) | 80.88% | 100.4 |
-| hepatitis | Pypper:one-level@50 (best rule) | 80.00% | 200.1 |
-| hepatitis | Pypper:one-level@50 (macro distribution voting) | 81.50% | 200.1 |
-| hepatitis | Pypper:one-level@50 (micro distribution voting) | 80.00% | 200.1 |
-| hepatitis | Pypper:one-level@50 (voting) | 82.17% | 200.1 |
-| hepatitis | Pypper:single (best rule) | 80.04% | 3.8 |
-| hepatitis | Pypper:single (macro distribution voting) | 80.67% | 3.8 |
-| hepatitis | Pypper:single (micro distribution voting) | 80.04% | 3.8 |
-| hepatitis | Pypper:single (voting) | 80.67% | 3.8 |
-| hepatitis | Pypper:two-level@10 (best rule) | 78.83% | 41.4 |
-| hepatitis | Pypper:two-level@10 (macro distribution voting) | 78.83% | 41.4 |
-| hepatitis | Pypper:two-level@10 (micro distribution voting) | 80.08% | 41.4 |
-| hepatitis | Pypper:two-level@10 (voting) | 80.71% | 41.4 |
-| hepatitis | Pypper:two-level@25 (best rule) | 79.54% | 100.4 |
-| hepatitis | Pypper:two-level@25 (macro distribution voting) | 80.21% | 100.4 |
-| hepatitis | Pypper:two-level@25 (micro distribution voting) | 78.88% | 100.4 |
-| hepatitis | Pypper:two-level@25 (voting) | 79.54% | 100.4 |
-| hepatitis | Pypper:two-level@50 (best rule) | 80.83% | 200.1 |
-| hepatitis | Pypper:two-level@50 (macro distribution voting) | 80.88% | 200.1 |
-| hepatitis | Pypper:two-level@50 (micro distribution voting) | 81.46% | 200.1 |
-| hepatitis | Pypper:two-level@50 (voting) | 81.46% | 200.1 |
+| hepatitis | Pypper:one-level@10 (best rule) | 80.17% | 47.6 |
+| hepatitis | Pypper:one-level@10 (macro distribution voting) | 80.17% | 47.6 |
+| hepatitis | Pypper:one-level@10 (micro distribution voting) | 79.46% | 47.6 |
+| hepatitis | Pypper:one-level@10 (voting) | 82.12% | 47.6 |
+| hepatitis | Pypper:one-level@25 (best rule) | 79.42% | 114.6 |
+| hepatitis | Pypper:one-level@25 (macro distribution voting) | 78.92% | 114.6 |
+| hepatitis | Pypper:one-level@25 (micro distribution voting) | 80.62% | 114.6 |
+| hepatitis | Pypper:one-level@25 (voting) | 80.83% | 114.6 |
+| hepatitis | Pypper:one-level@50 (best rule) | 80.00% | 228.0 |
+| hepatitis | Pypper:one-level@50 (macro distribution voting) | 82.17% | 228.0 |
+| hepatitis | Pypper:one-level@50 (micro distribution voting) | 80.00% | 228.0 |
+| hepatitis | Pypper:one-level@50 (voting) | 81.50% | 228.0 |
+| hepatitis | Pypper:single (best rule) | 80.71% | 4.2 |
+| hepatitis | Pypper:single (macro distribution voting) | 82.00% | 4.2 |
+| hepatitis | Pypper:single (micro distribution voting) | 80.04% | 4.2 |
+| hepatitis | Pypper:single (voting) | 80.67% | 4.2 |
+| hepatitis | Pypper:two-level@10 (best rule) | 79.54% | 47.6 |
+| hepatitis | Pypper:two-level@10 (macro distribution voting) | 80.83% | 47.6 |
+| hepatitis | Pypper:two-level@10 (micro distribution voting) | 80.79% | 47.6 |
+| hepatitis | Pypper:two-level@10 (voting) | 80.17% | 47.6 |
+| hepatitis | Pypper:two-level@25 (best rule) | 80.17% | 114.6 |
+| hepatitis | Pypper:two-level@25 (macro distribution voting) | 80.83% | 114.6 |
+| hepatitis | Pypper:two-level@25 (micro distribution voting) | 80.17% | 114.6 |
+| hepatitis | Pypper:two-level@25 (voting) | 78.92% | 114.6 |
+| hepatitis | Pypper:two-level@50 (best rule) | 80.25% | 228.0 |
+| hepatitis | Pypper:two-level@50 (macro distribution voting) | 82.17% | 228.0 |
+| hepatitis | Pypper:two-level@50 (micro distribution voting) | 80.21% | 228.0 |
+| hepatitis | Pypper:two-level@50 (voting) | 80.25% | 228.0 |
 | ilpd | PFoil:one-level@10 (best rule) | 71.19% | 520.5 |
 | ilpd | PFoil:one-level@10 (macro distribution voting) | 72.03% | 520.5 |
 | ilpd | PFoil:one-level@10 (micro distribution voting) | 71.01% | 520.5 |
@@ -2594,34 +2594,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | ilpd | PFossil:two-level@50 (macro distribution voting) | 67.74% | 382.9 |
 | ilpd | PFossil:two-level@50 (micro distribution voting) | 68.42% | 382.9 |
 | ilpd | PFossil:two-level@50 (voting) | 67.57% | 382.9 |
-| ilpd | Pypper:one-level@10 (best rule) | 70.85% | 48.2 |
-| ilpd | Pypper:one-level@10 (macro distribution voting) | 70.85% | 48.2 |
-| ilpd | Pypper:one-level@10 (micro distribution voting) | 71.02% | 48.2 |
-| ilpd | Pypper:one-level@10 (voting) | 68.62% | 48.2 |
-| ilpd | Pypper:one-level@25 (best rule) | 69.64% | 122.4 |
-| ilpd | Pypper:one-level@25 (macro distribution voting) | 69.99% | 122.4 |
-| ilpd | Pypper:one-level@25 (micro distribution voting) | 70.16% | 122.4 |
-| ilpd | Pypper:one-level@25 (voting) | 69.48% | 122.4 |
-| ilpd | Pypper:one-level@50 (best rule) | 69.81% | 240.8 |
-| ilpd | Pypper:one-level@50 (macro distribution voting) | 70.50% | 240.8 |
-| ilpd | Pypper:one-level@50 (micro distribution voting) | 71.01% | 240.8 |
-| ilpd | Pypper:one-level@50 (voting) | 69.82% | 240.8 |
-| ilpd | Pypper:single (best rule) | 69.66% | 3.3 |
-| ilpd | Pypper:single (macro distribution voting) | 69.66% | 3.3 |
-| ilpd | Pypper:single (micro distribution voting) | 69.66% | 3.3 |
-| ilpd | Pypper:single (voting) | 69.66% | 3.3 |
-| ilpd | Pypper:two-level@10 (best rule) | 68.79% | 48.2 |
-| ilpd | Pypper:two-level@10 (macro distribution voting) | 68.96% | 48.2 |
-| ilpd | Pypper:two-level@10 (micro distribution voting) | 68.27% | 48.2 |
-| ilpd | Pypper:two-level@10 (voting) | 67.93% | 48.2 |
-| ilpd | Pypper:two-level@25 (best rule) | 69.82% | 122.4 |
-| ilpd | Pypper:two-level@25 (macro distribution voting) | 69.82% | 122.4 |
-| ilpd | Pypper:two-level@25 (micro distribution voting) | 69.66% | 122.4 |
-| ilpd | Pypper:two-level@25 (voting) | 69.82% | 122.4 |
-| ilpd | Pypper:two-level@50 (best rule) | 69.99% | 240.8 |
-| ilpd | Pypper:two-level@50 (macro distribution voting) | 69.99% | 240.8 |
-| ilpd | Pypper:two-level@50 (micro distribution voting) | 69.48% | 240.8 |
-| ilpd | Pypper:two-level@50 (voting) | 69.48% | 240.8 |
+| ilpd | Pypper:one-level@10 (best rule) | 68.79% | 58.5 |
+| ilpd | Pypper:one-level@10 (macro distribution voting) | 69.99% | 58.5 |
+| ilpd | Pypper:one-level@10 (micro distribution voting) | 69.30% | 58.5 |
+| ilpd | Pypper:one-level@10 (voting) | 69.47% | 58.5 |
+| ilpd | Pypper:one-level@25 (best rule) | 69.99% | 148.1 |
+| ilpd | Pypper:one-level@25 (macro distribution voting) | 70.50% | 148.1 |
+| ilpd | Pypper:one-level@25 (micro distribution voting) | 69.98% | 148.1 |
+| ilpd | Pypper:one-level@25 (voting) | 69.81% | 148.1 |
+| ilpd | Pypper:one-level@50 (best rule) | 70.49% | 291.5 |
+| ilpd | Pypper:one-level@50 (macro distribution voting) | 69.82% | 291.5 |
+| ilpd | Pypper:one-level@50 (micro distribution voting) | 69.82% | 291.5 |
+| ilpd | Pypper:one-level@50 (voting) | 68.27% | 291.5 |
+| ilpd | Pypper:single (best rule) | 69.14% | 2.9 |
+| ilpd | Pypper:single (macro distribution voting) | 69.14% | 2.9 |
+| ilpd | Pypper:single (micro distribution voting) | 69.14% | 2.9 |
+| ilpd | Pypper:single (voting) | 69.14% | 2.9 |
+| ilpd | Pypper:two-level@10 (best rule) | 68.60% | 58.5 |
+| ilpd | Pypper:two-level@10 (macro distribution voting) | 68.60% | 58.5 |
+| ilpd | Pypper:two-level@10 (micro distribution voting) | 68.61% | 58.5 |
+| ilpd | Pypper:two-level@10 (voting) | 69.47% | 58.5 |
+| ilpd | Pypper:two-level@25 (best rule) | 69.12% | 148.1 |
+| ilpd | Pypper:two-level@25 (macro distribution voting) | 69.30% | 148.1 |
+| ilpd | Pypper:two-level@25 (micro distribution voting) | 69.47% | 148.1 |
+| ilpd | Pypper:two-level@25 (voting) | 69.30% | 148.1 |
+| ilpd | Pypper:two-level@50 (best rule) | 68.78% | 291.5 |
+| ilpd | Pypper:two-level@50 (macro distribution voting) | 68.78% | 291.5 |
+| ilpd | Pypper:two-level@50 (micro distribution voting) | 68.45% | 291.5 |
+| ilpd | Pypper:two-level@50 (voting) | 68.10% | 291.5 |
 | ionosphere | PFoil:one-level@10 (best rule) | 80.06% | 140.7 |
 | ionosphere | PFoil:one-level@10 (macro distribution voting) | 90.03% | 140.7 |
 | ionosphere | PFoil:one-level@10 (micro distribution voting) | 90.59% | 140.7 |
@@ -2678,34 +2678,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | ionosphere | PFossil:two-level@50 (macro distribution voting) | 93.16% | 556.7 |
 | ionosphere | PFossil:two-level@50 (micro distribution voting) | 91.45% | 556.7 |
 | ionosphere | PFossil:two-level@50 (voting) | 92.87% | 556.7 |
-| ionosphere | Pypper:one-level@10 (best rule) | 87.75% | 55.3 |
-| ionosphere | Pypper:one-level@10 (macro distribution voting) | 89.17% | 55.3 |
-| ionosphere | Pypper:one-level@10 (micro distribution voting) | 88.60% | 55.3 |
-| ionosphere | Pypper:one-level@10 (voting) | 88.89% | 55.3 |
-| ionosphere | Pypper:one-level@25 (best rule) | 86.60% | 139.6 |
-| ionosphere | Pypper:one-level@25 (macro distribution voting) | 89.46% | 139.6 |
-| ionosphere | Pypper:one-level@25 (micro distribution voting) | 88.88% | 139.6 |
-| ionosphere | Pypper:one-level@25 (voting) | 89.46% | 139.6 |
-| ionosphere | Pypper:one-level@50 (best rule) | 85.75% | 280.1 |
-| ionosphere | Pypper:one-level@50 (macro distribution voting) | 90.32% | 280.1 |
-| ionosphere | Pypper:one-level@50 (micro distribution voting) | 90.32% | 280.1 |
-| ionosphere | Pypper:one-level@50 (voting) | 90.32% | 280.1 |
-| ionosphere | Pypper:single (best rule) | 90.61% | 6.4 |
-| ionosphere | Pypper:single (macro distribution voting) | 90.61% | 6.4 |
-| ionosphere | Pypper:single (micro distribution voting) | 91.17% | 6.4 |
-| ionosphere | Pypper:single (voting) | 90.89% | 6.4 |
-| ionosphere | Pypper:two-level@10 (best rule) | 89.45% | 55.3 |
-| ionosphere | Pypper:two-level@10 (macro distribution voting) | 90.02% | 55.3 |
-| ionosphere | Pypper:two-level@10 (micro distribution voting) | 88.88% | 55.3 |
-| ionosphere | Pypper:two-level@10 (voting) | 89.45% | 55.3 |
-| ionosphere | Pypper:two-level@25 (best rule) | 90.32% | 139.6 |
-| ionosphere | Pypper:two-level@25 (macro distribution voting) | 90.32% | 139.6 |
-| ionosphere | Pypper:two-level@25 (micro distribution voting) | 89.17% | 139.6 |
-| ionosphere | Pypper:two-level@25 (voting) | 89.46% | 139.6 |
-| ionosphere | Pypper:two-level@50 (best rule) | 90.60% | 280.1 |
-| ionosphere | Pypper:two-level@50 (macro distribution voting) | 90.60% | 280.1 |
-| ionosphere | Pypper:two-level@50 (micro distribution voting) | 90.32% | 280.1 |
-| ionosphere | Pypper:two-level@50 (voting) | 90.89% | 280.1 |
+| ionosphere | Pypper:one-level@10 (best rule) | 88.60% | 65.6 |
+| ionosphere | Pypper:one-level@10 (macro distribution voting) | 90.60% | 65.6 |
+| ionosphere | Pypper:one-level@10 (micro distribution voting) | 88.88% | 65.6 |
+| ionosphere | Pypper:one-level@10 (voting) | 90.32% | 65.6 |
+| ionosphere | Pypper:one-level@25 (best rule) | 87.46% | 165.8 |
+| ionosphere | Pypper:one-level@25 (macro distribution voting) | 90.03% | 165.8 |
+| ionosphere | Pypper:one-level@25 (micro distribution voting) | 90.02% | 165.8 |
+| ionosphere | Pypper:one-level@25 (voting) | 90.03% | 165.8 |
+| ionosphere | Pypper:one-level@50 (best rule) | 85.17% | 333.1 |
+| ionosphere | Pypper:one-level@50 (macro distribution voting) | 90.32% | 333.1 |
+| ionosphere | Pypper:one-level@50 (micro distribution voting) | 90.32% | 333.1 |
+| ionosphere | Pypper:one-level@50 (voting) | 90.03% | 333.1 |
+| ionosphere | Pypper:single (best rule) | 90.60% | 6.6 |
+| ionosphere | Pypper:single (macro distribution voting) | 89.75% | 6.6 |
+| ionosphere | Pypper:single (micro distribution voting) | 90.03% | 6.6 |
+| ionosphere | Pypper:single (voting) | 90.32% | 6.6 |
+| ionosphere | Pypper:two-level@10 (best rule) | 91.16% | 65.6 |
+| ionosphere | Pypper:two-level@10 (macro distribution voting) | 91.16% | 65.6 |
+| ionosphere | Pypper:two-level@10 (micro distribution voting) | 89.17% | 65.6 |
+| ionosphere | Pypper:two-level@10 (voting) | 90.60% | 65.6 |
+| ionosphere | Pypper:two-level@25 (best rule) | 91.17% | 165.8 |
+| ionosphere | Pypper:two-level@25 (macro distribution voting) | 90.88% | 165.8 |
+| ionosphere | Pypper:two-level@25 (micro distribution voting) | 89.46% | 165.8 |
+| ionosphere | Pypper:two-level@25 (voting) | 91.46% | 165.8 |
+| ionosphere | Pypper:two-level@50 (best rule) | 90.60% | 333.1 |
+| ionosphere | Pypper:two-level@50 (macro distribution voting) | 91.17% | 333.1 |
+| ionosphere | Pypper:two-level@50 (micro distribution voting) | 90.32% | 333.1 |
+| ionosphere | Pypper:two-level@50 (voting) | 91.75% | 333.1 |
 | iris | PFoil:one-level@10 (best rule) | 94.00% | 69.4 |
 | iris | PFoil:one-level@10 (macro distribution voting) | 92.00% | 69.4 |
 | iris | PFoil:one-level@10 (micro distribution voting) | 93.33% | 69.4 |
@@ -2762,34 +2762,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | iris | PFossil:two-level@50 (macro distribution voting) | 92.00% | 263.0 |
 | iris | PFossil:two-level@50 (micro distribution voting) | 93.33% | 263.0 |
 | iris | PFossil:two-level@50 (voting) | 92.67% | 263.0 |
-| iris | Pypper:one-level@10 (best rule) | 94.67% | 35.4 |
-| iris | Pypper:one-level@10 (macro distribution voting) | 94.00% | 35.4 |
-| iris | Pypper:one-level@10 (micro distribution voting) | 94.00% | 35.4 |
-| iris | Pypper:one-level@10 (voting) | 94.00% | 35.4 |
-| iris | Pypper:one-level@25 (best rule) | 91.33% | 87.7 |
-| iris | Pypper:one-level@25 (macro distribution voting) | 93.33% | 87.7 |
-| iris | Pypper:one-level@25 (micro distribution voting) | 94.00% | 87.7 |
-| iris | Pypper:one-level@25 (voting) | 94.00% | 87.7 |
-| iris | Pypper:one-level@50 (best rule) | 95.33% | 175.4 |
-| iris | Pypper:one-level@50 (macro distribution voting) | 94.00% | 175.4 |
-| iris | Pypper:one-level@50 (micro distribution voting) | 94.00% | 175.4 |
-| iris | Pypper:one-level@50 (voting) | 94.00% | 175.4 |
-| iris | Pypper:single (best rule) | 92.00% | 3.7 |
-| iris | Pypper:single (macro distribution voting) | 92.00% | 3.7 |
-| iris | Pypper:single (micro distribution voting) | 92.00% | 3.7 |
-| iris | Pypper:single (voting) | 92.00% | 3.7 |
-| iris | Pypper:two-level@10 (best rule) | 94.67% | 35.4 |
-| iris | Pypper:two-level@10 (macro distribution voting) | 94.67% | 35.4 |
-| iris | Pypper:two-level@10 (micro distribution voting) | 94.67% | 35.4 |
-| iris | Pypper:two-level@10 (voting) | 94.67% | 35.4 |
-| iris | Pypper:two-level@25 (best rule) | 94.00% | 87.7 |
-| iris | Pypper:two-level@25 (macro distribution voting) | 94.00% | 87.7 |
-| iris | Pypper:two-level@25 (micro distribution voting) | 94.00% | 87.7 |
-| iris | Pypper:two-level@25 (voting) | 94.00% | 87.7 |
-| iris | Pypper:two-level@50 (best rule) | 94.00% | 175.4 |
-| iris | Pypper:two-level@50 (macro distribution voting) | 94.00% | 175.4 |
-| iris | Pypper:two-level@50 (micro distribution voting) | 94.00% | 175.4 |
-| iris | Pypper:two-level@50 (voting) | 94.00% | 175.4 |
+| iris | Pypper:one-level@10 (best rule) | 94.67% | 37.0 |
+| iris | Pypper:one-level@10 (macro distribution voting) | 94.67% | 37.0 |
+| iris | Pypper:one-level@10 (micro distribution voting) | 94.00% | 37.0 |
+| iris | Pypper:one-level@10 (voting) | 94.00% | 37.0 |
+| iris | Pypper:one-level@25 (best rule) | 91.33% | 91.8 |
+| iris | Pypper:one-level@25 (macro distribution voting) | 93.33% | 91.8 |
+| iris | Pypper:one-level@25 (micro distribution voting) | 93.33% | 91.8 |
+| iris | Pypper:one-level@25 (voting) | 93.33% | 91.8 |
+| iris | Pypper:one-level@50 (best rule) | 95.33% | 184.5 |
+| iris | Pypper:one-level@50 (macro distribution voting) | 93.33% | 184.5 |
+| iris | Pypper:one-level@50 (micro distribution voting) | 93.33% | 184.5 |
+| iris | Pypper:one-level@50 (voting) | 93.33% | 184.5 |
+| iris | Pypper:single (best rule) | 92.00% | 3.6 |
+| iris | Pypper:single (macro distribution voting) | 92.00% | 3.6 |
+| iris | Pypper:single (micro distribution voting) | 92.00% | 3.6 |
+| iris | Pypper:single (voting) | 92.00% | 3.6 |
+| iris | Pypper:two-level@10 (best rule) | 94.67% | 37.0 |
+| iris | Pypper:two-level@10 (macro distribution voting) | 94.00% | 37.0 |
+| iris | Pypper:two-level@10 (micro distribution voting) | 94.67% | 37.0 |
+| iris | Pypper:two-level@10 (voting) | 94.67% | 37.0 |
+| iris | Pypper:two-level@25 (best rule) | 93.33% | 91.8 |
+| iris | Pypper:two-level@25 (macro distribution voting) | 93.33% | 91.8 |
+| iris | Pypper:two-level@25 (micro distribution voting) | 93.33% | 91.8 |
+| iris | Pypper:two-level@25 (voting) | 93.33% | 91.8 |
+| iris | Pypper:two-level@50 (best rule) | 93.33% | 184.5 |
+| iris | Pypper:two-level@50 (macro distribution voting) | 93.33% | 184.5 |
+| iris | Pypper:two-level@50 (micro distribution voting) | 93.33% | 184.5 |
+| iris | Pypper:two-level@50 (voting) | 93.33% | 184.5 |
 | kc1 | PFoil:one-level@10 (best rule) | 85.63% | 1143.6 |
 | kc1 | PFoil:one-level@10 (macro distribution voting) | 85.97% | 1143.6 |
 | kc1 | PFoil:one-level@10 (micro distribution voting) | 84.83% | 1143.6 |
@@ -2846,34 +2846,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | kc1 | PFossil:two-level@50 (macro distribution voting) | 85.54% | 271.4 |
 | kc1 | PFossil:two-level@50 (micro distribution voting) | 85.54% | 271.4 |
 | kc1 | PFossil:two-level@50 (voting) | 85.59% | 271.4 |
-| kc1 | Pypper:one-level@10 (best rule) | 85.30% | 56.2 |
-| kc1 | Pypper:one-level@10 (macro distribution voting) | 85.35% | 56.2 |
-| kc1 | Pypper:one-level@10 (micro distribution voting) | 85.02% | 56.2 |
-| kc1 | Pypper:one-level@10 (voting) | 85.02% | 56.2 |
-| kc1 | Pypper:one-level@25 (best rule) | 85.54% | 136.0 |
-| kc1 | Pypper:one-level@25 (macro distribution voting) | 85.73% | 136.0 |
-| kc1 | Pypper:one-level@25 (micro distribution voting) | 85.21% | 136.0 |
-| kc1 | Pypper:one-level@25 (voting) | 84.64% | 136.0 |
-| kc1 | Pypper:one-level@50 (best rule) | 85.59% | 268.2 |
-| kc1 | Pypper:one-level@50 (macro distribution voting) | 85.54% | 268.2 |
-| kc1 | Pypper:one-level@50 (micro distribution voting) | 85.49% | 268.2 |
-| kc1 | Pypper:one-level@50 (voting) | 85.02% | 268.2 |
-| kc1 | Pypper:single (best rule) | 84.64% | 3.0 |
-| kc1 | Pypper:single (macro distribution voting) | 84.64% | 3.0 |
-| kc1 | Pypper:single (micro distribution voting) | 84.64% | 3.0 |
-| kc1 | Pypper:single (voting) | 84.64% | 3.0 |
-| kc1 | Pypper:two-level@10 (best rule) | 84.97% | 56.2 |
-| kc1 | Pypper:two-level@10 (macro distribution voting) | 84.97% | 56.2 |
-| kc1 | Pypper:two-level@10 (micro distribution voting) | 84.92% | 56.2 |
-| kc1 | Pypper:two-level@10 (voting) | 84.92% | 56.2 |
-| kc1 | Pypper:two-level@25 (best rule) | 84.54% | 136.0 |
-| kc1 | Pypper:two-level@25 (macro distribution voting) | 84.50% | 136.0 |
-| kc1 | Pypper:two-level@25 (micro distribution voting) | 84.45% | 136.0 |
-| kc1 | Pypper:two-level@25 (voting) | 84.45% | 136.0 |
-| kc1 | Pypper:two-level@50 (best rule) | 84.97% | 268.2 |
-| kc1 | Pypper:two-level@50 (macro distribution voting) | 84.92% | 268.2 |
-| kc1 | Pypper:two-level@50 (micro distribution voting) | 85.02% | 268.2 |
-| kc1 | Pypper:two-level@50 (voting) | 85.02% | 268.2 |
+| kc1 | Pypper:one-level@10 (best rule) | 85.11% | 74.7 |
+| kc1 | Pypper:one-level@10 (macro distribution voting) | 85.63% | 74.7 |
+| kc1 | Pypper:one-level@10 (micro distribution voting) | 85.25% | 74.7 |
+| kc1 | Pypper:one-level@10 (voting) | 85.11% | 74.7 |
+| kc1 | Pypper:one-level@25 (best rule) | 85.49% | 167.8 |
+| kc1 | Pypper:one-level@25 (macro distribution voting) | 85.40% | 167.8 |
+| kc1 | Pypper:one-level@25 (micro distribution voting) | 85.11% | 167.8 |
+| kc1 | Pypper:one-level@25 (voting) | 84.92% | 167.8 |
+| kc1 | Pypper:one-level@50 (best rule) | 85.44% | 330.8 |
+| kc1 | Pypper:one-level@50 (macro distribution voting) | 85.82% | 330.8 |
+| kc1 | Pypper:one-level@50 (micro distribution voting) | 85.49% | 330.8 |
+| kc1 | Pypper:one-level@50 (voting) | 84.87% | 330.8 |
+| kc1 | Pypper:single (best rule) | 84.49% | 4.1 |
+| kc1 | Pypper:single (macro distribution voting) | 84.49% | 4.1 |
+| kc1 | Pypper:single (micro distribution voting) | 84.45% | 4.1 |
+| kc1 | Pypper:single (voting) | 84.49% | 4.1 |
+| kc1 | Pypper:two-level@10 (best rule) | 85.40% | 74.7 |
+| kc1 | Pypper:two-level@10 (macro distribution voting) | 85.44% | 74.7 |
+| kc1 | Pypper:two-level@10 (micro distribution voting) | 85.21% | 74.7 |
+| kc1 | Pypper:two-level@10 (voting) | 85.35% | 74.7 |
+| kc1 | Pypper:two-level@25 (best rule) | 84.78% | 167.8 |
+| kc1 | Pypper:two-level@25 (macro distribution voting) | 84.78% | 167.8 |
+| kc1 | Pypper:two-level@25 (micro distribution voting) | 84.78% | 167.8 |
+| kc1 | Pypper:two-level@25 (voting) | 84.78% | 167.8 |
+| kc1 | Pypper:two-level@50 (best rule) | 85.02% | 330.8 |
+| kc1 | Pypper:two-level@50 (macro distribution voting) | 84.97% | 330.8 |
+| kc1 | Pypper:two-level@50 (micro distribution voting) | 84.87% | 330.8 |
+| kc1 | Pypper:two-level@50 (voting) | 84.87% | 330.8 |
 | kc2 | PFoil:one-level@10 (best rule) | 84.26% | 346.2 |
 | kc2 | PFoil:one-level@10 (macro distribution voting) | 84.66% | 346.2 |
 | kc2 | PFoil:one-level@10 (micro distribution voting) | 83.70% | 346.2 |
@@ -2930,34 +2930,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | kc2 | PFossil:two-level@50 (macro distribution voting) | 83.12% | 506.2 |
 | kc2 | PFossil:two-level@50 (micro distribution voting) | 83.11% | 506.2 |
 | kc2 | PFossil:two-level@50 (voting) | 83.32% | 506.2 |
-| kc2 | Pypper:one-level@10 (best rule) | 85.22% | 41.6 |
-| kc2 | Pypper:one-level@10 (macro distribution voting) | 84.07% | 41.6 |
-| kc2 | Pypper:one-level@10 (micro distribution voting) | 85.61% | 41.6 |
-| kc2 | Pypper:one-level@10 (voting) | 83.50% | 41.6 |
-| kc2 | Pypper:one-level@25 (best rule) | 84.27% | 99.6 |
-| kc2 | Pypper:one-level@25 (macro distribution voting) | 83.69% | 99.6 |
-| kc2 | Pypper:one-level@25 (micro distribution voting) | 84.27% | 99.6 |
-| kc2 | Pypper:one-level@25 (voting) | 84.46% | 99.6 |
-| kc2 | Pypper:one-level@50 (best rule) | 83.70% | 193.7 |
-| kc2 | Pypper:one-level@50 (macro distribution voting) | 84.45% | 193.7 |
-| kc2 | Pypper:one-level@50 (micro distribution voting) | 83.89% | 193.7 |
-| kc2 | Pypper:one-level@50 (voting) | 83.89% | 193.7 |
-| kc2 | Pypper:single (best rule) | 83.69% | 3.3 |
-| kc2 | Pypper:single (macro distribution voting) | 83.69% | 3.3 |
-| kc2 | Pypper:single (micro distribution voting) | 83.69% | 3.3 |
-| kc2 | Pypper:single (voting) | 83.69% | 3.3 |
-| kc2 | Pypper:two-level@10 (best rule) | 82.93% | 41.6 |
-| kc2 | Pypper:two-level@10 (macro distribution voting) | 82.93% | 41.6 |
-| kc2 | Pypper:two-level@10 (micro distribution voting) | 83.12% | 41.6 |
-| kc2 | Pypper:two-level@10 (voting) | 82.93% | 41.6 |
-| kc2 | Pypper:two-level@25 (best rule) | 83.88% | 99.6 |
-| kc2 | Pypper:two-level@25 (macro distribution voting) | 83.69% | 99.6 |
-| kc2 | Pypper:two-level@25 (micro distribution voting) | 83.70% | 99.6 |
-| kc2 | Pypper:two-level@25 (voting) | 83.69% | 99.6 |
-| kc2 | Pypper:two-level@50 (best rule) | 83.51% | 193.7 |
-| kc2 | Pypper:two-level@50 (macro distribution voting) | 83.51% | 193.7 |
-| kc2 | Pypper:two-level@50 (micro distribution voting) | 83.89% | 193.7 |
-| kc2 | Pypper:two-level@50 (voting) | 83.31% | 193.7 |
+| kc2 | Pypper:one-level@10 (best rule) | 83.49% | 57.2 |
+| kc2 | Pypper:one-level@10 (macro distribution voting) | 84.27% | 57.2 |
+| kc2 | Pypper:one-level@10 (micro distribution voting) | 84.85% | 57.2 |
+| kc2 | Pypper:one-level@10 (voting) | 84.46% | 57.2 |
+| kc2 | Pypper:one-level@25 (best rule) | 82.35% | 129.8 |
+| kc2 | Pypper:one-level@25 (macro distribution voting) | 84.07% | 129.8 |
+| kc2 | Pypper:one-level@25 (micro distribution voting) | 84.09% | 129.8 |
+| kc2 | Pypper:one-level@25 (voting) | 83.88% | 129.8 |
+| kc2 | Pypper:one-level@50 (best rule) | 82.93% | 252.5 |
+| kc2 | Pypper:one-level@50 (macro distribution voting) | 84.84% | 252.5 |
+| kc2 | Pypper:one-level@50 (micro distribution voting) | 83.71% | 252.5 |
+| kc2 | Pypper:one-level@50 (voting) | 83.88% | 252.5 |
+| kc2 | Pypper:single (best rule) | 83.69% | 3.7 |
+| kc2 | Pypper:single (macro distribution voting) | 83.69% | 3.7 |
+| kc2 | Pypper:single (micro distribution voting) | 83.69% | 3.7 |
+| kc2 | Pypper:single (voting) | 83.69% | 3.7 |
+| kc2 | Pypper:two-level@10 (best rule) | 83.88% | 57.2 |
+| kc2 | Pypper:two-level@10 (macro distribution voting) | 84.07% | 57.2 |
+| kc2 | Pypper:two-level@10 (micro distribution voting) | 83.69% | 57.2 |
+| kc2 | Pypper:two-level@10 (voting) | 83.88% | 57.2 |
+| kc2 | Pypper:two-level@25 (best rule) | 84.07% | 129.8 |
+| kc2 | Pypper:two-level@25 (macro distribution voting) | 83.50% | 129.8 |
+| kc2 | Pypper:two-level@25 (micro distribution voting) | 83.88% | 129.8 |
+| kc2 | Pypper:two-level@25 (voting) | 83.69% | 129.8 |
+| kc2 | Pypper:two-level@50 (best rule) | 83.69% | 252.5 |
+| kc2 | Pypper:two-level@50 (macro distribution voting) | 83.88% | 252.5 |
+| kc2 | Pypper:two-level@50 (micro distribution voting) | 83.31% | 252.5 |
+| kc2 | Pypper:two-level@50 (voting) | 83.88% | 252.5 |
 | kr-vs-kp | PFoil:one-level@10 (best rule) | 99.09% | 367.5 |
 | kr-vs-kp | PFoil:one-level@10 (macro distribution voting) | 99.53% | 367.5 |
 | kr-vs-kp | PFoil:one-level@10 (micro distribution voting) | 98.87% | 367.5 |
@@ -3014,34 +3014,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | kr-vs-kp | PFossil:two-level@50 (macro distribution voting) | 99.37% | 698.2 |
 | kr-vs-kp | PFossil:two-level@50 (micro distribution voting) | 94.31% | 698.2 |
 | kr-vs-kp | PFossil:two-level@50 (voting) | 96.40% | 698.2 |
-| kr-vs-kp | Pypper:one-level@10 (best rule) | 98.65% | 183.4 |
-| kr-vs-kp | Pypper:one-level@10 (macro distribution voting) | 99.19% | 183.4 |
-| kr-vs-kp | Pypper:one-level@10 (micro distribution voting) | 98.28% | 183.4 |
-| kr-vs-kp | Pypper:one-level@10 (voting) | 99.06% | 183.4 |
-| kr-vs-kp | Pypper:one-level@25 (best rule) | 98.53% | 455.5 |
-| kr-vs-kp | Pypper:one-level@25 (macro distribution voting) | 99.19% | 455.5 |
-| kr-vs-kp | Pypper:one-level@25 (micro distribution voting) | 98.40% | 455.5 |
-| kr-vs-kp | Pypper:one-level@25 (voting) | 99.19% | 455.5 |
-| kr-vs-kp | Pypper:one-level@50 (best rule) | 98.47% | 905.7 |
-| kr-vs-kp | Pypper:one-level@50 (macro distribution voting) | 99.19% | 905.7 |
-| kr-vs-kp | Pypper:one-level@50 (micro distribution voting) | 98.28% | 905.7 |
-| kr-vs-kp | Pypper:one-level@50 (voting) | 99.25% | 905.7 |
-| kr-vs-kp | Pypper:single (best rule) | 99.16% | 22.6 |
-| kr-vs-kp | Pypper:single (macro distribution voting) | 99.12% | 22.6 |
-| kr-vs-kp | Pypper:single (micro distribution voting) | 99.03% | 22.6 |
-| kr-vs-kp | Pypper:single (voting) | 98.91% | 22.6 |
-| kr-vs-kp | Pypper:two-level@10 (best rule) | 99.06% | 183.4 |
-| kr-vs-kp | Pypper:two-level@10 (macro distribution voting) | 99.06% | 183.4 |
-| kr-vs-kp | Pypper:two-level@10 (micro distribution voting) | 98.84% | 183.4 |
-| kr-vs-kp | Pypper:two-level@10 (voting) | 98.87% | 183.4 |
-| kr-vs-kp | Pypper:two-level@25 (best rule) | 99.12% | 455.5 |
-| kr-vs-kp | Pypper:two-level@25 (macro distribution voting) | 99.19% | 455.5 |
-| kr-vs-kp | Pypper:two-level@25 (micro distribution voting) | 99.03% | 455.5 |
-| kr-vs-kp | Pypper:two-level@25 (voting) | 99.09% | 455.5 |
-| kr-vs-kp | Pypper:two-level@50 (best rule) | 99.12% | 905.7 |
-| kr-vs-kp | Pypper:two-level@50 (macro distribution voting) | 99.19% | 905.7 |
-| kr-vs-kp | Pypper:two-level@50 (micro distribution voting) | 98.97% | 905.7 |
-| kr-vs-kp | Pypper:two-level@50 (voting) | 99.12% | 905.7 |
+| kr-vs-kp | Pypper:one-level@10 (best rule) | 98.75% | 223.3 |
+| kr-vs-kp | Pypper:one-level@10 (macro distribution voting) | 99.31% | 223.3 |
+| kr-vs-kp | Pypper:one-level@10 (micro distribution voting) | 98.50% | 223.3 |
+| kr-vs-kp | Pypper:one-level@10 (voting) | 99.37% | 223.3 |
+| kr-vs-kp | Pypper:one-level@25 (best rule) | 98.56% | 552.4 |
+| kr-vs-kp | Pypper:one-level@25 (macro distribution voting) | 99.44% | 552.4 |
+| kr-vs-kp | Pypper:one-level@25 (micro distribution voting) | 98.56% | 552.4 |
+| kr-vs-kp | Pypper:one-level@25 (voting) | 99.37% | 552.4 |
+| kr-vs-kp | Pypper:one-level@50 (best rule) | 98.53% | 1111.4 |
+| kr-vs-kp | Pypper:one-level@50 (macro distribution voting) | 99.37% | 1111.4 |
+| kr-vs-kp | Pypper:one-level@50 (micro distribution voting) | 98.62% | 1111.4 |
+| kr-vs-kp | Pypper:one-level@50 (voting) | 99.37% | 1111.4 |
+| kr-vs-kp | Pypper:single (best rule) | 99.25% | 23.5 |
+| kr-vs-kp | Pypper:single (macro distribution voting) | 99.22% | 23.5 |
+| kr-vs-kp | Pypper:single (micro distribution voting) | 99.16% | 23.5 |
+| kr-vs-kp | Pypper:single (voting) | 99.00% | 23.5 |
+| kr-vs-kp | Pypper:two-level@10 (best rule) | 99.37% | 223.3 |
+| kr-vs-kp | Pypper:two-level@10 (macro distribution voting) | 99.34% | 223.3 |
+| kr-vs-kp | Pypper:two-level@10 (micro distribution voting) | 99.25% | 223.3 |
+| kr-vs-kp | Pypper:two-level@10 (voting) | 99.22% | 223.3 |
+| kr-vs-kp | Pypper:two-level@25 (best rule) | 99.37% | 552.4 |
+| kr-vs-kp | Pypper:two-level@25 (macro distribution voting) | 99.44% | 552.4 |
+| kr-vs-kp | Pypper:two-level@25 (micro distribution voting) | 99.28% | 552.4 |
+| kr-vs-kp | Pypper:two-level@25 (voting) | 99.31% | 552.4 |
+| kr-vs-kp | Pypper:two-level@50 (best rule) | 99.41% | 1111.4 |
+| kr-vs-kp | Pypper:two-level@50 (macro distribution voting) | 99.34% | 1111.4 |
+| kr-vs-kp | Pypper:two-level@50 (micro distribution voting) | 99.31% | 1111.4 |
+| kr-vs-kp | Pypper:two-level@50 (voting) | 99.31% | 1111.4 |
 | led24 | PFoil:one-level@10 (best rule) | 70.97% | 3316.9 |
 | led24 | PFoil:one-level@10 (macro distribution voting) | 71.16% | 3316.9 |
 | led24 | PFoil:one-level@10 (micro distribution voting) | 71.50% | 3316.9 |
@@ -3098,34 +3098,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | led24 | PFossil:two-level@50 (macro distribution voting) | 71.44% | 3696.4 |
 | led24 | PFossil:two-level@50 (micro distribution voting) | 71.50% | 3696.4 |
 | led24 | PFossil:two-level@50 (voting) | 71.47% | 3696.4 |
-| led24 | Pypper:one-level@10 (best rule) | 69.94% | 241.4 |
-| led24 | Pypper:one-level@10 (macro distribution voting) | 72.06% | 241.4 |
-| led24 | Pypper:one-level@10 (micro distribution voting) | 72.41% | 241.4 |
-| led24 | Pypper:one-level@10 (voting) | 72.03% | 241.4 |
-| led24 | Pypper:one-level@25 (best rule) | 70.22% | 598.9 |
-| led24 | Pypper:one-level@25 (macro distribution voting) | 72.44% | 598.9 |
-| led24 | Pypper:one-level@25 (micro distribution voting) | 72.41% | 598.9 |
-| led24 | Pypper:one-level@25 (voting) | 72.22% | 598.9 |
-| led24 | Pypper:one-level@50 (best rule) | 70.00% | 1200.0 |
-| led24 | Pypper:one-level@50 (macro distribution voting) | 72.53% | 1200.0 |
-| led24 | Pypper:one-level@50 (micro distribution voting) | 72.81% | 1200.0 |
-| led24 | Pypper:one-level@50 (voting) | 72.41% | 1200.0 |
-| led24 | Pypper:single (best rule) | 68.00% | 25.4 |
-| led24 | Pypper:single (macro distribution voting) | 67.81% | 25.4 |
-| led24 | Pypper:single (micro distribution voting) | 67.88% | 25.4 |
-| led24 | Pypper:single (voting) | 67.47% | 25.4 |
-| led24 | Pypper:two-level@10 (best rule) | 71.94% | 241.4 |
-| led24 | Pypper:two-level@10 (macro distribution voting) | 72.03% | 241.4 |
-| led24 | Pypper:two-level@10 (micro distribution voting) | 72.25% | 241.4 |
-| led24 | Pypper:two-level@10 (voting) | 71.78% | 241.4 |
-| led24 | Pypper:two-level@25 (best rule) | 72.12% | 598.9 |
-| led24 | Pypper:two-level@25 (macro distribution voting) | 72.16% | 598.9 |
-| led24 | Pypper:two-level@25 (micro distribution voting) | 72.53% | 598.9 |
-| led24 | Pypper:two-level@25 (voting) | 72.19% | 598.9 |
-| led24 | Pypper:two-level@50 (best rule) | 72.44% | 1200.0 |
-| led24 | Pypper:two-level@50 (macro distribution voting) | 72.38% | 1200.0 |
-| led24 | Pypper:two-level@50 (micro distribution voting) | 72.84% | 1200.0 |
-| led24 | Pypper:two-level@50 (voting) | 72.44% | 1200.0 |
+| led24 | Pypper:one-level@10 (best rule) | 67.31% | 375.5 |
+| led24 | Pypper:one-level@10 (macro distribution voting) | 71.66% | 375.5 |
+| led24 | Pypper:one-level@10 (micro distribution voting) | 72.34% | 375.5 |
+| led24 | Pypper:one-level@10 (voting) | 71.56% | 375.5 |
+| led24 | Pypper:one-level@25 (best rule) | 66.62% | 956.0 |
+| led24 | Pypper:one-level@25 (macro distribution voting) | 72.12% | 956.0 |
+| led24 | Pypper:one-level@25 (micro distribution voting) | 72.78% | 956.0 |
+| led24 | Pypper:one-level@25 (voting) | 72.06% | 956.0 |
+| led24 | Pypper:one-level@50 (best rule) | 66.47% | 1929.7 |
+| led24 | Pypper:one-level@50 (macro distribution voting) | 72.09% | 1929.7 |
+| led24 | Pypper:one-level@50 (micro distribution voting) | 72.59% | 1929.7 |
+| led24 | Pypper:one-level@50 (voting) | 72.22% | 1929.7 |
+| led24 | Pypper:single (best rule) | 68.25% | 33.9 |
+| led24 | Pypper:single (macro distribution voting) | 68.22% | 33.9 |
+| led24 | Pypper:single (micro distribution voting) | 68.28% | 33.9 |
+| led24 | Pypper:single (voting) | 68.12% | 33.9 |
+| led24 | Pypper:two-level@10 (best rule) | 71.41% | 375.5 |
+| led24 | Pypper:two-level@10 (macro distribution voting) | 71.41% | 375.5 |
+| led24 | Pypper:two-level@10 (micro distribution voting) | 71.97% | 375.5 |
+| led24 | Pypper:two-level@10 (voting) | 71.28% | 375.5 |
+| led24 | Pypper:two-level@25 (best rule) | 71.69% | 956.0 |
+| led24 | Pypper:two-level@25 (macro distribution voting) | 71.91% | 956.0 |
+| led24 | Pypper:two-level@25 (micro distribution voting) | 72.31% | 956.0 |
+| led24 | Pypper:two-level@25 (voting) | 72.06% | 956.0 |
+| led24 | Pypper:two-level@50 (best rule) | 72.28% | 1929.7 |
+| led24 | Pypper:two-level@50 (macro distribution voting) | 72.31% | 1929.7 |
+| led24 | Pypper:two-level@50 (micro distribution voting) | 72.66% | 1929.7 |
+| led24 | Pypper:two-level@50 (voting) | 72.47% | 1929.7 |
 | letter | PFoil:one-level@10 (best rule) | 87.52% | 9440.8 |
 | letter | PFoil:one-level@10 (macro distribution voting) | 93.27% | 9440.8 |
 | letter | PFoil:one-level@10 (micro distribution voting) | 81.04% | 9440.8 |
@@ -3182,34 +3182,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | letter | PFossil:two-level@50 (macro distribution voting) | 87.41% | 7834.6 |
 | letter | PFossil:two-level@50 (micro distribution voting) | 84.54% | 7834.6 |
 | letter | PFossil:two-level@50 (voting) | 86.39% | 7834.6 |
-| letter | Pypper:one-level@10 (best rule) | 85.62% | 2092.3 |
-| letter | Pypper:one-level@10 (macro distribution voting) | 87.48% | 2092.3 |
-| letter | Pypper:one-level@10 (micro distribution voting) | 85.15% | 2092.3 |
-| letter | Pypper:one-level@10 (voting) | 87.48% | 2092.3 |
-| letter | Pypper:one-level@25 (best rule) | 85.87% | 5173.6 |
-| letter | Pypper:one-level@25 (macro distribution voting) | 88.74% | 5173.6 |
-| letter | Pypper:one-level@25 (micro distribution voting) | 85.98% | 5173.6 |
-| letter | Pypper:one-level@25 (voting) | 88.65% | 5173.6 |
-| letter | Pypper:one-level@50 (best rule) | 85.48% | 10391.8 |
-| letter | Pypper:one-level@50 (macro distribution voting) | 89.09% | 10391.8 |
-| letter | Pypper:one-level@50 (micro distribution voting) | 86.23% | 10391.8 |
-| letter | Pypper:one-level@50 (voting) | 88.90% | 10391.8 |
-| letter | Pypper:single (best rule) | 77.53% | 266.8 |
-| letter | Pypper:single (macro distribution voting) | 77.68% | 266.8 |
-| letter | Pypper:single (micro distribution voting) | 77.17% | 266.8 |
-| letter | Pypper:single (voting) | 77.28% | 266.8 |
-| letter | Pypper:two-level@10 (best rule) | 87.26% | 2092.3 |
-| letter | Pypper:two-level@10 (macro distribution voting) | 87.38% | 2092.3 |
-| letter | Pypper:two-level@10 (micro distribution voting) | 86.86% | 2092.3 |
-| letter | Pypper:two-level@10 (voting) | 87.33% | 2092.3 |
-| letter | Pypper:two-level@25 (best rule) | 88.56% | 5173.6 |
-| letter | Pypper:two-level@25 (macro distribution voting) | 88.70% | 5173.6 |
-| letter | Pypper:two-level@25 (micro distribution voting) | 88.03% | 5173.6 |
-| letter | Pypper:two-level@25 (voting) | 88.49% | 5173.6 |
-| letter | Pypper:two-level@50 (best rule) | 88.83% | 10391.8 |
-| letter | Pypper:two-level@50 (macro distribution voting) | 89.02% | 10391.8 |
-| letter | Pypper:two-level@50 (micro distribution voting) | 88.35% | 10391.8 |
-| letter | Pypper:two-level@50 (voting) | 88.88% | 10391.8 |
+| letter | Pypper:one-level@10 (best rule) | 87.00% | 3369.1 |
+| letter | Pypper:one-level@10 (macro distribution voting) | 90.44% | 3369.1 |
+| letter | Pypper:one-level@10 (micro distribution voting) | 87.29% | 3369.1 |
+| letter | Pypper:one-level@10 (voting) | 90.20% | 3369.1 |
+| letter | Pypper:one-level@25 (best rule) | 86.45% | 8496.2 |
+| letter | Pypper:one-level@25 (macro distribution voting) | 91.33% | 8496.2 |
+| letter | Pypper:one-level@25 (micro distribution voting) | 88.06% | 8496.2 |
+| letter | Pypper:one-level@25 (voting) | 91.19% | 8496.2 |
+| letter | Pypper:one-level@50 (best rule) | 85.70% | 17014.7 |
+| letter | Pypper:one-level@50 (macro distribution voting) | 91.64% | 17014.7 |
+| letter | Pypper:one-level@50 (micro distribution voting) | 88.29% | 17014.7 |
+| letter | Pypper:one-level@50 (voting) | 91.59% | 17014.7 |
+| letter | Pypper:single (best rule) | 81.02% | 378.0 |
+| letter | Pypper:single (macro distribution voting) | 81.26% | 378.0 |
+| letter | Pypper:single (micro distribution voting) | 80.67% | 378.0 |
+| letter | Pypper:single (voting) | 80.88% | 378.0 |
+| letter | Pypper:two-level@10 (best rule) | 89.89% | 3369.1 |
+| letter | Pypper:two-level@10 (macro distribution voting) | 90.14% | 3369.1 |
+| letter | Pypper:two-level@10 (micro distribution voting) | 89.28% | 3369.1 |
+| letter | Pypper:two-level@10 (voting) | 89.65% | 3369.1 |
+| letter | Pypper:two-level@25 (best rule) | 90.89% | 8496.2 |
+| letter | Pypper:two-level@25 (macro distribution voting) | 91.21% | 8496.2 |
+| letter | Pypper:two-level@25 (micro distribution voting) | 90.37% | 8496.2 |
+| letter | Pypper:two-level@25 (voting) | 90.84% | 8496.2 |
+| letter | Pypper:two-level@50 (best rule) | 91.26% | 17014.7 |
+| letter | Pypper:two-level@50 (macro distribution voting) | 91.60% | 17014.7 |
+| letter | Pypper:two-level@50 (micro distribution voting) | 90.82% | 17014.7 |
+| letter | Pypper:two-level@50 (voting) | 91.44% | 17014.7 |
 | lymph | PFoil:one-level@10 (best rule) | 78.52% | 140.2 |
 | lymph | PFoil:one-level@10 (macro distribution voting) | 82.57% | 140.2 |
 | lymph | PFoil:one-level@10 (micro distribution voting) | 80.52% | 140.2 |
@@ -3266,34 +3266,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | lymph | PFossil:two-level@50 (macro distribution voting) | 83.14% | 602.2 |
 | lymph | PFossil:two-level@50 (micro distribution voting) | 80.43% | 602.2 |
 | lymph | PFossil:two-level@50 (voting) | 81.76% | 602.2 |
-| lymph | Pypper:one-level@10 (best rule) | 81.86% | 50.6 |
-| lymph | Pypper:one-level@10 (macro distribution voting) | 81.86% | 50.6 |
-| lymph | Pypper:one-level@10 (micro distribution voting) | 80.48% | 50.6 |
-| lymph | Pypper:one-level@10 (voting) | 80.48% | 50.6 |
-| lymph | Pypper:one-level@25 (best rule) | 81.14% | 129.6 |
-| lymph | Pypper:one-level@25 (macro distribution voting) | 79.86% | 129.6 |
-| lymph | Pypper:one-level@25 (micro distribution voting) | 79.14% | 129.6 |
-| lymph | Pypper:one-level@25 (voting) | 79.86% | 129.6 |
-| lymph | Pypper:one-level@50 (best rule) | 79.14% | 261.5 |
-| lymph | Pypper:one-level@50 (macro distribution voting) | 79.86% | 261.5 |
-| lymph | Pypper:one-level@50 (micro distribution voting) | 77.76% | 261.5 |
-| lymph | Pypper:one-level@50 (voting) | 79.86% | 261.5 |
-| lymph | Pypper:single (best rule) | 80.52% | 5.6 |
-| lymph | Pypper:single (macro distribution voting) | 82.52% | 5.6 |
-| lymph | Pypper:single (micro distribution voting) | 77.81% | 5.6 |
-| lymph | Pypper:single (voting) | 78.52% | 5.6 |
-| lymph | Pypper:two-level@10 (best rule) | 79.86% | 50.6 |
-| lymph | Pypper:two-level@10 (macro distribution voting) | 80.52% | 50.6 |
-| lymph | Pypper:two-level@10 (micro distribution voting) | 79.81% | 50.6 |
-| lymph | Pypper:two-level@10 (voting) | 78.48% | 50.6 |
-| lymph | Pypper:two-level@25 (best rule) | 78.52% | 129.6 |
-| lymph | Pypper:two-level@25 (macro distribution voting) | 79.19% | 129.6 |
-| lymph | Pypper:two-level@25 (micro distribution voting) | 80.52% | 129.6 |
-| lymph | Pypper:two-level@25 (voting) | 78.43% | 129.6 |
-| lymph | Pypper:two-level@50 (best rule) | 79.14% | 261.5 |
-| lymph | Pypper:two-level@50 (macro distribution voting) | 81.19% | 261.5 |
-| lymph | Pypper:two-level@50 (micro distribution voting) | 78.48% | 261.5 |
-| lymph | Pypper:two-level@50 (voting) | 78.43% | 261.5 |
+| lymph | Pypper:one-level@10 (best rule) | 81.86% | 57.5 |
+| lymph | Pypper:one-level@10 (macro distribution voting) | 81.19% | 57.5 |
+| lymph | Pypper:one-level@10 (micro distribution voting) | 80.48% | 57.5 |
+| lymph | Pypper:one-level@10 (voting) | 80.52% | 57.5 |
+| lymph | Pypper:one-level@25 (best rule) | 81.14% | 145.1 |
+| lymph | Pypper:one-level@25 (macro distribution voting) | 80.52% | 145.1 |
+| lymph | Pypper:one-level@25 (micro distribution voting) | 79.14% | 145.1 |
+| lymph | Pypper:one-level@25 (voting) | 79.86% | 145.1 |
+| lymph | Pypper:one-level@50 (best rule) | 78.48% | 294.3 |
+| lymph | Pypper:one-level@50 (macro distribution voting) | 80.52% | 294.3 |
+| lymph | Pypper:one-level@50 (micro distribution voting) | 79.14% | 294.3 |
+| lymph | Pypper:one-level@50 (voting) | 79.86% | 294.3 |
+| lymph | Pypper:single (best rule) | 79.81% | 5.7 |
+| lymph | Pypper:single (macro distribution voting) | 81.81% | 5.7 |
+| lymph | Pypper:single (micro distribution voting) | 77.10% | 5.7 |
+| lymph | Pypper:single (voting) | 77.81% | 5.7 |
+| lymph | Pypper:two-level@10 (best rule) | 80.52% | 57.5 |
+| lymph | Pypper:two-level@10 (macro distribution voting) | 80.52% | 57.5 |
+| lymph | Pypper:two-level@10 (micro distribution voting) | 79.14% | 57.5 |
+| lymph | Pypper:two-level@10 (voting) | 77.81% | 57.5 |
+| lymph | Pypper:two-level@25 (best rule) | 79.86% | 145.1 |
+| lymph | Pypper:two-level@25 (macro distribution voting) | 81.19% | 145.1 |
+| lymph | Pypper:two-level@25 (micro distribution voting) | 80.52% | 145.1 |
+| lymph | Pypper:two-level@25 (voting) | 78.43% | 145.1 |
+| lymph | Pypper:two-level@50 (best rule) | 78.48% | 294.3 |
+| lymph | Pypper:two-level@50 (macro distribution voting) | 80.52% | 294.3 |
+| lymph | Pypper:two-level@50 (micro distribution voting) | 79.81% | 294.3 |
+| lymph | Pypper:two-level@50 (voting) | 77.76% | 294.3 |
 | mofn-3-7-10 | PFoil:one-level@10 (best rule) | 89.80% | 615.6 |
 | mofn-3-7-10 | PFoil:one-level@10 (macro distribution voting) | 100.00% | 615.6 |
 | mofn-3-7-10 | PFoil:one-level@10 (micro distribution voting) | 98.26% | 615.6 |
@@ -3350,34 +3350,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | mofn-3-7-10 | PFossil:two-level@50 (macro distribution voting) | 99.47% | 767.9 |
 | mofn-3-7-10 | PFossil:two-level@50 (micro distribution voting) | 90.48% | 767.9 |
 | mofn-3-7-10 | PFossil:two-level@50 (voting) | 93.65% | 767.9 |
-| mofn-3-7-10 | Pypper:one-level@10 (best rule) | 87.08% | 208.9 |
-| mofn-3-7-10 | Pypper:one-level@10 (macro distribution voting) | 98.34% | 208.9 |
-| mofn-3-7-10 | Pypper:one-level@10 (micro distribution voting) | 85.72% | 208.9 |
-| mofn-3-7-10 | Pypper:one-level@10 (voting) | 98.41% | 208.9 |
-| mofn-3-7-10 | Pypper:one-level@25 (best rule) | 85.72% | 525.6 |
-| mofn-3-7-10 | Pypper:one-level@25 (macro distribution voting) | 99.70% | 525.6 |
-| mofn-3-7-10 | Pypper:one-level@25 (micro distribution voting) | 84.52% | 525.6 |
-| mofn-3-7-10 | Pypper:one-level@25 (voting) | 99.85% | 525.6 |
-| mofn-3-7-10 | Pypper:one-level@50 (best rule) | 84.59% | 1057.8 |
-| mofn-3-7-10 | Pypper:one-level@50 (macro distribution voting) | 100.00% | 1057.8 |
-| mofn-3-7-10 | Pypper:one-level@50 (micro distribution voting) | 84.29% | 1057.8 |
-| mofn-3-7-10 | Pypper:one-level@50 (voting) | 100.00% | 1057.8 |
-| mofn-3-7-10 | Pypper:single (best rule) | 97.21% | 38.3 |
-| mofn-3-7-10 | Pypper:single (macro distribution voting) | 97.66% | 38.3 |
-| mofn-3-7-10 | Pypper:single (micro distribution voting) | 95.85% | 38.3 |
-| mofn-3-7-10 | Pypper:single (voting) | 96.00% | 38.3 |
-| mofn-3-7-10 | Pypper:two-level@10 (best rule) | 95.62% | 208.9 |
-| mofn-3-7-10 | Pypper:two-level@10 (macro distribution voting) | 97.05% | 208.9 |
-| mofn-3-7-10 | Pypper:two-level@10 (micro distribution voting) | 93.20% | 208.9 |
-| mofn-3-7-10 | Pypper:two-level@10 (voting) | 93.80% | 208.9 |
-| mofn-3-7-10 | Pypper:two-level@25 (best rule) | 97.43% | 525.6 |
-| mofn-3-7-10 | Pypper:two-level@25 (macro distribution voting) | 98.41% | 525.6 |
-| mofn-3-7-10 | Pypper:two-level@25 (micro distribution voting) | 95.54% | 525.6 |
-| mofn-3-7-10 | Pypper:two-level@25 (voting) | 95.69% | 525.6 |
-| mofn-3-7-10 | Pypper:two-level@50 (best rule) | 97.81% | 1057.8 |
-| mofn-3-7-10 | Pypper:two-level@50 (macro distribution voting) | 99.40% | 1057.8 |
-| mofn-3-7-10 | Pypper:two-level@50 (micro distribution voting) | 96.22% | 1057.8 |
-| mofn-3-7-10 | Pypper:two-level@50 (voting) | 96.90% | 1057.8 |
+| mofn-3-7-10 | Pypper:one-level@10 (best rule) | 86.63% | 242.4 |
+| mofn-3-7-10 | Pypper:one-level@10 (macro distribution voting) | 99.85% | 242.4 |
+| mofn-3-7-10 | Pypper:one-level@10 (micro distribution voting) | 85.57% | 242.4 |
+| mofn-3-7-10 | Pypper:one-level@10 (voting) | 100.00% | 242.4 |
+| mofn-3-7-10 | Pypper:one-level@25 (best rule) | 85.72% | 614.5 |
+| mofn-3-7-10 | Pypper:one-level@25 (macro distribution voting) | 100.00% | 614.5 |
+| mofn-3-7-10 | Pypper:one-level@25 (micro distribution voting) | 84.74% | 614.5 |
+| mofn-3-7-10 | Pypper:one-level@25 (voting) | 100.00% | 614.5 |
+| mofn-3-7-10 | Pypper:one-level@50 (best rule) | 84.59% | 1223.2 |
+| mofn-3-7-10 | Pypper:one-level@50 (macro distribution voting) | 100.00% | 1223.2 |
+| mofn-3-7-10 | Pypper:one-level@50 (micro distribution voting) | 84.52% | 1223.2 |
+| mofn-3-7-10 | Pypper:one-level@50 (voting) | 100.00% | 1223.2 |
+| mofn-3-7-10 | Pypper:single (best rule) | 97.21% | 31.6 |
+| mofn-3-7-10 | Pypper:single (macro distribution voting) | 97.43% | 31.6 |
+| mofn-3-7-10 | Pypper:single (micro distribution voting) | 93.35% | 31.6 |
+| mofn-3-7-10 | Pypper:single (voting) | 93.58% | 31.6 |
+| mofn-3-7-10 | Pypper:two-level@10 (best rule) | 96.00% | 242.4 |
+| mofn-3-7-10 | Pypper:two-level@10 (macro distribution voting) | 98.57% | 242.4 |
+| mofn-3-7-10 | Pypper:two-level@10 (micro distribution voting) | 93.88% | 242.4 |
+| mofn-3-7-10 | Pypper:two-level@10 (voting) | 94.33% | 242.4 |
+| mofn-3-7-10 | Pypper:two-level@25 (best rule) | 97.51% | 614.5 |
+| mofn-3-7-10 | Pypper:two-level@25 (macro distribution voting) | 99.85% | 614.5 |
+| mofn-3-7-10 | Pypper:two-level@25 (micro distribution voting) | 96.38% | 614.5 |
+| mofn-3-7-10 | Pypper:two-level@25 (voting) | 97.13% | 614.5 |
+| mofn-3-7-10 | Pypper:two-level@50 (best rule) | 98.79% | 1223.2 |
+| mofn-3-7-10 | Pypper:two-level@50 (macro distribution voting) | 100.00% | 1223.2 |
+| mofn-3-7-10 | Pypper:two-level@50 (micro distribution voting) | 97.58% | 1223.2 |
+| mofn-3-7-10 | Pypper:two-level@50 (voting) | 98.19% | 1223.2 |
 | molecular-biology_promoters | PFoil:one-level@10 (best rule) | 82.09% | 69.6 |
 | molecular-biology_promoters | PFoil:one-level@10 (macro distribution voting) | 90.64% | 69.6 |
 | molecular-biology_promoters | PFoil:one-level@10 (micro distribution voting) | 87.82% | 69.6 |
@@ -3434,34 +3434,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | molecular-biology_promoters | PFossil:two-level@50 (macro distribution voting) | 93.45% | 330.2 |
 | molecular-biology_promoters | PFossil:two-level@50 (micro distribution voting) | 92.55% | 330.2 |
 | molecular-biology_promoters | PFossil:two-level@50 (voting) | 92.45% | 330.2 |
-| molecular-biology_promoters | Pypper:one-level@10 (best rule) | 85.00% | 38.6 |
-| molecular-biology_promoters | Pypper:one-level@10 (macro distribution voting) | 84.64% | 38.6 |
-| molecular-biology_promoters | Pypper:one-level@10 (micro distribution voting) | 84.73% | 38.6 |
-| molecular-biology_promoters | Pypper:one-level@10 (voting) | 83.73% | 38.6 |
-| molecular-biology_promoters | Pypper:one-level@25 (best rule) | 82.00% | 95.9 |
-| molecular-biology_promoters | Pypper:one-level@25 (macro distribution voting) | 85.82% | 95.9 |
-| molecular-biology_promoters | Pypper:one-level@25 (micro distribution voting) | 85.64% | 95.9 |
-| molecular-biology_promoters | Pypper:one-level@25 (voting) | 85.73% | 95.9 |
-| molecular-biology_promoters | Pypper:one-level@50 (best rule) | 81.00% | 192.1 |
-| molecular-biology_promoters | Pypper:one-level@50 (macro distribution voting) | 88.73% | 192.1 |
-| molecular-biology_promoters | Pypper:one-level@50 (micro distribution voting) | 86.82% | 192.1 |
-| molecular-biology_promoters | Pypper:one-level@50 (voting) | 87.73% | 192.1 |
-| molecular-biology_promoters | Pypper:single (best rule) | 81.36% | 4.4 |
-| molecular-biology_promoters | Pypper:single (macro distribution voting) | 81.36% | 4.4 |
-| molecular-biology_promoters | Pypper:single (micro distribution voting) | 82.18% | 4.4 |
-| molecular-biology_promoters | Pypper:single (voting) | 81.27% | 4.4 |
-| molecular-biology_promoters | Pypper:two-level@10 (best rule) | 83.82% | 38.6 |
-| molecular-biology_promoters | Pypper:two-level@10 (macro distribution voting) | 83.82% | 38.6 |
-| molecular-biology_promoters | Pypper:two-level@10 (micro distribution voting) | 82.91% | 38.6 |
-| molecular-biology_promoters | Pypper:two-level@10 (voting) | 83.82% | 38.6 |
-| molecular-biology_promoters | Pypper:two-level@25 (best rule) | 87.64% | 95.9 |
-| molecular-biology_promoters | Pypper:two-level@25 (macro distribution voting) | 87.64% | 95.9 |
-| molecular-biology_promoters | Pypper:two-level@25 (micro distribution voting) | 86.73% | 95.9 |
-| molecular-biology_promoters | Pypper:two-level@25 (voting) | 87.64% | 95.9 |
-| molecular-biology_promoters | Pypper:two-level@50 (best rule) | 86.82% | 192.1 |
-| molecular-biology_promoters | Pypper:two-level@50 (macro distribution voting) | 88.64% | 192.1 |
-| molecular-biology_promoters | Pypper:two-level@50 (micro distribution voting) | 86.82% | 192.1 |
-| molecular-biology_promoters | Pypper:two-level@50 (voting) | 88.64% | 192.1 |
+| molecular-biology_promoters | Pypper:one-level@10 (best rule) | 86.00% | 40.0 |
+| molecular-biology_promoters | Pypper:one-level@10 (macro distribution voting) | 84.73% | 40.0 |
+| molecular-biology_promoters | Pypper:one-level@10 (micro distribution voting) | 84.73% | 40.0 |
+| molecular-biology_promoters | Pypper:one-level@10 (voting) | 84.73% | 40.0 |
+| molecular-biology_promoters | Pypper:one-level@25 (best rule) | 81.09% | 100.7 |
+| molecular-biology_promoters | Pypper:one-level@25 (macro distribution voting) | 85.82% | 100.7 |
+| molecular-biology_promoters | Pypper:one-level@25 (micro distribution voting) | 87.64% | 100.7 |
+| molecular-biology_promoters | Pypper:one-level@25 (voting) | 86.73% | 100.7 |
+| molecular-biology_promoters | Pypper:one-level@50 (best rule) | 81.00% | 200.3 |
+| molecular-biology_promoters | Pypper:one-level@50 (macro distribution voting) | 88.73% | 200.3 |
+| molecular-biology_promoters | Pypper:one-level@50 (micro distribution voting) | 87.82% | 200.3 |
+| molecular-biology_promoters | Pypper:one-level@50 (voting) | 87.73% | 200.3 |
+| molecular-biology_promoters | Pypper:single (best rule) | 81.36% | 4.3 |
+| molecular-biology_promoters | Pypper:single (macro distribution voting) | 81.36% | 4.3 |
+| molecular-biology_promoters | Pypper:single (micro distribution voting) | 81.18% | 4.3 |
+| molecular-biology_promoters | Pypper:single (voting) | 80.27% | 4.3 |
+| molecular-biology_promoters | Pypper:two-level@10 (best rule) | 82.91% | 40.0 |
+| molecular-biology_promoters | Pypper:two-level@10 (macro distribution voting) | 82.91% | 40.0 |
+| molecular-biology_promoters | Pypper:two-level@10 (micro distribution voting) | 83.91% | 40.0 |
+| molecular-biology_promoters | Pypper:two-level@10 (voting) | 83.91% | 40.0 |
+| molecular-biology_promoters | Pypper:two-level@25 (best rule) | 86.64% | 100.7 |
+| molecular-biology_promoters | Pypper:two-level@25 (macro distribution voting) | 86.64% | 100.7 |
+| molecular-biology_promoters | Pypper:two-level@25 (micro distribution voting) | 86.73% | 100.7 |
+| molecular-biology_promoters | Pypper:two-level@25 (voting) | 87.64% | 100.7 |
+| molecular-biology_promoters | Pypper:two-level@50 (best rule) | 86.82% | 200.3 |
+| molecular-biology_promoters | Pypper:two-level@50 (macro distribution voting) | 87.73% | 200.3 |
+| molecular-biology_promoters | Pypper:two-level@50 (micro distribution voting) | 86.82% | 200.3 |
+| molecular-biology_promoters | Pypper:two-level@50 (voting) | 88.64% | 200.3 |
 | monks-problems-1 | PFoil:one-level@10 (best rule) | 100.00% | 127.4 |
 | monks-problems-1 | PFoil:one-level@10 (macro distribution voting) | 100.00% | 127.4 |
 | monks-problems-1 | PFoil:one-level@10 (micro distribution voting) | 100.00% | 127.4 |
@@ -3518,34 +3518,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | monks-problems-1 | PFossil:two-level@50 (macro distribution voting) | 75.91% | 179.2 |
 | monks-problems-1 | PFossil:two-level@50 (micro distribution voting) | 74.64% | 179.2 |
 | monks-problems-1 | PFossil:two-level@50 (voting) | 74.64% | 179.2 |
-| monks-problems-1 | Pypper:one-level@10 (best rule) | 100.00% | 63.4 |
-| monks-problems-1 | Pypper:one-level@10 (macro distribution voting) | 100.00% | 63.4 |
-| monks-problems-1 | Pypper:one-level@10 (micro distribution voting) | 91.17% | 63.4 |
-| monks-problems-1 | Pypper:one-level@10 (voting) | 100.00% | 63.4 |
-| monks-problems-1 | Pypper:one-level@25 (best rule) | 100.00% | 156.3 |
-| monks-problems-1 | Pypper:one-level@25 (macro distribution voting) | 100.00% | 156.3 |
-| monks-problems-1 | Pypper:one-level@25 (micro distribution voting) | 93.53% | 156.3 |
-| monks-problems-1 | Pypper:one-level@25 (voting) | 100.00% | 156.3 |
-| monks-problems-1 | Pypper:one-level@50 (best rule) | 100.00% | 317.1 |
-| monks-problems-1 | Pypper:one-level@50 (macro distribution voting) | 100.00% | 317.1 |
-| monks-problems-1 | Pypper:one-level@50 (micro distribution voting) | 93.34% | 317.1 |
-| monks-problems-1 | Pypper:one-level@50 (voting) | 100.00% | 317.1 |
-| monks-problems-1 | Pypper:single (best rule) | 94.76% | 7.0 |
-| monks-problems-1 | Pypper:single (macro distribution voting) | 94.76% | 7.0 |
-| monks-problems-1 | Pypper:single (micro distribution voting) | 92.06% | 7.0 |
-| monks-problems-1 | Pypper:single (voting) | 92.06% | 7.0 |
-| monks-problems-1 | Pypper:two-level@10 (best rule) | 100.00% | 63.4 |
-| monks-problems-1 | Pypper:two-level@10 (macro distribution voting) | 100.00% | 63.4 |
-| monks-problems-1 | Pypper:two-level@10 (micro distribution voting) | 95.86% | 63.4 |
-| monks-problems-1 | Pypper:two-level@10 (voting) | 100.00% | 63.4 |
-| monks-problems-1 | Pypper:two-level@25 (best rule) | 100.00% | 156.3 |
-| monks-problems-1 | Pypper:two-level@25 (macro distribution voting) | 100.00% | 156.3 |
-| monks-problems-1 | Pypper:two-level@25 (micro distribution voting) | 97.86% | 156.3 |
-| monks-problems-1 | Pypper:two-level@25 (voting) | 100.00% | 156.3 |
-| monks-problems-1 | Pypper:two-level@50 (best rule) | 100.00% | 317.1 |
-| monks-problems-1 | Pypper:two-level@50 (macro distribution voting) | 100.00% | 317.1 |
-| monks-problems-1 | Pypper:two-level@50 (micro distribution voting) | 100.00% | 317.1 |
-| monks-problems-1 | Pypper:two-level@50 (voting) | 100.00% | 317.1 |
+| monks-problems-1 | Pypper:one-level@10 (best rule) | 100.00% | 66.9 |
+| monks-problems-1 | Pypper:one-level@10 (macro distribution voting) | 100.00% | 66.9 |
+| monks-problems-1 | Pypper:one-level@10 (micro distribution voting) | 94.26% | 66.9 |
+| monks-problems-1 | Pypper:one-level@10 (voting) | 100.00% | 66.9 |
+| monks-problems-1 | Pypper:one-level@25 (best rule) | 100.00% | 170.0 |
+| monks-problems-1 | Pypper:one-level@25 (macro distribution voting) | 100.00% | 170.0 |
+| monks-problems-1 | Pypper:one-level@25 (micro distribution voting) | 94.99% | 170.0 |
+| monks-problems-1 | Pypper:one-level@25 (voting) | 100.00% | 170.0 |
+| monks-problems-1 | Pypper:one-level@50 (best rule) | 100.00% | 345.9 |
+| monks-problems-1 | Pypper:one-level@50 (macro distribution voting) | 100.00% | 345.9 |
+| monks-problems-1 | Pypper:one-level@50 (micro distribution voting) | 99.27% | 345.9 |
+| monks-problems-1 | Pypper:one-level@50 (voting) | 100.00% | 345.9 |
+| monks-problems-1 | Pypper:single (best rule) | 96.76% | 7.3 |
+| monks-problems-1 | Pypper:single (macro distribution voting) | 96.76% | 7.3 |
+| monks-problems-1 | Pypper:single (micro distribution voting) | 92.06% | 7.3 |
+| monks-problems-1 | Pypper:single (voting) | 94.06% | 7.3 |
+| monks-problems-1 | Pypper:two-level@10 (best rule) | 100.00% | 66.9 |
+| monks-problems-1 | Pypper:two-level@10 (macro distribution voting) | 100.00% | 66.9 |
+| monks-problems-1 | Pypper:two-level@10 (micro distribution voting) | 98.55% | 66.9 |
+| monks-problems-1 | Pypper:two-level@10 (voting) | 100.00% | 66.9 |
+| monks-problems-1 | Pypper:two-level@25 (best rule) | 100.00% | 170.0 |
+| monks-problems-1 | Pypper:two-level@25 (macro distribution voting) | 100.00% | 170.0 |
+| monks-problems-1 | Pypper:two-level@25 (micro distribution voting) | 100.00% | 170.0 |
+| monks-problems-1 | Pypper:two-level@25 (voting) | 100.00% | 170.0 |
+| monks-problems-1 | Pypper:two-level@50 (best rule) | 100.00% | 345.9 |
+| monks-problems-1 | Pypper:two-level@50 (macro distribution voting) | 100.00% | 345.9 |
+| monks-problems-1 | Pypper:two-level@50 (micro distribution voting) | 100.00% | 345.9 |
+| monks-problems-1 | Pypper:two-level@50 (voting) | 100.00% | 345.9 |
 | monks-problems-2 | PFoil:one-level@10 (best rule) | 81.86% | 616.5 |
 | monks-problems-2 | PFoil:one-level@10 (macro distribution voting) | 90.51% | 616.5 |
 | monks-problems-2 | PFoil:one-level@10 (micro distribution voting) | 80.86% | 616.5 |
@@ -3602,34 +3602,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | monks-problems-2 | PFossil:two-level@50 (macro distribution voting) | 69.54% | 9.4 |
 | monks-problems-2 | PFossil:two-level@50 (micro distribution voting) | 69.54% | 9.4 |
 | monks-problems-2 | PFossil:two-level@50 (voting) | 69.54% | 9.4 |
-| monks-problems-2 | Pypper:one-level@10 (best rule) | 75.71% | 74.1 |
-| monks-problems-2 | Pypper:one-level@10 (macro distribution voting) | 71.88% | 74.1 |
-| monks-problems-2 | Pypper:one-level@10 (micro distribution voting) | 67.72% | 74.1 |
-| monks-problems-2 | Pypper:one-level@10 (voting) | 68.22% | 74.1 |
-| monks-problems-2 | Pypper:one-level@25 (best rule) | 77.04% | 184.6 |
-| monks-problems-2 | Pypper:one-level@25 (macro distribution voting) | 70.22% | 184.6 |
-| monks-problems-2 | Pypper:one-level@25 (micro distribution voting) | 66.06% | 184.6 |
-| monks-problems-2 | Pypper:one-level@25 (voting) | 68.55% | 184.6 |
-| monks-problems-2 | Pypper:one-level@50 (best rule) | 80.20% | 360.3 |
-| monks-problems-2 | Pypper:one-level@50 (macro distribution voting) | 69.55% | 360.3 |
-| monks-problems-2 | Pypper:one-level@50 (micro distribution voting) | 66.06% | 360.3 |
-| monks-problems-2 | Pypper:one-level@50 (voting) | 68.22% | 360.3 |
-| monks-problems-2 | Pypper:single (best rule) | 72.03% | 13.0 |
-| monks-problems-2 | Pypper:single (macro distribution voting) | 72.03% | 13.0 |
-| monks-problems-2 | Pypper:single (micro distribution voting) | 71.87% | 13.0 |
-| monks-problems-2 | Pypper:single (voting) | 71.87% | 13.0 |
-| monks-problems-2 | Pypper:two-level@10 (best rule) | 69.89% | 74.1 |
-| monks-problems-2 | Pypper:two-level@10 (macro distribution voting) | 69.72% | 74.1 |
-| monks-problems-2 | Pypper:two-level@10 (micro distribution voting) | 68.23% | 74.1 |
-| monks-problems-2 | Pypper:two-level@10 (voting) | 68.23% | 74.1 |
-| monks-problems-2 | Pypper:two-level@25 (best rule) | 70.72% | 184.6 |
-| monks-problems-2 | Pypper:two-level@25 (macro distribution voting) | 70.05% | 184.6 |
-| monks-problems-2 | Pypper:two-level@25 (micro distribution voting) | 69.39% | 184.6 |
-| monks-problems-2 | Pypper:two-level@25 (voting) | 69.22% | 184.6 |
-| monks-problems-2 | Pypper:two-level@50 (best rule) | 71.21% | 360.3 |
-| monks-problems-2 | Pypper:two-level@50 (macro distribution voting) | 70.72% | 360.3 |
-| monks-problems-2 | Pypper:two-level@50 (micro distribution voting) | 69.89% | 360.3 |
-| monks-problems-2 | Pypper:two-level@50 (voting) | 69.89% | 360.3 |
+| monks-problems-2 | Pypper:one-level@10 (best rule) | 77.21% | 87.8 |
+| monks-problems-2 | Pypper:one-level@10 (macro distribution voting) | 71.72% | 87.8 |
+| monks-problems-2 | Pypper:one-level@10 (micro distribution voting) | 67.39% | 87.8 |
+| monks-problems-2 | Pypper:one-level@10 (voting) | 69.06% | 87.8 |
+| monks-problems-2 | Pypper:one-level@25 (best rule) | 77.54% | 225.9 |
+| monks-problems-2 | Pypper:one-level@25 (macro distribution voting) | 70.05% | 225.9 |
+| monks-problems-2 | Pypper:one-level@25 (micro distribution voting) | 65.72% | 225.9 |
+| monks-problems-2 | Pypper:one-level@25 (voting) | 68.72% | 225.9 |
+| monks-problems-2 | Pypper:one-level@50 (best rule) | 82.03% | 447.1 |
+| monks-problems-2 | Pypper:one-level@50 (macro distribution voting) | 69.88% | 447.1 |
+| monks-problems-2 | Pypper:one-level@50 (micro distribution voting) | 65.72% | 447.1 |
+| monks-problems-2 | Pypper:one-level@50 (voting) | 69.22% | 447.1 |
+| monks-problems-2 | Pypper:single (best rule) | 74.03% | 14.5 |
+| monks-problems-2 | Pypper:single (macro distribution voting) | 74.03% | 14.5 |
+| monks-problems-2 | Pypper:single (micro distribution voting) | 74.36% | 14.5 |
+| monks-problems-2 | Pypper:single (voting) | 74.20% | 14.5 |
+| monks-problems-2 | Pypper:two-level@10 (best rule) | 70.89% | 87.8 |
+| monks-problems-2 | Pypper:two-level@10 (macro distribution voting) | 70.89% | 87.8 |
+| monks-problems-2 | Pypper:two-level@10 (micro distribution voting) | 69.89% | 87.8 |
+| monks-problems-2 | Pypper:two-level@10 (voting) | 69.89% | 87.8 |
+| monks-problems-2 | Pypper:two-level@25 (best rule) | 70.89% | 225.9 |
+| monks-problems-2 | Pypper:two-level@25 (macro distribution voting) | 70.72% | 225.9 |
+| monks-problems-2 | Pypper:two-level@25 (micro distribution voting) | 70.39% | 225.9 |
+| monks-problems-2 | Pypper:two-level@25 (voting) | 70.22% | 225.9 |
+| monks-problems-2 | Pypper:two-level@50 (best rule) | 72.38% | 447.1 |
+| monks-problems-2 | Pypper:two-level@50 (macro distribution voting) | 72.04% | 447.1 |
+| monks-problems-2 | Pypper:two-level@50 (micro distribution voting) | 71.38% | 447.1 |
+| monks-problems-2 | Pypper:two-level@50 (voting) | 71.22% | 447.1 |
 | monks-problems-3 | PFoil:one-level@10 (best rule) | 98.92% | 162.4 |
 | monks-problems-3 | PFoil:one-level@10 (macro distribution voting) | 98.92% | 162.4 |
 | monks-problems-3 | PFoil:one-level@10 (micro distribution voting) | 98.92% | 162.4 |
@@ -3686,34 +3686,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | monks-problems-3 | PFossil:two-level@50 (macro distribution voting) | 98.92% | 321.7 |
 | monks-problems-3 | PFossil:two-level@50 (micro distribution voting) | 96.40% | 321.7 |
 | monks-problems-3 | PFossil:two-level@50 (voting) | 98.92% | 321.7 |
-| monks-problems-3 | Pypper:one-level@10 (best rule) | 98.92% | 49.5 |
-| monks-problems-3 | Pypper:one-level@10 (macro distribution voting) | 98.92% | 49.5 |
-| monks-problems-3 | Pypper:one-level@10 (micro distribution voting) | 98.56% | 49.5 |
-| monks-problems-3 | Pypper:one-level@10 (voting) | 98.92% | 49.5 |
-| monks-problems-3 | Pypper:one-level@25 (best rule) | 98.92% | 122.6 |
-| monks-problems-3 | Pypper:one-level@25 (macro distribution voting) | 98.92% | 122.6 |
-| monks-problems-3 | Pypper:one-level@25 (micro distribution voting) | 98.20% | 122.6 |
-| monks-problems-3 | Pypper:one-level@25 (voting) | 98.92% | 122.6 |
-| monks-problems-3 | Pypper:one-level@50 (best rule) | 98.92% | 246.9 |
-| monks-problems-3 | Pypper:one-level@50 (macro distribution voting) | 98.92% | 246.9 |
-| monks-problems-3 | Pypper:one-level@50 (micro distribution voting) | 98.92% | 246.9 |
-| monks-problems-3 | Pypper:one-level@50 (voting) | 98.92% | 246.9 |
+| monks-problems-3 | Pypper:one-level@10 (best rule) | 98.92% | 51.5 |
+| monks-problems-3 | Pypper:one-level@10 (macro distribution voting) | 98.92% | 51.5 |
+| monks-problems-3 | Pypper:one-level@10 (micro distribution voting) | 98.56% | 51.5 |
+| monks-problems-3 | Pypper:one-level@10 (voting) | 98.92% | 51.5 |
+| monks-problems-3 | Pypper:one-level@25 (best rule) | 98.92% | 126.9 |
+| monks-problems-3 | Pypper:one-level@25 (macro distribution voting) | 98.92% | 126.9 |
+| monks-problems-3 | Pypper:one-level@25 (micro distribution voting) | 98.20% | 126.9 |
+| monks-problems-3 | Pypper:one-level@25 (voting) | 98.92% | 126.9 |
+| monks-problems-3 | Pypper:one-level@50 (best rule) | 98.92% | 255.8 |
+| monks-problems-3 | Pypper:one-level@50 (macro distribution voting) | 98.92% | 255.8 |
+| monks-problems-3 | Pypper:one-level@50 (micro distribution voting) | 98.92% | 255.8 |
+| monks-problems-3 | Pypper:one-level@50 (voting) | 98.92% | 255.8 |
 | monks-problems-3 | Pypper:single (best rule) | 98.92% | 5.0 |
 | monks-problems-3 | Pypper:single (macro distribution voting) | 98.92% | 5.0 |
 | monks-problems-3 | Pypper:single (micro distribution voting) | 98.92% | 5.0 |
 | monks-problems-3 | Pypper:single (voting) | 98.92% | 5.0 |
-| monks-problems-3 | Pypper:two-level@10 (best rule) | 98.92% | 49.5 |
-| monks-problems-3 | Pypper:two-level@10 (macro distribution voting) | 98.92% | 49.5 |
-| monks-problems-3 | Pypper:two-level@10 (micro distribution voting) | 98.92% | 49.5 |
-| monks-problems-3 | Pypper:two-level@10 (voting) | 98.92% | 49.5 |
-| monks-problems-3 | Pypper:two-level@25 (best rule) | 98.92% | 122.6 |
-| monks-problems-3 | Pypper:two-level@25 (macro distribution voting) | 98.92% | 122.6 |
-| monks-problems-3 | Pypper:two-level@25 (micro distribution voting) | 98.92% | 122.6 |
-| monks-problems-3 | Pypper:two-level@25 (voting) | 98.92% | 122.6 |
-| monks-problems-3 | Pypper:two-level@50 (best rule) | 98.92% | 246.9 |
-| monks-problems-3 | Pypper:two-level@50 (macro distribution voting) | 98.92% | 246.9 |
-| monks-problems-3 | Pypper:two-level@50 (micro distribution voting) | 98.92% | 246.9 |
-| monks-problems-3 | Pypper:two-level@50 (voting) | 98.92% | 246.9 |
+| monks-problems-3 | Pypper:two-level@10 (best rule) | 98.92% | 51.5 |
+| monks-problems-3 | Pypper:two-level@10 (macro distribution voting) | 98.92% | 51.5 |
+| monks-problems-3 | Pypper:two-level@10 (micro distribution voting) | 98.92% | 51.5 |
+| monks-problems-3 | Pypper:two-level@10 (voting) | 98.92% | 51.5 |
+| monks-problems-3 | Pypper:two-level@25 (best rule) | 98.92% | 126.9 |
+| monks-problems-3 | Pypper:two-level@25 (macro distribution voting) | 98.92% | 126.9 |
+| monks-problems-3 | Pypper:two-level@25 (micro distribution voting) | 98.92% | 126.9 |
+| monks-problems-3 | Pypper:two-level@25 (voting) | 98.92% | 126.9 |
+| monks-problems-3 | Pypper:two-level@50 (best rule) | 98.92% | 255.8 |
+| monks-problems-3 | Pypper:two-level@50 (macro distribution voting) | 98.92% | 255.8 |
+| monks-problems-3 | Pypper:two-level@50 (micro distribution voting) | 98.92% | 255.8 |
+| monks-problems-3 | Pypper:two-level@50 (voting) | 98.92% | 255.8 |
 | mushroom | PFoil:one-level@10 (best rule) | 99.96% | 121.6 |
 | mushroom | PFoil:one-level@10 (macro distribution voting) | 100.00% | 121.6 |
 | mushroom | PFoil:one-level@10 (micro distribution voting) | 99.96% | 121.6 |
@@ -3770,34 +3770,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | mushroom | PFossil:two-level@50 (macro distribution voting) | 100.00% | 582.8 |
 | mushroom | PFossil:two-level@50 (micro distribution voting) | 99.95% | 582.8 |
 | mushroom | PFossil:two-level@50 (voting) | 99.95% | 582.8 |
-| mushroom | Pypper:one-level@10 (best rule) | 99.91% | 107.3 |
-| mushroom | Pypper:one-level@10 (macro distribution voting) | 99.99% | 107.3 |
-| mushroom | Pypper:one-level@10 (micro distribution voting) | 99.91% | 107.3 |
-| mushroom | Pypper:one-level@10 (voting) | 99.95% | 107.3 |
-| mushroom | Pypper:one-level@25 (best rule) | 99.85% | 268.0 |
-| mushroom | Pypper:one-level@25 (macro distribution voting) | 99.98% | 268.0 |
-| mushroom | Pypper:one-level@25 (micro distribution voting) | 99.83% | 268.0 |
-| mushroom | Pypper:one-level@25 (voting) | 99.98% | 268.0 |
-| mushroom | Pypper:one-level@50 (best rule) | 99.86% | 534.9 |
-| mushroom | Pypper:one-level@50 (macro distribution voting) | 99.96% | 534.9 |
-| mushroom | Pypper:one-level@50 (micro distribution voting) | 99.83% | 534.9 |
-| mushroom | Pypper:one-level@50 (voting) | 99.96% | 534.9 |
+| mushroom | Pypper:one-level@10 (best rule) | 99.91% | 107.6 |
+| mushroom | Pypper:one-level@10 (macro distribution voting) | 99.99% | 107.6 |
+| mushroom | Pypper:one-level@10 (micro distribution voting) | 99.91% | 107.6 |
+| mushroom | Pypper:one-level@10 (voting) | 99.98% | 107.6 |
+| mushroom | Pypper:one-level@25 (best rule) | 99.85% | 269.8 |
+| mushroom | Pypper:one-level@25 (macro distribution voting) | 99.98% | 269.8 |
+| mushroom | Pypper:one-level@25 (micro distribution voting) | 99.83% | 269.8 |
+| mushroom | Pypper:one-level@25 (voting) | 99.98% | 269.8 |
+| mushroom | Pypper:one-level@50 (best rule) | 99.86% | 538.9 |
+| mushroom | Pypper:one-level@50 (macro distribution voting) | 99.96% | 538.9 |
+| mushroom | Pypper:one-level@50 (micro distribution voting) | 99.83% | 538.9 |
+| mushroom | Pypper:one-level@50 (voting) | 99.96% | 538.9 |
 | mushroom | Pypper:single (best rule) | 99.94% | 9.7 |
 | mushroom | Pypper:single (macro distribution voting) | 99.94% | 9.7 |
 | mushroom | Pypper:single (micro distribution voting) | 99.94% | 9.7 |
 | mushroom | Pypper:single (voting) | 99.94% | 9.7 |
-| mushroom | Pypper:two-level@10 (best rule) | 100.00% | 107.3 |
-| mushroom | Pypper:two-level@10 (macro distribution voting) | 100.00% | 107.3 |
-| mushroom | Pypper:two-level@10 (micro distribution voting) | 100.00% | 107.3 |
-| mushroom | Pypper:two-level@10 (voting) | 100.00% | 107.3 |
-| mushroom | Pypper:two-level@25 (best rule) | 99.98% | 268.0 |
-| mushroom | Pypper:two-level@25 (macro distribution voting) | 99.98% | 268.0 |
-| mushroom | Pypper:two-level@25 (micro distribution voting) | 99.98% | 268.0 |
-| mushroom | Pypper:two-level@25 (voting) | 99.98% | 268.0 |
-| mushroom | Pypper:two-level@50 (best rule) | 99.96% | 534.9 |
-| mushroom | Pypper:two-level@50 (macro distribution voting) | 99.96% | 534.9 |
-| mushroom | Pypper:two-level@50 (micro distribution voting) | 99.96% | 534.9 |
-| mushroom | Pypper:two-level@50 (voting) | 99.96% | 534.9 |
+| mushroom | Pypper:two-level@10 (best rule) | 100.00% | 107.6 |
+| mushroom | Pypper:two-level@10 (macro distribution voting) | 100.00% | 107.6 |
+| mushroom | Pypper:two-level@10 (micro distribution voting) | 100.00% | 107.6 |
+| mushroom | Pypper:two-level@10 (voting) | 100.00% | 107.6 |
+| mushroom | Pypper:two-level@25 (best rule) | 99.98% | 269.8 |
+| mushroom | Pypper:two-level@25 (macro distribution voting) | 99.98% | 269.8 |
+| mushroom | Pypper:two-level@25 (micro distribution voting) | 99.98% | 269.8 |
+| mushroom | Pypper:two-level@25 (voting) | 99.98% | 269.8 |
+| mushroom | Pypper:two-level@50 (best rule) | 99.98% | 538.9 |
+| mushroom | Pypper:two-level@50 (macro distribution voting) | 99.98% | 538.9 |
+| mushroom | Pypper:two-level@50 (micro distribution voting) | 99.98% | 538.9 |
+| mushroom | Pypper:two-level@50 (voting) | 99.98% | 538.9 |
 | optdigits | PFoil:one-level@10 (best rule) | 93.04% | 1171.8 |
 | optdigits | PFoil:one-level@10 (macro distribution voting) | 97.58% | 1171.8 |
 | optdigits | PFoil:one-level@10 (micro distribution voting) | 96.69% | 1171.8 |
@@ -3854,34 +3854,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | optdigits | PFossil:two-level@50 (macro distribution voting) | 97.10% | 3682.1 |
 | optdigits | PFossil:two-level@50 (micro distribution voting) | 96.33% | 3682.1 |
 | optdigits | PFossil:two-level@50 (voting) | 96.71% | 3682.1 |
-| optdigits | Pypper:one-level@10 (best rule) | 93.17% | 494.4 |
-| optdigits | Pypper:one-level@10 (macro distribution voting) | 96.62% | 494.4 |
-| optdigits | Pypper:one-level@10 (micro distribution voting) | 95.78% | 494.4 |
-| optdigits | Pypper:one-level@10 (voting) | 96.55% | 494.4 |
-| optdigits | Pypper:one-level@25 (best rule) | 92.44% | 1247.0 |
-| optdigits | Pypper:one-level@25 (macro distribution voting) | 96.87% | 1247.0 |
-| optdigits | Pypper:one-level@25 (micro distribution voting) | 96.09% | 1247.0 |
-| optdigits | Pypper:one-level@25 (voting) | 96.87% | 1247.0 |
-| optdigits | Pypper:one-level@50 (best rule) | 91.41% | 2502.6 |
-| optdigits | Pypper:one-level@50 (macro distribution voting) | 96.92% | 2502.6 |
-| optdigits | Pypper:one-level@50 (micro distribution voting) | 96.05% | 2502.6 |
-| optdigits | Pypper:one-level@50 (voting) | 96.89% | 2502.6 |
-| optdigits | Pypper:single (best rule) | 90.18% | 62.1 |
-| optdigits | Pypper:single (macro distribution voting) | 90.37% | 62.1 |
-| optdigits | Pypper:single (micro distribution voting) | 90.27% | 62.1 |
-| optdigits | Pypper:single (voting) | 90.14% | 62.1 |
-| optdigits | Pypper:two-level@10 (best rule) | 96.17% | 494.4 |
-| optdigits | Pypper:two-level@10 (macro distribution voting) | 96.42% | 494.4 |
-| optdigits | Pypper:two-level@10 (micro distribution voting) | 95.82% | 494.4 |
-| optdigits | Pypper:two-level@10 (voting) | 96.35% | 494.4 |
-| optdigits | Pypper:two-level@25 (best rule) | 96.76% | 1247.0 |
-| optdigits | Pypper:two-level@25 (macro distribution voting) | 96.87% | 1247.0 |
-| optdigits | Pypper:two-level@25 (micro distribution voting) | 96.41% | 1247.0 |
-| optdigits | Pypper:two-level@25 (voting) | 96.78% | 1247.0 |
-| optdigits | Pypper:two-level@50 (best rule) | 96.69% | 2502.6 |
-| optdigits | Pypper:two-level@50 (macro distribution voting) | 96.85% | 2502.6 |
-| optdigits | Pypper:two-level@50 (micro distribution voting) | 96.51% | 2502.6 |
-| optdigits | Pypper:two-level@50 (voting) | 96.83% | 2502.6 |
+| optdigits | Pypper:one-level@10 (best rule) | 93.11% | 709.2 |
+| optdigits | Pypper:one-level@10 (macro distribution voting) | 96.87% | 709.2 |
+| optdigits | Pypper:one-level@10 (micro distribution voting) | 96.00% | 709.2 |
+| optdigits | Pypper:one-level@10 (voting) | 96.83% | 709.2 |
+| optdigits | Pypper:one-level@25 (best rule) | 92.08% | 1795.3 |
+| optdigits | Pypper:one-level@25 (macro distribution voting) | 97.22% | 1795.3 |
+| optdigits | Pypper:one-level@25 (micro distribution voting) | 96.39% | 1795.3 |
+| optdigits | Pypper:one-level@25 (voting) | 97.17% | 1795.3 |
+| optdigits | Pypper:one-level@50 (best rule) | 90.93% | 3582.1 |
+| optdigits | Pypper:one-level@50 (macro distribution voting) | 97.33% | 3582.1 |
+| optdigits | Pypper:one-level@50 (micro distribution voting) | 96.37% | 3582.1 |
+| optdigits | Pypper:one-level@50 (voting) | 97.31% | 3582.1 |
+| optdigits | Pypper:single (best rule) | 91.39% | 81.2 |
+| optdigits | Pypper:single (macro distribution voting) | 91.80% | 81.2 |
+| optdigits | Pypper:single (micro distribution voting) | 91.51% | 81.2 |
+| optdigits | Pypper:single (voting) | 91.53% | 81.2 |
+| optdigits | Pypper:two-level@10 (best rule) | 96.42% | 709.2 |
+| optdigits | Pypper:two-level@10 (macro distribution voting) | 96.76% | 709.2 |
+| optdigits | Pypper:two-level@10 (micro distribution voting) | 96.23% | 709.2 |
+| optdigits | Pypper:two-level@10 (voting) | 96.55% | 709.2 |
+| optdigits | Pypper:two-level@25 (best rule) | 97.10% | 1795.3 |
+| optdigits | Pypper:two-level@25 (macro distribution voting) | 97.17% | 1795.3 |
+| optdigits | Pypper:two-level@25 (micro distribution voting) | 96.74% | 1795.3 |
+| optdigits | Pypper:two-level@25 (voting) | 97.01% | 1795.3 |
+| optdigits | Pypper:two-level@50 (best rule) | 97.17% | 3582.1 |
+| optdigits | Pypper:two-level@50 (macro distribution voting) | 97.30% | 3582.1 |
+| optdigits | Pypper:two-level@50 (micro distribution voting) | 96.85% | 3582.1 |
+| optdigits | Pypper:two-level@50 (voting) | 97.17% | 3582.1 |
 | ozone-level-8hr | PFoil:one-level@10 (best rule) | 93.69% | 433.9 |
 | ozone-level-8hr | PFoil:one-level@10 (macro distribution voting) | 94.12% | 433.9 |
 | ozone-level-8hr | PFoil:one-level@10 (micro distribution voting) | 93.69% | 433.9 |
@@ -3938,34 +3938,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | ozone-level-8hr | PFossil:two-level@50 (macro distribution voting) | 93.84% | 536.2 |
 | ozone-level-8hr | PFossil:two-level@50 (micro distribution voting) | 93.73% | 536.2 |
 | ozone-level-8hr | PFossil:two-level@50 (voting) | 93.73% | 536.2 |
-| ozone-level-8hr | Pypper:one-level@10 (best rule) | 93.76% | 73.7 |
-| ozone-level-8hr | Pypper:one-level@10 (macro distribution voting) | 94.12% | 73.7 |
-| ozone-level-8hr | Pypper:one-level@10 (micro distribution voting) | 93.73% | 73.7 |
-| ozone-level-8hr | Pypper:one-level@10 (voting) | 94.20% | 73.7 |
-| ozone-level-8hr | Pypper:one-level@25 (best rule) | 93.73% | 186.1 |
-| ozone-level-8hr | Pypper:one-level@25 (macro distribution voting) | 93.92% | 186.1 |
-| ozone-level-8hr | Pypper:one-level@25 (micro distribution voting) | 93.65% | 186.1 |
-| ozone-level-8hr | Pypper:one-level@25 (voting) | 94.24% | 186.1 |
-| ozone-level-8hr | Pypper:one-level@50 (best rule) | 93.73% | 363.5 |
-| ozone-level-8hr | Pypper:one-level@50 (macro distribution voting) | 94.04% | 363.5 |
-| ozone-level-8hr | Pypper:one-level@50 (micro distribution voting) | 93.69% | 363.5 |
-| ozone-level-8hr | Pypper:one-level@50 (voting) | 94.20% | 363.5 |
-| ozone-level-8hr | Pypper:single (best rule) | 93.33% | 6.1 |
-| ozone-level-8hr | Pypper:single (macro distribution voting) | 93.33% | 6.1 |
-| ozone-level-8hr | Pypper:single (micro distribution voting) | 93.33% | 6.1 |
-| ozone-level-8hr | Pypper:single (voting) | 93.37% | 6.1 |
-| ozone-level-8hr | Pypper:two-level@10 (best rule) | 94.16% | 73.7 |
-| ozone-level-8hr | Pypper:two-level@10 (macro distribution voting) | 94.12% | 73.7 |
-| ozone-level-8hr | Pypper:two-level@10 (micro distribution voting) | 94.16% | 73.7 |
-| ozone-level-8hr | Pypper:two-level@10 (voting) | 94.16% | 73.7 |
-| ozone-level-8hr | Pypper:two-level@25 (best rule) | 94.16% | 186.1 |
-| ozone-level-8hr | Pypper:two-level@25 (macro distribution voting) | 94.12% | 186.1 |
-| ozone-level-8hr | Pypper:two-level@25 (micro distribution voting) | 94.12% | 186.1 |
-| ozone-level-8hr | Pypper:two-level@25 (voting) | 94.08% | 186.1 |
-| ozone-level-8hr | Pypper:two-level@50 (best rule) | 94.08% | 363.5 |
-| ozone-level-8hr | Pypper:two-level@50 (macro distribution voting) | 94.08% | 363.5 |
-| ozone-level-8hr | Pypper:two-level@50 (micro distribution voting) | 94.08% | 363.5 |
-| ozone-level-8hr | Pypper:two-level@50 (voting) | 94.08% | 363.5 |
+| ozone-level-8hr | Pypper:one-level@10 (best rule) | 93.73% | 103.0 |
+| ozone-level-8hr | Pypper:one-level@10 (macro distribution voting) | 94.32% | 103.0 |
+| ozone-level-8hr | Pypper:one-level@10 (micro distribution voting) | 93.76% | 103.0 |
+| ozone-level-8hr | Pypper:one-level@10 (voting) | 94.08% | 103.0 |
+| ozone-level-8hr | Pypper:one-level@25 (best rule) | 93.73% | 254.0 |
+| ozone-level-8hr | Pypper:one-level@25 (macro distribution voting) | 94.00% | 254.0 |
+| ozone-level-8hr | Pypper:one-level@25 (micro distribution voting) | 93.69% | 254.0 |
+| ozone-level-8hr | Pypper:one-level@25 (voting) | 94.24% | 254.0 |
+| ozone-level-8hr | Pypper:one-level@50 (best rule) | 93.73% | 490.0 |
+| ozone-level-8hr | Pypper:one-level@50 (macro distribution voting) | 94.12% | 490.0 |
+| ozone-level-8hr | Pypper:one-level@50 (micro distribution voting) | 93.73% | 490.0 |
+| ozone-level-8hr | Pypper:one-level@50 (voting) | 94.16% | 490.0 |
+| ozone-level-8hr | Pypper:single (best rule) | 93.37% | 7.3 |
+| ozone-level-8hr | Pypper:single (macro distribution voting) | 93.37% | 7.3 |
+| ozone-level-8hr | Pypper:single (micro distribution voting) | 93.37% | 7.3 |
+| ozone-level-8hr | Pypper:single (voting) | 93.37% | 7.3 |
+| ozone-level-8hr | Pypper:two-level@10 (best rule) | 94.24% | 103.0 |
+| ozone-level-8hr | Pypper:two-level@10 (macro distribution voting) | 94.32% | 103.0 |
+| ozone-level-8hr | Pypper:two-level@10 (micro distribution voting) | 94.24% | 103.0 |
+| ozone-level-8hr | Pypper:two-level@10 (voting) | 94.24% | 103.0 |
+| ozone-level-8hr | Pypper:two-level@25 (best rule) | 94.12% | 254.0 |
+| ozone-level-8hr | Pypper:two-level@25 (macro distribution voting) | 94.12% | 254.0 |
+| ozone-level-8hr | Pypper:two-level@25 (micro distribution voting) | 94.12% | 254.0 |
+| ozone-level-8hr | Pypper:two-level@25 (voting) | 94.20% | 254.0 |
+| ozone-level-8hr | Pypper:two-level@50 (best rule) | 94.16% | 490.0 |
+| ozone-level-8hr | Pypper:two-level@50 (macro distribution voting) | 94.24% | 490.0 |
+| ozone-level-8hr | Pypper:two-level@50 (micro distribution voting) | 94.16% | 490.0 |
+| ozone-level-8hr | Pypper:two-level@50 (voting) | 94.20% | 490.0 |
 | pc1 | PFoil:one-level@10 (best rule) | 93.15% | 417.6 |
 | pc1 | PFoil:one-level@10 (macro distribution voting) | 92.61% | 417.6 |
 | pc1 | PFoil:one-level@10 (micro distribution voting) | 93.06% | 417.6 |
@@ -4022,34 +4022,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | pc1 | PFossil:two-level@50 (macro distribution voting) | 92.70% | 363.4 |
 | pc1 | PFossil:two-level@50 (micro distribution voting) | 92.97% | 363.4 |
 | pc1 | PFossil:two-level@50 (voting) | 92.88% | 363.4 |
-| pc1 | Pypper:one-level@10 (best rule) | 93.24% | 40.5 |
-| pc1 | Pypper:one-level@10 (macro distribution voting) | 93.06% | 40.5 |
-| pc1 | Pypper:one-level@10 (micro distribution voting) | 92.97% | 40.5 |
-| pc1 | Pypper:one-level@10 (voting) | 93.24% | 40.5 |
-| pc1 | Pypper:one-level@25 (best rule) | 93.15% | 100.3 |
-| pc1 | Pypper:one-level@25 (macro distribution voting) | 93.24% | 100.3 |
-| pc1 | Pypper:one-level@25 (micro distribution voting) | 93.15% | 100.3 |
-| pc1 | Pypper:one-level@25 (voting) | 93.69% | 100.3 |
-| pc1 | Pypper:one-level@50 (best rule) | 93.06% | 199.2 |
-| pc1 | Pypper:one-level@50 (macro distribution voting) | 93.24% | 199.2 |
-| pc1 | Pypper:one-level@50 (micro distribution voting) | 93.06% | 199.2 |
-| pc1 | Pypper:one-level@50 (voting) | 93.51% | 199.2 |
-| pc1 | Pypper:single (best rule) | 92.61% | 4.1 |
-| pc1 | Pypper:single (macro distribution voting) | 92.61% | 4.1 |
-| pc1 | Pypper:single (micro distribution voting) | 92.61% | 4.1 |
-| pc1 | Pypper:single (voting) | 92.61% | 4.1 |
-| pc1 | Pypper:two-level@10 (best rule) | 93.42% | 40.5 |
-| pc1 | Pypper:two-level@10 (macro distribution voting) | 93.42% | 40.5 |
-| pc1 | Pypper:two-level@10 (micro distribution voting) | 93.42% | 40.5 |
-| pc1 | Pypper:two-level@10 (voting) | 93.42% | 40.5 |
-| pc1 | Pypper:two-level@25 (best rule) | 93.42% | 100.3 |
-| pc1 | Pypper:two-level@25 (macro distribution voting) | 93.42% | 100.3 |
-| pc1 | Pypper:two-level@25 (micro distribution voting) | 93.42% | 100.3 |
-| pc1 | Pypper:two-level@25 (voting) | 93.51% | 100.3 |
-| pc1 | Pypper:two-level@50 (best rule) | 93.33% | 199.2 |
-| pc1 | Pypper:two-level@50 (macro distribution voting) | 93.33% | 199.2 |
-| pc1 | Pypper:two-level@50 (micro distribution voting) | 93.33% | 199.2 |
-| pc1 | Pypper:two-level@50 (voting) | 93.42% | 199.2 |
+| pc1 | Pypper:one-level@10 (best rule) | 93.06% | 49.4 |
+| pc1 | Pypper:one-level@10 (macro distribution voting) | 92.88% | 49.4 |
+| pc1 | Pypper:one-level@10 (micro distribution voting) | 93.06% | 49.4 |
+| pc1 | Pypper:one-level@10 (voting) | 93.06% | 49.4 |
+| pc1 | Pypper:one-level@25 (best rule) | 93.06% | 130.1 |
+| pc1 | Pypper:one-level@25 (macro distribution voting) | 93.24% | 130.1 |
+| pc1 | Pypper:one-level@25 (micro distribution voting) | 93.15% | 130.1 |
+| pc1 | Pypper:one-level@25 (voting) | 93.51% | 130.1 |
+| pc1 | Pypper:one-level@50 (best rule) | 93.06% | 265.7 |
+| pc1 | Pypper:one-level@50 (macro distribution voting) | 93.33% | 265.7 |
+| pc1 | Pypper:one-level@50 (micro distribution voting) | 93.06% | 265.7 |
+| pc1 | Pypper:one-level@50 (voting) | 93.42% | 265.7 |
+| pc1 | Pypper:single (best rule) | 93.15% | 4.3 |
+| pc1 | Pypper:single (macro distribution voting) | 93.15% | 4.3 |
+| pc1 | Pypper:single (micro distribution voting) | 93.15% | 4.3 |
+| pc1 | Pypper:single (voting) | 93.15% | 4.3 |
+| pc1 | Pypper:two-level@10 (best rule) | 93.24% | 49.4 |
+| pc1 | Pypper:two-level@10 (macro distribution voting) | 93.24% | 49.4 |
+| pc1 | Pypper:two-level@10 (micro distribution voting) | 93.24% | 49.4 |
+| pc1 | Pypper:two-level@10 (voting) | 93.24% | 49.4 |
+| pc1 | Pypper:two-level@25 (best rule) | 93.60% | 130.1 |
+| pc1 | Pypper:two-level@25 (macro distribution voting) | 93.51% | 130.1 |
+| pc1 | Pypper:two-level@25 (micro distribution voting) | 93.51% | 130.1 |
+| pc1 | Pypper:two-level@25 (voting) | 93.42% | 130.1 |
+| pc1 | Pypper:two-level@50 (best rule) | 93.42% | 265.7 |
+| pc1 | Pypper:two-level@50 (macro distribution voting) | 93.33% | 265.7 |
+| pc1 | Pypper:two-level@50 (micro distribution voting) | 93.42% | 265.7 |
+| pc1 | Pypper:two-level@50 (voting) | 93.24% | 265.7 |
 | pc3 | PFoil:one-level@10 (best rule) | 89.76% | 592.6 |
 | pc3 | PFoil:one-level@10 (macro distribution voting) | 89.76% | 592.6 |
 | pc3 | PFoil:one-level@10 (micro distribution voting) | 89.76% | 592.6 |
@@ -4106,34 +4106,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | pc3 | PFossil:two-level@50 (macro distribution voting) | 88.16% | 347.7 |
 | pc3 | PFossil:two-level@50 (micro distribution voting) | 88.10% | 347.7 |
 | pc3 | PFossil:two-level@50 (voting) | 87.97% | 347.7 |
-| pc3 | Pypper:one-level@10 (best rule) | 89.83% | 46.2 |
-| pc3 | Pypper:one-level@10 (macro distribution voting) | 89.70% | 46.2 |
-| pc3 | Pypper:one-level@10 (micro distribution voting) | 89.89% | 46.2 |
-| pc3 | Pypper:one-level@10 (voting) | 89.00% | 46.2 |
-| pc3 | Pypper:one-level@25 (best rule) | 89.70% | 110.2 |
-| pc3 | Pypper:one-level@25 (macro distribution voting) | 89.76% | 110.2 |
-| pc3 | Pypper:one-level@25 (micro distribution voting) | 89.83% | 110.2 |
-| pc3 | Pypper:one-level@25 (voting) | 88.74% | 110.2 |
-| pc3 | Pypper:one-level@50 (best rule) | 89.83% | 230.9 |
-| pc3 | Pypper:one-level@50 (macro distribution voting) | 89.70% | 230.9 |
-| pc3 | Pypper:one-level@50 (micro distribution voting) | 89.70% | 230.9 |
-| pc3 | Pypper:one-level@50 (voting) | 89.19% | 230.9 |
-| pc3 | Pypper:single (best rule) | 88.93% | 4.1 |
-| pc3 | Pypper:single (macro distribution voting) | 88.93% | 4.1 |
-| pc3 | Pypper:single (micro distribution voting) | 88.93% | 4.1 |
-| pc3 | Pypper:single (voting) | 88.93% | 4.1 |
-| pc3 | Pypper:two-level@10 (best rule) | 89.51% | 46.2 |
-| pc3 | Pypper:two-level@10 (macro distribution voting) | 89.44% | 46.2 |
-| pc3 | Pypper:two-level@10 (micro distribution voting) | 89.51% | 46.2 |
-| pc3 | Pypper:two-level@10 (voting) | 89.44% | 46.2 |
-| pc3 | Pypper:two-level@25 (best rule) | 89.19% | 110.2 |
-| pc3 | Pypper:two-level@25 (macro distribution voting) | 89.12% | 110.2 |
-| pc3 | Pypper:two-level@25 (micro distribution voting) | 89.19% | 110.2 |
-| pc3 | Pypper:two-level@25 (voting) | 88.99% | 110.2 |
-| pc3 | Pypper:two-level@50 (best rule) | 89.25% | 230.9 |
-| pc3 | Pypper:two-level@50 (macro distribution voting) | 89.19% | 230.9 |
-| pc3 | Pypper:two-level@50 (micro distribution voting) | 89.25% | 230.9 |
-| pc3 | Pypper:two-level@50 (voting) | 89.12% | 230.9 |
+| pc3 | Pypper:one-level@10 (best rule) | 90.15% | 57.2 |
+| pc3 | Pypper:one-level@10 (macro distribution voting) | 89.70% | 57.2 |
+| pc3 | Pypper:one-level@10 (micro distribution voting) | 90.02% | 57.2 |
+| pc3 | Pypper:one-level@10 (voting) | 88.74% | 57.2 |
+| pc3 | Pypper:one-level@25 (best rule) | 89.89% | 141.0 |
+| pc3 | Pypper:one-level@25 (macro distribution voting) | 89.83% | 141.0 |
+| pc3 | Pypper:one-level@25 (micro distribution voting) | 89.89% | 141.0 |
+| pc3 | Pypper:one-level@25 (voting) | 88.48% | 141.0 |
+| pc3 | Pypper:one-level@50 (best rule) | 89.76% | 298.8 |
+| pc3 | Pypper:one-level@50 (macro distribution voting) | 89.70% | 298.8 |
+| pc3 | Pypper:one-level@50 (micro distribution voting) | 89.83% | 298.8 |
+| pc3 | Pypper:one-level@50 (voting) | 89.19% | 298.8 |
+| pc3 | Pypper:single (best rule) | 88.61% | 3.9 |
+| pc3 | Pypper:single (macro distribution voting) | 88.61% | 3.9 |
+| pc3 | Pypper:single (micro distribution voting) | 88.61% | 3.9 |
+| pc3 | Pypper:single (voting) | 88.61% | 3.9 |
+| pc3 | Pypper:two-level@10 (best rule) | 88.93% | 57.2 |
+| pc3 | Pypper:two-level@10 (macro distribution voting) | 88.87% | 57.2 |
+| pc3 | Pypper:two-level@10 (micro distribution voting) | 88.99% | 57.2 |
+| pc3 | Pypper:two-level@10 (voting) | 88.80% | 57.2 |
+| pc3 | Pypper:two-level@25 (best rule) | 89.12% | 141.0 |
+| pc3 | Pypper:two-level@25 (macro distribution voting) | 88.99% | 141.0 |
+| pc3 | Pypper:two-level@25 (micro distribution voting) | 89.12% | 141.0 |
+| pc3 | Pypper:two-level@25 (voting) | 88.99% | 141.0 |
+| pc3 | Pypper:two-level@50 (best rule) | 89.12% | 298.8 |
+| pc3 | Pypper:two-level@50 (macro distribution voting) | 89.12% | 298.8 |
+| pc3 | Pypper:two-level@50 (micro distribution voting) | 89.12% | 298.8 |
+| pc3 | Pypper:two-level@50 (voting) | 89.06% | 298.8 |
 | pc4 | PFoil:one-level@10 (best rule) | 89.37% | 437.3 |
 | pc4 | PFoil:one-level@10 (macro distribution voting) | 90.40% | 437.3 |
 | pc4 | PFoil:one-level@10 (micro distribution voting) | 88.34% | 437.3 |
@@ -4190,34 +4190,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | pc4 | PFossil:two-level@50 (macro distribution voting) | 90.12% | 726.2 |
 | pc4 | PFossil:two-level@50 (micro distribution voting) | 89.64% | 726.2 |
 | pc4 | PFossil:two-level@50 (voting) | 89.92% | 726.2 |
-| pc4 | Pypper:one-level@10 (best rule) | 88.62% | 67.9 |
-| pc4 | Pypper:one-level@10 (macro distribution voting) | 88.61% | 67.9 |
-| pc4 | Pypper:one-level@10 (micro distribution voting) | 88.41% | 67.9 |
-| pc4 | Pypper:one-level@10 (voting) | 88.55% | 67.9 |
-| pc4 | Pypper:one-level@25 (best rule) | 89.16% | 171.1 |
-| pc4 | Pypper:one-level@25 (macro distribution voting) | 88.82% | 171.1 |
-| pc4 | Pypper:one-level@25 (micro distribution voting) | 89.64% | 171.1 |
-| pc4 | Pypper:one-level@25 (voting) | 89.16% | 171.1 |
-| pc4 | Pypper:one-level@50 (best rule) | 89.09% | 346.8 |
-| pc4 | Pypper:one-level@50 (macro distribution voting) | 89.03% | 346.8 |
-| pc4 | Pypper:one-level@50 (micro distribution voting) | 89.71% | 346.8 |
-| pc4 | Pypper:one-level@50 (voting) | 89.16% | 346.8 |
-| pc4 | Pypper:single (best rule) | 87.79% | 7.6 |
-| pc4 | Pypper:single (macro distribution voting) | 87.79% | 7.6 |
-| pc4 | Pypper:single (micro distribution voting) | 87.79% | 7.6 |
-| pc4 | Pypper:single (voting) | 87.79% | 7.6 |
-| pc4 | Pypper:two-level@10 (best rule) | 88.20% | 67.9 |
-| pc4 | Pypper:two-level@10 (macro distribution voting) | 88.27% | 67.9 |
-| pc4 | Pypper:two-level@10 (micro distribution voting) | 88.27% | 67.9 |
-| pc4 | Pypper:two-level@10 (voting) | 88.34% | 67.9 |
-| pc4 | Pypper:two-level@25 (best rule) | 89.23% | 171.1 |
-| pc4 | Pypper:two-level@25 (macro distribution voting) | 89.44% | 171.1 |
-| pc4 | Pypper:two-level@25 (micro distribution voting) | 89.23% | 171.1 |
-| pc4 | Pypper:two-level@25 (voting) | 89.37% | 171.1 |
-| pc4 | Pypper:two-level@50 (best rule) | 89.71% | 346.8 |
-| pc4 | Pypper:two-level@50 (macro distribution voting) | 89.78% | 346.8 |
-| pc4 | Pypper:two-level@50 (micro distribution voting) | 89.78% | 346.8 |
-| pc4 | Pypper:two-level@50 (voting) | 89.85% | 346.8 |
+| pc4 | Pypper:one-level@10 (best rule) | 88.55% | 84.7 |
+| pc4 | Pypper:one-level@10 (macro distribution voting) | 88.68% | 84.7 |
+| pc4 | Pypper:one-level@10 (micro distribution voting) | 88.48% | 84.7 |
+| pc4 | Pypper:one-level@10 (voting) | 88.61% | 84.7 |
+| pc4 | Pypper:one-level@25 (best rule) | 89.16% | 207.0 |
+| pc4 | Pypper:one-level@25 (macro distribution voting) | 89.44% | 207.0 |
+| pc4 | Pypper:one-level@25 (micro distribution voting) | 89.23% | 207.0 |
+| pc4 | Pypper:one-level@25 (voting) | 89.44% | 207.0 |
+| pc4 | Pypper:one-level@50 (best rule) | 88.82% | 408.8 |
+| pc4 | Pypper:one-level@50 (macro distribution voting) | 88.96% | 408.8 |
+| pc4 | Pypper:one-level@50 (micro distribution voting) | 89.23% | 408.8 |
+| pc4 | Pypper:one-level@50 (voting) | 89.30% | 408.8 |
+| pc4 | Pypper:single (best rule) | 88.55% | 8.2 |
+| pc4 | Pypper:single (macro distribution voting) | 88.55% | 8.2 |
+| pc4 | Pypper:single (micro distribution voting) | 88.55% | 8.2 |
+| pc4 | Pypper:single (voting) | 88.55% | 8.2 |
+| pc4 | Pypper:two-level@10 (best rule) | 88.07% | 84.7 |
+| pc4 | Pypper:two-level@10 (macro distribution voting) | 88.07% | 84.7 |
+| pc4 | Pypper:two-level@10 (micro distribution voting) | 88.13% | 84.7 |
+| pc4 | Pypper:two-level@10 (voting) | 88.27% | 84.7 |
+| pc4 | Pypper:two-level@25 (best rule) | 89.30% | 207.0 |
+| pc4 | Pypper:two-level@25 (macro distribution voting) | 89.37% | 207.0 |
+| pc4 | Pypper:two-level@25 (micro distribution voting) | 89.23% | 207.0 |
+| pc4 | Pypper:two-level@25 (voting) | 89.30% | 207.0 |
+| pc4 | Pypper:two-level@50 (best rule) | 89.85% | 408.8 |
+| pc4 | Pypper:two-level@50 (macro distribution voting) | 89.85% | 408.8 |
+| pc4 | Pypper:two-level@50 (micro distribution voting) | 89.78% | 408.8 |
+| pc4 | Pypper:two-level@50 (voting) | 89.71% | 408.8 |
 | phoneme | PFoil:one-level@10 (best rule) | 84.94% | 3538.4 |
 | phoneme | PFoil:one-level@10 (macro distribution voting) | 85.90% | 3538.4 |
 | phoneme | PFoil:one-level@10 (micro distribution voting) | 82.42% | 3538.4 |
@@ -4274,34 +4274,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | phoneme | PFossil:two-level@50 (macro distribution voting) | 77.46% | 254.1 |
 | phoneme | PFossil:two-level@50 (micro distribution voting) | 77.46% | 254.1 |
 | phoneme | PFossil:two-level@50 (voting) | 77.53% | 254.1 |
-| phoneme | Pypper:one-level@10 (best rule) | 84.47% | 246.3 |
-| phoneme | Pypper:one-level@10 (macro distribution voting) | 84.35% | 246.3 |
-| phoneme | Pypper:one-level@10 (micro distribution voting) | 83.22% | 246.3 |
-| phoneme | Pypper:one-level@10 (voting) | 84.05% | 246.3 |
-| phoneme | Pypper:one-level@25 (best rule) | 83.73% | 599.2 |
-| phoneme | Pypper:one-level@25 (macro distribution voting) | 84.66% | 599.2 |
-| phoneme | Pypper:one-level@25 (micro distribution voting) | 83.53% | 599.2 |
-| phoneme | Pypper:one-level@25 (voting) | 84.23% | 599.2 |
-| phoneme | Pypper:one-level@50 (best rule) | 83.40% | 1199.6 |
-| phoneme | Pypper:one-level@50 (macro distribution voting) | 84.75% | 1199.6 |
-| phoneme | Pypper:one-level@50 (micro distribution voting) | 83.40% | 1199.6 |
-| phoneme | Pypper:one-level@50 (voting) | 84.27% | 1199.6 |
-| phoneme | Pypper:single (best rule) | 83.53% | 26.9 |
-| phoneme | Pypper:single (macro distribution voting) | 83.40% | 26.9 |
-| phoneme | Pypper:single (micro distribution voting) | 83.24% | 26.9 |
-| phoneme | Pypper:single (voting) | 83.40% | 26.9 |
-| phoneme | Pypper:two-level@10 (best rule) | 84.36% | 246.3 |
-| phoneme | Pypper:two-level@10 (macro distribution voting) | 84.36% | 246.3 |
-| phoneme | Pypper:two-level@10 (micro distribution voting) | 84.16% | 246.3 |
-| phoneme | Pypper:two-level@10 (voting) | 84.27% | 246.3 |
-| phoneme | Pypper:two-level@25 (best rule) | 84.73% | 599.2 |
-| phoneme | Pypper:two-level@25 (macro distribution voting) | 84.55% | 599.2 |
-| phoneme | Pypper:two-level@25 (micro distribution voting) | 84.51% | 599.2 |
-| phoneme | Pypper:two-level@25 (voting) | 84.53% | 599.2 |
-| phoneme | Pypper:two-level@50 (best rule) | 84.73% | 1199.6 |
-| phoneme | Pypper:two-level@50 (macro distribution voting) | 84.70% | 1199.6 |
-| phoneme | Pypper:two-level@50 (micro distribution voting) | 84.49% | 1199.6 |
-| phoneme | Pypper:two-level@50 (voting) | 84.59% | 1199.6 |
+| phoneme | Pypper:one-level@10 (best rule) | 84.31% | 266.6 |
+| phoneme | Pypper:one-level@10 (macro distribution voting) | 84.88% | 266.6 |
+| phoneme | Pypper:one-level@10 (micro distribution voting) | 83.60% | 266.6 |
+| phoneme | Pypper:one-level@10 (voting) | 84.68% | 266.6 |
+| phoneme | Pypper:one-level@25 (best rule) | 83.72% | 654.5 |
+| phoneme | Pypper:one-level@25 (macro distribution voting) | 84.60% | 654.5 |
+| phoneme | Pypper:one-level@25 (micro distribution voting) | 83.35% | 654.5 |
+| phoneme | Pypper:one-level@25 (voting) | 84.40% | 654.5 |
+| phoneme | Pypper:one-level@50 (best rule) | 83.51% | 1309.5 |
+| phoneme | Pypper:one-level@50 (macro distribution voting) | 84.86% | 1309.5 |
+| phoneme | Pypper:one-level@50 (micro distribution voting) | 83.64% | 1309.5 |
+| phoneme | Pypper:one-level@50 (voting) | 84.38% | 1309.5 |
+| phoneme | Pypper:single (best rule) | 83.44% | 31.0 |
+| phoneme | Pypper:single (macro distribution voting) | 83.46% | 31.0 |
+| phoneme | Pypper:single (micro distribution voting) | 83.40% | 31.0 |
+| phoneme | Pypper:single (voting) | 83.49% | 31.0 |
+| phoneme | Pypper:two-level@10 (best rule) | 84.83% | 266.6 |
+| phoneme | Pypper:two-level@10 (macro distribution voting) | 84.72% | 266.6 |
+| phoneme | Pypper:two-level@10 (micro distribution voting) | 84.66% | 266.6 |
+| phoneme | Pypper:two-level@10 (voting) | 84.73% | 266.6 |
+| phoneme | Pypper:two-level@25 (best rule) | 84.68% | 654.5 |
+| phoneme | Pypper:two-level@25 (macro distribution voting) | 84.59% | 654.5 |
+| phoneme | Pypper:two-level@25 (micro distribution voting) | 84.49% | 654.5 |
+| phoneme | Pypper:two-level@25 (voting) | 84.59% | 654.5 |
+| phoneme | Pypper:two-level@50 (best rule) | 84.88% | 1309.5 |
+| phoneme | Pypper:two-level@50 (macro distribution voting) | 84.84% | 1309.5 |
+| phoneme | Pypper:two-level@50 (micro distribution voting) | 84.57% | 1309.5 |
+| phoneme | Pypper:two-level@50 (voting) | 84.79% | 1309.5 |
 | primary-tumor | PFoil:one-level@10 (best rule) | 43.07% | 864.2 |
 | primary-tumor | PFoil:one-level@10 (macro distribution voting) | 45.73% | 864.2 |
 | primary-tumor | PFoil:one-level@10 (micro distribution voting) | 44.27% | 864.2 |
@@ -4358,34 +4358,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | primary-tumor | PFossil:two-level@50 (macro distribution voting) | 44.55% | 3367.6 |
 | primary-tumor | PFossil:two-level@50 (micro distribution voting) | 43.95% | 3367.6 |
 | primary-tumor | PFossil:two-level@50 (voting) | 44.53% | 3367.6 |
-| primary-tumor | Pypper:one-level@10 (best rule) | 44.56% | 66.7 |
-| primary-tumor | Pypper:one-level@10 (macro distribution voting) | 44.86% | 66.7 |
-| primary-tumor | Pypper:one-level@10 (micro distribution voting) | 43.67% | 66.7 |
-| primary-tumor | Pypper:one-level@10 (voting) | 44.27% | 66.7 |
-| primary-tumor | Pypper:one-level@25 (best rule) | 45.73% | 170.9 |
-| primary-tumor | Pypper:one-level@25 (macro distribution voting) | 45.44% | 170.9 |
-| primary-tumor | Pypper:one-level@25 (micro distribution voting) | 43.95% | 170.9 |
-| primary-tumor | Pypper:one-level@25 (voting) | 44.55% | 170.9 |
-| primary-tumor | Pypper:one-level@50 (best rule) | 43.07% | 343.0 |
-| primary-tumor | Pypper:one-level@50 (macro distribution voting) | 46.32% | 343.0 |
-| primary-tumor | Pypper:one-level@50 (micro distribution voting) | 44.82% | 343.0 |
-| primary-tumor | Pypper:one-level@50 (voting) | 45.13% | 343.0 |
-| primary-tumor | Pypper:single (best rule) | 38.65% | 7.3 |
-| primary-tumor | Pypper:single (macro distribution voting) | 38.07% | 7.3 |
-| primary-tumor | Pypper:single (micro distribution voting) | 38.95% | 7.3 |
-| primary-tumor | Pypper:single (voting) | 37.77% | 7.3 |
-| primary-tumor | Pypper:two-level@10 (best rule) | 43.67% | 66.7 |
-| primary-tumor | Pypper:two-level@10 (macro distribution voting) | 43.38% | 66.7 |
-| primary-tumor | Pypper:two-level@10 (micro distribution voting) | 43.38% | 66.7 |
-| primary-tumor | Pypper:two-level@10 (voting) | 43.38% | 66.7 |
-| primary-tumor | Pypper:two-level@25 (best rule) | 44.25% | 170.9 |
-| primary-tumor | Pypper:two-level@25 (macro distribution voting) | 44.25% | 170.9 |
-| primary-tumor | Pypper:two-level@25 (micro distribution voting) | 44.54% | 170.9 |
-| primary-tumor | Pypper:two-level@25 (voting) | 44.24% | 170.9 |
-| primary-tumor | Pypper:two-level@50 (best rule) | 45.13% | 343.0 |
-| primary-tumor | Pypper:two-level@50 (macro distribution voting) | 45.13% | 343.0 |
-| primary-tumor | Pypper:two-level@50 (micro distribution voting) | 45.12% | 343.0 |
-| primary-tumor | Pypper:two-level@50 (voting) | 44.83% | 343.0 |
+| primary-tumor | Pypper:one-level@10 (best rule) | 43.66% | 149.5 |
+| primary-tumor | Pypper:one-level@10 (macro distribution voting) | 44.25% | 149.5 |
+| primary-tumor | Pypper:one-level@10 (micro distribution voting) | 43.36% | 149.5 |
+| primary-tumor | Pypper:one-level@10 (voting) | 45.14% | 149.5 |
+| primary-tumor | Pypper:one-level@25 (best rule) | 44.54% | 369.8 |
+| primary-tumor | Pypper:one-level@25 (macro distribution voting) | 45.12% | 369.8 |
+| primary-tumor | Pypper:one-level@25 (micro distribution voting) | 44.24% | 369.8 |
+| primary-tumor | Pypper:one-level@25 (voting) | 45.42% | 369.8 |
+| primary-tumor | Pypper:one-level@50 (best rule) | 42.77% | 749.0 |
+| primary-tumor | Pypper:one-level@50 (macro distribution voting) | 45.42% | 749.0 |
+| primary-tumor | Pypper:one-level@50 (micro distribution voting) | 46.31% | 749.0 |
+| primary-tumor | Pypper:one-level@50 (voting) | 46.60% | 749.0 |
+| primary-tumor | Pypper:single (best rule) | 37.47% | 9.1 |
+| primary-tumor | Pypper:single (macro distribution voting) | 36.88% | 9.1 |
+| primary-tumor | Pypper:single (micro distribution voting) | 38.07% | 9.1 |
+| primary-tumor | Pypper:single (voting) | 36.59% | 9.1 |
+| primary-tumor | Pypper:two-level@10 (best rule) | 44.25% | 149.5 |
+| primary-tumor | Pypper:two-level@10 (macro distribution voting) | 44.25% | 149.5 |
+| primary-tumor | Pypper:two-level@10 (micro distribution voting) | 44.84% | 149.5 |
+| primary-tumor | Pypper:two-level@10 (voting) | 43.96% | 149.5 |
+| primary-tumor | Pypper:two-level@25 (best rule) | 45.12% | 369.8 |
+| primary-tumor | Pypper:two-level@25 (macro distribution voting) | 45.12% | 369.8 |
+| primary-tumor | Pypper:two-level@25 (micro distribution voting) | 44.23% | 369.8 |
+| primary-tumor | Pypper:two-level@25 (voting) | 44.53% | 369.8 |
+| primary-tumor | Pypper:two-level@50 (best rule) | 46.90% | 749.0 |
+| primary-tumor | Pypper:two-level@50 (macro distribution voting) | 46.31% | 749.0 |
+| primary-tumor | Pypper:two-level@50 (micro distribution voting) | 46.02% | 749.0 |
+| primary-tumor | Pypper:two-level@50 (voting) | 44.54% | 749.0 |
 | qsar-biodeg | PFoil:one-level@10 (best rule) | 84.17% | 515.4 |
 | qsar-biodeg | PFoil:one-level@10 (macro distribution voting) | 86.45% | 515.4 |
 | qsar-biodeg | PFoil:one-level@10 (micro distribution voting) | 83.32% | 515.4 |
@@ -4442,34 +4442,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | qsar-biodeg | PFossil:two-level@50 (macro distribution voting) | 85.98% | 674.0 |
 | qsar-biodeg | PFossil:two-level@50 (micro distribution voting) | 84.56% | 674.0 |
 | qsar-biodeg | PFossil:two-level@50 (voting) | 84.93% | 674.0 |
-| qsar-biodeg | Pypper:one-level@10 (best rule) | 83.22% | 112.3 |
-| qsar-biodeg | Pypper:one-level@10 (macro distribution voting) | 84.36% | 112.3 |
-| qsar-biodeg | Pypper:one-level@10 (micro distribution voting) | 83.12% | 112.3 |
-| qsar-biodeg | Pypper:one-level@10 (voting) | 83.89% | 112.3 |
-| qsar-biodeg | Pypper:one-level@25 (best rule) | 83.98% | 281.8 |
-| qsar-biodeg | Pypper:one-level@25 (macro distribution voting) | 84.55% | 281.8 |
-| qsar-biodeg | Pypper:one-level@25 (micro distribution voting) | 83.13% | 281.8 |
-| qsar-biodeg | Pypper:one-level@25 (voting) | 84.17% | 281.8 |
-| qsar-biodeg | Pypper:one-level@50 (best rule) | 85.59% | 574.5 |
-| qsar-biodeg | Pypper:one-level@50 (macro distribution voting) | 84.65% | 574.5 |
-| qsar-biodeg | Pypper:one-level@50 (micro distribution voting) | 83.70% | 574.5 |
-| qsar-biodeg | Pypper:one-level@50 (voting) | 84.55% | 574.5 |
-| qsar-biodeg | Pypper:single (best rule) | 85.03% | 12.6 |
-| qsar-biodeg | Pypper:single (macro distribution voting) | 85.03% | 12.6 |
-| qsar-biodeg | Pypper:single (micro distribution voting) | 84.36% | 12.6 |
-| qsar-biodeg | Pypper:single (voting) | 84.65% | 12.6 |
-| qsar-biodeg | Pypper:two-level@10 (best rule) | 84.36% | 112.3 |
-| qsar-biodeg | Pypper:two-level@10 (macro distribution voting) | 84.55% | 112.3 |
-| qsar-biodeg | Pypper:two-level@10 (micro distribution voting) | 83.60% | 112.3 |
-| qsar-biodeg | Pypper:two-level@10 (voting) | 83.88% | 112.3 |
-| qsar-biodeg | Pypper:two-level@25 (best rule) | 84.36% | 281.8 |
-| qsar-biodeg | Pypper:two-level@25 (macro distribution voting) | 84.74% | 281.8 |
-| qsar-biodeg | Pypper:two-level@25 (micro distribution voting) | 84.83% | 281.8 |
-| qsar-biodeg | Pypper:two-level@25 (voting) | 84.55% | 281.8 |
-| qsar-biodeg | Pypper:two-level@50 (best rule) | 84.74% | 574.5 |
-| qsar-biodeg | Pypper:two-level@50 (macro distribution voting) | 84.83% | 574.5 |
-| qsar-biodeg | Pypper:two-level@50 (micro distribution voting) | 85.12% | 574.5 |
-| qsar-biodeg | Pypper:two-level@50 (voting) | 85.02% | 574.5 |
+| qsar-biodeg | Pypper:one-level@10 (best rule) | 83.98% | 136.8 |
+| qsar-biodeg | Pypper:one-level@10 (macro distribution voting) | 84.93% | 136.8 |
+| qsar-biodeg | Pypper:one-level@10 (micro distribution voting) | 83.59% | 136.8 |
+| qsar-biodeg | Pypper:one-level@10 (voting) | 84.84% | 136.8 |
+| qsar-biodeg | Pypper:one-level@25 (best rule) | 84.55% | 345.8 |
+| qsar-biodeg | Pypper:one-level@25 (macro distribution voting) | 84.74% | 345.8 |
+| qsar-biodeg | Pypper:one-level@25 (micro distribution voting) | 83.31% | 345.8 |
+| qsar-biodeg | Pypper:one-level@25 (voting) | 84.65% | 345.8 |
+| qsar-biodeg | Pypper:one-level@50 (best rule) | 85.03% | 699.5 |
+| qsar-biodeg | Pypper:one-level@50 (macro distribution voting) | 84.65% | 699.5 |
+| qsar-biodeg | Pypper:one-level@50 (micro distribution voting) | 83.79% | 699.5 |
+| qsar-biodeg | Pypper:one-level@50 (voting) | 84.46% | 699.5 |
+| qsar-biodeg | Pypper:single (best rule) | 83.70% | 13.3 |
+| qsar-biodeg | Pypper:single (macro distribution voting) | 83.32% | 13.3 |
+| qsar-biodeg | Pypper:single (micro distribution voting) | 83.12% | 13.3 |
+| qsar-biodeg | Pypper:single (voting) | 83.03% | 13.3 |
+| qsar-biodeg | Pypper:two-level@10 (best rule) | 84.83% | 136.8 |
+| qsar-biodeg | Pypper:two-level@10 (macro distribution voting) | 84.74% | 136.8 |
+| qsar-biodeg | Pypper:two-level@10 (micro distribution voting) | 84.36% | 136.8 |
+| qsar-biodeg | Pypper:two-level@10 (voting) | 84.55% | 136.8 |
+| qsar-biodeg | Pypper:two-level@25 (best rule) | 84.55% | 345.8 |
+| qsar-biodeg | Pypper:two-level@25 (macro distribution voting) | 85.12% | 345.8 |
+| qsar-biodeg | Pypper:two-level@25 (micro distribution voting) | 84.17% | 345.8 |
+| qsar-biodeg | Pypper:two-level@25 (voting) | 84.74% | 345.8 |
+| qsar-biodeg | Pypper:two-level@50 (best rule) | 84.93% | 699.5 |
+| qsar-biodeg | Pypper:two-level@50 (macro distribution voting) | 84.84% | 699.5 |
+| qsar-biodeg | Pypper:two-level@50 (micro distribution voting) | 85.21% | 699.5 |
+| qsar-biodeg | Pypper:two-level@50 (voting) | 85.12% | 699.5 |
 | segment | PFoil:one-level@10 (best rule) | 94.76% | 609.0 |
 | segment | PFoil:one-level@10 (macro distribution voting) | 96.36% | 609.0 |
 | segment | PFoil:one-level@10 (micro distribution voting) | 95.24% | 609.0 |
@@ -4526,34 +4526,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | segment | PFossil:two-level@50 (macro distribution voting) | 95.89% | 1586.1 |
 | segment | PFossil:two-level@50 (micro distribution voting) | 95.24% | 1586.1 |
 | segment | PFossil:two-level@50 (voting) | 95.89% | 1586.1 |
-| segment | Pypper:one-level@10 (best rule) | 94.63% | 187.2 |
-| segment | Pypper:one-level@10 (macro distribution voting) | 95.24% | 187.2 |
-| segment | Pypper:one-level@10 (micro distribution voting) | 94.68% | 187.2 |
-| segment | Pypper:one-level@10 (voting) | 95.32% | 187.2 |
-| segment | Pypper:one-level@25 (best rule) | 94.42% | 464.7 |
-| segment | Pypper:one-level@25 (macro distribution voting) | 95.28% | 464.7 |
-| segment | Pypper:one-level@25 (micro distribution voting) | 94.72% | 464.7 |
-| segment | Pypper:one-level@25 (voting) | 95.15% | 464.7 |
-| segment | Pypper:one-level@50 (best rule) | 94.07% | 930.9 |
-| segment | Pypper:one-level@50 (macro distribution voting) | 95.06% | 930.9 |
-| segment | Pypper:one-level@50 (micro distribution voting) | 94.76% | 930.9 |
-| segment | Pypper:one-level@50 (voting) | 95.24% | 930.9 |
-| segment | Pypper:single (best rule) | 93.46% | 21.9 |
-| segment | Pypper:single (macro distribution voting) | 93.51% | 21.9 |
-| segment | Pypper:single (micro distribution voting) | 93.20% | 21.9 |
-| segment | Pypper:single (voting) | 93.29% | 21.9 |
-| segment | Pypper:two-level@10 (best rule) | 95.15% | 187.2 |
-| segment | Pypper:two-level@10 (macro distribution voting) | 95.28% | 187.2 |
-| segment | Pypper:two-level@10 (micro distribution voting) | 95.11% | 187.2 |
-| segment | Pypper:two-level@10 (voting) | 95.28% | 187.2 |
-| segment | Pypper:two-level@25 (best rule) | 95.11% | 464.7 |
-| segment | Pypper:two-level@25 (macro distribution voting) | 95.11% | 464.7 |
-| segment | Pypper:two-level@25 (micro distribution voting) | 95.11% | 464.7 |
-| segment | Pypper:two-level@25 (voting) | 95.28% | 464.7 |
-| segment | Pypper:two-level@50 (best rule) | 95.11% | 930.9 |
-| segment | Pypper:two-level@50 (macro distribution voting) | 95.19% | 930.9 |
-| segment | Pypper:two-level@50 (micro distribution voting) | 95.02% | 930.9 |
-| segment | Pypper:two-level@50 (voting) | 95.24% | 930.9 |
+| segment | Pypper:one-level@10 (best rule) | 94.63% | 250.3 |
+| segment | Pypper:one-level@10 (macro distribution voting) | 95.54% | 250.3 |
+| segment | Pypper:one-level@10 (micro distribution voting) | 94.72% | 250.3 |
+| segment | Pypper:one-level@10 (voting) | 95.54% | 250.3 |
+| segment | Pypper:one-level@25 (best rule) | 94.16% | 625.6 |
+| segment | Pypper:one-level@25 (macro distribution voting) | 95.97% | 625.6 |
+| segment | Pypper:one-level@25 (micro distribution voting) | 94.76% | 625.6 |
+| segment | Pypper:one-level@25 (voting) | 95.89% | 625.6 |
+| segment | Pypper:one-level@50 (best rule) | 93.81% | 1245.5 |
+| segment | Pypper:one-level@50 (macro distribution voting) | 95.76% | 1245.5 |
+| segment | Pypper:one-level@50 (micro distribution voting) | 95.02% | 1245.5 |
+| segment | Pypper:one-level@50 (voting) | 95.80% | 1245.5 |
+| segment | Pypper:single (best rule) | 94.03% | 24.8 |
+| segment | Pypper:single (macro distribution voting) | 93.90% | 24.8 |
+| segment | Pypper:single (micro distribution voting) | 93.72% | 24.8 |
+| segment | Pypper:single (voting) | 93.68% | 24.8 |
+| segment | Pypper:two-level@10 (best rule) | 95.24% | 250.3 |
+| segment | Pypper:two-level@10 (macro distribution voting) | 95.45% | 250.3 |
+| segment | Pypper:two-level@10 (micro distribution voting) | 95.15% | 250.3 |
+| segment | Pypper:two-level@10 (voting) | 95.32% | 250.3 |
+| segment | Pypper:two-level@25 (best rule) | 95.63% | 625.6 |
+| segment | Pypper:two-level@25 (macro distribution voting) | 95.84% | 625.6 |
+| segment | Pypper:two-level@25 (micro distribution voting) | 95.58% | 625.6 |
+| segment | Pypper:two-level@25 (voting) | 95.97% | 625.6 |
+| segment | Pypper:two-level@50 (best rule) | 95.67% | 1245.5 |
+| segment | Pypper:two-level@50 (macro distribution voting) | 95.63% | 1245.5 |
+| segment | Pypper:two-level@50 (micro distribution voting) | 95.63% | 1245.5 |
+| segment | Pypper:two-level@50 (voting) | 95.76% | 1245.5 |
 | sick | PFoil:one-level@10 (best rule) | 97.56% | 502.3 |
 | sick | PFoil:one-level@10 (macro distribution voting) | 98.33% | 502.3 |
 | sick | PFoil:one-level@10 (micro distribution voting) | 96.37% | 502.3 |
@@ -4610,34 +4610,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | sick | PFossil:two-level@50 (macro distribution voting) | 98.38% | 806.0 |
 | sick | PFossil:two-level@50 (micro distribution voting) | 98.25% | 806.0 |
 | sick | PFossil:two-level@50 (voting) | 98.36% | 806.0 |
-| sick | Pypper:one-level@10 (best rule) | 98.06% | 83.3 |
-| sick | Pypper:one-level@10 (macro distribution voting) | 98.20% | 83.3 |
-| sick | Pypper:one-level@10 (micro distribution voting) | 97.93% | 83.3 |
-| sick | Pypper:one-level@10 (voting) | 98.14% | 83.3 |
-| sick | Pypper:one-level@25 (best rule) | 97.69% | 202.9 |
-| sick | Pypper:one-level@25 (macro distribution voting) | 98.28% | 202.9 |
-| sick | Pypper:one-level@25 (micro distribution voting) | 98.04% | 202.9 |
-| sick | Pypper:one-level@25 (voting) | 98.20% | 202.9 |
-| sick | Pypper:one-level@50 (best rule) | 97.67% | 405.1 |
-| sick | Pypper:one-level@50 (macro distribution voting) | 98.28% | 405.1 |
-| sick | Pypper:one-level@50 (micro distribution voting) | 98.06% | 405.1 |
-| sick | Pypper:one-level@50 (voting) | 98.14% | 405.1 |
-| sick | Pypper:single (best rule) | 98.20% | 8.9 |
-| sick | Pypper:single (macro distribution voting) | 98.20% | 8.9 |
-| sick | Pypper:single (micro distribution voting) | 98.22% | 8.9 |
-| sick | Pypper:single (voting) | 98.22% | 8.9 |
-| sick | Pypper:two-level@10 (best rule) | 98.20% | 83.3 |
-| sick | Pypper:two-level@10 (macro distribution voting) | 98.17% | 83.3 |
-| sick | Pypper:two-level@10 (micro distribution voting) | 98.17% | 83.3 |
-| sick | Pypper:two-level@10 (voting) | 98.20% | 83.3 |
-| sick | Pypper:two-level@25 (best rule) | 98.28% | 202.9 |
-| sick | Pypper:two-level@25 (macro distribution voting) | 98.28% | 202.9 |
-| sick | Pypper:two-level@25 (micro distribution voting) | 98.22% | 202.9 |
-| sick | Pypper:two-level@25 (voting) | 98.30% | 202.9 |
-| sick | Pypper:two-level@50 (best rule) | 98.30% | 405.1 |
-| sick | Pypper:two-level@50 (macro distribution voting) | 98.30% | 405.1 |
-| sick | Pypper:two-level@50 (micro distribution voting) | 98.30% | 405.1 |
-| sick | Pypper:two-level@50 (voting) | 98.38% | 405.1 |
+| sick | Pypper:one-level@10 (best rule) | 98.06% | 103.0 |
+| sick | Pypper:one-level@10 (macro distribution voting) | 98.20% | 103.0 |
+| sick | Pypper:one-level@10 (micro distribution voting) | 98.07% | 103.0 |
+| sick | Pypper:one-level@10 (voting) | 98.14% | 103.0 |
+| sick | Pypper:one-level@25 (best rule) | 97.69% | 254.5 |
+| sick | Pypper:one-level@25 (macro distribution voting) | 98.33% | 254.5 |
+| sick | Pypper:one-level@25 (micro distribution voting) | 97.99% | 254.5 |
+| sick | Pypper:one-level@25 (voting) | 98.25% | 254.5 |
+| sick | Pypper:one-level@50 (best rule) | 97.67% | 512.7 |
+| sick | Pypper:one-level@50 (macro distribution voting) | 98.33% | 512.7 |
+| sick | Pypper:one-level@50 (micro distribution voting) | 98.06% | 512.7 |
+| sick | Pypper:one-level@50 (voting) | 98.36% | 512.7 |
+| sick | Pypper:single (best rule) | 98.30% | 10.5 |
+| sick | Pypper:single (macro distribution voting) | 98.30% | 10.5 |
+| sick | Pypper:single (micro distribution voting) | 98.30% | 10.5 |
+| sick | Pypper:single (voting) | 98.33% | 10.5 |
+| sick | Pypper:two-level@10 (best rule) | 98.28% | 103.0 |
+| sick | Pypper:two-level@10 (macro distribution voting) | 98.28% | 103.0 |
+| sick | Pypper:two-level@10 (micro distribution voting) | 98.17% | 103.0 |
+| sick | Pypper:two-level@10 (voting) | 98.30% | 103.0 |
+| sick | Pypper:two-level@25 (best rule) | 98.25% | 254.5 |
+| sick | Pypper:two-level@25 (macro distribution voting) | 98.25% | 254.5 |
+| sick | Pypper:two-level@25 (micro distribution voting) | 98.20% | 254.5 |
+| sick | Pypper:two-level@25 (voting) | 98.28% | 254.5 |
+| sick | Pypper:two-level@50 (best rule) | 98.33% | 512.7 |
+| sick | Pypper:two-level@50 (macro distribution voting) | 98.28% | 512.7 |
+| sick | Pypper:two-level@50 (micro distribution voting) | 98.28% | 512.7 |
+| sick | Pypper:two-level@50 (voting) | 98.28% | 512.7 |
 | solar-flare | PFoil:one-level@10 (best rule) | 73.36% | 875.2 |
 | solar-flare | PFoil:one-level@10 (macro distribution voting) | 74.21% | 875.2 |
 | solar-flare | PFoil:one-level@10 (micro distribution voting) | 73.92% | 875.2 |
@@ -4694,34 +4694,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | solar-flare | PFossil:two-level@50 (macro distribution voting) | 74.20% | 911.9 |
 | solar-flare | PFossil:two-level@50 (micro distribution voting) | 75.14% | 911.9 |
 | solar-flare | PFossil:two-level@50 (voting) | 69.14% | 911.9 |
-| solar-flare | Pypper:one-level@10 (best rule) | 74.59% | 73.8 |
-| solar-flare | Pypper:one-level@10 (macro distribution voting) | 75.34% | 73.8 |
-| solar-flare | Pypper:one-level@10 (micro distribution voting) | 74.77% | 73.8 |
-| solar-flare | Pypper:one-level@10 (voting) | 74.59% | 73.8 |
-| solar-flare | Pypper:one-level@25 (best rule) | 73.55% | 184.5 |
-| solar-flare | Pypper:one-level@25 (macro distribution voting) | 75.05% | 184.5 |
-| solar-flare | Pypper:one-level@25 (micro distribution voting) | 74.40% | 184.5 |
-| solar-flare | Pypper:one-level@25 (voting) | 74.96% | 184.5 |
-| solar-flare | Pypper:one-level@50 (best rule) | 73.37% | 368.6 |
-| solar-flare | Pypper:one-level@50 (macro distribution voting) | 74.77% | 368.6 |
-| solar-flare | Pypper:one-level@50 (micro distribution voting) | 74.59% | 368.6 |
-| solar-flare | Pypper:one-level@50 (voting) | 74.87% | 368.6 |
-| solar-flare | Pypper:single (best rule) | 69.43% | 7.6 |
-| solar-flare | Pypper:single (macro distribution voting) | 69.52% | 7.6 |
-| solar-flare | Pypper:single (micro distribution voting) | 69.24% | 7.6 |
-| solar-flare | Pypper:single (voting) | 69.14% | 7.6 |
-| solar-flare | Pypper:two-level@10 (best rule) | 74.96% | 73.8 |
-| solar-flare | Pypper:two-level@10 (macro distribution voting) | 74.87% | 73.8 |
-| solar-flare | Pypper:two-level@10 (micro distribution voting) | 74.50% | 73.8 |
-| solar-flare | Pypper:two-level@10 (voting) | 74.87% | 73.8 |
-| solar-flare | Pypper:two-level@25 (best rule) | 74.96% | 184.5 |
-| solar-flare | Pypper:two-level@25 (macro distribution voting) | 74.77% | 184.5 |
-| solar-flare | Pypper:two-level@25 (micro distribution voting) | 74.68% | 184.5 |
-| solar-flare | Pypper:two-level@25 (voting) | 74.49% | 184.5 |
-| solar-flare | Pypper:two-level@50 (best rule) | 74.68% | 368.6 |
-| solar-flare | Pypper:two-level@50 (macro distribution voting) | 74.40% | 368.6 |
-| solar-flare | Pypper:two-level@50 (micro distribution voting) | 74.77% | 368.6 |
-| solar-flare | Pypper:two-level@50 (voting) | 74.40% | 368.6 |
+| solar-flare | Pypper:one-level@10 (best rule) | 73.36% | 107.7 |
+| solar-flare | Pypper:one-level@10 (macro distribution voting) | 74.78% | 107.7 |
+| solar-flare | Pypper:one-level@10 (micro distribution voting) | 74.87% | 107.7 |
+| solar-flare | Pypper:one-level@10 (voting) | 74.21% | 107.7 |
+| solar-flare | Pypper:one-level@25 (best rule) | 73.93% | 257.4 |
+| solar-flare | Pypper:one-level@25 (macro distribution voting) | 75.05% | 257.4 |
+| solar-flare | Pypper:one-level@25 (micro distribution voting) | 74.77% | 257.4 |
+| solar-flare | Pypper:one-level@25 (voting) | 74.86% | 257.4 |
+| solar-flare | Pypper:one-level@50 (best rule) | 72.80% | 522.3 |
+| solar-flare | Pypper:one-level@50 (macro distribution voting) | 75.15% | 522.3 |
+| solar-flare | Pypper:one-level@50 (micro distribution voting) | 74.68% | 522.3 |
+| solar-flare | Pypper:one-level@50 (voting) | 75.43% | 522.3 |
+| solar-flare | Pypper:single (best rule) | 69.52% | 7.5 |
+| solar-flare | Pypper:single (macro distribution voting) | 69.43% | 7.5 |
+| solar-flare | Pypper:single (micro distribution voting) | 69.43% | 7.5 |
+| solar-flare | Pypper:single (voting) | 69.24% | 7.5 |
+| solar-flare | Pypper:two-level@10 (best rule) | 74.21% | 107.7 |
+| solar-flare | Pypper:two-level@10 (macro distribution voting) | 74.59% | 107.7 |
+| solar-flare | Pypper:two-level@10 (micro distribution voting) | 75.06% | 107.7 |
+| solar-flare | Pypper:two-level@10 (voting) | 75.15% | 107.7 |
+| solar-flare | Pypper:two-level@25 (best rule) | 74.96% | 257.4 |
+| solar-flare | Pypper:two-level@25 (macro distribution voting) | 74.68% | 257.4 |
+| solar-flare | Pypper:two-level@25 (micro distribution voting) | 75.05% | 257.4 |
+| solar-flare | Pypper:two-level@25 (voting) | 74.87% | 257.4 |
+| solar-flare | Pypper:two-level@50 (best rule) | 74.96% | 522.3 |
+| solar-flare | Pypper:two-level@50 (macro distribution voting) | 75.24% | 522.3 |
+| solar-flare | Pypper:two-level@50 (micro distribution voting) | 74.96% | 522.3 |
+| solar-flare | Pypper:two-level@50 (voting) | 74.96% | 522.3 |
 | sonar | PFoil:one-level@10 (best rule) | 71.24% | 119.2 |
 | sonar | PFoil:one-level@10 (macro distribution voting) | 82.26% | 119.2 |
 | sonar | PFoil:one-level@10 (micro distribution voting) | 79.88% | 119.2 |
@@ -4778,34 +4778,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | sonar | PFossil:two-level@50 (macro distribution voting) | 75.52% | 664.2 |
 | sonar | PFossil:two-level@50 (micro distribution voting) | 76.52% | 664.2 |
 | sonar | PFossil:two-level@50 (voting) | 75.07% | 664.2 |
-| sonar | Pypper:one-level@10 (best rule) | 70.71% | 57.1 |
-| sonar | Pypper:one-level@10 (macro distribution voting) | 78.88% | 57.1 |
-| sonar | Pypper:one-level@10 (micro distribution voting) | 75.02% | 57.1 |
-| sonar | Pypper:one-level@10 (voting) | 77.43% | 57.1 |
-| sonar | Pypper:one-level@25 (best rule) | 75.02% | 141.1 |
-| sonar | Pypper:one-level@25 (macro distribution voting) | 77.95% | 141.1 |
-| sonar | Pypper:one-level@25 (micro distribution voting) | 75.52% | 141.1 |
-| sonar | Pypper:one-level@25 (voting) | 78.93% | 141.1 |
-| sonar | Pypper:one-level@50 (best rule) | 72.57% | 284.5 |
-| sonar | Pypper:one-level@50 (macro distribution voting) | 77.48% | 284.5 |
-| sonar | Pypper:one-level@50 (micro distribution voting) | 75.07% | 284.5 |
-| sonar | Pypper:one-level@50 (voting) | 77.95% | 284.5 |
-| sonar | Pypper:single (best rule) | 76.48% | 6.0 |
-| sonar | Pypper:single (macro distribution voting) | 75.52% | 6.0 |
-| sonar | Pypper:single (micro distribution voting) | 75.50% | 6.0 |
-| sonar | Pypper:single (voting) | 73.14% | 6.0 |
-| sonar | Pypper:two-level@10 (best rule) | 77.88% | 57.1 |
-| sonar | Pypper:two-level@10 (macro distribution voting) | 77.90% | 57.1 |
-| sonar | Pypper:two-level@10 (micro distribution voting) | 74.98% | 57.1 |
-| sonar | Pypper:two-level@10 (voting) | 74.50% | 57.1 |
-| sonar | Pypper:two-level@25 (best rule) | 77.98% | 141.1 |
-| sonar | Pypper:two-level@25 (macro distribution voting) | 77.98% | 141.1 |
-| sonar | Pypper:two-level@25 (micro distribution voting) | 76.50% | 141.1 |
-| sonar | Pypper:two-level@25 (voting) | 77.45% | 141.1 |
-| sonar | Pypper:two-level@50 (best rule) | 77.50% | 284.5 |
-| sonar | Pypper:two-level@50 (macro distribution voting) | 77.98% | 284.5 |
-| sonar | Pypper:two-level@50 (micro distribution voting) | 76.55% | 284.5 |
-| sonar | Pypper:two-level@50 (voting) | 76.55% | 284.5 |
+| sonar | Pypper:one-level@10 (best rule) | 72.62% | 64.6 |
+| sonar | Pypper:one-level@10 (macro distribution voting) | 78.90% | 64.6 |
+| sonar | Pypper:one-level@10 (micro distribution voting) | 74.55% | 64.6 |
+| sonar | Pypper:one-level@10 (voting) | 76.48% | 64.6 |
+| sonar | Pypper:one-level@25 (best rule) | 73.57% | 159.2 |
+| sonar | Pypper:one-level@25 (macro distribution voting) | 77.00% | 159.2 |
+| sonar | Pypper:one-level@25 (micro distribution voting) | 76.02% | 159.2 |
+| sonar | Pypper:one-level@25 (voting) | 77.98% | 159.2 |
+| sonar | Pypper:one-level@50 (best rule) | 71.64% | 320.1 |
+| sonar | Pypper:one-level@50 (macro distribution voting) | 78.93% | 320.1 |
+| sonar | Pypper:one-level@50 (micro distribution voting) | 76.02% | 320.1 |
+| sonar | Pypper:one-level@50 (voting) | 78.43% | 320.1 |
+| sonar | Pypper:single (best rule) | 73.57% | 6.6 |
+| sonar | Pypper:single (macro distribution voting) | 72.62% | 6.6 |
+| sonar | Pypper:single (micro distribution voting) | 74.05% | 6.6 |
+| sonar | Pypper:single (voting) | 71.21% | 6.6 |
+| sonar | Pypper:two-level@10 (best rule) | 76.48% | 64.6 |
+| sonar | Pypper:two-level@10 (macro distribution voting) | 77.45% | 64.6 |
+| sonar | Pypper:two-level@10 (micro distribution voting) | 74.50% | 64.6 |
+| sonar | Pypper:two-level@10 (voting) | 75.00% | 64.6 |
+| sonar | Pypper:two-level@25 (best rule) | 75.98% | 159.2 |
+| sonar | Pypper:two-level@25 (macro distribution voting) | 78.43% | 159.2 |
+| sonar | Pypper:two-level@25 (micro distribution voting) | 76.50% | 159.2 |
+| sonar | Pypper:two-level@25 (voting) | 77.95% | 159.2 |
+| sonar | Pypper:two-level@50 (best rule) | 77.98% | 320.1 |
+| sonar | Pypper:two-level@50 (macro distribution voting) | 78.43% | 320.1 |
+| sonar | Pypper:two-level@50 (micro distribution voting) | 77.98% | 320.1 |
+| sonar | Pypper:two-level@50 (voting) | 77.02% | 320.1 |
 | soybean | PFoil:one-level@10 (best rule) | 88.44% | 476.0 |
 | soybean | PFoil:one-level@10 (macro distribution voting) | 93.42% | 476.0 |
 | soybean | PFoil:one-level@10 (micro distribution voting) | 90.05% | 476.0 |
@@ -4862,34 +4862,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | soybean | PFossil:two-level@50 (macro distribution voting) | 92.83% | 2005.2 |
 | soybean | PFossil:two-level@50 (micro distribution voting) | 92.39% | 2005.2 |
 | soybean | PFossil:two-level@50 (voting) | 92.10% | 2005.2 |
-| soybean | Pypper:one-level@10 (best rule) | 89.17% | 243.1 |
-| soybean | Pypper:one-level@10 (macro distribution voting) | 92.54% | 243.1 |
-| soybean | Pypper:one-level@10 (micro distribution voting) | 88.74% | 243.1 |
-| soybean | Pypper:one-level@10 (voting) | 91.66% | 243.1 |
-| soybean | Pypper:one-level@25 (best rule) | 88.15% | 605.4 |
-| soybean | Pypper:one-level@25 (macro distribution voting) | 92.25% | 605.4 |
-| soybean | Pypper:one-level@25 (micro distribution voting) | 89.03% | 605.4 |
-| soybean | Pypper:one-level@25 (voting) | 91.66% | 605.4 |
-| soybean | Pypper:one-level@50 (best rule) | 86.83% | 1210.9 |
-| soybean | Pypper:one-level@50 (macro distribution voting) | 92.39% | 1210.9 |
-| soybean | Pypper:one-level@50 (micro distribution voting) | 89.91% | 1210.9 |
-| soybean | Pypper:one-level@50 (voting) | 91.81% | 1210.9 |
-| soybean | Pypper:single (best rule) | 89.91% | 26.0 |
-| soybean | Pypper:single (macro distribution voting) | 89.91% | 26.0 |
-| soybean | Pypper:single (micro distribution voting) | 87.28% | 26.0 |
-| soybean | Pypper:single (voting) | 86.84% | 26.0 |
-| soybean | Pypper:two-level@10 (best rule) | 91.81% | 243.1 |
-| soybean | Pypper:two-level@10 (macro distribution voting) | 91.81% | 243.1 |
-| soybean | Pypper:two-level@10 (micro distribution voting) | 89.61% | 243.1 |
-| soybean | Pypper:two-level@10 (voting) | 88.88% | 243.1 |
-| soybean | Pypper:two-level@25 (best rule) | 92.54% | 605.4 |
-| soybean | Pypper:two-level@25 (macro distribution voting) | 92.69% | 605.4 |
-| soybean | Pypper:two-level@25 (micro distribution voting) | 90.34% | 605.4 |
-| soybean | Pypper:two-level@25 (voting) | 89.61% | 605.4 |
-| soybean | Pypper:two-level@50 (best rule) | 92.39% | 1210.9 |
-| soybean | Pypper:two-level@50 (macro distribution voting) | 92.69% | 1210.9 |
-| soybean | Pypper:two-level@50 (micro distribution voting) | 90.93% | 1210.9 |
-| soybean | Pypper:two-level@50 (voting) | 90.35% | 1210.9 |
+| soybean | Pypper:one-level@10 (best rule) | 90.78% | 292.9 |
+| soybean | Pypper:one-level@10 (macro distribution voting) | 93.56% | 292.9 |
+| soybean | Pypper:one-level@10 (micro distribution voting) | 89.02% | 292.9 |
+| soybean | Pypper:one-level@10 (voting) | 92.83% | 292.9 |
+| soybean | Pypper:one-level@25 (best rule) | 88.44% | 733.1 |
+| soybean | Pypper:one-level@25 (macro distribution voting) | 93.42% | 733.1 |
+| soybean | Pypper:one-level@25 (micro distribution voting) | 90.49% | 733.1 |
+| soybean | Pypper:one-level@25 (voting) | 91.96% | 733.1 |
+| soybean | Pypper:one-level@50 (best rule) | 86.40% | 1467.5 |
+| soybean | Pypper:one-level@50 (macro distribution voting) | 93.42% | 1467.5 |
+| soybean | Pypper:one-level@50 (micro distribution voting) | 90.49% | 1467.5 |
+| soybean | Pypper:one-level@50 (voting) | 91.95% | 1467.5 |
+| soybean | Pypper:single (best rule) | 90.50% | 28.2 |
+| soybean | Pypper:single (macro distribution voting) | 90.50% | 28.2 |
+| soybean | Pypper:single (micro distribution voting) | 88.15% | 28.2 |
+| soybean | Pypper:single (voting) | 87.71% | 28.2 |
+| soybean | Pypper:two-level@10 (best rule) | 92.69% | 292.9 |
+| soybean | Pypper:two-level@10 (macro distribution voting) | 92.84% | 292.9 |
+| soybean | Pypper:two-level@10 (micro distribution voting) | 90.63% | 292.9 |
+| soybean | Pypper:two-level@10 (voting) | 89.76% | 292.9 |
+| soybean | Pypper:two-level@25 (best rule) | 92.84% | 733.1 |
+| soybean | Pypper:two-level@25 (macro distribution voting) | 92.84% | 733.1 |
+| soybean | Pypper:two-level@25 (micro distribution voting) | 90.78% | 733.1 |
+| soybean | Pypper:two-level@25 (voting) | 89.76% | 733.1 |
+| soybean | Pypper:two-level@50 (best rule) | 92.69% | 1467.5 |
+| soybean | Pypper:two-level@50 (macro distribution voting) | 92.69% | 1467.5 |
+| soybean | Pypper:two-level@50 (micro distribution voting) | 90.20% | 1467.5 |
+| soybean | Pypper:two-level@50 (voting) | 89.32% | 1467.5 |
 | spambase | PFoil:one-level@10 (best rule) | 94.37% | 1110.8 |
 | spambase | PFoil:one-level@10 (macro distribution voting) | 94.83% | 1110.8 |
 | spambase | PFoil:one-level@10 (micro distribution voting) | 93.24% | 1110.8 |
@@ -4946,34 +4946,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | spambase | PFossil:two-level@50 (macro distribution voting) | 93.46% | 574.3 |
 | spambase | PFossil:two-level@50 (micro distribution voting) | 92.89% | 574.3 |
 | spambase | PFossil:two-level@50 (voting) | 93.09% | 574.3 |
-| spambase | Pypper:one-level@10 (best rule) | 93.81% | 217.1 |
-| spambase | Pypper:one-level@10 (macro distribution voting) | 93.65% | 217.1 |
-| spambase | Pypper:one-level@10 (micro distribution voting) | 92.87% | 217.1 |
-| spambase | Pypper:one-level@10 (voting) | 93.70% | 217.1 |
-| spambase | Pypper:one-level@25 (best rule) | 93.91% | 554.2 |
-| spambase | Pypper:one-level@25 (macro distribution voting) | 93.89% | 554.2 |
-| spambase | Pypper:one-level@25 (micro distribution voting) | 93.37% | 554.2 |
-| spambase | Pypper:one-level@25 (voting) | 93.87% | 554.2 |
-| spambase | Pypper:one-level@50 (best rule) | 93.65% | 1097.9 |
-| spambase | Pypper:one-level@50 (macro distribution voting) | 93.96% | 1097.9 |
-| spambase | Pypper:one-level@50 (micro distribution voting) | 93.24% | 1097.9 |
-| spambase | Pypper:one-level@50 (voting) | 93.91% | 1097.9 |
-| spambase | Pypper:single (best rule) | 92.96% | 25.7 |
-| spambase | Pypper:single (macro distribution voting) | 92.87% | 25.7 |
-| spambase | Pypper:single (micro distribution voting) | 92.76% | 25.7 |
-| spambase | Pypper:single (voting) | 92.68% | 25.7 |
-| spambase | Pypper:two-level@10 (best rule) | 93.74% | 217.1 |
-| spambase | Pypper:two-level@10 (macro distribution voting) | 93.76% | 217.1 |
-| spambase | Pypper:two-level@10 (micro distribution voting) | 93.44% | 217.1 |
-| spambase | Pypper:two-level@10 (voting) | 93.81% | 217.1 |
-| spambase | Pypper:two-level@25 (best rule) | 94.04% | 554.2 |
-| spambase | Pypper:two-level@25 (macro distribution voting) | 93.96% | 554.2 |
-| spambase | Pypper:two-level@25 (micro distribution voting) | 93.50% | 554.2 |
-| spambase | Pypper:two-level@25 (voting) | 93.91% | 554.2 |
-| spambase | Pypper:two-level@50 (best rule) | 94.04% | 1097.9 |
-| spambase | Pypper:two-level@50 (macro distribution voting) | 94.00% | 1097.9 |
-| spambase | Pypper:two-level@50 (micro distribution voting) | 93.74% | 1097.9 |
-| spambase | Pypper:two-level@50 (voting) | 93.85% | 1097.9 |
+| spambase | Pypper:one-level@10 (best rule) | 94.09% | 257.7 |
+| spambase | Pypper:one-level@10 (macro distribution voting) | 94.02% | 257.7 |
+| spambase | Pypper:one-level@10 (micro distribution voting) | 93.18% | 257.7 |
+| spambase | Pypper:one-level@10 (voting) | 93.91% | 257.7 |
+| spambase | Pypper:one-level@25 (best rule) | 93.91% | 655.0 |
+| spambase | Pypper:one-level@25 (macro distribution voting) | 94.13% | 655.0 |
+| spambase | Pypper:one-level@25 (micro distribution voting) | 93.46% | 655.0 |
+| spambase | Pypper:one-level@25 (voting) | 94.13% | 655.0 |
+| spambase | Pypper:one-level@50 (best rule) | 93.68% | 1304.2 |
+| spambase | Pypper:one-level@50 (macro distribution voting) | 94.20% | 1304.2 |
+| spambase | Pypper:one-level@50 (micro distribution voting) | 93.44% | 1304.2 |
+| spambase | Pypper:one-level@50 (voting) | 94.18% | 1304.2 |
+| spambase | Pypper:single (best rule) | 93.11% | 26.4 |
+| spambase | Pypper:single (macro distribution voting) | 93.00% | 26.4 |
+| spambase | Pypper:single (micro distribution voting) | 92.59% | 26.4 |
+| spambase | Pypper:single (voting) | 92.83% | 26.4 |
+| spambase | Pypper:two-level@10 (best rule) | 94.04% | 257.7 |
+| spambase | Pypper:two-level@10 (macro distribution voting) | 93.98% | 257.7 |
+| spambase | Pypper:two-level@10 (micro distribution voting) | 93.63% | 257.7 |
+| spambase | Pypper:two-level@10 (voting) | 93.81% | 257.7 |
+| spambase | Pypper:two-level@25 (best rule) | 94.35% | 655.0 |
+| spambase | Pypper:two-level@25 (macro distribution voting) | 94.26% | 655.0 |
+| spambase | Pypper:two-level@25 (micro distribution voting) | 93.72% | 655.0 |
+| spambase | Pypper:two-level@25 (voting) | 94.00% | 655.0 |
+| spambase | Pypper:two-level@50 (best rule) | 94.15% | 1304.2 |
+| spambase | Pypper:two-level@50 (macro distribution voting) | 94.22% | 1304.2 |
+| spambase | Pypper:two-level@50 (micro distribution voting) | 93.89% | 1304.2 |
+| spambase | Pypper:two-level@50 (voting) | 94.04% | 1304.2 |
 | splice | PFoil:one-level@10 (best rule) | 94.45% | 598.6 |
 | splice | PFoil:one-level@10 (macro distribution voting) | 95.99% | 598.6 |
 | splice | PFoil:one-level@10 (micro distribution voting) | 95.89% | 598.6 |
@@ -5030,34 +5030,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | splice | PFossil:two-level@50 (macro distribution voting) | 95.49% | 1442.8 |
 | splice | PFossil:two-level@50 (micro distribution voting) | 90.78% | 1442.8 |
 | splice | PFossil:two-level@50 (voting) | 91.00% | 1442.8 |
-| splice | Pypper:one-level@10 (best rule) | 94.73% | 168.6 |
-| splice | Pypper:one-level@10 (macro distribution voting) | 95.36% | 168.6 |
-| splice | Pypper:one-level@10 (micro distribution voting) | 95.08% | 168.6 |
-| splice | Pypper:one-level@10 (voting) | 95.39% | 168.6 |
-| splice | Pypper:one-level@25 (best rule) | 95.27% | 423.4 |
-| splice | Pypper:one-level@25 (macro distribution voting) | 95.42% | 423.4 |
-| splice | Pypper:one-level@25 (micro distribution voting) | 95.08% | 423.4 |
-| splice | Pypper:one-level@25 (voting) | 95.42% | 423.4 |
-| splice | Pypper:one-level@50 (best rule) | 95.24% | 846.2 |
-| splice | Pypper:one-level@50 (macro distribution voting) | 95.52% | 846.2 |
-| splice | Pypper:one-level@50 (micro distribution voting) | 95.02% | 846.2 |
-| splice | Pypper:one-level@50 (voting) | 95.49% | 846.2 |
-| splice | Pypper:single (best rule) | 93.45% | 21.1 |
-| splice | Pypper:single (macro distribution voting) | 93.70% | 21.1 |
-| splice | Pypper:single (micro distribution voting) | 93.42% | 21.1 |
-| splice | Pypper:single (voting) | 93.51% | 21.1 |
-| splice | Pypper:two-level@10 (best rule) | 95.39% | 168.6 |
-| splice | Pypper:two-level@10 (macro distribution voting) | 95.61% | 168.6 |
-| splice | Pypper:two-level@10 (micro distribution voting) | 95.20% | 168.6 |
-| splice | Pypper:two-level@10 (voting) | 95.61% | 168.6 |
-| splice | Pypper:two-level@25 (best rule) | 95.30% | 423.4 |
-| splice | Pypper:two-level@25 (macro distribution voting) | 95.36% | 423.4 |
-| splice | Pypper:two-level@25 (micro distribution voting) | 95.20% | 423.4 |
-| splice | Pypper:two-level@25 (voting) | 95.42% | 423.4 |
-| splice | Pypper:two-level@50 (best rule) | 95.30% | 846.2 |
-| splice | Pypper:two-level@50 (macro distribution voting) | 95.45% | 846.2 |
-| splice | Pypper:two-level@50 (micro distribution voting) | 95.17% | 846.2 |
-| splice | Pypper:two-level@50 (voting) | 95.39% | 846.2 |
+| splice | Pypper:one-level@10 (best rule) | 94.64% | 238.6 |
+| splice | Pypper:one-level@10 (macro distribution voting) | 95.52% | 238.6 |
+| splice | Pypper:one-level@10 (micro distribution voting) | 95.14% | 238.6 |
+| splice | Pypper:one-level@10 (voting) | 95.42% | 238.6 |
+| splice | Pypper:one-level@25 (best rule) | 94.86% | 593.5 |
+| splice | Pypper:one-level@25 (macro distribution voting) | 95.55% | 593.5 |
+| splice | Pypper:one-level@25 (micro distribution voting) | 95.24% | 593.5 |
+| splice | Pypper:one-level@25 (voting) | 95.55% | 593.5 |
+| splice | Pypper:one-level@50 (best rule) | 94.95% | 1191.7 |
+| splice | Pypper:one-level@50 (macro distribution voting) | 95.55% | 1191.7 |
+| splice | Pypper:one-level@50 (micro distribution voting) | 95.05% | 1191.7 |
+| splice | Pypper:one-level@50 (voting) | 95.61% | 1191.7 |
+| splice | Pypper:single (best rule) | 93.20% | 26.8 |
+| splice | Pypper:single (macro distribution voting) | 93.39% | 26.8 |
+| splice | Pypper:single (micro distribution voting) | 93.39% | 26.8 |
+| splice | Pypper:single (voting) | 93.26% | 26.8 |
+| splice | Pypper:two-level@10 (best rule) | 95.30% | 238.6 |
+| splice | Pypper:two-level@10 (macro distribution voting) | 95.45% | 238.6 |
+| splice | Pypper:two-level@10 (micro distribution voting) | 95.11% | 238.6 |
+| splice | Pypper:two-level@10 (voting) | 95.61% | 238.6 |
+| splice | Pypper:two-level@25 (best rule) | 95.55% | 593.5 |
+| splice | Pypper:two-level@25 (macro distribution voting) | 95.61% | 593.5 |
+| splice | Pypper:two-level@25 (micro distribution voting) | 95.33% | 593.5 |
+| splice | Pypper:two-level@25 (voting) | 95.67% | 593.5 |
+| splice | Pypper:two-level@50 (best rule) | 95.52% | 1191.7 |
+| splice | Pypper:two-level@50 (macro distribution voting) | 95.64% | 1191.7 |
+| splice | Pypper:two-level@50 (micro distribution voting) | 95.42% | 1191.7 |
+| splice | Pypper:two-level@50 (voting) | 95.64% | 1191.7 |
 | texture | PFoil:one-level@10 (best rule) | 93.07% | 1317.8 |
 | texture | PFoil:one-level@10 (macro distribution voting) | 97.35% | 1317.8 |
 | texture | PFoil:one-level@10 (micro distribution voting) | 95.62% | 1317.8 |
@@ -5114,34 +5114,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | texture | PFossil:two-level@50 (macro distribution voting) | 96.45% | 4124.7 |
 | texture | PFossil:two-level@50 (micro distribution voting) | 93.64% | 4124.7 |
 | texture | PFossil:two-level@50 (voting) | 95.93% | 4124.7 |
-| texture | Pypper:one-level@10 (best rule) | 93.38% | 526.0 |
-| texture | Pypper:one-level@10 (macro distribution voting) | 95.95% | 526.0 |
-| texture | Pypper:one-level@10 (micro distribution voting) | 94.67% | 526.0 |
-| texture | Pypper:one-level@10 (voting) | 95.96% | 526.0 |
-| texture | Pypper:one-level@25 (best rule) | 93.13% | 1339.4 |
-| texture | Pypper:one-level@25 (macro distribution voting) | 96.27% | 1339.4 |
-| texture | Pypper:one-level@25 (micro distribution voting) | 95.02% | 1339.4 |
-| texture | Pypper:one-level@25 (voting) | 96.24% | 1339.4 |
-| texture | Pypper:one-level@50 (best rule) | 92.31% | 2675.8 |
-| texture | Pypper:one-level@50 (macro distribution voting) | 96.33% | 2675.8 |
-| texture | Pypper:one-level@50 (micro distribution voting) | 95.07% | 2675.8 |
-| texture | Pypper:one-level@50 (voting) | 96.33% | 2675.8 |
-| texture | Pypper:single (best rule) | 91.78% | 66.7 |
-| texture | Pypper:single (macro distribution voting) | 92.04% | 66.7 |
-| texture | Pypper:single (micro distribution voting) | 91.49% | 66.7 |
-| texture | Pypper:single (voting) | 91.71% | 66.7 |
-| texture | Pypper:two-level@10 (best rule) | 95.85% | 526.0 |
-| texture | Pypper:two-level@10 (macro distribution voting) | 95.84% | 526.0 |
-| texture | Pypper:two-level@10 (micro distribution voting) | 95.49% | 526.0 |
-| texture | Pypper:two-level@10 (voting) | 95.82% | 526.0 |
-| texture | Pypper:two-level@25 (best rule) | 96.09% | 1339.4 |
-| texture | Pypper:two-level@25 (macro distribution voting) | 96.27% | 1339.4 |
-| texture | Pypper:two-level@25 (micro distribution voting) | 95.76% | 1339.4 |
-| texture | Pypper:two-level@25 (voting) | 96.27% | 1339.4 |
-| texture | Pypper:two-level@50 (best rule) | 96.13% | 2675.8 |
-| texture | Pypper:two-level@50 (macro distribution voting) | 96.24% | 2675.8 |
-| texture | Pypper:two-level@50 (micro distribution voting) | 95.91% | 2675.8 |
-| texture | Pypper:two-level@50 (voting) | 96.20% | 2675.8 |
+| texture | Pypper:one-level@10 (best rule) | 93.40% | 746.2 |
+| texture | Pypper:one-level@10 (macro distribution voting) | 96.60% | 746.2 |
+| texture | Pypper:one-level@10 (micro distribution voting) | 95.07% | 746.2 |
+| texture | Pypper:one-level@10 (voting) | 96.58% | 746.2 |
+| texture | Pypper:one-level@25 (best rule) | 92.58% | 1862.2 |
+| texture | Pypper:one-level@25 (macro distribution voting) | 96.96% | 1862.2 |
+| texture | Pypper:one-level@25 (micro distribution voting) | 95.42% | 1862.2 |
+| texture | Pypper:one-level@25 (voting) | 96.93% | 1862.2 |
+| texture | Pypper:one-level@50 (best rule) | 92.02% | 3720.4 |
+| texture | Pypper:one-level@50 (macro distribution voting) | 96.98% | 3720.4 |
+| texture | Pypper:one-level@50 (micro distribution voting) | 95.56% | 3720.4 |
+| texture | Pypper:one-level@50 (voting) | 97.04% | 3720.4 |
+| texture | Pypper:single (best rule) | 92.40% | 81.3 |
+| texture | Pypper:single (macro distribution voting) | 92.82% | 81.3 |
+| texture | Pypper:single (micro distribution voting) | 92.05% | 81.3 |
+| texture | Pypper:single (voting) | 92.38% | 81.3 |
+| texture | Pypper:two-level@10 (best rule) | 96.45% | 746.2 |
+| texture | Pypper:two-level@10 (macro distribution voting) | 96.69% | 746.2 |
+| texture | Pypper:two-level@10 (micro distribution voting) | 96.04% | 746.2 |
+| texture | Pypper:two-level@10 (voting) | 96.44% | 746.2 |
+| texture | Pypper:two-level@25 (best rule) | 96.75% | 1862.2 |
+| texture | Pypper:two-level@25 (macro distribution voting) | 96.96% | 1862.2 |
+| texture | Pypper:two-level@25 (micro distribution voting) | 96.33% | 1862.2 |
+| texture | Pypper:two-level@25 (voting) | 96.85% | 1862.2 |
+| texture | Pypper:two-level@50 (best rule) | 96.73% | 3720.4 |
+| texture | Pypper:two-level@50 (macro distribution voting) | 97.02% | 3720.4 |
+| texture | Pypper:two-level@50 (micro distribution voting) | 96.35% | 3720.4 |
+| texture | Pypper:two-level@50 (voting) | 96.87% | 3720.4 |
 | tic-tac-toe | PFoil:one-level@10 (best rule) | 97.18% | 238.4 |
 | tic-tac-toe | PFoil:one-level@10 (macro distribution voting) | 99.27% | 238.4 |
 | tic-tac-toe | PFoil:one-level@10 (micro distribution voting) | 98.85% | 238.4 |
@@ -5198,34 +5198,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | tic-tac-toe | PFossil:two-level@50 (macro distribution voting) | 99.17% | 883.0 |
 | tic-tac-toe | PFossil:two-level@50 (micro distribution voting) | 89.36% | 883.0 |
 | tic-tac-toe | PFossil:two-level@50 (voting) | 90.62% | 883.0 |
-| tic-tac-toe | Pypper:one-level@10 (best rule) | 97.08% | 158.2 |
-| tic-tac-toe | Pypper:one-level@10 (macro distribution voting) | 98.33% | 158.2 |
-| tic-tac-toe | Pypper:one-level@10 (micro distribution voting) | 98.33% | 158.2 |
-| tic-tac-toe | Pypper:one-level@10 (voting) | 98.33% | 158.2 |
-| tic-tac-toe | Pypper:one-level@25 (best rule) | 96.87% | 393.1 |
-| tic-tac-toe | Pypper:one-level@25 (macro distribution voting) | 98.33% | 393.1 |
-| tic-tac-toe | Pypper:one-level@25 (micro distribution voting) | 98.33% | 393.1 |
-| tic-tac-toe | Pypper:one-level@25 (voting) | 98.33% | 393.1 |
-| tic-tac-toe | Pypper:one-level@50 (best rule) | 96.45% | 788.8 |
-| tic-tac-toe | Pypper:one-level@50 (macro distribution voting) | 98.33% | 788.8 |
-| tic-tac-toe | Pypper:one-level@50 (micro distribution voting) | 98.33% | 788.8 |
-| tic-tac-toe | Pypper:one-level@50 (voting) | 98.33% | 788.8 |
-| tic-tac-toe | Pypper:single (best rule) | 96.25% | 15.5 |
-| tic-tac-toe | Pypper:single (macro distribution voting) | 96.25% | 15.5 |
-| tic-tac-toe | Pypper:single (micro distribution voting) | 96.25% | 15.5 |
-| tic-tac-toe | Pypper:single (voting) | 96.25% | 15.5 |
-| tic-tac-toe | Pypper:two-level@10 (best rule) | 98.33% | 158.2 |
-| tic-tac-toe | Pypper:two-level@10 (macro distribution voting) | 98.33% | 158.2 |
-| tic-tac-toe | Pypper:two-level@10 (micro distribution voting) | 98.33% | 158.2 |
-| tic-tac-toe | Pypper:two-level@10 (voting) | 98.33% | 158.2 |
-| tic-tac-toe | Pypper:two-level@25 (best rule) | 98.33% | 393.1 |
-| tic-tac-toe | Pypper:two-level@25 (macro distribution voting) | 98.33% | 393.1 |
-| tic-tac-toe | Pypper:two-level@25 (micro distribution voting) | 98.33% | 393.1 |
-| tic-tac-toe | Pypper:two-level@25 (voting) | 98.33% | 393.1 |
-| tic-tac-toe | Pypper:two-level@50 (best rule) | 98.33% | 788.8 |
-| tic-tac-toe | Pypper:two-level@50 (macro distribution voting) | 98.33% | 788.8 |
-| tic-tac-toe | Pypper:two-level@50 (micro distribution voting) | 98.33% | 788.8 |
-| tic-tac-toe | Pypper:two-level@50 (voting) | 98.33% | 788.8 |
+| tic-tac-toe | Pypper:one-level@10 (best rule) | 97.60% | 176.7 |
+| tic-tac-toe | Pypper:one-level@10 (macro distribution voting) | 98.75% | 176.7 |
+| tic-tac-toe | Pypper:one-level@10 (micro distribution voting) | 98.54% | 176.7 |
+| tic-tac-toe | Pypper:one-level@10 (voting) | 98.75% | 176.7 |
+| tic-tac-toe | Pypper:one-level@25 (best rule) | 97.18% | 438.5 |
+| tic-tac-toe | Pypper:one-level@25 (macro distribution voting) | 98.75% | 438.5 |
+| tic-tac-toe | Pypper:one-level@25 (micro distribution voting) | 98.33% | 438.5 |
+| tic-tac-toe | Pypper:one-level@25 (voting) | 98.75% | 438.5 |
+| tic-tac-toe | Pypper:one-level@50 (best rule) | 96.66% | 870.0 |
+| tic-tac-toe | Pypper:one-level@50 (macro distribution voting) | 98.96% | 870.0 |
+| tic-tac-toe | Pypper:one-level@50 (micro distribution voting) | 98.33% | 870.0 |
+| tic-tac-toe | Pypper:one-level@50 (voting) | 98.96% | 870.0 |
+| tic-tac-toe | Pypper:single (best rule) | 98.33% | 16.6 |
+| tic-tac-toe | Pypper:single (macro distribution voting) | 98.33% | 16.6 |
+| tic-tac-toe | Pypper:single (micro distribution voting) | 98.33% | 16.6 |
+| tic-tac-toe | Pypper:single (voting) | 98.33% | 16.6 |
+| tic-tac-toe | Pypper:two-level@10 (best rule) | 98.64% | 176.7 |
+| tic-tac-toe | Pypper:two-level@10 (macro distribution voting) | 98.64% | 176.7 |
+| tic-tac-toe | Pypper:two-level@10 (micro distribution voting) | 98.64% | 176.7 |
+| tic-tac-toe | Pypper:two-level@10 (voting) | 98.64% | 176.7 |
+| tic-tac-toe | Pypper:two-level@25 (best rule) | 98.75% | 438.5 |
+| tic-tac-toe | Pypper:two-level@25 (macro distribution voting) | 98.75% | 438.5 |
+| tic-tac-toe | Pypper:two-level@25 (micro distribution voting) | 98.75% | 438.5 |
+| tic-tac-toe | Pypper:two-level@25 (voting) | 98.75% | 438.5 |
+| tic-tac-toe | Pypper:two-level@50 (best rule) | 98.85% | 870.0 |
+| tic-tac-toe | Pypper:two-level@50 (macro distribution voting) | 98.85% | 870.0 |
+| tic-tac-toe | Pypper:two-level@50 (micro distribution voting) | 98.85% | 870.0 |
+| tic-tac-toe | Pypper:two-level@50 (voting) | 98.85% | 870.0 |
 | vehicle | PFoil:one-level@10 (best rule) | 69.99% | 740.8 |
 | vehicle | PFoil:one-level@10 (macro distribution voting) | 74.48% | 740.8 |
 | vehicle | PFoil:one-level@10 (micro distribution voting) | 72.12% | 740.8 |
@@ -5282,34 +5282,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | vehicle | PFossil:two-level@50 (macro distribution voting) | 73.88% | 1189.4 |
 | vehicle | PFossil:two-level@50 (micro distribution voting) | 72.35% | 1189.4 |
 | vehicle | PFossil:two-level@50 (voting) | 74.82% | 1189.4 |
-| vehicle | Pypper:one-level@10 (best rule) | 71.05% | 127.9 |
-| vehicle | Pypper:one-level@10 (macro distribution voting) | 73.30% | 127.9 |
-| vehicle | Pypper:one-level@10 (micro distribution voting) | 71.77% | 127.9 |
-| vehicle | Pypper:one-level@10 (voting) | 73.54% | 127.9 |
-| vehicle | Pypper:one-level@25 (best rule) | 70.23% | 321.2 |
-| vehicle | Pypper:one-level@25 (macro distribution voting) | 72.58% | 321.2 |
-| vehicle | Pypper:one-level@25 (micro distribution voting) | 71.05% | 321.2 |
-| vehicle | Pypper:one-level@25 (voting) | 73.05% | 321.2 |
-| vehicle | Pypper:one-level@50 (best rule) | 68.93% | 643.9 |
-| vehicle | Pypper:one-level@50 (macro distribution voting) | 72.34% | 643.9 |
-| vehicle | Pypper:one-level@50 (micro distribution voting) | 70.93% | 643.9 |
-| vehicle | Pypper:one-level@50 (voting) | 72.46% | 643.9 |
-| vehicle | Pypper:single (best rule) | 63.84% | 13.1 |
-| vehicle | Pypper:single (macro distribution voting) | 64.19% | 13.1 |
-| vehicle | Pypper:single (micro distribution voting) | 62.30% | 13.1 |
-| vehicle | Pypper:single (voting) | 63.72% | 13.1 |
-| vehicle | Pypper:two-level@10 (best rule) | 73.66% | 127.9 |
-| vehicle | Pypper:two-level@10 (macro distribution voting) | 73.77% | 127.9 |
-| vehicle | Pypper:two-level@10 (micro distribution voting) | 73.30% | 127.9 |
-| vehicle | Pypper:two-level@10 (voting) | 73.89% | 127.9 |
-| vehicle | Pypper:two-level@25 (best rule) | 72.93% | 321.2 |
-| vehicle | Pypper:two-level@25 (macro distribution voting) | 73.17% | 321.2 |
-| vehicle | Pypper:two-level@25 (micro distribution voting) | 73.41% | 321.2 |
-| vehicle | Pypper:two-level@25 (voting) | 73.29% | 321.2 |
-| vehicle | Pypper:two-level@50 (best rule) | 71.87% | 643.9 |
-| vehicle | Pypper:two-level@50 (macro distribution voting) | 71.99% | 643.9 |
-| vehicle | Pypper:two-level@50 (micro distribution voting) | 71.87% | 643.9 |
-| vehicle | Pypper:two-level@50 (voting) | 72.58% | 643.9 |
+| vehicle | Pypper:one-level@10 (best rule) | 70.70% | 172.9 |
+| vehicle | Pypper:one-level@10 (macro distribution voting) | 73.89% | 172.9 |
+| vehicle | Pypper:one-level@10 (micro distribution voting) | 72.59% | 172.9 |
+| vehicle | Pypper:one-level@10 (voting) | 73.88% | 172.9 |
+| vehicle | Pypper:one-level@25 (best rule) | 69.05% | 441.2 |
+| vehicle | Pypper:one-level@25 (macro distribution voting) | 74.71% | 441.2 |
+| vehicle | Pypper:one-level@25 (micro distribution voting) | 71.99% | 441.2 |
+| vehicle | Pypper:one-level@25 (voting) | 74.71% | 441.2 |
+| vehicle | Pypper:one-level@50 (best rule) | 68.10% | 874.1 |
+| vehicle | Pypper:one-level@50 (macro distribution voting) | 73.64% | 874.1 |
+| vehicle | Pypper:one-level@50 (micro distribution voting) | 71.75% | 874.1 |
+| vehicle | Pypper:one-level@50 (voting) | 73.29% | 874.1 |
+| vehicle | Pypper:single (best rule) | 63.95% | 17.4 |
+| vehicle | Pypper:single (macro distribution voting) | 64.19% | 17.4 |
+| vehicle | Pypper:single (micro distribution voting) | 62.65% | 17.4 |
+| vehicle | Pypper:single (voting) | 62.90% | 17.4 |
+| vehicle | Pypper:two-level@10 (best rule) | 73.29% | 172.9 |
+| vehicle | Pypper:two-level@10 (macro distribution voting) | 73.77% | 172.9 |
+| vehicle | Pypper:two-level@10 (micro distribution voting) | 73.29% | 172.9 |
+| vehicle | Pypper:two-level@10 (voting) | 74.00% | 172.9 |
+| vehicle | Pypper:two-level@25 (best rule) | 74.47% | 441.2 |
+| vehicle | Pypper:two-level@25 (macro distribution voting) | 74.83% | 441.2 |
+| vehicle | Pypper:two-level@25 (micro distribution voting) | 73.88% | 441.2 |
+| vehicle | Pypper:two-level@25 (voting) | 73.88% | 441.2 |
+| vehicle | Pypper:two-level@50 (best rule) | 73.06% | 874.1 |
+| vehicle | Pypper:two-level@50 (macro distribution voting) | 73.88% | 874.1 |
+| vehicle | Pypper:two-level@50 (micro distribution voting) | 72.70% | 874.1 |
+| vehicle | Pypper:two-level@50 (voting) | 73.88% | 874.1 |
 | vote | PFoil:one-level@10 (best rule) | 94.49% | 176.1 |
 | vote | PFoil:one-level@10 (macro distribution voting) | 95.87% | 176.1 |
 | vote | PFoil:one-level@10 (micro distribution voting) | 95.18% | 176.1 |
@@ -5366,34 +5366,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | vote | PFossil:two-level@50 (macro distribution voting) | 95.41% | 372.3 |
 | vote | PFossil:two-level@50 (micro distribution voting) | 95.65% | 372.3 |
 | vote | PFossil:two-level@50 (voting) | 94.94% | 372.3 |
-| vote | Pypper:one-level@10 (best rule) | 94.48% | 32.7 |
-| vote | Pypper:one-level@10 (macro distribution voting) | 95.42% | 32.7 |
-| vote | Pypper:one-level@10 (micro distribution voting) | 95.65% | 32.7 |
-| vote | Pypper:one-level@10 (voting) | 95.65% | 32.7 |
-| vote | Pypper:one-level@25 (best rule) | 95.18% | 85.2 |
-| vote | Pypper:one-level@25 (macro distribution voting) | 95.65% | 85.2 |
-| vote | Pypper:one-level@25 (micro distribution voting) | 95.65% | 85.2 |
-| vote | Pypper:one-level@25 (voting) | 95.65% | 85.2 |
-| vote | Pypper:one-level@50 (best rule) | 95.41% | 175.2 |
-| vote | Pypper:one-level@50 (macro distribution voting) | 95.65% | 175.2 |
-| vote | Pypper:one-level@50 (micro distribution voting) | 95.65% | 175.2 |
-| vote | Pypper:one-level@50 (voting) | 95.65% | 175.2 |
-| vote | Pypper:single (best rule) | 95.18% | 3.9 |
-| vote | Pypper:single (macro distribution voting) | 94.95% | 3.9 |
-| vote | Pypper:single (micro distribution voting) | 95.18% | 3.9 |
-| vote | Pypper:single (voting) | 94.95% | 3.9 |
-| vote | Pypper:two-level@10 (best rule) | 95.42% | 32.7 |
-| vote | Pypper:two-level@10 (macro distribution voting) | 95.42% | 32.7 |
-| vote | Pypper:two-level@10 (micro distribution voting) | 95.65% | 32.7 |
-| vote | Pypper:two-level@10 (voting) | 95.18% | 32.7 |
-| vote | Pypper:two-level@25 (best rule) | 95.42% | 85.2 |
-| vote | Pypper:two-level@25 (macro distribution voting) | 95.42% | 85.2 |
-| vote | Pypper:two-level@25 (micro distribution voting) | 95.65% | 85.2 |
-| vote | Pypper:two-level@25 (voting) | 95.42% | 85.2 |
-| vote | Pypper:two-level@50 (best rule) | 95.42% | 175.2 |
-| vote | Pypper:two-level@50 (macro distribution voting) | 95.42% | 175.2 |
-| vote | Pypper:two-level@50 (micro distribution voting) | 95.65% | 175.2 |
-| vote | Pypper:two-level@50 (voting) | 95.42% | 175.2 |
+| vote | Pypper:one-level@10 (best rule) | 94.26% | 39.8 |
+| vote | Pypper:one-level@10 (macro distribution voting) | 95.65% | 39.8 |
+| vote | Pypper:one-level@10 (micro distribution voting) | 95.65% | 39.8 |
+| vote | Pypper:one-level@10 (voting) | 95.65% | 39.8 |
+| vote | Pypper:one-level@25 (best rule) | 95.18% | 106.5 |
+| vote | Pypper:one-level@25 (macro distribution voting) | 95.65% | 106.5 |
+| vote | Pypper:one-level@25 (micro distribution voting) | 95.65% | 106.5 |
+| vote | Pypper:one-level@25 (voting) | 95.65% | 106.5 |
+| vote | Pypper:one-level@50 (best rule) | 94.95% | 219.8 |
+| vote | Pypper:one-level@50 (macro distribution voting) | 95.65% | 219.8 |
+| vote | Pypper:one-level@50 (micro distribution voting) | 95.65% | 219.8 |
+| vote | Pypper:one-level@50 (voting) | 95.65% | 219.8 |
+| vote | Pypper:single (best rule) | 96.09% | 4.8 |
+| vote | Pypper:single (macro distribution voting) | 95.86% | 4.8 |
+| vote | Pypper:single (micro distribution voting) | 95.18% | 4.8 |
+| vote | Pypper:single (voting) | 95.86% | 4.8 |
+| vote | Pypper:two-level@10 (best rule) | 95.42% | 39.8 |
+| vote | Pypper:two-level@10 (macro distribution voting) | 95.42% | 39.8 |
+| vote | Pypper:two-level@10 (micro distribution voting) | 95.65% | 39.8 |
+| vote | Pypper:two-level@10 (voting) | 95.42% | 39.8 |
+| vote | Pypper:two-level@25 (best rule) | 95.64% | 106.5 |
+| vote | Pypper:two-level@25 (macro distribution voting) | 95.64% | 106.5 |
+| vote | Pypper:two-level@25 (micro distribution voting) | 95.65% | 106.5 |
+| vote | Pypper:two-level@25 (voting) | 95.64% | 106.5 |
+| vote | Pypper:two-level@50 (best rule) | 95.64% | 219.8 |
+| vote | Pypper:two-level@50 (macro distribution voting) | 95.64% | 219.8 |
+| vote | Pypper:two-level@50 (micro distribution voting) | 95.65% | 219.8 |
+| vote | Pypper:two-level@50 (voting) | 95.64% | 219.8 |
 | vowel | PFoil:one-level@10 (best rule) | 73.64% | 1017.7 |
 | vowel | PFoil:one-level@10 (macro distribution voting) | 88.69% | 1017.7 |
 | vowel | PFoil:one-level@10 (micro distribution voting) | 82.02% | 1017.7 |
@@ -5450,34 +5450,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | vowel | PFossil:two-level@50 (macro distribution voting) | 89.70% | 4356.5 |
 | vowel | PFossil:two-level@50 (micro distribution voting) | 84.34% | 4356.5 |
 | vowel | PFossil:two-level@50 (voting) | 88.18% | 4356.5 |
-| vowel | Pypper:one-level@10 (best rule) | 71.62% | 295.1 |
-| vowel | Pypper:one-level@10 (macro distribution voting) | 75.66% | 295.1 |
-| vowel | Pypper:one-level@10 (micro distribution voting) | 69.09% | 295.1 |
-| vowel | Pypper:one-level@10 (voting) | 74.24% | 295.1 |
-| vowel | Pypper:one-level@25 (best rule) | 72.12% | 747.7 |
-| vowel | Pypper:one-level@25 (macro distribution voting) | 76.97% | 747.7 |
-| vowel | Pypper:one-level@25 (micro distribution voting) | 72.93% | 747.7 |
-| vowel | Pypper:one-level@25 (voting) | 76.46% | 747.7 |
-| vowel | Pypper:one-level@50 (best rule) | 70.40% | 1507.0 |
-| vowel | Pypper:one-level@50 (macro distribution voting) | 79.39% | 1507.0 |
-| vowel | Pypper:one-level@50 (micro distribution voting) | 72.42% | 1507.0 |
-| vowel | Pypper:one-level@50 (voting) | 78.08% | 1507.0 |
-| vowel | Pypper:single (best rule) | 63.84% | 41.5 |
-| vowel | Pypper:single (macro distribution voting) | 64.04% | 41.5 |
-| vowel | Pypper:single (micro distribution voting) | 62.53% | 41.5 |
-| vowel | Pypper:single (voting) | 62.53% | 41.5 |
-| vowel | Pypper:two-level@10 (best rule) | 74.85% | 295.1 |
-| vowel | Pypper:two-level@10 (macro distribution voting) | 75.15% | 295.1 |
-| vowel | Pypper:two-level@10 (micro distribution voting) | 73.13% | 295.1 |
-| vowel | Pypper:two-level@10 (voting) | 74.44% | 295.1 |
-| vowel | Pypper:two-level@25 (best rule) | 76.87% | 747.7 |
-| vowel | Pypper:two-level@25 (macro distribution voting) | 76.97% | 747.7 |
-| vowel | Pypper:two-level@25 (micro distribution voting) | 75.56% | 747.7 |
-| vowel | Pypper:two-level@25 (voting) | 76.97% | 747.7 |
-| vowel | Pypper:two-level@50 (best rule) | 78.89% | 1507.0 |
-| vowel | Pypper:two-level@50 (macro distribution voting) | 79.39% | 1507.0 |
-| vowel | Pypper:two-level@50 (micro distribution voting) | 76.36% | 1507.0 |
-| vowel | Pypper:two-level@50 (voting) | 78.28% | 1507.0 |
+| vowel | Pypper:one-level@10 (best rule) | 74.55% | 541.2 |
+| vowel | Pypper:one-level@10 (macro distribution voting) | 83.23% | 541.2 |
+| vowel | Pypper:one-level@10 (micro distribution voting) | 74.85% | 541.2 |
+| vowel | Pypper:one-level@10 (voting) | 82.42% | 541.2 |
+| vowel | Pypper:one-level@25 (best rule) | 72.73% | 1366.3 |
+| vowel | Pypper:one-level@25 (macro distribution voting) | 85.76% | 1366.3 |
+| vowel | Pypper:one-level@25 (micro distribution voting) | 76.97% | 1366.3 |
+| vowel | Pypper:one-level@25 (voting) | 84.14% | 1366.3 |
+| vowel | Pypper:one-level@50 (best rule) | 70.40% | 2738.3 |
+| vowel | Pypper:one-level@50 (macro distribution voting) | 85.56% | 2738.3 |
+| vowel | Pypper:one-level@50 (micro distribution voting) | 77.78% | 2738.3 |
+| vowel | Pypper:one-level@50 (voting) | 84.55% | 2738.3 |
+| vowel | Pypper:single (best rule) | 73.84% | 68.9 |
+| vowel | Pypper:single (macro distribution voting) | 74.85% | 68.9 |
+| vowel | Pypper:single (micro distribution voting) | 72.02% | 68.9 |
+| vowel | Pypper:single (voting) | 72.02% | 68.9 |
+| vowel | Pypper:two-level@10 (best rule) | 81.52% | 541.2 |
+| vowel | Pypper:two-level@10 (macro distribution voting) | 83.33% | 541.2 |
+| vowel | Pypper:two-level@10 (micro distribution voting) | 79.70% | 541.2 |
+| vowel | Pypper:two-level@10 (voting) | 80.71% | 541.2 |
+| vowel | Pypper:two-level@25 (best rule) | 85.56% | 1366.3 |
+| vowel | Pypper:two-level@25 (macro distribution voting) | 86.26% | 1366.3 |
+| vowel | Pypper:two-level@25 (micro distribution voting) | 82.42% | 1366.3 |
+| vowel | Pypper:two-level@25 (voting) | 84.44% | 1366.3 |
+| vowel | Pypper:two-level@50 (best rule) | 84.95% | 2738.3 |
+| vowel | Pypper:two-level@50 (macro distribution voting) | 86.57% | 2738.3 |
+| vowel | Pypper:two-level@50 (micro distribution voting) | 81.92% | 2738.3 |
+| vowel | Pypper:two-level@50 (voting) | 85.05% | 2738.3 |
 | wdbc | PFoil:one-level@10 (best rule) | 93.33% | 124.4 |
 | wdbc | PFoil:one-level@10 (macro distribution voting) | 96.66% | 124.4 |
 | wdbc | PFoil:one-level@10 (micro distribution voting) | 96.48% | 124.4 |
@@ -5534,34 +5534,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | wdbc | PFossil:two-level@50 (macro distribution voting) | 95.78% | 517.1 |
 | wdbc | PFossil:two-level@50 (micro distribution voting) | 94.73% | 517.1 |
 | wdbc | PFossil:two-level@50 (voting) | 95.61% | 517.1 |
-| wdbc | Pypper:one-level@10 (best rule) | 95.08% | 55.7 |
-| wdbc | Pypper:one-level@10 (macro distribution voting) | 95.96% | 55.7 |
-| wdbc | Pypper:one-level@10 (micro distribution voting) | 94.56% | 55.7 |
-| wdbc | Pypper:one-level@10 (voting) | 95.96% | 55.7 |
-| wdbc | Pypper:one-level@25 (best rule) | 94.55% | 136.9 |
-| wdbc | Pypper:one-level@25 (macro distribution voting) | 95.78% | 136.9 |
-| wdbc | Pypper:one-level@25 (micro distribution voting) | 94.38% | 136.9 |
-| wdbc | Pypper:one-level@25 (voting) | 95.78% | 136.9 |
-| wdbc | Pypper:one-level@50 (best rule) | 95.25% | 270.8 |
-| wdbc | Pypper:one-level@50 (macro distribution voting) | 95.78% | 270.8 |
-| wdbc | Pypper:one-level@50 (micro distribution voting) | 94.73% | 270.8 |
-| wdbc | Pypper:one-level@50 (voting) | 95.78% | 270.8 |
-| wdbc | Pypper:single (best rule) | 94.91% | 6.2 |
-| wdbc | Pypper:single (macro distribution voting) | 95.08% | 6.2 |
-| wdbc | Pypper:single (micro distribution voting) | 94.90% | 6.2 |
-| wdbc | Pypper:single (voting) | 94.72% | 6.2 |
-| wdbc | Pypper:two-level@10 (best rule) | 95.08% | 55.7 |
-| wdbc | Pypper:two-level@10 (macro distribution voting) | 95.25% | 55.7 |
-| wdbc | Pypper:two-level@10 (micro distribution voting) | 95.08% | 55.7 |
-| wdbc | Pypper:two-level@10 (voting) | 95.08% | 55.7 |
-| wdbc | Pypper:two-level@25 (best rule) | 95.78% | 136.9 |
-| wdbc | Pypper:two-level@25 (macro distribution voting) | 95.43% | 136.9 |
-| wdbc | Pypper:two-level@25 (micro distribution voting) | 94.56% | 136.9 |
-| wdbc | Pypper:two-level@25 (voting) | 94.56% | 136.9 |
-| wdbc | Pypper:two-level@50 (best rule) | 96.13% | 270.8 |
-| wdbc | Pypper:two-level@50 (macro distribution voting) | 95.96% | 270.8 |
-| wdbc | Pypper:two-level@50 (micro distribution voting) | 95.08% | 270.8 |
-| wdbc | Pypper:two-level@50 (voting) | 95.26% | 270.8 |
+| wdbc | Pypper:one-level@10 (best rule) | 95.43% | 65.3 |
+| wdbc | Pypper:one-level@10 (macro distribution voting) | 95.96% | 65.3 |
+| wdbc | Pypper:one-level@10 (micro distribution voting) | 94.56% | 65.3 |
+| wdbc | Pypper:one-level@10 (voting) | 95.96% | 65.3 |
+| wdbc | Pypper:one-level@25 (best rule) | 94.03% | 162.5 |
+| wdbc | Pypper:one-level@25 (macro distribution voting) | 96.13% | 162.5 |
+| wdbc | Pypper:one-level@25 (micro distribution voting) | 94.73% | 162.5 |
+| wdbc | Pypper:one-level@25 (voting) | 96.13% | 162.5 |
+| wdbc | Pypper:one-level@50 (best rule) | 95.25% | 322.1 |
+| wdbc | Pypper:one-level@50 (macro distribution voting) | 95.96% | 322.1 |
+| wdbc | Pypper:one-level@50 (micro distribution voting) | 94.90% | 322.1 |
+| wdbc | Pypper:one-level@50 (voting) | 95.96% | 322.1 |
+| wdbc | Pypper:single (best rule) | 95.44% | 7.2 |
+| wdbc | Pypper:single (macro distribution voting) | 95.44% | 7.2 |
+| wdbc | Pypper:single (micro distribution voting) | 95.43% | 7.2 |
+| wdbc | Pypper:single (voting) | 95.08% | 7.2 |
+| wdbc | Pypper:two-level@10 (best rule) | 95.60% | 65.3 |
+| wdbc | Pypper:two-level@10 (macro distribution voting) | 95.60% | 65.3 |
+| wdbc | Pypper:two-level@10 (micro distribution voting) | 95.08% | 65.3 |
+| wdbc | Pypper:two-level@10 (voting) | 95.26% | 65.3 |
+| wdbc | Pypper:two-level@25 (best rule) | 95.96% | 162.5 |
+| wdbc | Pypper:two-level@25 (macro distribution voting) | 96.13% | 162.5 |
+| wdbc | Pypper:two-level@25 (micro distribution voting) | 95.26% | 162.5 |
+| wdbc | Pypper:two-level@25 (voting) | 95.08% | 162.5 |
+| wdbc | Pypper:two-level@50 (best rule) | 96.13% | 322.1 |
+| wdbc | Pypper:two-level@50 (macro distribution voting) | 96.31% | 322.1 |
+| wdbc | Pypper:two-level@50 (micro distribution voting) | 95.43% | 322.1 |
+| wdbc | Pypper:two-level@50 (voting) | 95.43% | 322.1 |
 | wilt | PFoil:one-level@10 (best rule) | 96.73% | 889.6 |
 | wilt | PFoil:one-level@10 (macro distribution voting) | 96.94% | 889.6 |
 | wilt | PFoil:one-level@10 (micro distribution voting) | 95.31% | 889.6 |
@@ -5618,34 +5618,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | wilt | PFossil:two-level@50 (macro distribution voting) | 96.40% | 51.6 |
 | wilt | PFossil:two-level@50 (micro distribution voting) | 96.40% | 51.6 |
 | wilt | PFossil:two-level@50 (voting) | 96.40% | 51.6 |
-| wilt | Pypper:one-level@10 (best rule) | 97.40% | 56.8 |
-| wilt | Pypper:one-level@10 (macro distribution voting) | 97.38% | 56.8 |
-| wilt | Pypper:one-level@10 (micro distribution voting) | 97.40% | 56.8 |
-| wilt | Pypper:one-level@10 (voting) | 97.40% | 56.8 |
-| wilt | Pypper:one-level@25 (best rule) | 97.11% | 142.4 |
-| wilt | Pypper:one-level@25 (macro distribution voting) | 97.42% | 142.4 |
-| wilt | Pypper:one-level@25 (micro distribution voting) | 97.29% | 142.4 |
-| wilt | Pypper:one-level@25 (voting) | 97.38% | 142.4 |
-| wilt | Pypper:one-level@50 (best rule) | 97.17% | 287.0 |
-| wilt | Pypper:one-level@50 (macro distribution voting) | 97.44% | 287.0 |
-| wilt | Pypper:one-level@50 (micro distribution voting) | 97.33% | 287.0 |
-| wilt | Pypper:one-level@50 (voting) | 97.42% | 287.0 |
-| wilt | Pypper:single (best rule) | 97.42% | 6.1 |
-| wilt | Pypper:single (macro distribution voting) | 97.42% | 6.1 |
-| wilt | Pypper:single (micro distribution voting) | 97.42% | 6.1 |
-| wilt | Pypper:single (voting) | 97.42% | 6.1 |
-| wilt | Pypper:two-level@10 (best rule) | 97.38% | 56.8 |
-| wilt | Pypper:two-level@10 (macro distribution voting) | 97.38% | 56.8 |
-| wilt | Pypper:two-level@10 (micro distribution voting) | 97.38% | 56.8 |
-| wilt | Pypper:two-level@10 (voting) | 97.38% | 56.8 |
-| wilt | Pypper:two-level@25 (best rule) | 97.42% | 142.4 |
-| wilt | Pypper:two-level@25 (macro distribution voting) | 97.42% | 142.4 |
-| wilt | Pypper:two-level@25 (micro distribution voting) | 97.42% | 142.4 |
-| wilt | Pypper:two-level@25 (voting) | 97.42% | 142.4 |
-| wilt | Pypper:two-level@50 (best rule) | 97.44% | 287.0 |
-| wilt | Pypper:two-level@50 (macro distribution voting) | 97.44% | 287.0 |
-| wilt | Pypper:two-level@50 (micro distribution voting) | 97.44% | 287.0 |
-| wilt | Pypper:two-level@50 (voting) | 97.44% | 287.0 |
+| wilt | Pypper:one-level@10 (best rule) | 97.23% | 63.1 |
+| wilt | Pypper:one-level@10 (macro distribution voting) | 97.44% | 63.1 |
+| wilt | Pypper:one-level@10 (micro distribution voting) | 97.31% | 63.1 |
+| wilt | Pypper:one-level@10 (voting) | 97.38% | 63.1 |
+| wilt | Pypper:one-level@25 (best rule) | 97.00% | 160.8 |
+| wilt | Pypper:one-level@25 (macro distribution voting) | 97.42% | 160.8 |
+| wilt | Pypper:one-level@25 (micro distribution voting) | 97.29% | 160.8 |
+| wilt | Pypper:one-level@25 (voting) | 97.42% | 160.8 |
+| wilt | Pypper:one-level@50 (best rule) | 96.98% | 326.6 |
+| wilt | Pypper:one-level@50 (macro distribution voting) | 97.44% | 326.6 |
+| wilt | Pypper:one-level@50 (micro distribution voting) | 97.33% | 326.6 |
+| wilt | Pypper:one-level@50 (voting) | 97.42% | 326.6 |
+| wilt | Pypper:single (best rule) | 97.36% | 6.5 |
+| wilt | Pypper:single (macro distribution voting) | 97.38% | 6.5 |
+| wilt | Pypper:single (micro distribution voting) | 97.36% | 6.5 |
+| wilt | Pypper:single (voting) | 97.38% | 6.5 |
+| wilt | Pypper:two-level@10 (best rule) | 97.48% | 63.1 |
+| wilt | Pypper:two-level@10 (macro distribution voting) | 97.46% | 63.1 |
+| wilt | Pypper:two-level@10 (micro distribution voting) | 97.48% | 63.1 |
+| wilt | Pypper:two-level@10 (voting) | 97.48% | 63.1 |
+| wilt | Pypper:two-level@25 (best rule) | 97.44% | 160.8 |
+| wilt | Pypper:two-level@25 (macro distribution voting) | 97.44% | 160.8 |
+| wilt | Pypper:two-level@25 (micro distribution voting) | 97.44% | 160.8 |
+| wilt | Pypper:two-level@25 (voting) | 97.44% | 160.8 |
+| wilt | Pypper:two-level@50 (best rule) | 97.44% | 326.6 |
+| wilt | Pypper:two-level@50 (macro distribution voting) | 97.44% | 326.6 |
+| wilt | Pypper:two-level@50 (micro distribution voting) | 97.44% | 326.6 |
+| wilt | Pypper:two-level@50 (voting) | 97.44% | 326.6 |
 | wine | PFoil:one-level@10 (best rule) | 92.65% | 74.5 |
 | wine | PFoil:one-level@10 (macro distribution voting) | 96.63% | 74.5 |
 | wine | PFoil:one-level@10 (micro distribution voting) | 96.05% | 74.5 |
@@ -5702,34 +5702,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | wine | PFossil:two-level@50 (macro distribution voting) | 97.75% | 397.4 |
 | wine | PFossil:two-level@50 (micro distribution voting) | 96.60% | 397.4 |
 | wine | PFossil:two-level@50 (voting) | 97.16% | 397.4 |
-| wine | Pypper:one-level@10 (best rule) | 92.58% | 49.3 |
-| wine | Pypper:one-level@10 (macro distribution voting) | 97.75% | 49.3 |
-| wine | Pypper:one-level@10 (micro distribution voting) | 96.60% | 49.3 |
-| wine | Pypper:one-level@10 (voting) | 97.75% | 49.3 |
-| wine | Pypper:one-level@25 (best rule) | 92.58% | 122.4 |
-| wine | Pypper:one-level@25 (macro distribution voting) | 97.19% | 122.4 |
-| wine | Pypper:one-level@25 (micro distribution voting) | 97.19% | 122.4 |
-| wine | Pypper:one-level@25 (voting) | 97.19% | 122.4 |
-| wine | Pypper:one-level@50 (best rule) | 90.92% | 245.8 |
-| wine | Pypper:one-level@50 (macro distribution voting) | 97.75% | 245.8 |
-| wine | Pypper:one-level@50 (micro distribution voting) | 96.60% | 245.8 |
-| wine | Pypper:one-level@50 (voting) | 97.75% | 245.8 |
-| wine | Pypper:single (best rule) | 92.09% | 5.2 |
-| wine | Pypper:single (macro distribution voting) | 90.98% | 5.2 |
-| wine | Pypper:single (micro distribution voting) | 90.92% | 5.2 |
-| wine | Pypper:single (voting) | 88.69% | 5.2 |
-| wine | Pypper:two-level@10 (best rule) | 96.60% | 49.3 |
-| wine | Pypper:two-level@10 (macro distribution voting) | 97.16% | 49.3 |
-| wine | Pypper:two-level@10 (micro distribution voting) | 95.42% | 49.3 |
-| wine | Pypper:two-level@10 (voting) | 94.87% | 49.3 |
-| wine | Pypper:two-level@25 (best rule) | 96.63% | 122.4 |
-| wine | Pypper:two-level@25 (macro distribution voting) | 96.63% | 122.4 |
-| wine | Pypper:two-level@25 (micro distribution voting) | 96.05% | 122.4 |
-| wine | Pypper:two-level@25 (voting) | 96.60% | 122.4 |
-| wine | Pypper:two-level@50 (best rule) | 97.19% | 245.8 |
-| wine | Pypper:two-level@50 (macro distribution voting) | 97.19% | 245.8 |
-| wine | Pypper:two-level@50 (micro distribution voting) | 96.60% | 245.8 |
-| wine | Pypper:two-level@50 (voting) | 95.42% | 245.8 |
+| wine | Pypper:one-level@10 (best rule) | 91.47% | 52.3 |
+| wine | Pypper:one-level@10 (macro distribution voting) | 97.75% | 52.3 |
+| wine | Pypper:one-level@10 (micro distribution voting) | 96.60% | 52.3 |
+| wine | Pypper:one-level@10 (voting) | 97.75% | 52.3 |
+| wine | Pypper:one-level@25 (best rule) | 92.03% | 130.8 |
+| wine | Pypper:one-level@25 (macro distribution voting) | 97.19% | 130.8 |
+| wine | Pypper:one-level@25 (micro distribution voting) | 97.19% | 130.8 |
+| wine | Pypper:one-level@25 (voting) | 97.19% | 130.8 |
+| wine | Pypper:one-level@50 (best rule) | 90.36% | 262.2 |
+| wine | Pypper:one-level@50 (macro distribution voting) | 97.75% | 262.2 |
+| wine | Pypper:one-level@50 (micro distribution voting) | 96.60% | 262.2 |
+| wine | Pypper:one-level@50 (voting) | 97.75% | 262.2 |
+| wine | Pypper:single (best rule) | 92.09% | 5.3 |
+| wine | Pypper:single (macro distribution voting) | 90.98% | 5.3 |
+| wine | Pypper:single (micro distribution voting) | 90.92% | 5.3 |
+| wine | Pypper:single (voting) | 88.69% | 5.3 |
+| wine | Pypper:two-level@10 (best rule) | 96.60% | 52.3 |
+| wine | Pypper:two-level@10 (macro distribution voting) | 97.16% | 52.3 |
+| wine | Pypper:two-level@10 (micro distribution voting) | 95.42% | 52.3 |
+| wine | Pypper:two-level@10 (voting) | 94.87% | 52.3 |
+| wine | Pypper:two-level@25 (best rule) | 96.63% | 130.8 |
+| wine | Pypper:two-level@25 (macro distribution voting) | 97.19% | 130.8 |
+| wine | Pypper:two-level@25 (micro distribution voting) | 96.05% | 130.8 |
+| wine | Pypper:two-level@25 (voting) | 96.60% | 130.8 |
+| wine | Pypper:two-level@50 (best rule) | 96.63% | 262.2 |
+| wine | Pypper:two-level@50 (macro distribution voting) | 97.19% | 262.2 |
+| wine | Pypper:two-level@50 (micro distribution voting) | 96.05% | 262.2 |
+| wine | Pypper:two-level@50 (voting) | 96.57% | 262.2 |
 | yeast | PFoil:one-level@10 (best rule) | 58.16% | 2029.6 |
 | yeast | PFoil:one-level@10 (macro distribution voting) | 59.03% | 2029.6 |
 | yeast | PFoil:one-level@10 (micro distribution voting) | 49.47% | 2029.6 |
@@ -5786,34 +5786,34 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | yeast | PFossil:two-level@50 (macro distribution voting) | 60.37% | 2135.2 |
 | yeast | PFossil:two-level@50 (micro distribution voting) | 58.09% | 2135.2 |
 | yeast | PFossil:two-level@50 (voting) | 57.68% | 2135.2 |
-| yeast | Pypper:one-level@10 (best rule) | 60.11% | 171.7 |
-| yeast | Pypper:one-level@10 (macro distribution voting) | 61.39% | 171.7 |
-| yeast | Pypper:one-level@10 (micro distribution voting) | 59.10% | 171.7 |
-| yeast | Pypper:one-level@10 (voting) | 61.39% | 171.7 |
-| yeast | Pypper:one-level@25 (best rule) | 60.65% | 427.6 |
-| yeast | Pypper:one-level@25 (macro distribution voting) | 61.59% | 427.6 |
-| yeast | Pypper:one-level@25 (micro distribution voting) | 59.37% | 427.6 |
-| yeast | Pypper:one-level@25 (voting) | 61.32% | 427.6 |
-| yeast | Pypper:one-level@50 (best rule) | 59.50% | 848.9 |
-| yeast | Pypper:one-level@50 (macro distribution voting) | 61.86% | 848.9 |
-| yeast | Pypper:one-level@50 (micro distribution voting) | 59.23% | 848.9 |
-| yeast | Pypper:one-level@50 (voting) | 60.92% | 848.9 |
-| yeast | Pypper:single (best rule) | 59.30% | 17.5 |
-| yeast | Pypper:single (macro distribution voting) | 59.30% | 17.5 |
-| yeast | Pypper:single (micro distribution voting) | 58.62% | 17.5 |
-| yeast | Pypper:single (voting) | 58.69% | 17.5 |
-| yeast | Pypper:two-level@10 (best rule) | 61.79% | 171.7 |
-| yeast | Pypper:two-level@10 (macro distribution voting) | 61.59% | 171.7 |
-| yeast | Pypper:two-level@10 (micro distribution voting) | 60.31% | 171.7 |
-| yeast | Pypper:two-level@10 (voting) | 60.04% | 171.7 |
-| yeast | Pypper:two-level@25 (best rule) | 61.93% | 427.6 |
-| yeast | Pypper:two-level@25 (macro distribution voting) | 62.00% | 427.6 |
-| yeast | Pypper:two-level@25 (micro distribution voting) | 60.44% | 427.6 |
-| yeast | Pypper:two-level@25 (voting) | 60.24% | 427.6 |
-| yeast | Pypper:two-level@50 (best rule) | 61.99% | 848.9 |
-| yeast | Pypper:two-level@50 (macro distribution voting) | 61.73% | 848.9 |
-| yeast | Pypper:two-level@50 (micro distribution voting) | 60.18% | 848.9 |
-| yeast | Pypper:two-level@50 (voting) | 60.31% | 848.9 |
+| yeast | Pypper:one-level@10 (best rule) | 58.69% | 236.6 |
+| yeast | Pypper:one-level@10 (macro distribution voting) | 61.66% | 236.6 |
+| yeast | Pypper:one-level@10 (micro distribution voting) | 58.90% | 236.6 |
+| yeast | Pypper:one-level@10 (voting) | 60.85% | 236.6 |
+| yeast | Pypper:one-level@25 (best rule) | 59.77% | 583.5 |
+| yeast | Pypper:one-level@25 (macro distribution voting) | 61.86% | 583.5 |
+| yeast | Pypper:one-level@25 (micro distribution voting) | 58.76% | 583.5 |
+| yeast | Pypper:one-level@25 (voting) | 61.45% | 583.5 |
+| yeast | Pypper:one-level@50 (best rule) | 58.90% | 1153.7 |
+| yeast | Pypper:one-level@50 (macro distribution voting) | 61.32% | 1153.7 |
+| yeast | Pypper:one-level@50 (micro distribution voting) | 59.70% | 1153.7 |
+| yeast | Pypper:one-level@50 (voting) | 61.12% | 1153.7 |
+| yeast | Pypper:single (best rule) | 59.43% | 18.5 |
+| yeast | Pypper:single (macro distribution voting) | 59.02% | 18.5 |
+| yeast | Pypper:single (micro distribution voting) | 57.88% | 18.5 |
+| yeast | Pypper:single (voting) | 58.15% | 18.5 |
+| yeast | Pypper:two-level@10 (best rule) | 62.00% | 236.6 |
+| yeast | Pypper:two-level@10 (macro distribution voting) | 61.46% | 236.6 |
+| yeast | Pypper:two-level@10 (micro distribution voting) | 60.78% | 236.6 |
+| yeast | Pypper:two-level@10 (voting) | 60.51% | 236.6 |
+| yeast | Pypper:two-level@25 (best rule) | 61.79% | 583.5 |
+| yeast | Pypper:two-level@25 (macro distribution voting) | 61.93% | 583.5 |
+| yeast | Pypper:two-level@25 (micro distribution voting) | 60.58% | 583.5 |
+| yeast | Pypper:two-level@25 (voting) | 60.18% | 583.5 |
+| yeast | Pypper:two-level@50 (best rule) | 61.99% | 1153.7 |
+| yeast | Pypper:two-level@50 (macro distribution voting) | 61.73% | 1153.7 |
+| yeast | Pypper:two-level@50 (micro distribution voting) | 60.51% | 1153.7 |
+| yeast | Pypper:two-level@50 (voting) | 60.38% | 1153.7 |
 | zoo | PFoil:one-level@10 (best rule) | 93.00% | 85.5 |
 | zoo | PFoil:one-level@10 (macro distribution voting) | 95.00% | 85.5 |
 | zoo | PFoil:one-level@10 (micro distribution voting) | 94.00% | 85.5 |
@@ -5870,32 +5870,32 @@ Per (dataset, base learner) pair, the accuracy of the two-level combination minu
 | zoo | PFossil:two-level@50 (macro distribution voting) | 97.00% | 420.1 |
 | zoo | PFossil:two-level@50 (micro distribution voting) | 97.00% | 420.1 |
 | zoo | PFossil:two-level@50 (voting) | 96.00% | 420.1 |
-| zoo | Pypper:one-level@10 (best rule) | 90.09% | 55.6 |
-| zoo | Pypper:one-level@10 (macro distribution voting) | 92.09% | 55.6 |
-| zoo | Pypper:one-level@10 (micro distribution voting) | 90.09% | 55.6 |
-| zoo | Pypper:one-level@10 (voting) | 92.09% | 55.6 |
-| zoo | Pypper:one-level@25 (best rule) | 88.09% | 140.0 |
-| zoo | Pypper:one-level@25 (macro distribution voting) | 92.09% | 140.0 |
-| zoo | Pypper:one-level@25 (micro distribution voting) | 90.09% | 140.0 |
-| zoo | Pypper:one-level@25 (voting) | 92.09% | 140.0 |
-| zoo | Pypper:one-level@50 (best rule) | 89.09% | 272.5 |
-| zoo | Pypper:one-level@50 (macro distribution voting) | 93.09% | 272.5 |
-| zoo | Pypper:one-level@50 (micro distribution voting) | 92.09% | 272.5 |
-| zoo | Pypper:one-level@50 (voting) | 93.09% | 272.5 |
+| zoo | Pypper:one-level@10 (best rule) | 91.00% | 62.1 |
+| zoo | Pypper:one-level@10 (macro distribution voting) | 93.00% | 62.1 |
+| zoo | Pypper:one-level@10 (micro distribution voting) | 92.00% | 62.1 |
+| zoo | Pypper:one-level@10 (voting) | 92.00% | 62.1 |
+| zoo | Pypper:one-level@25 (best rule) | 88.09% | 154.2 |
+| zoo | Pypper:one-level@25 (macro distribution voting) | 93.00% | 154.2 |
+| zoo | Pypper:one-level@25 (micro distribution voting) | 91.00% | 154.2 |
+| zoo | Pypper:one-level@25 (voting) | 93.00% | 154.2 |
+| zoo | Pypper:one-level@50 (best rule) | 89.09% | 300.4 |
+| zoo | Pypper:one-level@50 (macro distribution voting) | 94.00% | 300.4 |
+| zoo | Pypper:one-level@50 (micro distribution voting) | 93.00% | 300.4 |
+| zoo | Pypper:one-level@50 (voting) | 94.00% | 300.4 |
 | zoo | Pypper:single (best rule) | 90.09% | 6.1 |
 | zoo | Pypper:single (macro distribution voting) | 90.09% | 6.1 |
 | zoo | Pypper:single (micro distribution voting) | 91.09% | 6.1 |
 | zoo | Pypper:single (voting) | 90.09% | 6.1 |
-| zoo | Pypper:two-level@10 (best rule) | 92.09% | 55.6 |
-| zoo | Pypper:two-level@10 (macro distribution voting) | 92.09% | 55.6 |
-| zoo | Pypper:two-level@10 (micro distribution voting) | 91.09% | 55.6 |
-| zoo | Pypper:two-level@10 (voting) | 91.09% | 55.6 |
-| zoo | Pypper:two-level@25 (best rule) | 91.09% | 140.0 |
-| zoo | Pypper:two-level@25 (macro distribution voting) | 92.09% | 140.0 |
-| zoo | Pypper:two-level@25 (micro distribution voting) | 91.09% | 140.0 |
-| zoo | Pypper:two-level@25 (voting) | 91.09% | 140.0 |
-| zoo | Pypper:two-level@50 (best rule) | 92.09% | 272.5 |
-| zoo | Pypper:two-level@50 (macro distribution voting) | 93.09% | 272.5 |
-| zoo | Pypper:two-level@50 (micro distribution voting) | 91.09% | 272.5 |
-| zoo | Pypper:two-level@50 (voting) | 91.09% | 272.5 |
+| zoo | Pypper:two-level@10 (best rule) | 92.00% | 62.1 |
+| zoo | Pypper:two-level@10 (macro distribution voting) | 92.00% | 62.1 |
+| zoo | Pypper:two-level@10 (micro distribution voting) | 91.00% | 62.1 |
+| zoo | Pypper:two-level@10 (voting) | 91.00% | 62.1 |
+| zoo | Pypper:two-level@25 (best rule) | 92.00% | 154.2 |
+| zoo | Pypper:two-level@25 (macro distribution voting) | 93.00% | 154.2 |
+| zoo | Pypper:two-level@25 (micro distribution voting) | 92.00% | 154.2 |
+| zoo | Pypper:two-level@25 (voting) | 92.00% | 154.2 |
+| zoo | Pypper:two-level@50 (best rule) | 94.00% | 300.4 |
+| zoo | Pypper:two-level@50 (macro distribution voting) | 94.00% | 300.4 |
+| zoo | Pypper:two-level@50 (micro distribution voting) | 93.00% | 300.4 |
+| zoo | Pypper:two-level@50 (voting) | 93.00% | 300.4 |
 

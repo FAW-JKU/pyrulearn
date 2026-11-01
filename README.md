@@ -246,15 +246,15 @@ features):
 
 - *The default:* `VerticalBitmapRepresentation`. On real data the
   separate-and-conquer learners and PyLORD fit fastest on it (`adult`,
-  32,000 rows, with negation features: Pypper 1.6 s against 5.2 s on
-  N-lists, 13.5 s on Sparse and 25.3 s on the horizontal bitmap; CN2
-  15.5 s against 21.7, 31.1 and 34.9 s; PyLORD finishes 32,000 rows in
+  32,000 rows, with negation features: Pypper 2.0 s against 6.2 s on
+  N-lists, 17.9 s on Sparse and 33.4 s on the horizontal bitmap; CN2
+  121 s against 155, 198 and 226 s; PyLORD finishes 32,000 rows in
   505 s only on the vertical bitmap, and needs more than 600 s on the
   others), and ENDER is close to the fastest (23.0 s against 20.6 s on
   N-lists). It holds one bit per cell, like the horizontal bitmap (1.1 MiB
   for `adult`, against 38-42 MiB for N-lists and Sparse), and a fit
-  allocates little on top: a CN2 fit needs 4.5 MiB in total, about as
-  much as on the horizontal bitmap (4.3 MiB), against 72-98 MiB on
+  allocates little on top: a CN2 fit needs 5.5 MiB in total, about as
+  much as on the horizontal bitmap (6.2 MiB), against 72-99 MiB on
   N-lists and Sparse.
 - *For sparse data* -- many features, few of them true per example
   (one-hot encodings of many-valued attributes, text), built without
@@ -263,8 +263,8 @@ features):
   below a density of about 1/80 (1,000 examples, 20,000 features, about
   18 true per example: 257 KiB against 2.4 MiB for the bitmaps and
   38.7 MiB for N-lists). The separate-and-conquer learners are about as
-  fast on it as on the vertical bitmap there (CN2 1.8 s against 2.2 s, and
-  12.6 s on the horizontal bitmap); ENDER is faster on the list-based
+  fast on it as on the vertical bitmap there (CN2 3.3 s against 3.7 s, and
+  14.3 s on the horizontal bitmap); ENDER is faster on the list-based
   representations on such data (1.5 s on Sparse, 1.6 s on N-lists, 7.8 s
   on the vertical bitmap).
 - Negation features make any data dense (every test or its negation
