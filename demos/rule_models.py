@@ -86,7 +86,7 @@ N_FOLDS = 10
 LARGE_DATASETS = ["kropt", "letter"]
 LARGE_FIT_TIMEOUT = 1800.0
 MAX_INTERVALS = 8
-FIT_TIMEOUT = 300.0
+FIT_TIMEOUT = 900.0
 
 BASES = {"CN2": CN2, "PFossil": PFossil, "Pypper": Pypper}
 

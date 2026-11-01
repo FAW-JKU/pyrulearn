@@ -17,7 +17,7 @@ handling several classes -- see `LEARNER_NOTES`):
 
 - **CN2**      -- `pyrulearn.learners.seco.CN2` (Clark & Boswell 1991):
                   beam search (width 5) with Laplace, CN2's significance
-                  test as the stopping criterion.
+                  test as a filter on the search's rules.
 - **PFoil**    -- `PFoil`: FOIL's greedy gain-ascent search with FOIL
                   gain and Quinlan's (1990) encoding-length restriction.
 - **PFossil**  -- `PFossil`: FOSSIL (Fürnkranz 1994), hill climbing on
@@ -96,7 +96,7 @@ N_JOBS = "1"
 RANDOM_STATE = 0
 N_FOLDS = 10
 MAX_INTERVALS = 8
-FIT_TIMEOUT = 300.0
+FIT_TIMEOUT = 900.0
 
 # Datasets whose attributes are mostly symbolic (at least half nominal) --
 # the kind these learners were designed for; numeric attributes and their
@@ -231,7 +231,7 @@ def run_preliminary_aqr_check():
 # what the report says about each learner, keyed by display_name
 LEARNER_NOTES = {
     "CN2": "Beam search (width 5) with the Laplace estimate; CN2's likelihood-ratio "
-           "significance test stops rules that aren't significant. Learns rules for "
+           "significance test filters the rules a search can return. Learns rules for "
            "every class (one-vs-rest rule set).",
     "PFoil": "FOIL: greedy search that adds the condition with the highest FOIL gain; "
              "Quinlan's encoding-length restriction stops rules that cost more bits "
@@ -323,7 +323,7 @@ that need the dense matrix convert them). Each fit is capped at {FIT_TIMEOUT:.0f
 time-out or an error counts as a failure (and as last in the ranking),
 not as the end of the run. The cap is deliberately kept for the large
 datasets too: which learners scale to tens of thousands of examples is
-part of the result (a single CN2 fit on adult takes about 20 minutes).{_concurrency_note()}
+part of the result.{_concurrency_note()}
 
 A fold that times out fails the whole cross-validation of that learner on that dataset (`run_cv`'s `stop_on_timeout`): its remaining folds are not run, and all its folds count as failures, so no mean rests on just the folds that finished.
 

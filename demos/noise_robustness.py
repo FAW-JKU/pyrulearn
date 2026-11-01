@@ -58,7 +58,7 @@ N_MEMBERS = 10
 #: name -> the learner (default settings unless the name says otherwise)
 LEARNERS = {
     "CN2": lambda: CN2(),
-    "CN2 (no stopping)": lambda: CN2(significance_threshold=None),
+    "CN2 (no significance test)": lambda: CN2(significance_threshold=None),
     "PFoil": lambda: PFoil(),
     "PFoil (no stopping)": lambda: PFoil(mdl_stopping=False),
     "PFossil": lambda: PFossil(),
@@ -74,7 +74,7 @@ LEARNERS = {
 }
 #: group -> its learners, in the order of the report
 GROUPS = {
-    "separate-and-conquer": ["CN2", "CN2 (no stopping)", "PFoil", "PFoil (no stopping)", "PFossil", "Pypper"],
+    "separate-and-conquer": ["CN2", "CN2 (no significance test)", "PFoil", "PFoil (no stopping)", "PFossil", "Pypper"],
     "local rules": ["PyLORD"],
     "boosted rules": ["Slipper", "ENDER", "ENDER (exponential loss)", "Boomer"],
     "ensembles of concept sets": ["Bagging:PFoil", "AdaBoost:PFoil"],
@@ -164,7 +164,7 @@ concept. Every learner of a fold sees the same noisy labels.
 Separate-and-conquer:
 
 - **CN2** -- beam search with the Laplace estimate, its significance test
-  as the stopping criterion; rules for every class. **CN2 (no stopping)**:
+  as a filter on the rules a search returns; rules for every class. **CN2 (no significance test)**:
   without the test.
 - **PFoil** -- FOIL gain, greedy search, Quinlan's encoding-length
   restriction as the stopping criterion; rules for every class.

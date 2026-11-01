@@ -84,8 +84,8 @@ from pyrulearn.learners.seco import CN2, PFossil, Pypper
 RANDOM_STATE = 0
 MAX_INTERVALS = 8
 FIT_TIMEOUT = 300.0
-#: learners with a longer cap than FIT_TIMEOUT: PyLORD's larger points need it
-FIT_TIMEOUTS = {"PyLORD": 600.0}
+#: learners with a longer cap than FIT_TIMEOUT: PyLORD's and CN2's larger points need it
+FIT_TIMEOUTS = {"PyLORD": 600.0, "CN2": 1800.0}
 REPRESENTATIONS = ("HBitmap", "VBitmap", "NList", "Sparse")
 _VERTICAL = {"VBitmap": VerticalBitmapRepresentation, "NList": NListRepresentation,
              "Sparse": SparseDataRepresentation}
