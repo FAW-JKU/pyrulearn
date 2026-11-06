@@ -234,10 +234,11 @@ examples where it is true:
   in that order and the node it ends at. A rule's coverage is a vectorized
   `uint64` word-AND over one item's N-list plus the matching nodes' row
   ranges; `features_of` and `X` are decoded from the tree.
-  `PrePostNListRepresentation` also keeps the nodes' pre/post visit codes,
-  giving its search a second way to narrow a feature's nodes down to the
-  current search branch; it measured about break-even with plain N-lists,
-  at about 15% more memory.
+  `PrePostNListRepresentation` builds the same tree but keeps the nodes'
+  pre/post visit codes and parents instead of the path bitmasks, as the
+  N-lists of PrePost: its search tests ancestors by binary search, and
+  `features_of` walks up the tree. It holds less memory (on `adult`, 2.4
+  times less with negation), and its fits are a little slower.
 
 **Which one to use.** Every learner learns the same rules on all of
 them; only time and memory differ (`demos/representations_report.md`,

@@ -748,6 +748,9 @@ class NListRepresentation(DataRepresentation):
     #: (`PrePostNListRepresentation` searches with them; here they are
     #: only needed to derive the row ranges)
     _KEEP_PRE_POST = False
+    #: keep every node's path bitmask (`_words`); without them
+    #: (`PrePostNListRepresentation`), the nodes keep their parent instead
+    _PATH_BITMASKS = True
 
     def __init__(self, spec: DataSpec, X, y: Optional[np.ndarray] = None,
                  weights: Optional[np.ndarray] = None):
@@ -824,20 +827,23 @@ class NListRepresentation(DataRepresentation):
 
         # subtree sizes bottom-up, one depth level at a time; path bitmasks top-down
         size = np.ones(N + 1, dtype=np.int64)
-        words = np.zeros((N + 1, W), dtype=np.uint64)
         levels = [np.flatnonzero(node_depth[1:] == d) + 1 for d in range(L)]
         for nodes in reversed(levels):
             np.add.at(size, parent[nodes], size[nodes])
-        for nodes in levels:
-            words[nodes] = words[parent[nodes]]
-            f = item[nodes]
-            words[nodes, f >> 6] |= np.left_shift(np.uint64(1), (f & 63).astype(np.uint64))
+        if self._PATH_BITMASKS:
+            words = np.zeros((N + 1, W), dtype=np.uint64)
+            for nodes in levels:
+                words[nodes] = words[parent[nodes]]
+                f = item[nodes]
+                words[nodes, f >> 6] |= np.left_shift(np.uint64(1), (f & 63).astype(np.uint64))
         subtree_end = np.arange(N + 1) + size - 1
 
         # per item, its nodes in pre-order: the N-lists, one flat array each
         flat = np.argsort(item[1:], kind="stable") + 1   # node ids grouped by item
         self._item_ptr = np.concatenate(([0], np.cumsum(np.bincount(item[1:], minlength=k)))).astype(np.int64)
-        self._words = words[flat]
+        if self._PATH_BITMASKS:
+            self._words = words[flat]
+            del words
         self._row_lo = np.searchsorted(end_sorted, flat, side="left").astype(np.int32)
         self._row_hi = np.searchsorted(end_sorted, subtree_end[flat], side="right").astype(np.int32)
         if self._KEEP_PRE_POST:
@@ -845,6 +851,8 @@ class NListRepresentation(DataRepresentation):
             self._node_end = subtree_end[flat].astype(np.int32)
         position = np.full(N + 1, -1, dtype=np.int64)
         position[flat] = np.arange(N)
+        if not self._PATH_BITMASKS:
+            self._node_parent = position[parent[flat]].astype(np.int32)   # -1: a child of the root
         row_end = np.empty(n, dtype=np.int32)
         row_end[perm] = position[end_sorted]             # -1: the row ends at the root
         self._row_end = row_end
@@ -983,8 +991,8 @@ class NListRepresentation(DataRepresentation):
     #   item's own N-list, filtered by the full accumulated mask --
     #   exactly `coverage`'s cost for that one item. (Pre/post codes
     #   give a second way, searching the new item's nodes inside the
-    #   active nodes' subtrees: `PrePostNListRepresentation`, measured
-    #   about break-even, hence a separate, opt-in subclass.)
+    #   active nodes' subtrees: `PrePostNListRepresentation`, which
+    #   does without the path bitmasks altogether.)
     # - `mask_words` is the accumulated feature bitmask (needed for the
     #   re-anchor case's full-mask test). `ctx` (`_NListMaskContext`)
     #   carries `example_mask` and the weights, shared unchanged by every
@@ -1172,9 +1180,13 @@ class NListRepresentation(DataRepresentation):
         the row patterns)."""
         new = object.__new__(type(self))
         DataRepresentation.__init__(new, self.spec)
-        for name in ("_n_samples", "_n_features", "_word_count", "_rank", "_item_ptr", "_words",
+        for name in ("_n_samples", "_n_features", "_word_count", "_rank", "_item_ptr",
                      "_row_lo", "_row_hi", "_row_end", "_perm"):
             setattr(new, name, getattr(self, name))
+        if self._PATH_BITMASKS:
+            new._words = self._words
+        else:
+            new._node_parent = self._node_parent
         if self._KEEP_PRE_POST:
             new._node_pre, new._node_end = self._node_pre, self._node_end
         return new
@@ -1193,7 +1205,6 @@ class NListRepresentation(DataRepresentation):
         new._n_samples = m
         new._item_ptr = np.concatenate(([0], np.cumsum(np.bincount(item_of[alive], minlength=n_items)))
                                        ).astype(np.int64)
-        new._words = self._words[alive]
         new._row_lo = lo[alive].astype(np.int32)
         new._row_hi = hi[alive].astype(np.int32)
         if self._KEEP_PRE_POST:   # ancestor tests only compare these numbers: no renumbering needed
@@ -1201,6 +1212,11 @@ class NListRepresentation(DataRepresentation):
         new_id = np.cumsum(mask) - 1                              # old row -> new row
         new._perm = new_id[self._perm[keep]].astype(np.int32)
         new_position = np.cumsum(alive) - 1                       # old node -> new node
+        if self._PATH_BITMASKS:
+            new._words = self._words[alive]
+        else:   # an alive node's parent has its rows too, so it is alive as well
+            p = self._node_parent[alive]
+            new._node_parent = np.where(p >= 0, new_position[np.maximum(p, 0)], -1).astype(np.int32)
         old_end = self._row_end[mask]
         new._row_end = np.where(old_end >= 0, new_position[np.maximum(old_end, 0)], -1).astype(np.int32)
         new.y = None if self.y is None else self.y[mask]
@@ -1254,51 +1270,88 @@ class NListRepresentation(DataRepresentation):
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}(spec={self.spec!r}, n_samples={self.n_samples}, "
-            f"n_tree_nodes={len(self._words)})"
+            f"n_tree_nodes={len(self._row_lo)})"
         )
 
 
 class PrePostNListRepresentation(NListRepresentation):
-    """`NListRepresentation` searching with the nodes' pre/post codes:
-    `refine_cover`'s "deeper feature" case (see the comment above the base
-    class's `initial_cover`) finds the new feature's nodes compatible with
-    the rule so far by binary-searching its pre-order-sorted nodes against
-    the active nodes' ``[pre, subtree_end]`` intervals (disjoint, since no
-    two nodes of the same item can be ancestor/descendant of each other),
-    instead of scanning its whole N-list. `_reanchor` picks the plain scan
-    -- identical to the base class -- whenever the active set isn't smaller
-    than the feature's own N-list.
+    """`NListRepresentation` without the path bitmasks: the N-lists of the
+    original PrePost algorithm (Deng et al.), which only know every node's
+    pre-order number and subtree end. Node ``u`` is an ancestor of ``v``
+    iff ``pre(u) < pre(v) <= end(u)``, and since no two nodes of one item
+    lie on one path, an item's nodes, stored in pre-order, are disjoint
+    intervals -- so every test a search needs is a binary search:
 
-    The same tree and the same storage as `NListRepresentation`, which
-    needs the pre/post codes to derive its row ranges anyway; this class
-    only keeps them (two integers per node) for the search. **Opt-in, not
-    the default**: measured at the data scales of this library's demos
-    (thousands of rows, hundreds of features), the interval join comes out
-    roughly break-even to slightly *worse* than the plain scan -- it needs
-    several more vectorized numpy calls, whose fixed overhead is on the
-    order of the work saved. Kept for the case it hasn't been measured on:
-    a single feature's N-list running into the tens of thousands of nodes
-    while the active set stays tiny.
+    - refining by a feature *deeper* than the anchor (see the comment above
+      the base class's `initial_cover`): its nodes inside the active nodes'
+      intervals (`_reanchor`);
+    - refining by a feature *no deeper*: the active nodes with a node of the
+      feature above them (`_with_ancestor`);
+    - `coverage`: the deepest feature's nodes, filtered by the others' in
+      the same way.
+
+    A row's features are read back by walking from the node it ends at to
+    the root, over every node's parent (`_node_parent`). Per node, this
+    keeps five integers (pre-order number, subtree end, parent, row range)
+    instead of the path bitmask -- one bit per feature -- and the row range.
     """
 
     _KEEP_PRE_POST = True
+    _PATH_BITMASKS = False
 
-    def _reanchor(self, anchor_item: int, active: np.ndarray, feature: int, mask_words: np.ndarray) -> np.ndarray:
-        """Which of `feature`'s own nodes satisfy every bit in
-        `mask_words`, given that `active` already lists the `anchor_item`
-        nodes satisfying every bit *except* `feature`'s: those in an active
-        node's subtree (every node there has the active node's path, and
-        `feature`'s nodes are the ones with `feature` on it)."""
-        words = self._words_of(feature)
-        if active.size == 0 or active.size >= words.shape[0]:
-            hit = np.all((words & mask_words) == mask_words, axis=1)
-            return np.flatnonzero(hit).astype(np.int64)
+    # -- reading the data back from the tree ------------------------------
 
+    def _item_of(self, positions: np.ndarray) -> np.ndarray:
+        """The item of the nodes at flat `positions` (the N-lists are
+        consecutive in item order)."""
+        return np.searchsorted(self._item_ptr, positions, side="right") - 1
+
+    def _path_features(self, ends: np.ndarray) -> np.ndarray:
+        """``(len(ends), n_features)`` bool: the features on the paths of the
+        nodes at flat positions `ends` (-1: the root), collected by walking
+        all of them up to the root together, one level per step."""
+        out = np.zeros((len(ends), self._n_features), dtype=bool)
+        cur = np.asarray(ends, dtype=np.int64)
+        rows = np.flatnonzero(cur >= 0)
+        cur = cur[rows]
+        while cur.size:
+            out[rows, self._item_of(cur)] = True
+            cur = self._node_parent[cur].astype(np.int64)
+            live = cur >= 0
+            rows, cur = rows[live], cur[live]
+        return out
+
+    # -- the ancestor tests ------------------------------------------------
+
+    def _with_ancestor(self, anchor_item: int, active: np.ndarray, feature: int) -> np.ndarray:
+        """The `active` nodes of `anchor_item` (indices into its N-list)
+        that have a node of `feature` on their path: for each, the last of
+        `feature`'s nodes that starts no later must reach it."""
         s, e = self._item_ptr[feature], self._item_ptr[feature + 1]
-        pre_sorted = self._node_pre[s:e]                  # an item's nodes are stored in pre-order
-        a = self._item_ptr[anchor_item] + active
-        lo = np.searchsorted(pre_sorted, self._node_pre[a], side="left")
-        hi = np.searchsorted(pre_sorted, self._node_end[a], side="right")
+        if active.size == 0 or e == s:
+            return active[:0]
+        pre_f, end_f = self._node_pre[s:e], self._node_end[s:e]
+        p = self._node_pre[self._item_ptr[anchor_item] + active]
+        i = np.searchsorted(pre_f, p, side="right") - 1
+        return active[(i >= 0) & (end_f[np.maximum(i, 0)] >= p)]
+
+    def _reanchor(self, anchor_item: int, active: np.ndarray, feature: int) -> np.ndarray:
+        """`feature`'s nodes (indices into its N-list) below an `active` node
+        of `anchor_item`: every node there has the active node's path, so
+        they are the ones whose path has every feature so far. Searches
+        from the smaller side: the feature's nodes inside each active
+        interval, or the active interval around each of the feature's nodes."""
+        s, e = self._item_ptr[feature], self._item_ptr[feature + 1]
+        if active.size == 0 or e == s:
+            return np.empty(0, dtype=np.int64)
+        pre_f = self._node_pre[s:e]
+        a = self._item_ptr[anchor_item] + active          # in pre-order, disjoint intervals
+        a_pre, a_end = self._node_pre[a], self._node_end[a]
+        if active.size >= e - s:
+            i = np.searchsorted(a_pre, pre_f, side="right") - 1
+            return np.flatnonzero((i >= 0) & (a_end[np.maximum(i, 0)] >= pre_f)).astype(np.int64)
+        lo = np.searchsorted(pre_f, a_pre, side="left")
+        hi = np.searchsorted(pre_f, a_end, side="right")
         counts = hi - lo
         total = int(counts.sum())
         if total == 0:
@@ -1306,23 +1359,43 @@ class PrePostNListRepresentation(NListRepresentation):
         # vectorized ragged-range gather (no Python loop over `active`)
         return (np.repeat(lo - (np.cumsum(counts) - counts), counts) + np.arange(total)).astype(np.int64)
 
-    def refine_cover(self, handle, feature: int):
-        anchor_item, active, mask_words, ctx = handle
-        feature = int(feature)
-        new_mask_words = mask_words.copy()
-        new_mask_words[feature >> 6] |= np.uint64(1 << (feature & 63))
+    # -- the two DataRepresentation primitives -------------------------
 
+    def _coverage_of_features(self, feats: Sequence[int]) -> np.ndarray:
+        feats = list(dict.fromkeys(int(f) for f in feats))
+        out = np.zeros(self._n_samples, dtype=bool)
+        if not feats:
+            out[:] = True
+            return out
+        iy = max(feats, key=lambda f: self._rank[f])   # deepest item in the tree
+        active = np.arange(self._item_ptr[iy + 1] - self._item_ptr[iy], dtype=np.int64)
+        for f in feats:
+            if f != iy:
+                active = self._with_ancestor(iy, active, f)
+        if active.size:
+            out[self._rows_of(self._item_ptr[iy] + active)] = True
+        return out
+
+    # -- incremental coverage (search fast path) -----------------------
+    #
+    # The base class's handles, without the accumulated feature bitmask
+    # (its slot is None): the ancestor tests need no more than the active
+    # nodes of the anchor.
+
+    def initial_cover(self, example_mask: Optional[np.ndarray] = None):
+        support, w = self.scope(example_mask)
+        mask = None if support is None else np.array(support, dtype=bool, copy=True)
+        return None, None, None, _NListMaskContext(mask, w)
+
+    def refine_cover(self, handle, feature: int):
+        anchor_item, active, _, ctx = handle
+        feature = int(feature)
         if anchor_item is None:
             m = self._item_ptr[feature + 1] - self._item_ptr[feature]
-            return feature, np.arange(m, dtype=np.int64), new_mask_words, ctx
-
+            return feature, np.arange(m, dtype=np.int64), None, ctx
         if self._rank[feature] > self._rank[anchor_item]:
-            new_active = self._reanchor(anchor_item, active, feature, new_mask_words)
-            return feature, new_active, new_mask_words, ctx
-
-        wj, bit = feature >> 6, np.uint64(1 << (feature & 63))
-        keep = (self._words_of(anchor_item)[active, wj] & bit) == bit
-        return anchor_item, active[keep], new_mask_words, ctx
+            return feature, self._reanchor(anchor_item, active, feature), None, ctx
+        return anchor_item, self._with_ancestor(anchor_item, active, feature), None, ctx
 
 
 class SparseDataRepresentation(DataRepresentation):
@@ -1865,9 +1938,10 @@ class VerticalBitmapRepresentation(DataRepresentation):
 #: separate-and-conquer learners and PyLORD fit fastest on it, ENDER close
 #: to the fastest, and it holds the least memory, one bit per cell
 #: (`demos/representations_report.md`). `NListRepresentation` and
-#: `PrePostNListRepresentation` next -- the same index, the second with
-#: pre/post codes, measured about break-even with the first but slower to
-#: build. Read at call time, so reassigning this module attribute changes
+#: `PrePostNListRepresentation` next -- the same tree, the second with
+#: pre/post codes instead of path bitmasks: less memory, a little slower
+#: (on adult, 2.4 times less with negation, fits up to a fifth slower).
+#: Read at call time, so reassigning this module attribute changes
 #: the library-wide default.
 REPRESENTATION_PREFERENCE_ORDER: Tuple[type, ...] = (
     VerticalBitmapRepresentation, NListRepresentation, PrePostNListRepresentation,
