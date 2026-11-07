@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 import pytest
 
@@ -416,6 +418,36 @@ def test_deep_model_filter_remap_and_conflicts():
     assert moved.predict(data)[2] in ("p", "q")  # both fire: the combiner decides
     with pytest.raises(TypeError):
         dm._with_members([])
+
+
+def test_deep_model_seip_formula():
+    # (a | b) & (c | d) & (e | (f & g)), the example of Seip et al.: three hidden concepts,
+    # one rule for the class over them
+    spec = DataSpec(list("abcdefg"))
+    W1 = np.zeros((6, 7), dtype=int)
+    for node, inputs in enumerate([[0], [1], [2], [3], [4], [5, 6]]):
+        W1[node, inputs] = 1
+    W2 = [[1, 1, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 1, 1]]
+    dm = DeepModel(spec, ["y"], weights=[W1, W2, [[1, 1, 1]], [[1]]])
+    X = np.array(list(itertools.product([0, 1], repeat=7)), dtype=bool)
+    a, b, c, d, e, f, g = X.T
+    expected = (a | b) & (c | d) & (e | (f & g))
+    assert ((dm.predict(HorizontalBitmapRepresentation(spec, X)) == "y") == expected).all()
+    assert dm.to_string() == dm.to_string(simplify=False) == """\
+% concept: h1_1
+h1_1(X) :- a(X).
+h1_1(X) :- b(X).
+
+% concept: h1_2
+h1_2(X) :- c(X).
+h1_2(X) :- d(X).
+
+% concept: h1_3
+h1_3(X) :- e(X).
+h1_3(X) :- f(X), g(X).
+
+% class: y
+y(X) :- h1_1(X), h1_2(X), h1_3(X)."""
 
 
 def test_deep_model_from_its_architecture():
