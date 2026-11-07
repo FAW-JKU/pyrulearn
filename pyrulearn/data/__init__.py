@@ -14,7 +14,8 @@ Everything about representing data, split by concern:
   three base representations, the actual data bound to a `DataSpec`:
   `HorizontalBitmapRepresentation` (bit-packed matrix), `SparseDataRepresentation`
   (scipy CSR/CSC) and `NListRepresentation` (PPC-tree / N-list index;
-  `PrePostNListRepresentation` is an opt-in variant). All implement the
+  `PrePostNListRepresentation` is the same tree without the path bitmasks,
+  for less memory). All implement the
   same `coverage(rule)` interface, so every rule learner runs on any of them.
 - `pyrulearn.data.discretization` -- discretizers, turning a numeric
   column into thresholds: `TreeDiscretizer` (the default),

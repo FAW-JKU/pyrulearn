@@ -2,7 +2,7 @@
 demos/representations.py
 ========================
 
-Four encodings of the same Boolean data, all behind one
+Five encodings of the same Boolean data, all behind one
 `DataRepresentation` interface:
 
 - `HorizontalBitmapRepresentation` -- a `numpy.packbits` bit matrix,
@@ -11,11 +11,13 @@ Four encodings of the same Boolean data, all behind one
   feature: one bit-vector over the examples per feature.
 - `NListRepresentation` -- LORD's PPC-tree / N-list vertical index:
   per-feature row lists, bucketed by shared row prefix.
+- `PrePostNListRepresentation` -- the same tree without the per-node path
+  bitmasks: nodes compared by their pre/post codes, as in PrePost.
 - `SparseDataRepresentation` -- `scipy` CSR/CSC: per-feature row lists
   without the prefix tree.
 
 A learner asks its data only two things -- `coverage(rule)` and
-`features_of(row)` -- so the four are interchangeable and must give the
+`features_of(row)` -- so the five are interchangeable and must give the
 same rules; only the time differs. This demo measures that time and checks
 the equality at every point:
 
@@ -71,6 +73,7 @@ from pyrulearn.data.discretization import TreeDiscretizer
 from pyrulearn.data import (
     HorizontalBitmapRepresentation,
     NListRepresentation,
+    PrePostNListRepresentation,
     SparseDataRepresentation,
     VerticalBitmapRepresentation,
 )
@@ -86,9 +89,9 @@ MAX_INTERVALS = 8
 FIT_TIMEOUT = 300.0
 #: learners with a longer cap than FIT_TIMEOUT: PyLORD's and CN2's larger points need it
 FIT_TIMEOUTS = {"PyLORD": 600.0, "CN2": 1800.0}
-REPRESENTATIONS = ("HBitmap", "VBitmap", "NList", "Sparse")
+REPRESENTATIONS = ("HBitmap", "VBitmap", "NList", "PrePost", "Sparse")
 _VERTICAL = {"VBitmap": VerticalBitmapRepresentation, "NList": NListRepresentation,
-             "Sparse": SparseDataRepresentation}
+             "PrePost": PrePostNListRepresentation, "Sparse": SparseDataRepresentation}
 LEARNERS = ("CN2", "PFossil", "Pypper", "PyLORD", "ENDER")
 
 SIZE_DATASET = "adult"
@@ -114,7 +117,7 @@ PLOTS_DIR = os.path.join(HERE, f"{NAME}_plots")
 CACHE_DIR = os.path.join(HERE, "_representations_cache")
 
 STYLE = {"HBitmap": ("o", "tab:blue"), "VBitmap": ("v", "tab:purple"), "NList": ("s", "tab:orange"),
-         "Sparse": ("d", "tab:red")}
+         "PrePost": ("^", "tab:green"), "Sparse": ("d", "tab:red")}
 
 
 def make_learner(name: str):
@@ -760,7 +763,7 @@ def write_report(size_rows, density_rows, width_rows, paths, quick: bool, report
         + "pyrulearn's learners never look at the data directly. They ask it two things -- which "
         "examples a rule covers (`coverage(rule)`) and which features an example has "
         "(`features_of(row)`) -- so the data can be stored in any structure that answers these "
-        "questions. Four such representations are implemented:\n\n"
+        "questions. Five such representations are implemented:\n\n"
         "- **HBitmap** (horizontal bitmap) -- a bit matrix packed by example, one bit per example "
         "and feature. Covering a rule checks every example's row against the rule's features, "
         "whatever the density.\n"
@@ -770,10 +773,16 @@ def write_report(size_rows, density_rows, width_rows, paths, quick: bool, report
         "- **NList** -- LORD's vertical index (Huynh, Fürnkranz & Beck, 2023): examples are "
         "inserted into a prefix tree of their true features, and each feature keeps the list of "
         "tree nodes it occurs in (its N-list). Covering a rule intersects these lists; the work "
-        "grows with how often the features are true, not with the number of examples.\n"
+        "grows with how often the features are true, not with the number of examples. Each "
+        "node keeps the bitmask of the features on its path, so that a refinement is one "
+        "vectorized test.\n"
+        "- **PrePost** -- the same tree without these bitmasks, as in PrePost (Deng et al., "
+        "2012): a node is compared with another by their pre/post codes, and an example's "
+        "features are read back by walking up the tree. Less memory, and binary searches "
+        "instead of the bitmask test.\n"
         "- **Sparse** -- `scipy` sparse matrices: per-feature example lists without the prefix "
         "tree.\n\n"
-        "All four must lead to exactly the same rules, so the only thing that differs is time. "
+        "All five must lead to exactly the same rules, so the only thing that differs is time. "
         "This demo measures that time for five learners -- CN2, PFossil, Pypper, PyLORD and "
         "ENDER, each with its default settings -- and checks the rules and the test-set predictions "
         "against HBitmap at every point. Each fit runs in a separate process and is "

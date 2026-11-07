@@ -287,7 +287,7 @@ def test_nlist_relabel_shares_the_tree(rep_cls):
     rep = rep_cls(ds, X, y)
     new_y = np.where(np.arange(len(y)) % 3 == 0, "a", np.where(y == "pos", "b", "c"))
     rel, fresh = rep.relabel(new_y), rep_cls(ds, X, new_y)
-    assert rel._words is rep._words  # shared, not rebuilt
+    assert rel._row_lo is rep._row_lo  # shared, not rebuilt
     assert np.array_equal(rel.y, new_y) and np.array_equal(rep.y, y)  # the original keeps its labels
     for rule in _random_rules(ds, np.random.default_rng(2), n_rules=40, max_len=3):
         assert np.array_equal(rel.coverage(rule), fresh.coverage(rule))
@@ -374,13 +374,14 @@ def test_nlist_incremental_cover_on_wide_varied_frequency_data(rep_cls):
     brep = HorizontalBitmapRepresentation(ds, X, y)
     rep = rep_cls.from_boolean(brep)
 
-    branch_counts = {"bitmask": 0, "interval": 0}
+    branch_counts = {"per node": 0, "per interval": 0}
     orig_reanchor = getattr(rep_cls, "_reanchor", None)
     if orig_reanchor is not None:
-        def counted(self, anchor_item, active, feature, mask_words):
-            words = self._words_of(feature)
-            branch_counts["bitmask" if (active.size == 0 or active.size >= words.shape[0]) else "interval"] += 1
-            return orig_reanchor(self, anchor_item, active, feature, mask_words)
+        def counted(self, anchor_item, active, feature):
+            n_nodes = self._item_ptr[feature + 1] - self._item_ptr[feature]
+            if active.size:
+                branch_counts["per node" if active.size >= n_nodes else "per interval"] += 1
+            return orig_reanchor(self, anchor_item, active, feature)
         rep_cls._reanchor = counted
 
     try:
@@ -402,7 +403,7 @@ def test_nlist_incremental_cover_on_wide_varied_frequency_data(rep_cls):
             rep_cls._reanchor = orig_reanchor
 
     if orig_reanchor is not None:
-        assert branch_counts["interval"] > 0 and branch_counts["bitmask"] > 0
+        assert branch_counts["per interval"] > 0 and branch_counts["per node"] > 0
 
 
 def test_nlist_tree_is_more_compact_than_the_dense_matrix():
