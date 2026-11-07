@@ -634,6 +634,17 @@ def build_refinement_graph(ruleset: RuleModel):
     return g
 
 
+def isometrics_cmap():
+    """The default colormap of isometrics (`CoverageSpace.contour`): from
+    red for low scores over orange and yellow to green for high ones, as in
+    a heatmap, but with a darker yellow than matplotlib's ``RdYlGn``, so
+    that the middle lines stay visible on white."""
+    from matplotlib.colors import LinearSegmentedColormap
+
+    return LinearSegmentedColormap.from_list(
+        "isometrics", ["#c62828", "#ef6c00", "#c9a400", "#7cb342", "#1b5e20"])
+
+
 class CoverageSpace:
     """A coverage-space plot: x = negatives covered, y = positives
     covered -- or, `normalized=True`, the classic **ROC space**: FPR/TPR
@@ -790,7 +801,8 @@ class CoverageSpace:
         levels=10,
         resolution: int = 200,
         filled: bool = False,
-        cmap: str = "viridis",
+        cmap: Any = None,
+        shade: float = 0.3,
         **kwargs,
     ):
         """Draw isometrics of `score_fn(neg, pos) -> float` -- evaluated
@@ -798,24 +810,35 @@ class CoverageSpace:
         extent -- as contour lines (or, `filled=True`, filled bands).
         `levels` is passed straight to matplotlib's `contour`/`contourf`
         (an int for that many automatically chosen levels, or explicit
-        level values). Pass `colors=` (a single color, for a flat-colored
+        level values). `cmap` defaults to `isometrics_cmap()`, from red
+        (low scores) to green (high ones), as in a heatmap. Lines are
+        drawn over bands of the same colors with opacity `shade` (0 for
+        bare lines; skipped for fewer than two levels, which bound no
+        band). Pass `colors=` (a single color, for a flat-colored
         set of isometrics -- handy when overlaying more than one
         heuristic's isometrics on the same space) instead of `cmap` to
-        tell them apart by color rather than by shape alone; `cmap` is
-        dropped automatically when `colors` is given, since matplotlib
-        rejects both together. Returns the `QuadContourSet` matplotlib
-        hands back, in case the caller wants to `ax.clabel(...)` it
-        directly.
+        tell them apart by color rather than by shape alone; `cmap` and
+        the shading are dropped automatically when `colors` is given,
+        since matplotlib rejects both together. Returns the
+        `QuadContourSet` matplotlib hands back, in case the caller wants
+        to `ax.clabel(...)` it directly.
         """
         neg = np.linspace(0, self.n_neg, resolution)
         pos = np.linspace(0, self.n_pos, resolution)
         NEG, POS = np.meshgrid(neg, pos)
         Z = np.vectorize(score_fn, otypes=[float])(NEG, POS)
         x, y = self._display(NEG, POS)
-        fn = self.ax.contourf if filled else self.ax.contour
         if "colors" in kwargs:
             cmap = None
-        return fn(x, y, Z, levels=levels, cmap=cmap, **kwargs)
+        elif cmap is None:
+            cmap = isometrics_cmap()
+        if filled:
+            return self.ax.contourf(x, y, Z, levels=levels, cmap=cmap, **kwargs)
+        if cmap is not None and shade > 0 and (np.ndim(levels) == 0 or np.size(levels) >= 2):
+            # under the grid and everything drawn on top (rules, paths, ...)
+            bands = self.ax.contourf(x, y, Z, levels=levels, cmap=cmap, alpha=shade, zorder=0.5)
+            levels = bands.levels
+        return self.ax.contour(x, y, Z, levels=levels, cmap=cmap, **kwargs)
 
     # -- rule-learning-specific layers ---------------------------------------
 

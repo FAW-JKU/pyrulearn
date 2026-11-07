@@ -1317,17 +1317,21 @@ the random-guess diagonal, for visual reference regardless of whether
 concrete numbers are shown. The plot's `title` (if given) is shown
 regardless of `show_labels`.
 
-`plot_isometrics(levels=10, filled=False, cmap="viridis")` draws line
+`plot_isometrics(levels=10, filled=False, cmap=None)` draws line
 contours (label text via `ax.clabel`, skipped when `show_labels` is
-`False`) by default, or filled bands with `filled=True`; `levels` is
+`False`) by default, or filled bands with `filled=True`. Its colors run
+from red for low scores to green for high ones, as in a heatmap
+(`isometrics_cmap()` in `pyrulearn.evaluation`, the default for
+`cmap=None`), and the lines lie on lightly shaded bands of the same
+colors (`shade=0.3`, their opacity; `shade=0` for bare lines); `levels` is
 passed straight to matplotlib's `contour`/`contourf`, as is everything
 else passed via `**kwargs` -- `colors=`, `linestyles=`, `linewidths=`,
 etc. are all genuinely configurable this way, e.g. `colors="tab:blue",
 linestyles="dashed", linewidths=0.8` to keep one heuristic's isometrics
 visually distinct from another's (or from an overlaid rule's own
 refinement-path color) when layering several on the same space --
-`cmap` is dropped automatically when `colors` is given, since matplotlib
-rejects both together. `parent=` fixes the parent `RuleStats` passed to
+`cmap` and the shading are dropped automatically when `colors` is given,
+since matplotlib rejects both together. `parent=` fixes the parent `RuleStats` passed to
 a `GainHeuristic`'s `score` across every grid point -- the same value
 throughout, not one per point -- which is what makes a gain-style
 heuristic like `FoilGain` plottable at all here (it otherwise raises

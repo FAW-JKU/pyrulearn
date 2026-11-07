@@ -442,6 +442,25 @@ def test_plot_isometrics_sized_to_representation_and_layerable():
     assert list(offsets[:, 0]) == list(expected[:, 0])
 
 
+def test_plot_isometrics_shades_bands_under_the_lines_by_default():
+    from matplotlib.contour import QuadContourSet
+
+    space = CoverageSpace(n_pos=10, n_neg=10)
+    Precision().plot_isometrics(space=space, levels=5)
+    contours = [c for c in space.ax.collections if isinstance(c, QuadContourSet)]
+    assert [c.filled for c in contours] == [True, False]  # bands, then lines
+    assert list(contours[0].levels) == list(contours[1].levels)
+    assert contours[0].get_alpha() == 0.3
+
+    bare = CoverageSpace(n_pos=10, n_neg=10)
+    Precision().plot_isometrics(space=bare, levels=5, shade=0)
+    assert [c.filled for c in bare.ax.collections if isinstance(c, QuadContourSet)] == [False]
+
+    flat = CoverageSpace(n_pos=10, n_neg=10)
+    Precision().plot_isometrics(space=flat, levels=5, colors="tab:blue")  # no shading with a flat color
+    assert [c.filled for c in flat.ax.collections if isinstance(c, QuadContourSet)] == [False]
+
+
 def test_plot_isometrics_filled_skips_clabel():
     space = CoverageSpace(n_pos=10, n_neg=10)
     n_texts_before = len(space.ax.texts)

@@ -368,7 +368,7 @@ class RuleHeuristic(ABC):
         levels: Any = 10,
         resolution: int = 200,
         filled: bool = False,
-        cmap: str = "viridis",
+        cmap: Any = None,
         parent: Optional[RuleStats] = None,
         **kwargs,
     ) -> CoverageSpace:
@@ -404,7 +404,10 @@ class RuleHeuristic(ABC):
 
         Isometric value labels (`ax.clabel`) are skipped when
         `space.show_labels` is `False` (the default for a dataset-agnostic
-        space -- see `CoverageSpace`). Color/linestyle/linewidth are
+        space -- see `CoverageSpace`). By default, the isometrics run from
+        red (low scores) to green (high ones) over lightly shaded bands of
+        the same colors (`CoverageSpace.contour`'s `cmap` and `shade`,
+        e.g. `shade=0` for bare lines). Color/linestyle/linewidth are
         fully configurable via `**kwargs`, forwarded through
         `CoverageSpace.contour` to matplotlib's `contour`/`contourf` --
         e.g. `colors="tab:blue", linestyles="dashed", linewidths=0.8` to
@@ -436,7 +439,7 @@ class RuleHeuristic(ABC):
         space: Optional[CoverageSpace] = None,
         mark_point: bool = True,
         resolution: int = 200,
-        cmap: str = "viridis",
+        cmap: Any = None,
         **kwargs,
     ) -> CoverageSpace:
         """Plot the single isometric of this heuristic that passes

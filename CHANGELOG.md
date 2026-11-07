@@ -7,6 +7,10 @@ is in early development (alpha): until 1.0, minor versions may change the API.
 
 ### Changed
 
+- Isometrics (`RuleHeuristic.plot_isometrics`, `CoverageSpace.contour`)
+  are drawn from red for low scores to green for high ones, as in a
+  heatmap (`isometrics_cmap()`), instead of in viridis, and lie on lightly
+  shaded bands of the same colors (`shade=`, 0 for bare lines).
 - `PrePostNListRepresentation` no longer keeps the path bitmask of every
   tree node, only its pre-order number, subtree end and parent, as the
   N-lists of PrePost (Deng et al. 2012): a refinement and `coverage` test
