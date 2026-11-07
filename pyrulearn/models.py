@@ -2535,9 +2535,10 @@ class DeepModel(CompositeModel):
     The weights are the model; its rules are a view of them, for printing
     and export (`to_concepts`): every AND node is a rule body, every OR
     node a concept -- a `ConceptModel` with one rule per incoming edge.
-    A concept is a Boolean feature for the layers above it: the rules are
-    defined over `dataspec`, `input_spec` extended by one feature per OR
-    node (`extended_spec`). The hidden OR nodes of the *l*-th OR layer are
+    A hidden concept is a Boolean feature for the layers above it: the
+    rules are defined over `dataspec`, `input_spec` extended by one
+    feature per hidden OR node (`extended_spec`); the outputs feed nothing,
+    so a label may also be a feature's name. The hidden OR nodes of the *l*-th OR layer are
     named by `hidden_name` (*node* counts from 1).
 
     A row one output concept covers gets its label, a row several cover
@@ -2584,7 +2585,7 @@ class DeepModel(CompositeModel):
         self.outputs: List[Any] = list(labels)
         self.hidden_name = hidden_name
         self.resolution = Combine(combiner)
-        self.dataspec = DeepModel.extended_spec(input_spec, self._concept_labels())
+        self.dataspec = DeepModel.extended_spec(input_spec, self.hidden_concepts)
 
     @staticmethod
     def extended_spec(input_spec: DataSpec, concept_labels: Sequence[Any]) -> DataSpec:
@@ -2657,7 +2658,7 @@ class DeepModel(CompositeModel):
     def to_concepts(self, simplify: bool = True) -> List["ConceptModel"]:
         """The rule view: one `ConceptModel` per OR node, layer by layer,
         with one rule per incoming edge, over `extended_spec` of the
-        concepts returned. `simplify` (the default) removes the
+        hidden concepts returned. `simplify` (the default) removes the
         pass-through nodes, repeated until none is left:
 
         - a hidden concept with a single rule is inlined: the bodies that
@@ -2715,9 +2716,10 @@ class DeepModel(CompositeModel):
                 seen: set = set()
                 bodies[k] = [b for b in bodies[k] if not (frozenset(b) in seen or seen.add(frozenset(b)))]
         keep = [k for k in range(len(labels)) if alive[k]]
-        new_index = {n_in + k: n_in + i for i, k in enumerate(keep)}
-        spec = (self.dataspec if len(keep) == len(labels)
-                else DeepModel.extended_spec(self.input_spec, [labels[k] for k in keep]))
+        kept_hidden = [k for k in keep if k < n_hidden]
+        new_index = {n_in + k: n_in + i for i, k in enumerate(kept_hidden)}
+        spec = (self.dataspec if len(kept_hidden) == n_hidden
+                else DeepModel.extended_spec(self.input_spec, [labels[k] for k in kept_hidden]))
         return [ConceptModel([Rule([new_index.get(f, f) for f in b], target=labels[k], dataspec=spec)
                               for b in bodies[k]], label=labels[k])
                 for k in keep]

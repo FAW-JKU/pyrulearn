@@ -360,7 +360,7 @@ def test_deep_model_rule_view():
     assert repr(dm) == "DeepModel(3 inputs, layers [3, 2, 2], 1 outputs)" and dm.layers == [3, 2, 2]
     assert [m.label for m in dm.members] == ["h1_1", "h1_2", "yes"]
     assert dm.hidden_concepts == ["h1_1", "h1_2"] and dm.outputs == ["yes"] and dm.labels == ["no", "yes"]
-    assert dm.dataspec.feature_names == ["a", "b", "c", "h1_1", "h1_2", "yes"]
+    assert dm.dataspec.feature_names == ["a", "b", "c", "h1_1", "h1_2"]
     assert [len(m.rules) for m in dm.members] == [2, 0, 2]
     X = np.array([[1, 1, 0], [0, 0, 1], [1, 0, 0]], dtype=bool)
     data = HorizontalBitmapRepresentation(spec, X)
@@ -403,7 +403,8 @@ def test_deep_model_checks_its_layers():
     with pytest.raises(ValueError, match="labels for"):
         DeepModel(spec, ["yes", "no"], weights=[[[1, 0]], [[1]]])
     with pytest.raises(ValueError, match="clash"):
-        DeepModel(spec, ["a"], weights=[[[1, 0]], [[1]]])
+        DeepModel(spec, ["yes"], [1, 1, 1], hidden_name="a")
+    assert DeepModel(spec, ["a"], weights=[[[1, 0]], [[1]]]).outputs == ["a"]  # outputs feed nothing
 
 
 def test_deep_model_filter_remap_and_conflicts():

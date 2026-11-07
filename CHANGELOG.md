@@ -18,6 +18,21 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   above -- by default without the pass-through nodes, as `to_string`
   prints it. `node_values`/`concept_values(data)` give every node's
   value, hidden ones included.
+- `pyrulearn.learners.deep`: `DeepLocalSearch` learns a `DeepModel` by
+  stochastic local search over edge flips (after Beck & Fürnkranz), on
+  the shared base `DeepRuleLearner` (architecture, targets, `initial=`
+  start weights); `nnf_forward` evaluates weight matrices on a Boolean
+  matrix.
+- Catalog: `CatalogEntry.csv_url`, a CSV file as a dataset's source,
+  downloaded once into the data home (`fetch_csv_frame`; filled in by
+  `tools/build_catalog.py` too). The tags `deep` and `artificial`: the
+  datasets of Beck & Fürnkranz (2021) and Seip et al. -- their 20
+  artificial datasets (`artificial-nnf-5`, ...), `car-binary` and
+  `connect-4-binary` from Beck's repository, and the MONK's problems,
+  tic-tac-toe, vote, kr-vs-kp and mushroom already in the catalog.
+- `build_dataspec`: a column of dtype `bool` is a Boolean attribute
+  (`x`, and `not x` with negations) instead of a binary nominal one
+  (`x=False`/`x=True`).
 
 ### Changed
 

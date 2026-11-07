@@ -191,7 +191,7 @@ details.
 | `experiments` | Shared infrastructure for demos and other cross-validation-style experiments: `experiments.catalog` (the catalog of benchmark datasets, see *Benchmark datasets*), `experiments.runner` (`run_cv`: per-fold encoding into `representation=` (default: the preference order's first entry, `VerticalBitmapRepresentation`), a per-fit timeout via `TimeoutRunner`, uniform measurement, fold caching), `experiments.stats` (optional `mean_rank`, `friedman_test`, `critical_difference_diagram`, never run automatically) and `experiments.report` (small Markdown-writing building blocks). Needs `pandas`/`scipy`/`matplotlib` (the `experiments` extra). |
 | `heuristics` | `RuleHeuristic`: pluggable rule-evaluation heuristics (`Precision`, `Laplace`, `MEstimate`, `WRAcc`, `FoilGain`, `Correlation`, `Entropy`, `LikelihoodRatio`, ...), the composable `LEF`, and `plot_isometrics` for drawing a heuristic into a `CoverageSpace`. |
 | `interfaces` | Bringing external rule models in. `interfaces.base` has the shared `RuleImporter` machinery (`ObjectRuleImporter`, `StringRuleImporter`, the importer registry, `PatternStringImporter`); each external tool then has its own submodule, pairing an importer with a learner wrapper: `interfaces.sklearn` (decision trees, random forests, and `RuleSetClassifier`, which wraps any `RuleModel` as a scikit-learn estimator), `interfaces.wittgenstein` (IREP, RIPPER), `interfaces.imodels` (Bayesian rule lists and sets, RuleFit, Slipper), `interfaces.weka` (JRip, PART, J48), `interfaces.lord` (the reference LORD implementation), `interfaces.pyarc` (CBA), `interfaces.boomer` (BOOMER) and `interfaces.realkd` (optimal rule boosting). |
-| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
+| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), `learners.deep` (`DeepLocalSearch`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
 | `models` | The `RuleModel` hierarchy, organised by how a prediction is resolved: `RuleSet` (`FlatRuleSet`, `ConceptModel`, `ConceptSet`, `DisjointRuleSet`, and the memory-compact `PooledRuleSet` that `CARMiner` returns), `RuleList` (`DecisionList`, `ConceptCascade`), `CompositeModel` (`EnsembleModel`, `PairwiseModel`, `DeepModel`) and `SingleRule`. Also the `default_prediction` policy, per-model `stats`, `Provenance`, `annotate_rules`, and the model-to-model converters. |
 | `pruning` | `PrePruningCriterion`: one per-candidate test (`ThresholdPrePruning`, `EncodingLengthRestriction`, ...) that a search can use as a filter, as a stopping trigger, or that the covering loop can use as its stop condition. |
 | `rule` | `Rule`: a conjunction of Boolean literals, with optional condition order, several output formats and constraint-aware consistency checks. No dependencies beyond numpy. |
@@ -1743,6 +1743,29 @@ model = LRI(n_rules=50, max_terms=4).fit(train_rep)
 beam = LRI(n_rules=50, search=BeamSearch(beam_width=3, optimistic_pruning=False)).fit(train_rep)
 ```
 
+**Deep rule networks.** `pyrulearn.learners.deep` learns `DeepModel`s:
+fully connected networks of alternating AND and OR layers with 0/1 edge
+weights over the data's features (see `DeepModel`). `layers` are the
+hidden layer sizes (by default one AND layer of `ceil(sqrt(n))` nodes,
+a DNF); the output layer has one OR node per class, or for two classes
+one for the less frequent class, the other the default. A row several
+outputs cover gets the class with the most covering rules, a row none
+covers the most frequent class. `initial=` starts from another
+`DeepModel`'s weights. `DeepLocalSearch` (after Beck & Fürnkranz) flips
+one random edge per step, keeps the flip unless it raises the weighted
+training error (and then still with probability `noise`, 0.01), and
+returns the best weights seen in `max_flips` steps over `restarts`
+further runs from random weights (each edge present with probability
+`density`). A step evaluates only the flipped node and the layers above
+it.
+
+```python
+from pyrulearn.learners.deep import DeepLocalSearch
+
+model = DeepLocalSearch(layers=[16, 8, 4], max_flips=20000, restarts=2).fit(train_rep)
+print(model)  # the stacked rules, without pass-through nodes
+```
+
 #### Boosting
 
 Boosting learners reweight the examples too, but they also fit a
@@ -2676,7 +2699,7 @@ Three categories are computed from each entry's statistics:
 | `size` | `small` (< 1,000 rows), `medium` (1,000-10,000), `large` (> 10,000) |
 | `attributes` | `categorical` (all attributes nominal), `numeric` (all numeric), `mixed` |
 
-`task` x `size` for the 100 loadable entries, for gauging how big a
+`task` x `size` for the 122 loadable entries, for gauging how big a
 `select(...)`/`.parse(...)` run is before starting it (a demo's default
 should stay small/medium -- see *Try it* below; `size="large"` climbs
 past 10,000 rows up to 581,012, so an `all` run is an overnight-on-a-
@@ -2685,17 +2708,24 @@ strong-machine job, not a quick one):
 | | binary | multiclass | total |
 |---|--:|--:|--:|
 | `small` (< 1,000 rows) | 25 | 17 | 42 |
-| `medium` (1,000-10,000) | 19 | 22 | 41 |
-| `large` (> 10,000) | 10 | 7 | 17 |
-| **total** | **54** | **46** | **100** |
+| `medium` (1,000-10,000) | 40 | 22 | 62 |
+| `large` (> 10,000) | 11 | 7 | 18 |
+| **total** | **76** | **46** | **122** |
 
 `tags` record where an entry comes from: `cc18` (the OpenML-CC18 benchmark
 suite, minus its 13 image/signal/text datasets with more than 200
 attributes), `lord` (the datasets of the LORD evaluation), `xai` (classic
 explainable-AI datasets: adult, COMPAS, German credit, HELOC, ...) and
 `classic` (traditional rule-learning benchmarks: vote, mushroom, soybean,
-the MONK's problems, promoters, kropt, ...). A few entries (e.g. SUSY, PAMAP2) are not on
-OpenML and are pointers only (`entry.loadable` is False).
+the MONK's problems, promoters, kropt, ...), `deep` (the datasets of the
+deep rule learning evaluations, Beck & Fürnkranz 2021 and Seip et al.: 20
+artificial truth tables of ten Boolean features labeled by a random deep
+NNF, the MONK's problems, tic-tac-toe, vote, kr-vs-kp, mushroom, and
+binary versions of car and connect-4) and `artificial` (generated data).
+Entries not on OpenML either read a CSV file (`csv_url`, downloaded once
+into the same data home; the `deep` datasets from Beck's repository,
+pinned to one commit) or are pointers only (e.g. SUSY, PAMAP2;
+`entry.loadable` is False).
 
 Entries also carry curated loading fixes: attribute names restored where
 the OpenML upload anonymized them (`V1`, `x1`, ...), identifier and

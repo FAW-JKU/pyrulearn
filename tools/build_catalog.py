@@ -14,7 +14,9 @@ ever typed in:
   `CatalogEntry.load` uses; skipped above --max-rows): rows, classes,
   majority-class rate and missing-value rate *after* the entry's own
   loading fixes -- which also proves every entry loads;
-- for UCI-only entries (no OpenML id): rows/attributes from UCI's API.
+- for UCI-only entries (no OpenML id): rows/attributes from UCI's API;
+- for CSV entries (`csv_url`): everything from the file itself, a
+  boolean or text column counting as nominal.
 
 It also keeps the ``cc18`` tag in sync with the OpenML-CC18 suite (study
 99): members get the tag, and ``--add-cc18`` adds members not yet in the
@@ -39,7 +41,7 @@ import urllib.request
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pyrulearn.experiments.catalog import Catalog, CatalogEntry, fetch_openml_frame  # noqa: E402
+from pyrulearn.experiments.catalog import Catalog, CatalogEntry, fetch_csv_frame, fetch_openml_frame  # noqa: E402
 
 CATALOG = os.path.join(os.path.dirname(__file__), "..", "pyrulearn", "experiments", "catalog.json")
 OPENML = "https://www.openml.org/api/v1/json"
@@ -159,6 +161,24 @@ def fill_openml(entry: CatalogEntry, with_data: bool, max_rows: int) -> list:
     return review_meta + review
 
 
+def fill_csv(entry: CatalogEntry) -> list:
+    import pandas as pd
+
+    df = entry.prepare(fetch_csv_frame(entry.csv_url), entry.target, drop_degenerate=False)
+    y, attrs = df[entry.target], df.drop(columns=[entry.target])
+    numeric = [c for c in attrs.columns
+               if pd.api.types.is_numeric_dtype(attrs[c]) and not pd.api.types.is_bool_dtype(attrs[c])
+               and c not in entry.nominal]
+    entry.n_instances = len(df)
+    entry.n_features = attrs.shape[1]
+    entry.n_numeric = len(numeric)
+    entry.n_nominal = attrs.shape[1] - len(numeric)
+    entry.n_classes = int(y.nunique())
+    entry.majority_rate = round(float(y.value_counts(normalize=True).iloc[0]), 4)
+    entry.missing_rate = round(float(attrs.isna().any(axis=1).mean()), 4)
+    return []
+
+
 def fill_uci(entry: CatalogEntry) -> list:
     uci_id = int(entry.uci.rstrip("/").split("/dataset/")[1].split("/")[0])
     d = get_json(f"{UCI}?id={uci_id}")["data"]
@@ -213,6 +233,7 @@ def main():
         print(f"{entry.name} ...", flush=True)
         try:
             notes = (fill_openml(entry, not args.no_data, args.max_rows) if entry.openml_id is not None
+                     else fill_csv(entry) if entry.csv_url and not args.no_data
                      else fill_uci(entry) if entry.uci else ["no source to fill statistics from"])
         except Exception as e:  # noqa: BLE001 -- report, keep the rest going
             notes = [f"FAILED: {type(e).__name__}: {e}"]

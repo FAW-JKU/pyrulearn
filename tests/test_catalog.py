@@ -8,7 +8,7 @@ from pyrulearn.experiments.catalog import (
     ATTRIBUTE_KINDS, MEDIUM_MAX, SIZES, SMALL_MAX, TASKS, Catalog, CatalogEntry, prepare_frame,
 )
 
-KNOWN_TAGS = {"cc18", "lord", "xai", "classic"}
+KNOWN_TAGS = {"cc18", "lord", "xai", "classic", "deep", "artificial"}
 
 
 @pytest.fixture(scope="module")
@@ -20,7 +20,8 @@ def test_shipped_catalog_is_consistent(cat):
     assert len(cat) > 50
     for e in cat:
         assert e.tags and set(e.tags) <= KNOWN_TAGS, e.name
-        assert e.openml_id is not None or e.uci or e.kaggle, f"{e.name} has no source"
+        assert e.openml_id is not None or e.csv_url or e.uci or e.kaggle, f"{e.name} has no source"
+        assert not e.csv_url or e.target, f"{e.name} reads a CSV without a target"
         if e.loadable:
             # the statistics tools/build_catalog.py fills in are all there
             for f in ("n_instances", "n_features", "n_numeric", "n_nominal", "n_classes"):
@@ -44,6 +45,27 @@ def test_shipped_catalog_covers_every_category(cat):
         assert cat.select(attributes=kind), kind
     for tag in KNOWN_TAGS:
         assert cat.select(tags=tag, loadable=None), tag
+
+
+def test_deep_datasets_are_the_papers(cat):
+    deep = {e.name for e in cat.select(tags="deep")}
+    assert len(deep) == 29 and len(cat.select(tags="artificial")) == 20
+    assert {"monks-problems-3", "car-binary", "connect-4-binary", "artificial-nnf-5"} <= deep
+    assert all(e.n_instances == 1024 and e.n_features == 10 for e in cat.select(tags="artificial"))
+
+
+def test_csv_entry_downloads_once_into_the_data_home(tmp_path):
+    src = tmp_path / "toy.csv"
+    src.write_text("a,b,class\nTrue,x,p\nFalse,,n\nTrue,y,p\n", encoding="utf-8")
+    entry = CatalogEntry("toy", csv_url=src.as_uri(), target="class")
+    assert entry.loadable
+    home = tmp_path / "home"
+    df, target = entry.load(data_home=str(home))
+    assert target == "class" and df.shape == (3, 3) and df["a"].dtype == bool and df["b"].isna().sum() == 1
+    src.unlink()  # read from the cache from now on
+    assert entry.load(data_home=str(home))[0].equals(df)
+    with pytest.raises(ValueError, match="target"):
+        CatalogEntry("toy", csv_url="file:///nowhere.csv").load(data_home=str(home))
 
 
 def test_categories_follow_the_counts():

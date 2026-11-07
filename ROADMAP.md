@@ -899,6 +899,55 @@ identical models). Sharing one `data` array between CSR and CSC (half
 the saving, no time cost) was left out: the two store the cells in
 different orders, so it only works while every value is `True`.
 
+## Deep rule networks: NNF networks and their learners
+
+**In progress (branch `deep-models`, from 2026-11-07).** Learning
+formulas in negation normal form as fully connected networks of
+alternating AND and OR layers with 0/1 edge weights (Beck & Fürnkranz
+2021, "An empirical investigation into deep and shallow rule learning";
+Seip et al., "Towards SAT-based learning of NNF networks", SYNASC 2025, and
+its unpublished long version for JAIR, with MaxSAT).
+
+Done:
+
+- `DeepModel` holds the weights (`layers` are the hidden sizes, like a
+  neural network's; default one AND layer of `ceil(sqrt(n))` nodes);
+  predicts by matrix products; its rules are a view for printing and
+  export (`to_concepts`): every AND node a rule body, every OR node a
+  concept with one rule per incoming edge, pass-through nodes removed.
+- The datasets of both papers in the catalog, tags `deep` and
+  `artificial`: Beck's 20 artificial truth tables and binary car and
+  connect-4, read from his repository (`csv_url`, pinned to a commit).
+- A `bool` column is a Boolean attribute (`x`, `not x`), so the
+  artificial data comes in both papers' encodings: with negations (the
+  SAT papers' 2d inputs) or without (Beck's).
+
+Next:
+
+- `DeepModel`: an AND output layer (an even number of hidden layers, as
+  in the papers' Fig. 2 and Beck's code); an AND node feeding several OR
+  nodes as its own intermediate concept in the rule view (the long
+  paper's step iii), concepts named by layer and node.
+- Three learners on a shared base (`DeepRuleLearner`):
+  - `DeepLocalSearch`: Beck's stochastic hill climbing (his code:
+    github.com/f-beck/scikit-learn-rule-network) -- per mini-batch of 50,
+    the best of all single flips until none improves, 5 epochs, the best
+    weights on the whole training set kept, attribute-aware flips in the
+    first layer. The first version (one random flip per step) is far
+    weaker than his published numbers and gets replaced.
+  - `DeepSAT`: Seip et al.'s encoding through PySAT (CaDiCaL), an exact
+    fit; `minimize_weights=True` for their MaxSAT variant (soft unit
+    clauses on every weight, RC2). PySAT as an optional extra `sat`.
+    Inconsistent data (monk-3) is UNSAT; soft examples later.
+  - `DeepNeuroFuzzy`: the relaxed network (product AND/OR, weights in
+    [0, 1]) trained by gradient descent in numpy, then frozen to 0/1.
+- Sanity checks against the papers' numbers, with their encodings;
+  otherwise our framework's encoding comes first.
+- **Remove `car-binary` and `connect-4-binary` again** once those
+  comparisons are done: they are binary versions of `car` and
+  `connect-4`, only there to match the papers' setups (also adjust
+  `test_deep_datasets_are_the_papers`, which counts 29 `deep` entries).
+
 ## Other planned work
 
 - **Decision tables** (Kohavi, *The Power of Decision Tables*, ECML 1995),

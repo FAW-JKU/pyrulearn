@@ -142,7 +142,9 @@ def build_dataspec(
     an ARFF header's value list), else the non-missing values observed
     in `df`. Exactly two values make it a BINARY attribute
     (`DataSpecBuilder.add_binary`: ``x=a``/``x=b``, each the other's
-    negation, no ``!=`` columns); otherwise it's NOMINAL.
+    negation, no ``!=`` columns); otherwise it's NOMINAL. A column of
+    dtype ``bool`` is a BOOLEAN attribute (`DataSpecBuilder.add_boolean`:
+    ``x``, and ``not x`` with negations).
 
     `include_negations` (default True) is the builder-wide default for
     whether each attribute also gets explicit negation features
@@ -168,7 +170,9 @@ def build_dataspec(
         kind = declared if declared is not None else _infer_csv_column_type(df[col], max_ordinal_values)
         negation = overrides.get(col)
 
-        if kind in ("nominal", "string"):
+        if declared is None and pd.api.types.is_bool_dtype(df[col]):
+            builder.add_boolean(col, negation=negation)
+        elif kind in ("nominal", "string"):
             declared_domain = (domains or {}).get(col)
             domain = (list(declared_domain) if declared_domain is not None
                       else sorted(df[col].dropna().unique().tolist()))
