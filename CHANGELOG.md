@@ -19,10 +19,14 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   prints it. `node_values`/`concept_values(data)` give every node's
   value, hidden ones included.
 - `pyrulearn.learners.deep`: `DeepLocalSearch` learns a `DeepModel` by
-  stochastic local search over edge flips (after Beck & Fürnkranz), on
-  the shared base `DeepRuleLearner` (architecture, targets, `initial=`
-  start weights); `nnf_forward` evaluates weight matrices on a Boolean
-  matrix.
+  Beck & Fürnkranz's stochastic hill climbing (best single flip on
+  mini-batches, best weights kept), with flips that keep rules
+  consistent with the `DataSpec`'s constraints (`moves=`,
+  `contradictions`); on the shared base `DeepRuleLearner`
+  (architecture, targets, the start as a component: `RandomInit`,
+  `ModelInit`, `RuleSetInit` -- a rule set or a rule learner's rules as
+  the start network). `nnf_forward` evaluates weight matrices on a
+  Boolean matrix. `DeepModel.pruned()`, `used_nodes()`, `n_edges`.
 - Catalog: `CatalogEntry.csv_url`, a CSV file as a dataset's source,
   downloaded once into the data home (`fetch_csv_frame`; filled in by
   `tools/build_catalog.py` too). The tags `deep` and `artificial`: the

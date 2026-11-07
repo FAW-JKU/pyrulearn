@@ -2738,7 +2738,8 @@ class DeepModel(CompositeModel):
         keep = [k for k, o in enumerate(self.outputs) if o == target]
         return _carry_provenance(self, DeepModel(
             self.input_spec, [self.outputs[k] for k in keep],
-            weights=self.weights[:-1] + [self.weights[-1][keep]], default_prediction=self._default_prediction, combiner=self.combiner, hidden_name=self.hidden_name))
+            weights=self.weights[:-1] + [self.weights[-1][keep]],
+            default_prediction=self._default_prediction, combiner=self.combiner, hidden_name=self.hidden_name))
 
     def remap(self, new_dataspec: DataSpec) -> "DeepModel":
         """The same network over `new_dataspec`, the inputs matched by
@@ -2750,6 +2751,28 @@ class DeepModel(CompositeModel):
                 moved[:, new_dataspec.feature_index(name)] = first[:, j]
         return _carry_provenance(self, DeepModel(
             new_dataspec, self.outputs, weights=[moved] + self.weights[1:],
+            default_prediction=self._default_prediction, combiner=self.combiner, hidden_name=self.hidden_name))
+
+    @property
+    def n_edges(self) -> int:
+        """The number of edges with weight 1."""
+        return sum(int(w.sum()) for w in self.weights)
+
+    def used_nodes(self) -> List[np.ndarray]:
+        """Per layer above the inputs, which nodes the outputs depend on: an
+        output always, a node below if it has an edge to a used node."""
+        used = [np.ones(self.weights[-1].shape[0], dtype=bool)]
+        for w in reversed(self.weights[1:]):
+            used.insert(0, w[used[0]].any(axis=0))
+        return used
+
+    def pruned(self) -> "DeepModel":
+        """The backbone: the same network with every edge into a node the
+        outputs don't depend on (`used_nodes`) set to 0. The layer sizes
+        stay; the predictions and the rule view stay the same."""
+        weights = [w & used[:, None] for w, used in zip(self.weights, self.used_nodes())]
+        return _carry_provenance(self, DeepModel(
+            self.input_spec, self.outputs, weights=weights,
             default_prediction=self._default_prediction, combiner=self.combiner, hidden_name=self.hidden_name))
 
     # -- prediction ---------------------------------------------------

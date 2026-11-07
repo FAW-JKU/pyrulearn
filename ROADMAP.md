@@ -943,6 +943,11 @@ Next:
     [0, 1]) trained by gradient descent in numpy, then frozen to 0/1.
 - Sanity checks against the papers' numbers, with their encodings;
   otherwise our framework's encoding comes first.
+- Consistency of rules (start and moves) is logical: what the
+  `DataSpec`'s constraints imply (`contradictions`). A `DataSpec` of bare
+  feature names has none. Later, as a `DataSpec` method: inferring
+  constraints from data (e.g. features never true together, or one
+  implying another), so that such specs get them too.
 - **Remove `car-binary` and `connect-4-binary` again** once those
   comparisons are done: they are binary versions of `car` and
   `connect-4`, only there to match the papers' setups (also adjust

@@ -451,6 +451,21 @@ h1_3(X) :- f(X), g(X).
 y(X) :- h1_1(X), h1_2(X), h1_3(X)."""
 
 
+def test_deep_model_pruned_keeps_the_backbone():
+    spec = DataSpec(list("abcd"))
+    # AND nodes: a&b, c, d (only into the unused OR node 2); OR nodes: 1 <- {0, 1}, 2 <- {2}; output <- OR 1
+    dm = DeepModel(spec, ["y"], [3, 2, 1], weights=[
+        [[1, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], [[1, 1, 0], [0, 0, 1]], [[1, 0]], [[1]]])
+    assert [u.tolist() for u in dm.used_nodes()] == [[True, True, False], [True, False], [True], [True]]
+    pr = dm.pruned()
+    assert pr.n_edges == dm.n_edges - 2 and pr.layers == dm.layers
+    assert pr.weights[0][2].sum() == 0 and pr.weights[1][1].sum() == 0
+    X = np.array(list(itertools.product([0, 1], repeat=4)), dtype=bool)
+    data = HorizontalBitmapRepresentation(spec, X)
+    assert (pr.predict(data) == dm.predict(data)).all() and str(pr) == str(dm)
+    assert pr.pruned().n_edges == pr.n_edges
+
+
 def test_deep_model_from_its_architecture():
     spec = DataSpec([f"f{i}" for i in range(8)])
     dm = DeepModel(spec, ["a", "b"], [32, 16, 10, 5, 2], default_prediction="none")

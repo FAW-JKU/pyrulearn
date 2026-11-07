@@ -1750,19 +1750,34 @@ hidden layer sizes (by default one AND layer of `ceil(sqrt(n))` nodes,
 a DNF); the output layer has one OR node per class, or for two classes
 one for the less frequent class, the other the default. A row several
 outputs cover gets the class with the most covering rules, a row none
-covers the most frequent class. `initial=` starts from another
-`DeepModel`'s weights. `DeepLocalSearch` (after Beck & Fürnkranz) flips
-one random edge per step, keeps the flip unless it raises the weighted
-training error (and then still with probability `noise`, 0.01), and
-returns the best weights seen in `max_flips` steps over `restarts`
-further runs from random weights (each edge present with probability
-`density`). A step evaluates only the flipped node and the layers above
-it.
+covers the most frequent class. The start is a component, `init=`
+(`DeepRuleLearner._initialize`, which a subclass may override):
+`RandomInit()` (random rules of about `avg_rule_length` conditions, none
+empty, none contradictory by the `DataSpec`'s constraints; several
+outputs divide the rules among them), `ModelInit(deep_model)` (another network's
+weights) or `RuleSetInit(rules)` (a rule set, or a learner fitted first:
+the network starts out as the rules' DNF per output, passed up through
+the layers). `DeepLocalSearch` is Beck & Fürnkranz's stochastic hill
+climbing: on mini-batches of `batch_size` (50) rows, the best single
+edge flip until none improves, `n_epochs` (5) passes, the best weights
+on the whole training set kept, then a last climb on all rows. A flip
+that adds a condition to a rule drops the conditions contradicting it by
+the `DataSpec`'s constraints (`moves="consistent"`, through
+`contradictions(spec)`: other values of a nominal attribute, a negation,
+contradicting thresholds; Beck's `moves="attribute"` drops the other
+values of its attribute). Beck's
+own setup is `moves="attribute", init=RandomInit(min_rule_length=0,
+consistent=False)`. The errors of all flips of a node are computed at
+once from the node's counts of true (OR) or false (AND) inputs.
+`DeepModel.pruned()` keeps the backbone: edges into nodes the outputs
+don't depend on are set to 0.
 
 ```python
-from pyrulearn.learners.deep import DeepLocalSearch
+from pyrulearn.learners.deep import DeepLocalSearch, RuleSetInit
+from pyrulearn.learners.seco import Pypper
 
-model = DeepLocalSearch(layers=[16, 8, 4], max_flips=20000, restarts=2).fit(train_rep)
+model = DeepLocalSearch(layers=[32, 8, 2]).fit(train_rep)
+improved = DeepLocalSearch(layers=[32, 8, 2], init=RuleSetInit(Pypper())).fit(train_rep)
 print(model)  # the stacked rules, without pass-through nodes
 ```
 
