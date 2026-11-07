@@ -177,6 +177,26 @@ def test_genetic_learns_the_formula_and_is_reproducible():
     assert all((w1 == w2).all() for w1, w2 in zip(m.weights, learner.fit(NEG_DATA).weights))
 
 
+def test_subtree_crossover_takes_a_node_with_its_cone():
+    rng = np.random.default_rng(3)
+    w = [np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0]], bool),  # 4 rules over 3 inputs
+         np.array([[1, 0, 0, 1], [0, 1, 1, 0]], bool),                  # OR 0 <- rules 0, 3; OR 1 <- rules 1, 2
+         np.array([[1, 0], [0, 1]], bool), np.array([[1, 1]], bool)]
+    cones = {tuple(tuple(np.flatnonzero(m).tolist()) for m in DeepGenetic._cone(w, 2, np.random.default_rng(s)))
+             for s in range(20)}
+    assert cones == {((0, 3), (0,), (0,), ()), ((1, 2), (1,), (1,), ())}
+    a_ = [np.zeros_like(x) for x in w]
+    child = DeepGenetic(crossover="subtree")._crossover(a_, w, X[:, :3], rng)
+    taken = [np.flatnonzero(c.any(axis=1)).tolist() for c in child]
+    assert taken[-1] == [] and len(taken[1]) == 1 and len(taken[0]) == 2  # one OR node and its two rules, or one rule
+
+
+@pytest.mark.parametrize("crossover", ["subtree", "mixed", "none"])
+def test_genetic_with_other_crossovers(crossover):
+    m = DeepGenetic(layers=[6, 3, 1], population=8, generations=5, crossover=crossover).fit(NEG_DATA)
+    assert (m.predict(NEG_DATA) == NEG_DATA.y).mean() > 0.8  # the majority class has 0.65
+
+
 def test_genetic_keeps_a_perfect_seed():
     seed = ModelInit(DeepModel(SPEC, ["pos"], weights=_seip_weights()))
     m = DeepGenetic(layers=[6, 3, 1], population=4, generations=3, seeds=[seed]).fit(DATA)
@@ -207,6 +227,8 @@ def test_parameters_are_checked():
         RandomInit(init_prob=1.5)
     with pytest.raises(ValueError):
         DeepGenetic(population=3, elite=3)
+    with pytest.raises(ValueError, match="crossover"):
+        DeepGenetic(crossover="uniform")
     with pytest.raises(ValueError, match="seeds"):
         DeepGenetic(population=2, elite=0, seeds=[RandomInit()] * 3)
     with pytest.raises(ValueError, match="two classes"):

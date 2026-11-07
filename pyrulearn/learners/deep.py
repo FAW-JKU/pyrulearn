@@ -545,11 +545,23 @@ class DeepGenetic(DeepRuleLearner):
     and node *i* of the other need not have anything in common. Layer by
     layer from the inputs up, the second parent's hidden nodes are matched
     to the first's by their values on the training data (fewest differing
-    rows, Hungarian method) and reordered; then the child takes each node
-    -- its row of incoming edges -- from either parent with probability
-    1/2. Mutation flips on average `mutations` random edges, with the
+    rows, Hungarian method) and reordered. Then, by `crossover`:
+
+    - ``"nodes"`` (default): the child takes each node -- its row of
+      incoming edges -- from either parent with probability 1/2;
+    - ``"subtree"``: a random node x of a random hidden layer of the
+      second parent comes with its cone (every node below it connected to
+      it through edges of weight 1, down to the first layer); everything
+      else is the first parent's. x keeps the inputs it was built on; in
+      a network with one hidden layer that swaps one rule;
+    - ``"mixed"``: one of the two at random, per child;
+    - ``"none"``: the child is a copy of the first parent (the control:
+      mutation and hill climbing alone).
+
+    Mutation flips on average `mutations` random edges, with the
     moves of `moves` (see `DeepLocalSearch`)."""
 
+    CROSSOVERS = ("nodes", "subtree", "mixed", "none")
     #: rows the alignment compares nodes on (a random sample beyond this)
     _ALIGN_ROWS = 2000
 
@@ -564,6 +576,7 @@ class DeepGenetic(DeepRuleLearner):
         local_flips: int = 5,
         batch_size: int = 50,
         moves: str = "consistent",
+        crossover: str = "nodes",
         polish: bool = True,
         seeds: Sequence[DeepInit] = (),
         init: Optional[DeepInit] = None,
@@ -579,6 +592,8 @@ class DeepGenetic(DeepRuleLearner):
             raise ValueError(f"{len(seeds)} seeds for a population of {population}")
         if moves not in DeepLocalSearch.MOVES:
             raise ValueError(f"moves must be one of {DeepLocalSearch.MOVES}, got {moves!r}")
+        if crossover not in self.CROSSOVERS:
+            raise ValueError(f"crossover must be one of {self.CROSSOVERS}, got {crossover!r}")
         self.population = population
         self.generations = generations
         self.elite = elite
@@ -587,6 +602,7 @@ class DeepGenetic(DeepRuleLearner):
         self.local_flips = local_flips
         self.batch_size = batch_size
         self.moves = moves
+        self.crossover = crossover
         self.polish = polish
         self.seeds = list(seeds)
 
@@ -651,9 +667,27 @@ class DeepGenetic(DeepRuleLearner):
         return b
 
     def _crossover(self, a, b, X, rng):
+        if self.crossover == "none":
+            return [w.copy() for w in a]
         self._tracker.count(2 * X.shape[0])
         b = self._aligned(a, b, X)
-        return [np.where((rng.random(wa.shape[0]) < 0.5)[:, None], wa, wb) for wa, wb in zip(a, b)]
+        mode = self.crossover if self.crossover != "mixed" else ("nodes", "subtree")[rng.integers(2)]
+        if mode == "subtree":
+            from_a = [~m for m in self._cone(b, int(rng.integers(len(b) - 1)), rng)]
+        else:
+            from_a = [rng.random(w.shape[0]) < 0.5 for w in a]
+        return [np.where(m[:, None], wa, wb) for wa, wb, m in zip(a, b, from_a)]
+
+    @staticmethod
+    def _cone(weights, layer, rng) -> List[np.ndarray]:
+        """Per layer, the nodes of a random node x of `layer` and of its
+        cone: everything below x connected to it through edges of weight
+        1 (nothing above x)."""
+        masks = [np.zeros(w.shape[0], dtype=bool) for w in weights]
+        masks[layer][rng.integers(weights[layer].shape[0])] = True
+        for l in range(layer, 0, -1):
+            masks[l - 1] = weights[l][masks[l]].any(axis=0)
+        return masks
 
     def _mutate(self, weights, conflicts, rng):
         sizes = np.array([w.size for w in weights], dtype=float)

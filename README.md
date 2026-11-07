@@ -1781,7 +1781,11 @@ climbed on all rows. Crossover first aligns the parents: hidden nodes
 can be permuted without changing the network's function, so the second
 parent's nodes are matched to the first's, layer by layer, by their
 values on the training data (Hungarian method); the child then takes
-each node's incoming edges from either parent.
+each node's incoming edges from either parent (`crossover="nodes"`), or
+one node of the second parent with its cone -- everything below it
+connected through edges of weight 1 -- and the rest from the first
+(`"subtree"`); `"mixed"` picks one per child, `"none"` copies the first
+parent (the control).
 
 Both are anytime algorithms. With `trace=True`, `model.trace` lists every
 new best network on the training set during the fit (`TracePoint`: the

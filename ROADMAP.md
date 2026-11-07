@@ -942,8 +942,14 @@ Next:
   - `DeepNeuroFuzzy`: the relaxed network (product AND/OR, weights in
     [0, 1]) trained by gradient descent in numpy, then frozen to 0/1.
   - `DeepGenetic` (added 2026-11-07): a memetic algorithm with crossover
-    of aligned networks. Other crossovers to try: rules as genes
-    (Pittsburgh style) and hidden concepts as subtrees (GP style).
+    of aligned networks: node-wise, subtree (a node with its cone),
+    mixed, none. One seed, 10-fold, nine datasets, mean accuracy NNF(1) /
+    NNF(3): nodes 0.925 / 0.932, subtree 0.907 / 0.929, mixed 0.911 /
+    0.922, none 0.908 / 0.922 -- but the same node-wise configuration
+    with other random numbers gave 0.916 / 0.925, and single datasets
+    move by up to 0.06 (monk-2), so several seeds are needed to decide
+    whether crossover helps. Not tried: deep rules (a top-level AND node
+    with its cone) as genes, Pittsburgh style.
 - Sanity checks against the papers' numbers, with their encodings;
   otherwise our framework's encoding comes first.
 - Consistency of rules (start and moves) is logical: what the
