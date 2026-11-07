@@ -10,6 +10,8 @@ rules. They differ only in how they find the weights:
 - `DeepLocalSearch` -- stochastic hill climbing over edge flips (Beck &
   Fürnkranz 2021), with moves that keep the rules consistent with the
   `DataSpec`'s constraints (`contradictions`).
+- `DeepGenetic` -- a memetic algorithm: crossover of aligned networks,
+  mutation, a few hill-climbing steps per child.
 
 `DeepRuleLearner` is their shared base: the architecture (`layers`), the
 targets (one output node per class; for two classes one output for the
@@ -29,8 +31,9 @@ The starts (`DeepInit`):
 from __future__ import annotations
 
 import math
+import time
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Sequence, Union
+from typing import Any, List, NamedTuple, Optional, Sequence, Union
 
 import numpy as np
 
@@ -58,6 +61,41 @@ def _layer(w: np.ndarray, below: np.ndarray, is_and: bool) -> np.ndarray:
     if is_and:
         return wi @ (~below).astype(np.int32) == 0
     return wi @ below.astype(np.int32) > 0
+
+
+class TracePoint(NamedTuple):
+    """One new best network during a fit (`DeepRuleLearner(trace=True)`):
+    the effort so far in candidate-rows (one candidate network evaluated
+    on one row; a hill-climbing step on a batch counts every flip it
+    evaluates on every row of the batch), the seconds so far, the weighted
+    training error and the weights."""
+
+    evaluations: int
+    seconds: float
+    train_error: float
+    weights: List[np.ndarray]
+
+
+class _Tracker:
+    """Counts a fit's effort and, with `keep`, records each new best."""
+
+    def __init__(self, keep: bool):
+        self.keep = keep
+        self.evaluations = 0
+        self.start = time.perf_counter()
+        self.best = math.inf
+        self.points: List[TracePoint] = []
+
+    def count(self, n: int) -> None:
+        self.evaluations += int(n)
+
+    def offer(self, weights: Sequence[np.ndarray], error: float) -> None:
+        """`weights` reach the training error `error`: a new point if best."""
+        if error < self.best:
+            self.best = error
+            if self.keep:
+                self.points.append(TracePoint(self.evaluations, time.perf_counter() - self.start, error,
+                                              [w.copy() for w in weights]))
 
 
 class DeepInit(ABC):
@@ -200,17 +238,26 @@ class DeepRuleLearner(NativeRuleLearner):
     no output covers gets the most frequent class, a row several cover the
     class with the most covering rules (`CountVoteCombiner`). `init` (a
     `DeepInit`, default `RandomInit()`) gives the start weights, through
-    `_initialize`, which a subclass may override."""
+    `_initialize`, which a subclass may override.
+
+    The learners are anytime algorithms: with `trace`, the model's `trace`
+    lists every new best network on the training set during the fit
+    (`TracePoint`s: effort, seconds, training error, weights), and
+    `DeepModel.trace_model(i)` turns one into a model, e.g. to measure
+    the test accuracy along the run."""
 
     def __init__(
         self,
         layers: Optional[Sequence[int]] = None,
         init: Optional[DeepInit] = None,
+        trace: bool = False,
         random_state: Optional[int] = 0,
     ):
         self.layers = None if layers is None else [int(n) for n in layers]
         self.init = init if init is not None else RandomInit()
+        self.trace = trace
         self.random_state = random_state
+        self._tracker = _Tracker(False)
 
     def _default_model(self, data: DataRepresentation) -> type:
         return DeepModel
@@ -233,27 +280,38 @@ class DeepRuleLearner(NativeRuleLearner):
         sample_weight = (np.ones(len(y)) if data.weights is None
                          else np.asarray(data.weights, dtype=float))
         rng = np.random.default_rng(self.random_state)
+        self._tracker = _Tracker(self.trace)
         start = self._initialize(data, labels, shapes, rng)
         if [w.shape for w in start] != shapes:
             raise ValueError(f"the start weights have shapes {[w.shape for w in start]}, not {shapes}")
-        weights = self._fit_weights(X, targets, shapes, [np.asarray(w, dtype=bool) for w in start],
-                                    sample_weight, rng, data.spec)
+        weights = self._fit_weights(data, labels, X, targets, shapes,
+                                    [np.asarray(w, dtype=bool) for w in start], sample_weight, rng)
         default = (next(c for c in classes if c != labels[0]) if len(classes) == 2
                    else MajorityClass(data))
-        return DeepModel(data.spec, labels, weights=weights, default_prediction=default,
-                         combiner=CountVoteCombiner())
+        model = DeepModel(data.spec, labels, weights=weights, default_prediction=default,
+                          combiner=CountVoteCombiner())
+        model.trace = self._tracker.points if self.trace else None
+        return model
+
+    def _error(self, weights, X, targets, sample_weight) -> float:
+        """The weighted training error of `weights` on (X, targets),
+        counted as one candidate on every row."""
+        self._tracker.count(X.shape[0])
+        out = nnf_forward(weights, X)[-1]
+        return float(((out != targets) * sample_weight).sum())
 
     def _initialize(self, data: DataRepresentation, labels: Sequence[Any], shapes: List[tuple],
                     rng: np.random.Generator) -> List[np.ndarray]:
         """The start weights: `init`'s."""
         return self.init.weights(data, labels, shapes, rng)
 
-    def _fit_weights(self, X: np.ndarray, targets: np.ndarray, shapes: List[tuple],
-                     start: List[np.ndarray], sample_weight: np.ndarray,
-                     rng: np.random.Generator, spec: Any) -> List[np.ndarray]:
-        """The 0/1 weight matrices (bool, of `shapes`) for `X` (over the
-        features of `spec`) and the output nodes' `targets`
-        (`(n_outputs, n_samples)` bool), starting from `start`."""
+    def _fit_weights(self, data: DataRepresentation, labels: Sequence[Any], X: np.ndarray,
+                     targets: np.ndarray, shapes: List[tuple], start: List[np.ndarray],
+                     sample_weight: np.ndarray, rng: np.random.Generator) -> List[np.ndarray]:
+        """The 0/1 weight matrices (bool, of `shapes`) for `data` (`X` its
+        Boolean matrix) and the output nodes' `targets` (`(n_outputs,
+        n_samples)` bool, one row per entry of `labels`), starting from
+        `start` (`_initialize`'s, which may be called for more starts)."""
         raise NotImplementedError
 
 
@@ -304,9 +362,10 @@ class DeepLocalSearch(DeepRuleLearner):
         max_flips: Optional[int] = None,
         optimize_last_layer: bool = False,
         init: Optional[DeepInit] = None,
+        trace: bool = False,
         random_state: Optional[int] = 0,
     ):
-        super().__init__(layers=layers, init=init, random_state=random_state)
+        super().__init__(layers=layers, init=init, trace=trace, random_state=random_state)
         if moves not in self.MOVES:
             raise ValueError(f"moves must be one of {self.MOVES}, got {moves!r}")
         if (n_epochs is not None and n_epochs < 0) or (max_flips is not None and max_flips < 0):
@@ -321,14 +380,15 @@ class DeepLocalSearch(DeepRuleLearner):
 
     # -- the fit ----------------------------------------------------------
 
-    def _fit_weights(self, X, targets, shapes, start, sample_weight, rng, spec):
-        conflicts = self._conflicts(spec)
+    def _fit_weights(self, data, labels, X, targets, shapes, start, sample_weight, rng):
+        conflicts = self._conflicts(data.spec)
         weights = start
         n = X.shape[0]
         batch = n if self.batch_size is None else min(self.batch_size, n)
         n_batches = n // batch
         best = [w.copy() for w in weights]
         best_error = self._error(weights, X, targets, sample_weight)
+        self._tracker.offer(weights, best_error)
         epochs = self.n_epochs if self.n_epochs is not None else np.iinfo(np.int32).max
         for _ in range(epochs):
             improved = False
@@ -340,18 +400,14 @@ class DeepLocalSearch(DeepRuleLearner):
                 else:
                     self._rebuild_last_layer(weights, X, targets, sample_weight)
                 error = self._error(weights, X, targets, sample_weight)
+                self._tracker.offer(weights, error)
                 if error < best_error:
                     best, best_error, improved = [w.copy() for w in weights], error, True
             if best_error == 0 or (self.n_epochs is None and not improved):
                 break
         weights = [w.copy() for w in best]
-        self._climb(weights, X, targets, sample_weight, conflicts)
+        self._climb(weights, X, targets, sample_weight, conflicts, on_step=self._tracker.offer)
         return weights
-
-    @staticmethod
-    def _error(weights, X, targets, sample_weight) -> float:
-        out = nnf_forward(weights, X)[-1]
-        return float(((out != targets) * sample_weight).sum())
 
     def _conflicts(self, spec: Any) -> Optional[np.ndarray]:
         """`[j, d]` True iff flipping on feature `j` in a rule drops `d`."""
@@ -366,9 +422,10 @@ class DeepLocalSearch(DeepRuleLearner):
 
     # -- hill climbing --------------------------------------------------------
 
-    def _climb(self, weights, X, targets, sample_weight, conflicts) -> None:
+    def _climb(self, weights, X, targets, sample_weight, conflicts, on_step=None) -> None:
         """Steepest ascent on (X, targets): make the best improving flip
-        until none is left (or `max_flips`)."""
+        until none is left (or `max_flips`); `on_step(weights, error)` after
+        each flip."""
         flips = 0
         inputs = X.T
         error = self._error(weights, X, targets, sample_weight)
@@ -377,6 +434,7 @@ class DeepLocalSearch(DeepRuleLearner):
             errors = [self._flip_errors(weights, values, inputs, l, targets, sample_weight,
                                         conflicts if l == 0 else None)
                       for l in range(len(weights))]
+            self._tracker.count(sum(w.size for w in weights) * X.shape[0])
             # Beck's order: the first layer node by node, the others edge source by source
             order = [errors[0].ravel()] + [e.T.ravel() for e in errors[1:]]
             flat = np.concatenate(order)
@@ -391,6 +449,8 @@ class DeepLocalSearch(DeepRuleLearner):
                 i -= e.size
             error = float(flat.min())
             flips += 1
+            if on_step is not None:
+                on_step(weights, error)
 
     @staticmethod
     def _flip(weights, l, k, j, conflicts) -> None:
@@ -464,6 +524,143 @@ class DeepLocalSearch(DeepRuleLearner):
                 return
             last[best_at] = True
             error = best
+
+
+class DeepGenetic(DeepRuleLearner):
+    """A memetic algorithm over the weights of a `DeepModel`: a genetic
+    algorithm whose children are improved by a few hill-climbing steps.
+
+    The population: `population` networks from `init` (default
+    `RandomInit()`), the first ones replaced by the starts in `seeds`
+    (further `DeepInit`s, e.g. `RuleSetInit(Pypper())`). Each generation
+    keeps the `elite` best and fills up with children: two parents by
+    tournaments of `tournament`, crossed over, mutated, then improved by
+    up to `local_flips` steps of `DeepLocalSearch`'s hill climbing on a
+    random mini-batch of `batch_size` rows. Fitness is the weighted
+    training error, ties broken by fewer edges. After `generations`, the
+    best network is climbed on all rows (`polish`).
+
+    Crossover aligns the parents first: a network's hidden nodes can be
+    permuted without changing what it computes, so node *i* of one parent
+    and node *i* of the other need not have anything in common. Layer by
+    layer from the inputs up, the second parent's hidden nodes are matched
+    to the first's by their values on the training data (fewest differing
+    rows, Hungarian method) and reordered; then the child takes each node
+    -- its row of incoming edges -- from either parent with probability
+    1/2. Mutation flips on average `mutations` random edges, with the
+    moves of `moves` (see `DeepLocalSearch`)."""
+
+    #: rows the alignment compares nodes on (a random sample beyond this)
+    _ALIGN_ROWS = 2000
+
+    def __init__(
+        self,
+        layers: Optional[Sequence[int]] = None,
+        population: int = 20,
+        generations: int = 20,
+        elite: int = 2,
+        tournament: int = 3,
+        mutations: float = 2.0,
+        local_flips: int = 5,
+        batch_size: int = 50,
+        moves: str = "consistent",
+        polish: bool = True,
+        seeds: Sequence[DeepInit] = (),
+        init: Optional[DeepInit] = None,
+        trace: bool = False,
+        random_state: Optional[int] = 0,
+    ):
+        super().__init__(layers=layers, init=init, trace=trace, random_state=random_state)
+        if population < 2 or not 0 <= elite < population or tournament < 1:
+            raise ValueError("population must be at least 2, elite below it, tournament at least 1")
+        if generations < 0 or local_flips < 0 or mutations < 0 or batch_size < 1:
+            raise ValueError("generations, local_flips and mutations must be at least 0, batch_size 1")
+        if len(seeds) > population:
+            raise ValueError(f"{len(seeds)} seeds for a population of {population}")
+        if moves not in DeepLocalSearch.MOVES:
+            raise ValueError(f"moves must be one of {DeepLocalSearch.MOVES}, got {moves!r}")
+        self.population = population
+        self.generations = generations
+        self.elite = elite
+        self.tournament = tournament
+        self.mutations = mutations
+        self.local_flips = local_flips
+        self.batch_size = batch_size
+        self.moves = moves
+        self.polish = polish
+        self.seeds = list(seeds)
+
+    def _fit_weights(self, data, labels, X, targets, shapes, start, sample_weight, rng):
+        climber = DeepLocalSearch(moves=self.moves, max_flips=self.local_flips)
+        climber._tracker = self._tracker
+        conflicts = climber._conflicts(data.spec)
+        align_rows = (np.arange(len(X)) if len(X) <= self._ALIGN_ROWS
+                      else rng.choice(len(X), self._ALIGN_ROWS, replace=False))
+        starts = [seed.weights(data, labels, shapes, rng) for seed in self.seeds]
+        if len(starts) < self.population:
+            starts.append(start)
+        while len(starts) < self.population:
+            starts.append(self._initialize(data, labels, shapes, rng))
+        pop = [self._individual([np.asarray(w, dtype=bool) for w in ws], X, targets, sample_weight)
+               for ws in starts]
+        n, batch = len(X), min(self.batch_size, len(X))
+        for _ in range(self.generations):
+            pop.sort(key=lambda ind: ind[1])
+            if pop[0][1][0] == 0:
+                break
+            children = pop[:self.elite]
+            while len(children) < self.population:
+                a, b = self._select(pop, rng), self._select(pop, rng)
+                child = self._crossover(a[0], b[0], X[align_rows], rng)
+                self._mutate(child, conflicts, rng)
+                if self.local_flips:
+                    rows = rng.choice(n, batch, replace=False)
+                    climber._climb(child, X[rows], targets[:, rows], sample_weight[rows], conflicts)
+                children.append(self._individual(child, X, targets, sample_weight))
+            pop = children
+        best = min(pop, key=lambda ind: ind[1])[0]
+        if self.polish:
+            polisher = DeepLocalSearch(moves=self.moves)
+            polisher._tracker = self._tracker
+            polisher._climb(best, X, targets, sample_weight, conflicts, on_step=self._tracker.offer)
+        return best
+
+    def _individual(self, weights, X, targets, sample_weight):
+        error = self._error(weights, X, targets, sample_weight)
+        self._tracker.offer(weights, error)
+        return weights, (error, sum(int(w.sum()) for w in weights))
+
+    def _select(self, pop, rng):
+        picks = rng.choice(len(pop), size=min(self.tournament, len(pop)), replace=False)
+        return min((pop[i] for i in picks), key=lambda ind: ind[1])
+
+    @staticmethod
+    def _aligned(a, b, X):
+        """`b`'s weights with its hidden nodes reordered to match `a`'s."""
+        from scipy.optimize import linear_sum_assignment
+
+        b = [w.copy() for w in b]
+        va, vb = nnf_forward(a, X), nnf_forward(b, X)
+        for l in range(len(b) - 1):
+            ai, bi = va[l].astype(np.int32), vb[l].astype(np.int32)
+            differ = ai @ (1 - bi).T + (1 - ai) @ bi.T  # rows on which node i of a and node j of b differ
+            _, order = linear_sum_assignment(differ)
+            b[l] = b[l][order]
+            b[l + 1] = b[l + 1][:, order]
+            vb[l] = vb[l][order]
+        return b
+
+    def _crossover(self, a, b, X, rng):
+        self._tracker.count(2 * X.shape[0])
+        b = self._aligned(a, b, X)
+        return [np.where((rng.random(wa.shape[0]) < 0.5)[:, None], wa, wb) for wa, wb in zip(a, b)]
+
+    def _mutate(self, weights, conflicts, rng):
+        sizes = np.array([w.size for w in weights], dtype=float)
+        for _ in range(rng.poisson(self.mutations)):
+            l = int(rng.choice(len(weights), p=sizes / sizes.sum()))
+            k, j = int(rng.integers(weights[l].shape[0])), int(rng.integers(weights[l].shape[1]))
+            DeepLocalSearch._flip(weights, l, k, j, conflicts if l == 0 else None)
 
 
 def contradictions(spec) -> np.ndarray:

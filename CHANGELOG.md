@@ -27,6 +27,12 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   `ModelInit`, `RuleSetInit` -- a rule set or a rule learner's rules as
   the start network). `nnf_forward` evaluates weight matrices on a
   Boolean matrix. `DeepModel.pruned()`, `used_nodes()`, `n_edges`.
+  `DeepGenetic`: a memetic algorithm -- crossover of networks aligned by
+  their nodes' values, mutation, a few hill-climbing steps per child; the
+  population can be seeded with rule learners' rules.
+  `trace=True` on both: the model's `trace` lists every new best network
+  during the fit with its effort (candidate-rows), seconds and training
+  error (`TracePoint`), `DeepModel.trace_model(i)` the network of a point.
 - Catalog: `CatalogEntry.csv_url`, a CSV file as a dataset's source,
   downloaded once into the data home (`fetch_csv_frame`; filled in by
   `tools/build_catalog.py` too). The tags `deep` and `artificial`: the

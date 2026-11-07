@@ -2586,6 +2586,8 @@ class DeepModel(CompositeModel):
         self.hidden_name = hidden_name
         self.resolution = Combine(combiner)
         self.dataspec = DeepModel.extended_spec(input_spec, self.hidden_concepts)
+        #: the learner's record of its run (`pyrulearn.learners.deep.TracePoint`s), if it kept one
+        self.trace: Optional[List[Any]] = None
 
     @staticmethod
     def extended_spec(input_spec: DataSpec, concept_labels: Sequence[Any]) -> DataSpec:
@@ -2752,6 +2754,15 @@ class DeepModel(CompositeModel):
         return _carry_provenance(self, DeepModel(
             new_dataspec, self.outputs, weights=[moved] + self.weights[1:],
             default_prediction=self._default_prediction, combiner=self.combiner, hidden_name=self.hidden_name))
+
+    def trace_model(self, i: int) -> "DeepModel":
+        """The network of `trace[i]`, a point of the learner's run, as a
+        model with this one's outputs and default."""
+        if not self.trace:
+            raise ValueError("this model has no trace -- fit it with trace=True")
+        return DeepModel(self.input_spec, self.outputs, weights=self.trace[i].weights,
+                         default_prediction=self._default_prediction, combiner=self.combiner,
+                         hidden_name=self.hidden_name)
 
     @property
     def n_edges(self) -> int:

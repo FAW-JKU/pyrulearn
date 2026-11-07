@@ -941,6 +941,9 @@ Next:
     Inconsistent data (monk-3) is UNSAT; soft examples later.
   - `DeepNeuroFuzzy`: the relaxed network (product AND/OR, weights in
     [0, 1]) trained by gradient descent in numpy, then frozen to 0/1.
+  - `DeepGenetic` (added 2026-11-07): a memetic algorithm with crossover
+    of aligned networks. Other crossovers to try: rules as genes
+    (Pittsburgh style) and hidden concepts as subtrees (GP style).
 - Sanity checks against the papers' numbers, with their encodings;
   otherwise our framework's encoding comes first.
 - Consistency of rules (start and moves) is logical: what the
@@ -948,6 +951,17 @@ Next:
   feature names has none. Later, as a `DataSpec` method: inferring
   constraints from data (e.g. features never true together, or one
   implying another), so that such specs get them too.
+- Results so far (2026-11-07, 10-fold, nine datasets; mean accuracy):
+  Pypper 0.929; local search NNF(1) 0.811, NNF(3) 0.925; GA NNF(1) 0.925,
+  NNF(3) 0.932; both started from Pypper's rules 0.948-0.952 -- the gain
+  comes from the start, the GA adds little over local search there.
+- A demo of the anytime behaviour (`trace=True`): test accuracy against
+  effort, averaged over folds, for local search and the GA, random and
+  Pypper-seeded, NNF(1) and NNF(3), on larger datasets where a deeper
+  structure may pay off -- adult, kr-vs-kp, mushroom, connect-4-binary,
+  kropt -- with the artificial datasets as a control. Needs budgets
+  (`max_evaluations`, `max_seconds`) to compare on equal effort. Whether
+  the largest ones can be run is open.
 - **Remove `car-binary` and `connect-4-binary` again** once those
   comparisons are done: they are binary versions of `car` and
   `connect-4`, only there to match the papers' setups (also adjust

@@ -26,7 +26,7 @@ pool, and the `CBA` and `CMAR` classifiers built on it),
 base learner), `pyrulearn.learners.adaboost` (`AdaBoost`, SAMME over any
 base learner), `pyrulearn.learners.cpar` (`CPAR`, `DenseCPAR`), `pyrulearn.learners.opus`
 (`Opus`, `OpusTopK`), `pyrulearn.learners.deep` (`DeepLocalSearch`,
-learning `DeepModel`s), and
+`DeepGenetic`, learning `DeepModel`s), and
 `pyrulearn.learners.multiclass` (`OneVsRest`/`OrderedOneVsRest`/
 `Pairwise` -- thin sugar over `DecomposingLearner`). External-tool
 learners (sklearn/wittgenstein/imodels/Weka/LORD) live next to their
