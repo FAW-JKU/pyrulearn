@@ -302,11 +302,134 @@ def test_pairwise_ties_use_training_frequencies_from_stats_when_no_priors_are_gi
         assert PairwiseModel(members).predict(row)[0] == "yes"
 
 
-def test_deep_model_is_a_stub():
-    dm = DeepModel([SingleRule(Rule([0], target="a", dataspec=DS))], dependencies={0: []})
-    assert isinstance(dm, CompositeModel)
-    with pytest.raises(NotImplementedError):
-        dm.predict(DATA)
+def _nnf_reference(layers, X):
+    """A layered NNF evaluated directly: AND = all inputs with weight 1,
+    OR = any input with weight 1."""
+    v = X.astype(bool)
+    for i, w in enumerate(layers):
+        w = np.asarray(w, dtype=bool)
+        if i % 2 == 0:
+            v = np.all(~w[None, :, :] | v[:, None, :], axis=2)
+        else:
+            v = np.any(w[None, :, :] & v[:, None, :], axis=2)
+    return v
+
+
+def _random_layers(rng, n_in, widths, density):
+    layers, below = [], n_in
+    for width in widths:
+        layers.append((rng.random((width, below)) < density).astype(int))
+        below = width
+    return layers
+
+
+def test_deep_model_is_its_nnf():
+    rng = np.random.default_rng(0)
+    spec = DataSpec([f"f{i}" for i in range(6)])
+    X = rng.random((200, 6)) < 0.5
+    data = HorizontalBitmapRepresentation(spec, X, np.array(["x"] * 200))
+    for _ in range(30):
+        layers = _random_layers(rng, 6, [5, 4, 3, 1], 0.4)
+        dm = DeepModel(spec, ["yes"], weights=layers, default_prediction="no")
+        expected = _nnf_reference(layers, X)[:, 0]
+        assert list(dm.predict(data)) == ["yes" if e else "no" for e in expected]
+        assert dm.concept_values(data)[-1].tolist() == expected.tolist()
+        # the rule views predict the same, simplified or not
+        for simplify in (False, True):
+            cv = {}
+            for m in dm.to_concepts(simplify):
+                v = np.zeros(200, dtype=bool)
+                for r in m.rules:
+                    c = np.ones(200, dtype=bool)
+                    for lit in r.conditions:
+                        c &= X[:, lit.feature] if lit.feature < 6 else cv[r.dataspec.feature_names[lit.feature]]
+                    v |= c
+                cv[m.label] = v
+            assert cv["yes"].tolist() == expected.tolist()
+
+
+def test_deep_model_rule_view():
+    spec = DataSpec(["a", "b", "c"])
+    W1 = [[1, 1, 0], [0, 0, 1], [0, 0, 0]]  # a & b, c, (empty: true)
+    W2 = [[1, 1, 0], [0, 0, 0]]             # h1_1 = (a & b) | c, h1_2 = (no rules: false)
+    W3 = [[1, 0], [1, 1]]                    # h1_1, h1_1 & h1_2
+    W4 = [[1, 1]]
+    dm = DeepModel(spec, ["yes"], weights=[W1, W2, W3, W4], default_prediction="no")
+    assert repr(dm) == "DeepModel(3 inputs, layers [3, 2, 2], 1 outputs)" and dm.layers == [3, 2, 2]
+    assert [m.label for m in dm.members] == ["h1_1", "h1_2", "yes"]
+    assert dm.hidden_concepts == ["h1_1", "h1_2"] and dm.outputs == ["yes"] and dm.labels == ["no", "yes"]
+    assert dm.dataspec.feature_names == ["a", "b", "c", "h1_1", "h1_2", "yes"]
+    assert [len(m.rules) for m in dm.members] == [2, 0, 2]
+    X = np.array([[1, 1, 0], [0, 0, 1], [1, 0, 0]], dtype=bool)
+    data = HorizontalBitmapRepresentation(spec, X)
+    assert dm.concept_values(data).tolist() == [[True, True, False], [False] * 3, [True, True, False]]
+    assert dm.coverage_matrix(data).tolist() == [
+        [True, False, False], [False, True, False], [True, True, False], [False] * 3]
+    assert list(dm.predict(data)) == ["yes", "yes", "no"]
+    # the rule using the false h1_2 goes, the single-rule `yes :- h1_1` takes h1_1's rules
+    simple = dm.to_concepts()
+    assert [m.label for m in simple] == ["yes"]
+    assert sorted(r.rule.to_string() for r in simple[0].rules) == ["yes(X) :- a(X), b(X).", "yes(X) :- c(X)."]
+    assert "h1_" not in str(dm) and "% concept: h1_1" in dm.to_string(simplify=False)
+
+
+def test_deep_model_inlines_a_single_rule_concept():
+    spec = DataSpec(["a", "b", "c"])
+    # h1_1 = a & b (one rule); yes = (h1_1 & c) | c
+    dm = DeepModel(spec, ["yes"], weights=[[[1, 1, 0]], [[1]], [[1], [0]], [[1, 1]]])
+    dm_c = DeepModel(spec, ["yes"],
+                     weights=[[[1, 1, 0], [0, 0, 1]], [[1, 0], [0, 1]], [[1, 1], [0, 1]], [[1, 1]]])
+    (yes,) = dm_c.to_concepts()
+    assert sorted(sorted(spec.feature_names[l.feature] for l in r.conditions) for r in yes.rules) == [
+        ["a", "b", "c"], ["c"]]
+    (yes,) = dm.to_concepts()
+    assert [r.rule.to_string() for r in yes.rules] == ["yes(X) :- a(X), b(X).", "yes(X) :- true."]
+
+
+def test_deep_model_checks_its_layers():
+    spec = DataSpec(["a", "b"])
+    with pytest.raises(ValueError, match="odd number"):
+        DeepModel(spec, ["yes"], weights=[[[1, 0]]])
+    with pytest.raises(ValueError, match="odd number"):
+        DeepModel(spec, ["yes"], [4, 2])
+    with pytest.raises(ValueError, match="not \\[2\\]"):
+        DeepModel(spec, ["yes"], [2], weights=[[[1, 0]], [[1]]])
+    with pytest.raises(ValueError, match="0 or 1"):
+        DeepModel(spec, ["yes"], weights=[[[2, 0]], [[1]]])
+    with pytest.raises(ValueError, match="columns"):
+        DeepModel(spec, ["yes"], weights=[[[1, 0, 1]], [[1]]])
+    with pytest.raises(ValueError, match="labels for"):
+        DeepModel(spec, ["yes", "no"], weights=[[[1, 0]], [[1]]])
+    with pytest.raises(ValueError, match="clash"):
+        DeepModel(spec, ["a"], weights=[[[1, 0]], [[1]]])
+
+
+def test_deep_model_filter_remap_and_conflicts():
+    spec = DataSpec(["a", "b"])
+    dm = DeepModel(spec, ["p", "q"], weights=[[[1, 0], [0, 1]], [[1, 0], [0, 1]]], combiner=CountVoteCombiner())
+    assert isinstance(dm, CompositeModel) and dm.outputs == ["p", "q"]
+    assert dm.filter("q").outputs == ["q"] and dm.filter("q").weights[-1].tolist() == [[False, True]]
+    wider = DataSpec(["z", "b", "a"])
+    data = HorizontalBitmapRepresentation(wider, np.array([[0, 0, 1], [1, 1, 0], [0, 1, 1]], dtype=bool))
+    moved = dm.remap(wider)
+    assert list(moved.predict(data)[:2]) == ["p", "q"]
+    assert moved.predict(data)[2] in ("p", "q")  # both fire: the combiner decides
+    with pytest.raises(TypeError):
+        dm._with_members([])
+
+
+def test_deep_model_from_its_architecture():
+    spec = DataSpec([f"f{i}" for i in range(8)])
+    dm = DeepModel(spec, ["a", "b"], [32, 16, 10, 5, 2], default_prediction="none")
+    assert dm.layers == [32, 16, 10, 5, 2]
+    assert [w.shape for w in dm.weights] == [(32, 8), (16, 32), (10, 16), (5, 10), (2, 5), (2, 2)]
+    assert not any(w.any() for w in dm.weights)
+    assert dm.hidden_concepts == [f"h1_{j}" for j in range(1, 17)] + [f"h2_{j}" for j in range(1, 6)]
+    data = HorizontalBitmapRepresentation(spec, np.ones((3, 8), dtype=bool))
+    assert list(dm.predict(data)) == ["none"] * 3  # no edges: every OR node is false
+    assert DeepModel(spec, ["a"], [4, 2, 3]).layers == [4, 2, 3]
+    assert DeepModel(spec, ["a"]).layers == [3]  # ceil(sqrt(8)): a DNF
+    assert DeepModel(DataSpec([f"f{i}" for i in range(100)]), ["a"]).layers == [10]
 
 
 # -- converters --------------------------------------------------------

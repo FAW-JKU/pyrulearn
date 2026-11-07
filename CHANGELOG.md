@@ -5,6 +5,20 @@ is in early development (alpha): until 1.0, minor versions may change the API.
 
 ## Unreleased
 
+### Added
+
+- `DeepModel` is no longer a stub: a formula in negation normal form, a
+  fully connected network of alternating AND and OR layers with 0/1 edge
+  weights, `DeepModel(input_spec, labels, layers)` with the hidden layer
+  sizes like a neural network's (by default one AND layer of
+  `ceil(sqrt(n))` nodes for `n` features, a DNF) or `weights=`, instead of members and
+  `dependencies`. The weights are the model; `to_concepts()` reads them
+  as stacked rules -- every AND node a rule body, every OR node a concept
+  with one rule per incoming edge, a concept a feature for the layers
+  above -- by default without the pass-through nodes, as `to_string`
+  prints it. `node_values`/`concept_values(data)` give every node's
+  value, hidden ones included.
+
 ### Changed
 
 - `PrePostNListRepresentation` no longer keeps the path bitmask of every

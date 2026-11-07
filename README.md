@@ -702,8 +702,20 @@ rules apply:
     first `n` members.
   - `PairwiseModel` -- round robin: one binary member per label pair,
     each voting for one of its two labels.
-  - `DeepModel` -- members wired into a dependency DAG ("stacking");
-    currently a stub, structure only, with no `predict` yet.
+  - `DeepModel(input_spec, labels, layers)` -- a formula in negation
+    normal form: a fully connected network of alternating AND and OR
+    layers with 0/1 edge weights. The inputs are the features, the output
+    layer an OR layer with one node per label, `layers` the sizes of the
+    layers in between, like a neural network's (an odd number, AND, OR,
+    ..., AND: e.g. `[32, 16, 10, 5, 2]`; by default one AND layer of
+    `ceil(sqrt(n))` nodes for `n` features, a DNF); the weights start at
+    0, or come from `weights=`. The weights are the model and predict by matrix products; its rules
+    are a view of them (`to_concepts()`): every AND node is a rule body,
+    every OR node a concept (a `ConceptModel` with one rule per incoming
+    edge), and a concept is a feature for the layers above. By default the
+    view removes the pass-through nodes: a concept with a single rule is
+    inlined, a rule whose body is a single concept replaced by that
+    concept's rules.
 
 ### Printing a model
 
@@ -800,9 +812,12 @@ suppressing it for a genuine `DistributionCombiner`); `show_classes=True`/
 rule ends up showing a vector at all -- useful for naming a model's relevant
 classes as a label on its own.
 
-`EnsembleModel`/`PairwiseModel` also have `to_string` (`CompositeModel`'s
-other concrete subclass, `DeepModel`, doesn't -- it's a structure-only stub
-with no member-wiring semantics yet to print). Both render every member/pair
+`DeepModel.to_string` prints its hidden concepts, each headed
+`% concept: <label>`, then its output concepts as a `ConceptSet` prints them;
+by default without the pass-through nodes (`simplify=False` prints every
+node).
+
+`EnsembleModel`/`PairwiseModel` also have `to_string`. Both render every member/pair
 in turn plus a top-level `% classes: [...]` naming the model's own `labels`
 (from its own declared structure, not `data` -- see `_container_legend`).
 `EnsembleModel` headers each member `% member <k>`, with `(weight: ...)`
