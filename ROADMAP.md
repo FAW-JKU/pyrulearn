@@ -1059,6 +1059,29 @@ Next:
 - `RuleSetInit` puts a rule set into the first layer and passes it up
   unchanged; a start that factors the rules (shared conditions as hidden
   concepts) would use the deeper levels from the start.
+- Hidden concepts (full demo run on ab7a5b3 and follow-ups, 2026-11-08):
+  no learner has built one yet. KRK (`[128, 16, 4]`): NeuroFuzzy from
+  Pypper beats Pypper (0.858 vs 0.792) with one hidden concept, "rook on
+  the black king's file or rank" (an OR of the 15 `eq` pairs), the layers
+  above pass it through; with lambda 0.25 it adds flat fragments of "kings
+  adjacent" (0.846), not "files close AND ranks close". Parity-4 is
+  learnt flat by NNF(1) as well (8 rules fit `[20]`); parity-6-of-12
+  (1000 rows) defeats every learner (no subset of the six features tells
+  anything, so a group's parity earns nothing). `parity_groups` (at least
+  2 of 4 groups odd, 1000 rows, lambda 1) rewards the groups one by one,
+  but no learner finds them either: groups of three, everything near the
+  majority (0.688), local search on `[32, 8, 8]` best with 0.733; groups
+  of two (plus 4 irrelevant), local search on `[32, 8, 8]` 0.874 against
+  Pypper 0.825 and flat local search 0.833 -- with 6-8 used OR nodes, but
+  none of them a group's parity (each agrees with every group's on about
+  half the rows): a tangle of partial terms, not the concepts.
+- Next steps (the user, 2026-11-08), new algorithms rather than changes to
+  the current ones:
+  1. A better start than Pypper, whose rules are too simple (general,
+     short): FOIL's, say.
+  2. A search -- and possibly a start -- driven by examples (e.g. a
+     misclassified example picks the moves, rules seeded from examples):
+     a different algorithm.
 - **Remove `car-binary` and `connect-4-binary` again** once those
   comparisons are done: they are binary versions of `car` and
   `connect-4`, only there to match the papers' setups (also adjust

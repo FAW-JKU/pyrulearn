@@ -111,3 +111,53 @@ def test_parity():
     assert target == "class" and df.equals(d)
     with pytest.raises(ValueError):
         parity(0, 3)
+
+
+def test_parity_groups():
+    from pyrulearn.datasets import ParityGroups, parity_groups
+
+    d = parity_groups(4, 3, 2, n_irrelevant=1)
+    assert len(d) == 2 ** 13 and list(d.columns) == [f"x{i}" for i in range(1, 14)] + ["class"]
+    x = d.drop(columns="class").to_numpy()
+    odd = x[:, :12].reshape(-1, 4, 3).sum(axis=2) % 2 == 1
+    np.testing.assert_array_equal(d["class"] == "yes", odd.sum(axis=1) >= 2)  # x13 doesn't matter
+    assert abs((d["class"] == "yes").mean() - 11 / 16) < 1e-12
+    s = parity_groups(n=500, random_state=3)
+    assert len(s) == 500 and not s.drop(columns="class").duplicated().any()
+    assert ParityGroups().name == "parity-groups-2-of-4x3"
+    assert ParityGroups(4, 2, 2, n_irrelevant=4, n=1000).name == "parity-groups-2-of-4x2-plus4-n1000"
+    df, target = ParityGroups(3, 2, 1).load()
+    assert target == "class" and df.equals(parity_groups(3, 2, 1))
+    with pytest.raises(ValueError, match="threshold"):
+        parity_groups(3, 2, 4)
+
+
+def test_parity_groups_has_the_small_deep_network():
+    # the network of the docstring -- each group's parity in layers 1-2, the pairs of groups in
+    # layer 3 (AND), their OR at the output -- computes the concept exactly, with 82 edges
+    from itertools import combinations, product
+
+    from pyrulearn.datasets import parity_groups
+    from pyrulearn.learners.deep import nnf_forward
+
+    d = parity_groups(4, 3, 2)
+    x = d.drop(columns="class").to_numpy()
+    X = np.hstack([x, ~x])  # x1..x12, then not x1..not x12
+    odd_terms = [t for t in product((0, 1), repeat=3) if sum(t) % 2 == 1]
+    w1 = np.zeros((16, 24), dtype=bool)
+    for g in range(4):
+        for k, t in enumerate(odd_terms):
+            for i, bit in enumerate(t):
+                w1[4 * g + k, 3 * g + i + (0 if bit else 12)] = True
+    w2 = np.zeros((4, 16), dtype=bool)
+    for g in range(4):
+        w2[g, 4 * g:4 * g + 4] = True
+    pairs = list(combinations(range(4), 2))
+    w3 = np.zeros((6, 4), dtype=bool)
+    for k, (a, b) in enumerate(pairs):
+        w3[k, [a, b]] = True
+    w4 = np.ones((1, 6), dtype=bool)
+    weights = [w1, w2, w3, w4]
+    assert sum(int(w.sum()) for w in weights) == 48 + 16 + 12 + 6
+    out = nnf_forward(weights, X)[-1][0]
+    np.testing.assert_array_equal(out, d["class"] == "yes")

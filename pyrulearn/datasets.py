@@ -5,6 +5,13 @@ irrelevant ones: a flat DNF needs 2^(k-1) rules of k conditions, a deep
 network builds it from small parts (XOR and XNOR of pairs, then of those).
 `Parity` is the same as a dataset for `run_cv`.
 
+`parity_groups` -- at least `threshold` of a few groups of Boolean
+features have odd parity: hidden concepts that pay off one by one (each
+group's parity alone tells about the class, unlike the parts of a single
+parity) and a flat DNF that is much larger than the deep network (with
+groups of three, two of four: 96 rules of six conditions against about
+80 edges). `ParityGroups` is the same as a dataset for `run_cv`.
+
 `krk_illegal` -- the KRK illegality task of the ILP literature (Muggleton,
 Bain, Hayes-Michie & Michie, "An experimental comparison of human and
 machine learning formalisms", ML 1989): a chess position of white king,
@@ -142,11 +149,16 @@ def parity(n_relevant: int = 4, n_irrelevant: int = 6, n: Optional[int] = None, 
     `n_irrelevant` features don't matter. All 2^(n_relevant +
     n_irrelevant) rows, in order (``n=None``), or `n` distinct ones drawn
     uniformly. `noise` flips each label with that probability."""
-    import pandas as pd
-
-    d = n_relevant + n_irrelevant
     if n_relevant < 1 or n_irrelevant < 0:
         raise ValueError("parity needs at least one relevant feature and no negative number of irrelevant ones")
+    rng, bits = _boolean_rows(n_relevant + n_irrelevant, n, noise, random_state)
+    odd = bits[:, :n_relevant].sum(axis=1) % 2 == 1
+    return _boolean_frame(bits, _flip(odd, noise, rng), "odd", "even")
+
+
+def _boolean_rows(d: int, n: Optional[int], noise: float, random_state: Optional[int]):
+    """A generator and the rows of `d` Boolean features: all 2^d in order
+    (``n=None``) or `n` distinct ones drawn uniformly."""
     if not 0 <= noise <= 1:
         raise ValueError(f"noise must be in [0, 1], got {noise!r}")
     rng = np.random.default_rng(random_state)
@@ -157,12 +169,18 @@ def parity(n_relevant: int = 4, n_irrelevant: int = 6, n: Optional[int] = None, 
         if not 0 < n <= total:
             raise ValueError(f"n must be between 1 and {total}, got {n}")
         codes = np.sort(rng.choice(total, size=n, replace=False))
-    bits = ((codes[:, None] >> np.arange(d - 1, -1, -1)) & 1).astype(bool)
-    odd = bits[:, :n_relevant].sum(axis=1) % 2 == 1
-    if noise:
-        odd = odd ^ (rng.random(len(odd)) < noise)
-    frame = {f"x{i + 1}": bits[:, i] for i in range(d)}
-    frame["class"] = np.where(odd, "odd", "even")
+    return rng, ((codes[:, None] >> np.arange(d - 1, -1, -1)) & 1).astype(bool)
+
+
+def _flip(labels: np.ndarray, noise: float, rng: np.random.Generator) -> np.ndarray:
+    return labels ^ (rng.random(len(labels)) < noise) if noise else labels
+
+
+def _boolean_frame(bits: np.ndarray, positive: np.ndarray, yes: str, no: str):
+    import pandas as pd
+
+    frame = {f"x{i + 1}": bits[:, i] for i in range(bits.shape[1])}
+    frame["class"] = np.where(positive, yes, no)
     return pd.DataFrame(frame)
 
 
@@ -193,3 +211,62 @@ class Parity:
 
     def load(self, data_home: Optional[str] = None, drop_degenerate: bool = True) -> Tuple[object, str]:
         return parity(self.n_relevant, self.n_irrelevant, self.n, self.noise, self.random_state), self.target
+
+
+def parity_groups(n_groups: int = 4, group_size: int = 3, threshold: int = 2, n_irrelevant: int = 0,
+                  n: Optional[int] = None, noise: float = 0.0, random_state: Optional[int] = 0):
+    """A `pandas.DataFrame` of Boolean features ``x1``, ``x2``, ... and
+    ``class``: ``"yes"`` if at least `threshold` of the `n_groups` groups
+    of `group_size` features (``x1``-``x3``, ``x4``-``x6``, ... for groups
+    of three) have an odd number of true features, else ``"no"``; the
+    `n_irrelevant` features after them don't matter. Rows and `noise` as
+    in `parity`.
+
+    A deep network computes each group's parity in its first two layers
+    (2^(group_size-1) rules of `group_size` conditions, ORed), the
+    combinations of `threshold` groups in an AND layer and their OR at the
+    output; the combination is monotone, so it needs no negated hidden
+    nodes. A flat DNF has C(n_groups, threshold) * 2^(threshold *
+    (group_size-1)) rules of threshold * group_size conditions."""
+    if n_groups < 1 or group_size < 1 or n_irrelevant < 0:
+        raise ValueError("parity_groups needs at least one group of at least one feature")
+    if not 1 <= threshold <= n_groups:
+        raise ValueError(f"threshold must be between 1 and n_groups={n_groups}, got {threshold}")
+    rng, bits = _boolean_rows(n_groups * group_size + n_irrelevant, n, noise, random_state)
+    groups = bits[:, :n_groups * group_size].reshape(len(bits), n_groups, group_size)
+    odd = groups.sum(axis=2) % 2 == 1
+    return _boolean_frame(bits, _flip(odd.sum(axis=1) >= threshold, noise, rng), "yes", "no")
+
+
+@dataclass(frozen=True)
+class ParityGroups:
+    """`parity_groups(...)` as a dataset for `run_cv` (its `name` -- which
+    keys the cache -- says how it was made)."""
+
+    n_groups: int = 4
+    group_size: int = 3
+    threshold: int = 2
+    n_irrelevant: int = 0
+    n: Optional[int] = None
+    noise: float = 0.0
+    random_state: Optional[int] = 0
+    openml_id = None
+    openml_version = None
+    target = "class"
+
+    @property
+    def name(self) -> str:
+        out = f"parity-groups-{self.threshold}-of-{self.n_groups}x{self.group_size}"
+        if self.n_irrelevant:
+            out += f"-plus{self.n_irrelevant}"
+        if self.n is not None:
+            out += f"-n{self.n}"
+        if self.noise:
+            out += f"-noise{self.noise:g}"
+        if self.random_state not in (None, 0) and (self.n is not None or self.noise):
+            out += f"-seed{self.random_state}"
+        return out
+
+    def load(self, data_home: Optional[str] = None, drop_degenerate: bool = True) -> Tuple[object, str]:
+        return parity_groups(self.n_groups, self.group_size, self.threshold, self.n_irrelevant, self.n,
+                             self.noise, self.random_state), self.target

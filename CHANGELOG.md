@@ -84,6 +84,12 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   `Parity`: the parity of a few relevant Boolean features among
   irrelevant ones (Pypper, 5-fold: 0.71 for 3 of 10, 0.62 for 4 of 10,
   0.52 for 5 of 10).
+- `pyrulearn.datasets.parity_groups(n_groups, group_size, threshold,
+  n_irrelevant, n, noise)` and `ParityGroups`: at least `threshold` of
+  `n_groups` groups of Boolean features have odd parity -- hidden
+  concepts that pay off one by one, and a flat DNF much larger than the
+  deep network (2 of 4 groups of three: 96 rules of six conditions
+  against a network of 82 edges).
 - `target_class` on the deep learners: the class the output node learns
   (the most frequent other class the default); without it, as before,
   the less frequent of two classes, or one output per class. On Beck's
