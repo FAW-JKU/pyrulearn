@@ -12,6 +12,8 @@ rules. They differ only in how they find the weights:
   `DataSpec`'s constraints (`contradictions`).
 - `DeepGenetic` -- a memetic algorithm: crossover of aligned networks,
   mutation, a few hill-climbing steps per child.
+- `DeepSAT` -- an exact fit by SAT solving, the smallest network by
+  MaxSAT (Seip, Fürnkranz et al.).
 
 `DeepRuleLearner` is their shared base: the architecture (`layers`), the
 targets (one output node per class; for two classes one output for the
@@ -43,17 +45,22 @@ from ..models import DeepModel, MajorityClass, RuleModel
 from .base import NativeRuleLearner, RuleLearner, produces
 
 
-def nnf_forward(weights: Sequence[np.ndarray], X: np.ndarray) -> List[np.ndarray]:
+def nnf_forward(weights: Sequence[np.ndarray], X: np.ndarray, first: str = "and") -> List[np.ndarray]:
     """The value of every node for every row of the Boolean matrix `X`
     (`(n_samples, n_features)`), one `(n_nodes, n_samples)` bool array per
-    layer of `weights` (AND, OR, AND, ..., OR): an AND node holds where
-    none of its inputs is false, an OR node where one is true."""
+    layer of `weights`, alternating from `first` (``"and"``: AND, OR, AND,
+    ...): an AND node holds where none of its inputs is false, an OR node
+    where one is true."""
     values: List[np.ndarray] = []
     below = X.T
     for i, w in enumerate(weights):
-        values.append(_layer(w, below, i % 2 == 0))
+        values.append(_layer(w, below, _is_and(i, first)))
         below = values[-1]
     return values
+
+
+def _is_and(layer: int, first: str) -> bool:
+    return (layer % 2 == 0) == (first == "and")
 
 
 def _layer(w: np.ndarray, below: np.ndarray, is_and: bool) -> np.ndarray:
@@ -65,15 +72,18 @@ def _layer(w: np.ndarray, below: np.ndarray, is_and: bool) -> np.ndarray:
 
 class TracePoint(NamedTuple):
     """One new best network during a fit (`DeepRuleLearner(trace=True)`):
-    the effort so far in candidate-rows (one candidate network evaluated
-    on one row; a hill-climbing step on a batch counts every flip it
-    evaluates on every row of the batch), the seconds so far, the weighted
-    training error and the weights."""
+    the effort so far (for the search learners in candidate-rows: one
+    candidate network evaluated on one row, a hill-climbing step on a
+    batch counting every flip it evaluates on every row of the batch; for
+    `DeepSAT` in solver calls), the seconds so far, the weighted training
+    error, the weights, and for a learner that minimizes size (`DeepSAT`'s
+    MaxSAT) the size it minimizes."""
 
     evaluations: int
     seconds: float
     train_error: float
     weights: List[np.ndarray]
+    size: Optional[int] = None
 
 
 class _Tracker:
@@ -84,18 +94,23 @@ class _Tracker:
         self.evaluations = 0
         self.start = time.perf_counter()
         self.best = math.inf
+        self.best_size = math.inf
         self.points: List[TracePoint] = []
 
     def count(self, n: int) -> None:
         self.evaluations += int(n)
 
-    def offer(self, weights: Sequence[np.ndarray], error: float) -> None:
-        """`weights` reach the training error `error`: a new point if best."""
-        if error < self.best:
+    def offer(self, weights: Sequence[np.ndarray], error: float, size: Optional[int] = None) -> None:
+        """`weights` reach the training error `error` (and the `size` a
+        learner minimizes): a new point if better -- a lower error, or the
+        same error and a smaller size."""
+        better = error < self.best or (error == self.best and size is not None and size < self.best_size)
+        if better:
             self.best = error
+            self.best_size = size if size is not None else math.inf
             if self.keep:
                 self.points.append(TracePoint(self.evaluations, time.perf_counter() - self.start, error,
-                                              [w.copy() for w in weights]))
+                                              [w.copy() for w in weights], size))
 
 
 class DeepInit(ABC):
@@ -103,9 +118,10 @@ class DeepInit(ABC):
 
     @abstractmethod
     def weights(self, data: DataRepresentation, labels: Sequence[Any], shapes: List[tuple],
-                rng: np.random.Generator) -> List[np.ndarray]:
+                rng: np.random.Generator, first: str = "and") -> List[np.ndarray]:
         """Bool matrices of `shapes` (one per layer above the inputs, the
-        output layer's rows in the order of `labels`) for `data`."""
+        output layer's rows in the order of `labels`, the layers
+        alternating from `first`) for `data`."""
 
 
 class RandomInit(DeepInit):
@@ -115,13 +131,15 @@ class RandomInit(DeepInit):
     has fewer than `min_rule_length` conditions (Beck: 0 -- but two empty
     rules are true on every row and keep an output OR true: no single flip
     changes that); a node of a layer in between gets one edge to a random
-    node above it, and every edge with probability `init_prob`; a single
-    output node is connected to every node below, several divide the nodes
-    below among them (round-robin), so that the classes don't start out
-    with the same rules. With `consistent`, a rule skips a feature that
-    contradicts one it already has by the `DataSpec`'s constraints
-    (`contradictions`); Beck's start is ``consistent=False,
-    min_rule_length=0``."""
+    node above it, and every edge with probability `init_prob`. An OR
+    output: a single one is connected to every node below, several divide
+    the nodes below among them (round-robin), so that the classes don't
+    start out with the same rules. An AND output (all of its inputs must
+    hold) gets one edge, round-robin. With `consistent`, a rule skips a
+    feature that contradicts one it already has by the `DataSpec`'s
+    constraints (`contradictions`); Beck's start is ``consistent=False,
+    min_rule_length=0``. A first OR layer (`first` ``"or"``) gets its
+    literals the same way, without the consistency check."""
 
     def __init__(self, avg_rule_length: float = 3, min_rule_length: int = 1, init_prob: float = 0.2,
                  consistent: bool = True):
@@ -132,9 +150,10 @@ class RandomInit(DeepInit):
         self.init_prob = init_prob
         self.consistent = consistent
 
-    def weights(self, data, labels, shapes, rng):
+    def weights(self, data, labels, shapes, rng, first="and"):
         groups = _attribute_groups(data.spec)
-        if self.consistent:
+        consistent = self.consistent and first == "and"
+        if consistent:
             apart = contradictions(data.spec)
         weights = [np.zeros(s, dtype=bool) for s in shapes]
         attributes = [np.flatnonzero(groups == g) for g in np.unique(groups)]
@@ -146,7 +165,7 @@ class RandomInit(DeepInit):
                 for feats in attributes:
                     if rng.random() < p:
                         j = feats[rng.integers(len(feats))]
-                        if not (self.consistent and (apart[j] & weights[0][k]).any()):
+                        if not (consistent and (apart[j] & weights[0][k]).any()):
                             weights[0][k, j] = True
                 if weights[0][k].sum() >= least:
                     break
@@ -155,7 +174,12 @@ class RandomInit(DeepInit):
                 w[rng.integers(w.shape[0]), j] = True
                 w[:, j] |= rng.random(w.shape[0]) < self.init_prob
         last = weights[-1]
-        if last.shape[0] == 1:
+        if len(weights) == 1:
+            return weights  # the output is the first layer: its rules (or clauses) above
+        last[:] = False
+        if _is_and(len(weights) - 1, first):
+            last[np.arange(last.shape[0]), np.arange(last.shape[0]) % last.shape[1]] = True
+        elif last.shape[0] == 1:
             last[:] = True
         else:
             last[np.arange(last.shape[1]) % last.shape[0], np.arange(last.shape[1])] = True
@@ -169,8 +193,10 @@ class ModelInit(DeepInit):
     def __init__(self, model: DeepModel):
         self.model = model
 
-    def weights(self, data, labels, shapes, rng):
+    def weights(self, data, labels, shapes, rng, first="and"):
         model = self.model.remap(data.spec)
+        if model.first != first:
+            raise ValueError(f"the initial model's first layer is {model.first!r}, not {first!r}")
         if list(model.outputs) != list(labels) or [w.shape for w in model.weights] != list(shapes):
             raise ValueError(f"the initial model has layers {model.layers} and outputs {model.outputs}, "
                              f"not {[s[0] for s in shapes[:-1]]} and {list(labels)}")
@@ -187,21 +213,27 @@ class RuleSetInit(DeepInit):
     (default `RandomInit()`) but no edge upwards, so the network starts out
     as the rule set's DNF of every output. The first layer needs a node for
     every rule, every layer above it one per output; rules of other heads
-    (the default class of a two-class problem) are left out."""
+    (the default class of a two-class problem) are left out. Needs a first
+    AND layer; without hidden layers (an AND output), each output can take
+    one rule only."""
 
     def __init__(self, rules: Union[RuleModel, RuleLearner], fill: Optional[DeepInit] = None):
         self.rules = rules
         self.fill = fill if fill is not None else RandomInit()
 
-    def weights(self, data, labels, shapes, rng):
+    def weights(self, data, labels, shapes, rng, first="and"):
+        if first != "and":
+            raise ValueError("RuleSetInit puts rules into a first AND layer (first='and')")
         model = self.rules.fit(data) if isinstance(self.rules, RuleLearner) else self.rules
         bodies = [[r for r in model.rules if r.target == label] for label in labels]
         n_rules = sum(len(b) for b in bodies)
+        if len(shapes) == 1 and any(len(b) > 1 for b in bodies):
+            raise ValueError("without hidden layers each output is one rule, but the rule set has more")
         if shapes[0][0] < n_rules:
             raise ValueError(f"{n_rules} rules for the outputs, but a first layer of {shapes[0][0]} nodes")
         if any(s[0] < len(labels) for s in shapes[1:-1]):
             raise ValueError(f"every layer above the first needs a node per output ({len(labels)})")
-        weights = self.fill.weights(data, labels, shapes, rng)
+        weights = self.fill.weights(data, labels, shapes, rng, first)
         rule_nodes: List[List[int]] = []
         node = 0
         for rules in bodies:
@@ -211,6 +243,8 @@ class RuleSetInit(DeepInit):
                 for lit in r.conditions:
                     weights[0][node, data.spec.feature_index(r.dataspec.feature_name(lit.feature))] = True
                 node += 1
+        if len(weights) == 1:
+            return weights
         # the rules' nodes, and above them one node per output, feed only each other
         weights[1][:, :n_rules] = False
         for w in weights[2:]:
@@ -232,7 +266,8 @@ class RuleSetInit(DeepInit):
 class DeepRuleLearner(NativeRuleLearner):
     """Base of the `DeepModel` learners. `layers` are the hidden layer
     sizes, AND, OR, ..., AND (an odd number of them; by default one AND
-    layer of ``ceil(sqrt(n))`` nodes for *n* features, a DNF); the output
+    layer of ``ceil(sqrt(n))`` nodes for *n* features, a DNF; `first`, the
+    type of the layer above the inputs, as in `DeepModel`); the output
     layer has one OR node per class, or for two classes one for the less
     frequent class, the other being the default. With more classes, a row
     no output covers gets the most frequent class, a row several cover the
@@ -249,11 +284,15 @@ class DeepRuleLearner(NativeRuleLearner):
     def __init__(
         self,
         layers: Optional[Sequence[int]] = None,
+        first: str = "and",
         init: Optional[DeepInit] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
+        if first not in ("and", "or"):
+            raise ValueError(f"first must be 'and' or 'or', got {first!r}")
         self.layers = None if layers is None else [int(n) for n in layers]
+        self.first = first
         self.init = init if init is not None else RandomInit()
         self.trace = trace
         self.random_state = random_state
@@ -276,7 +315,7 @@ class DeepRuleLearner(NativeRuleLearner):
         X = np.asarray(data.X, dtype=bool)
         layers = (self.layers if self.layers is not None
                   else [math.ceil(math.sqrt(data.spec.n_features))])
-        shapes = [w.shape for w in DeepModel(data.spec, labels, layers).weights]  # validates them
+        shapes = [w.shape for w in DeepModel(data.spec, labels, layers, first=self.first).weights]
         sample_weight = (np.ones(len(y)) if data.weights is None
                          else np.asarray(data.weights, dtype=float))
         rng = np.random.default_rng(self.random_state)
@@ -289,7 +328,7 @@ class DeepRuleLearner(NativeRuleLearner):
         default = (next(c for c in classes if c != labels[0]) if len(classes) == 2
                    else MajorityClass(data))
         model = DeepModel(data.spec, labels, weights=weights, default_prediction=default,
-                          combiner=CountVoteCombiner())
+                          combiner=CountVoteCombiner(), first=self.first)
         model.trace = self._tracker.points if self.trace else None
         return model
 
@@ -297,13 +336,13 @@ class DeepRuleLearner(NativeRuleLearner):
         """The weighted training error of `weights` on (X, targets),
         counted as one candidate on every row."""
         self._tracker.count(X.shape[0])
-        out = nnf_forward(weights, X)[-1]
+        out = nnf_forward(weights, X, self.first)[-1]
         return float(((out != targets) * sample_weight).sum())
 
     def _initialize(self, data: DataRepresentation, labels: Sequence[Any], shapes: List[tuple],
                     rng: np.random.Generator) -> List[np.ndarray]:
         """The start weights: `init`'s."""
-        return self.init.weights(data, labels, shapes, rng)
+        return self.init.weights(data, labels, shapes, rng, self.first)
 
     def _fit_weights(self, data: DataRepresentation, labels: Sequence[Any], X: np.ndarray,
                      targets: np.ndarray, shapes: List[tuple], start: List[np.ndarray],
@@ -362,10 +401,11 @@ class DeepLocalSearch(DeepRuleLearner):
         max_flips: Optional[int] = None,
         optimize_last_layer: bool = False,
         init: Optional[DeepInit] = None,
+        first: str = "and",
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
-        super().__init__(layers=layers, init=init, trace=trace, random_state=random_state)
+        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state)
         if moves not in self.MOVES:
             raise ValueError(f"moves must be one of {self.MOVES}, got {moves!r}")
         if (n_epochs is not None and n_epochs < 0) or (max_flips is not None and max_flips < 0):
@@ -410,8 +450,9 @@ class DeepLocalSearch(DeepRuleLearner):
         return weights
 
     def _conflicts(self, spec: Any) -> Optional[np.ndarray]:
-        """`[j, d]` True iff flipping on feature `j` in a rule drops `d`."""
-        if self.moves == "free":
+        """`[j, d]` True iff flipping on feature `j` in a rule drops `d`
+        (`None`: nothing; always for a first OR layer)."""
+        if self.moves == "free" or self.first != "and":
             return None
         if self.moves == "consistent":
             return contradictions(spec)
@@ -430,7 +471,7 @@ class DeepLocalSearch(DeepRuleLearner):
         inputs = X.T
         error = self._error(weights, X, targets, sample_weight)
         while self.max_flips is None or flips < self.max_flips:
-            values = nnf_forward(weights, X)
+            values = nnf_forward(weights, X, self.first)
             errors = [self._flip_errors(weights, values, inputs, l, targets, sample_weight,
                                         conflicts if l == 0 else None)
                       for l in range(len(weights))]
@@ -465,14 +506,15 @@ class DeepLocalSearch(DeepRuleLearner):
         edges, then the layers above."""
         w = weights[l]
         below = inputs if l == 0 else values[l - 1]
-        is_and = l % 2 == 0
+        is_and = _is_and(l, self.first)
         out = np.empty(w.shape)
         b = below.shape[1]
         step = max(1, self._CHUNK_CELLS // max(1, b * max(x.shape[0] for x in weights[l:])))
         for k in range(w.shape[0]):
             for lo in range(0, w.shape[1], step):
                 cand = self._candidate_values(w[k], below, is_and, conflicts, slice(lo, lo + step))
-                out[k, lo:lo + step] = self._errors_above(weights, values, l, k, cand, targets, sample_weight)
+                out[k, lo:lo + step] = self._errors_above(weights, values, l, k, cand, targets, sample_weight,
+                                                          self.first)
         return out
 
     @staticmethod
@@ -495,14 +537,14 @@ class DeepLocalSearch(DeepRuleLearner):
         return count[None, :] + delta > 0
 
     @staticmethod
-    def _errors_above(weights, values, l, k, cand, targets, sample_weight) -> np.ndarray:
+    def _errors_above(weights, values, l, k, cand, targets, sample_weight, first="and") -> np.ndarray:
         """The weighted error for each candidate row `cand` of node `k` in
         layer `l`, propagated through the layers above."""
         layer = np.broadcast_to(values[l], (cand.shape[0],) + values[l].shape).copy()
         layer[:, k] = cand
         for up in range(l + 1, len(weights)):
             wi = weights[up].astype(np.int32)
-            if up % 2 == 0:
+            if _is_and(up, first):
                 layer = wi @ (~layer).astype(np.int32) == 0
             else:
                 layer = wi @ layer.astype(np.int32) > 0
@@ -580,10 +622,11 @@ class DeepGenetic(DeepRuleLearner):
         polish: bool = True,
         seeds: Sequence[DeepInit] = (),
         init: Optional[DeepInit] = None,
+        first: str = "and",
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
-        super().__init__(layers=layers, init=init, trace=trace, random_state=random_state)
+        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state)
         if population < 2 or not 0 <= elite < population or tournament < 1:
             raise ValueError("population must be at least 2, elite below it, tournament at least 1")
         if generations < 0 or local_flips < 0 or mutations < 0 or batch_size < 1:
@@ -607,7 +650,7 @@ class DeepGenetic(DeepRuleLearner):
         self.seeds = list(seeds)
 
     def _fit_weights(self, data, labels, X, targets, shapes, start, sample_weight, rng):
-        climber = DeepLocalSearch(moves=self.moves, max_flips=self.local_flips)
+        climber = DeepLocalSearch(moves=self.moves, max_flips=self.local_flips, first=self.first)
         climber._tracker = self._tracker
         conflicts = climber._conflicts(data.spec)
         align_rows = (np.arange(len(X)) if len(X) <= self._ALIGN_ROWS
@@ -636,7 +679,7 @@ class DeepGenetic(DeepRuleLearner):
             pop = children
         best = min(pop, key=lambda ind: ind[1])[0]
         if self.polish:
-            polisher = DeepLocalSearch(moves=self.moves)
+            polisher = DeepLocalSearch(moves=self.moves, first=self.first)
             polisher._tracker = self._tracker
             polisher._climb(best, X, targets, sample_weight, conflicts, on_step=self._tracker.offer)
         return best
@@ -651,12 +694,12 @@ class DeepGenetic(DeepRuleLearner):
         return min((pop[i] for i in picks), key=lambda ind: ind[1])
 
     @staticmethod
-    def _aligned(a, b, X):
+    def _aligned(a, b, X, first="and"):
         """`b`'s weights with its hidden nodes reordered to match `a`'s."""
         from scipy.optimize import linear_sum_assignment
 
         b = [w.copy() for w in b]
-        va, vb = nnf_forward(a, X), nnf_forward(b, X)
+        va, vb = nnf_forward(a, X, first), nnf_forward(b, X, first)
         for l in range(len(b) - 1):
             ai, bi = va[l].astype(np.int32), vb[l].astype(np.int32)
             differ = ai @ (1 - bi).T + (1 - ai) @ bi.T  # rows on which node i of a and node j of b differ
@@ -670,7 +713,7 @@ class DeepGenetic(DeepRuleLearner):
         if self.crossover == "none":
             return [w.copy() for w in a]
         self._tracker.count(2 * X.shape[0])
-        b = self._aligned(a, b, X)
+        b = self._aligned(a, b, X, self.first)
         mode = self.crossover if self.crossover != "mixed" else ("nodes", "subtree")[rng.integers(2)]
         if mode == "subtree":
             from_a = [~m for m in self._cone(b, int(rng.integers(len(b) - 1)), rng)]
@@ -697,6 +740,326 @@ class DeepGenetic(DeepRuleLearner):
             DeepLocalSearch._flip(weights, l, k, j, conflicts if l == 0 else None)
 
 
+class DeepSAT(DeepRuleLearner):
+    """The weights of a `DeepModel` by SAT solving, after Seip, Fürnkranz et
+    al. ("Towards SAT-based learning of NNF networks", SYNASC 2025; the
+    long version adds MaxSAT): an exact fit of the training data. Boolean
+    variables are the weights and, per training example, the value of
+    every node; clauses tie each node's value to its inputs (an AND node is
+    true iff no input with an edge is false, an OR node iff an input with
+    an edge is true; one auxiliary variable per edge for the direction
+    that needs a witness) and each output to the example's label. The
+    inputs and labels are constants, so a rule node of the first layer is
+    true iff it has no edge to a feature false in the example -- no
+    auxiliary variables there -- and a negative example's output needs
+    none either. Solved by CaDiCaL through PySAT (``pip install
+    python-sat``, the extra ``sat``).
+
+    `minimize` turns it into MaxSAT, still fitting the data exactly:
+    ``"inputs"`` minimizes the number of conditions (the edges of the first
+    layer, summed over its nodes), ``"weights"`` the number of edges -- the
+    smallest network fitting the data. `maxsat` decides how:
+
+    - ``"linear"`` (default): linear search ("SAT-UNSAT"). Solve, then
+      demand fewer edges than the network found (a cardinality constraint,
+      an incremental totalizer, the bound passed as an assumption so the
+      solver keeps what it learned), and repeat until no smaller network
+      exists -- then the last one is optimal. An anytime algorithm: every
+      step gives a smaller network; with `max_seconds` it returns the best
+      found so far, and with `trace` every one is a `TracePoint` (effort:
+      solver calls; `size`: the objective).
+    - ``"rc2"``: RC2, core-guided: works up from lower bounds and has a
+      network only at the optimum -- often faster to prove it, but with
+      nothing to return before; no time limit.
+
+    Identical training rows are merged (the encoding needs one copy); rows
+    with identical features but different labels make the problem
+    unsatisfiable, so `conflicts` decides: ``"majority"`` (default) keeps
+    the most frequent label of such a group (ties: the first in sorted
+    order), ``"raise"`` refuses. An unsatisfiable problem (the
+    architecture too small for the data) raises `ValueError`. `max_seconds`
+    limits the solving: plain SAT raises a `TimeoutError` if it has no
+    answer by then, the linear search returns its best network (or raises
+    if it has none). `solver` is any of PySAT's; by default Glucose 4
+    (``"g4"``) for SAT and the linear search -- it stops when the time is
+    up, where CaDiCaL (``"cadical195"``, the papers') can't be interrupted
+    by PySAT, so with it the time limit is only checked between solver
+    calls -- and CaDiCaL for RC2, which has no time limit anyway and is
+    much faster with it (on the Seip formula 12 s against 136 s).
+    `max_conflicts` limits each solver call to that many conflicts
+    instead (not for RC2, nor CaDiCaL): the same result on every machine,
+    where a time limit depends on its speed; a call that runs out ends
+    the linear search with its best network, and plain SAT with a
+    `TimeoutError`. The start weights (`init`) are not used.
+
+    `constraints` adds the `DataSpec`'s constraints as clauses on the
+    weights of a first AND layer, independent of the examples: no rule
+    takes two conditions that contradict each other (`contradictions`),
+    nor one that another of its conditions implies (`implications`), which
+    would change nothing -- the rules stay logically consistent, and
+    equivalent solutions drop out of the search."""
+
+    MINIMIZE = (None, "inputs", "weights")
+    MAXSAT = ("linear", "rc2")
+    CONFLICTS = ("majority", "raise")
+    #: solvers PySAT can't interrupt: the time limit holds only between calls
+    UNINTERRUPTIBLE = ("cadical103", "cadical153", "cadical195", "lingeling")
+
+    def __init__(
+        self,
+        layers: Optional[Sequence[int]] = None,
+        minimize: Optional[str] = None,
+        maxsat: str = "linear",
+        conflicts: str = "majority",
+        max_seconds: Optional[float] = None,
+        max_conflicts: Optional[int] = None,
+        solver: Optional[str] = None,
+        constraints: bool = True,
+        init: Optional[DeepInit] = None,
+        first: str = "and",
+        trace: bool = False,
+        random_state: Optional[int] = 0,
+    ):
+        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state)
+        if minimize not in self.MINIMIZE:
+            raise ValueError(f"minimize must be one of {self.MINIMIZE}, got {minimize!r}")
+        if conflicts not in self.CONFLICTS:
+            raise ValueError(f"conflicts must be one of {self.CONFLICTS}, got {conflicts!r}")
+        if maxsat not in self.MAXSAT:
+            raise ValueError(f"maxsat must be one of {self.MAXSAT}, got {maxsat!r}")
+        self.minimize = minimize
+        self.maxsat = maxsat
+        self.conflicts = conflicts
+        self.max_seconds = max_seconds
+        self.max_conflicts = max_conflicts
+        self.solver = solver
+        self.constraints = constraints
+
+    def _fit_weights(self, data, labels, X, targets, shapes, start, sample_weight, rng):
+        X, targets = self._consistent_rows(X, targets)
+        pool, hard, soft = self._encode(X, targets, shapes)
+        if self.constraints and self.first == "and":
+            excluded = contradictions(data.spec) | implications(data.spec)
+            pairs = [(i, j) for i, j in zip(*np.nonzero(np.triu(excluded | excluded.T, 1)))]
+            hard += [[-pool.weight(0, k, int(i)), -pool.weight(0, k, int(j))]
+                     for k in range(shapes[0][0]) for i, j in pairs]
+        if soft and self.maxsat == "linear":
+            return self._linear_search(pool, hard, soft, shapes)
+        model = self._solve(pool, hard, soft)
+        weights = self._weights(model, pool, shapes)
+        self._tracker.count(1)
+        self._tracker.offer(weights, 0.0, sum(int(w.sum()) for w in weights))
+        return weights
+
+    def _call(self, solver, assumptions, deadline):
+        """One solver call within the limits: `None` if one ran out."""
+        import threading
+
+        limited = deadline is not None or self.max_conflicts is not None
+        if not limited:
+            return solver.solve(assumptions=assumptions)
+        if self.max_conflicts is not None:
+            solver.conf_budget(self.max_conflicts)
+        timer = None
+        if deadline is not None:
+            timer = threading.Timer(max(0.0, deadline - time.perf_counter()), solver.interrupt)
+            timer.start()
+        sat = solver.solve_limited(assumptions=assumptions, expect_interrupt=deadline is not None)
+        if timer is not None:
+            timer.cancel()
+            solver.clear_interrupt()
+        return sat
+
+    def _solver_name(self, method: str = "sat") -> str:
+        if self.solver is not None:
+            return self.solver
+        return "cadical195" if method == "rc2" else "g4"
+
+    @staticmethod
+    def _weights(model, pool, shapes) -> List[np.ndarray]:
+        """The weight matrices of a solver model (a list of literals)."""
+        true = {lit for lit in model if lit > 0}
+        return [np.array([[pool.weight(l, k, j) in true for j in range(s[1])] for k in range(s[0])], dtype=bool)
+                for l, s in enumerate(shapes)]
+
+    def _linear_search(self, pool, hard, soft, shapes) -> List[np.ndarray]:
+        """Linear search: ever smaller exact fits, until none is left or the
+        time is up; the best found."""
+        from pysat.card import ITotalizer
+        from pysat.solvers import Solver
+
+        lits = [-clause[0] for clause in soft]  # the weights counted
+        totalizer = ITotalizer(lits=lits, ubound=len(lits), top_id=pool.top)
+        deadline = None if self.max_seconds is None else time.perf_counter() + self.max_seconds
+        interruptible = self._solver_name() not in self.UNINTERRUPTIBLE
+        best, bound, out_of_limits = None, None, False
+        with Solver(name=self._solver_name(), bootstrap_with=hard + totalizer.cnf.clauses) as solver:
+            while bound is None or bound >= 0:
+                if deadline is not None and time.perf_counter() >= deadline:
+                    out_of_limits = True
+                    break
+                assumptions = [] if bound is None else [-totalizer.rhs[bound]]
+                sat = self._call(solver, assumptions, deadline if interruptible else None)
+                self._tracker.count(1)
+                if not sat:  # None: a limit ran out; False: nothing smaller, the last one is optimal
+                    out_of_limits = sat is None
+                    break
+                model = solver.get_model()
+                true = {lit for lit in model if lit > 0}
+                size = sum(1 for v in lits if v in true)
+                best = self._weights(model, pool, shapes)
+                self._tracker.offer(best, 0.0, size)
+                bound = size - 1
+        totalizer.delete()
+        if best is None:
+            if out_of_limits:
+                raise TimeoutError("no network found within the limits "
+                                   f"(max_seconds={self.max_seconds}, max_conflicts={self.max_conflicts})")
+            raise ValueError("no network of this architecture fits the training data (unsatisfiable)")
+        return best
+
+    def _consistent_rows(self, X: np.ndarray, targets: np.ndarray):
+        """One row per distinct feature vector, with its majority label."""
+        rows, inverse = np.unique(X, axis=0, return_inverse=True)
+        inverse = inverse.ravel()
+        codes = np.unique(targets.T, axis=0, return_inverse=True)[1].ravel()
+        out = np.zeros((targets.shape[0], len(rows)), dtype=bool)
+        for r in range(len(rows)):
+            members = np.flatnonzero(inverse == r)
+            found, counts = np.unique(codes[members], return_counts=True)
+            if len(found) > 1 and self.conflicts == "raise":
+                raise ValueError("the training data has identical rows with different labels -- "
+                                 "no network fits it (conflicts='majority' keeps the majority label)")
+            best = found[np.argmax(counts)]
+            out[:, r] = targets[:, members[np.flatnonzero(codes[members] == best)[0]]]
+        return rows, out
+
+    def _encode(self, X, targets, shapes):
+        pool = _VariablePool(shapes)
+        hard: List[List[int]] = []
+        n_layers = len(shapes)
+        for i in range(X.shape[0]):
+            # over the constant inputs, an AND node is true iff it has no edge to a false
+            # feature, an OR node iff it has one to a true feature
+            deciding = np.flatnonzero(~X[i]) if self.first == "and" else np.flatnonzero(X[i])
+            sign = -1 if self.first == "and" else 1  # the polarity of "the node holds" in its clauses
+            below: Optional[List[int]] = None  # activation variables of the layer below
+            for l, (n_nodes, n_below) in enumerate(shapes):
+                last = l == n_layers - 1
+                acts = [] if last else [pool.new() for _ in range(n_nodes)]
+                for k in range(n_nodes):
+                    ws = [pool.weight(l, k, j) for j in range(n_below)]
+                    a = bool(targets[k, i]) if last else acts[k]
+                    if l == 0:
+                        if a is True or a is False:
+                            holds = a if self.first == "and" else not a
+                            if holds:  # AND true / OR false: no edge to a deciding feature
+                                hard += [[-ws[j]] for j in deciding]
+                            else:
+                                hard.append([ws[j] for j in deciding])
+                        else:  # a <-> no edge to a false feature (AND) / an edge to a true one (OR)
+                            hard += [[sign * a, -ws[j]] for j in deciding]
+                            hard.append([-sign * a] + [ws[j] for j in deciding])
+                    elif _is_and(l, self.first):
+                        self._and(pool, hard, a, ws, below)
+                    else:
+                        self._or(pool, hard, a, ws, below)
+                below = acts
+        soft: List[List[int]] = []
+        if self.minimize is not None:
+            for l, (n_nodes, n_below) in enumerate(shapes if self.minimize == "weights" else shapes[:1]):
+                soft += [[-pool.weight(l, k, j)] for k in range(n_nodes) for j in range(n_below)]
+        return pool, hard, soft
+
+    @staticmethod
+    def _and(pool, hard, a, ws, xs):
+        """a <-> AND_j (w_j -> x_j); `a` a variable or a constant bool."""
+        if a is True or a is False:
+            if a:
+                hard += [[-w, x] for w, x in zip(ws, xs)]
+            else:
+                t = [pool.new() for _ in ws]
+                hard += [[-tj, w] for tj, w in zip(t, ws)] + [[-tj, -x] for tj, x in zip(t, xs)]
+                hard.append(t)
+            return
+        hard += [[-a, -w, x] for w, x in zip(ws, xs)]
+        t = [pool.new() for _ in ws]
+        hard += [[-tj, w] for tj, w in zip(t, ws)] + [[-tj, -x] for tj, x in zip(t, xs)]
+        hard.append([a] + t)
+
+    @staticmethod
+    def _or(pool, hard, a, ws, xs):
+        """a <-> OR_j (w_j and x_j); `a` a variable or a constant bool."""
+        if a is True or a is False:
+            if a:
+                t = [pool.new() for _ in ws]
+                hard += [[-tj, w] for tj, w in zip(t, ws)] + [[-tj, x] for tj, x in zip(t, xs)]
+                hard.append(t)
+            else:
+                hard += [[-w, -x] for w, x in zip(ws, xs)]
+            return
+        hard += [[a, -w, -x] for w, x in zip(ws, xs)]
+        t = [pool.new() for _ in ws]
+        hard += [[-tj, w] for tj, w in zip(t, ws)] + [[-tj, x] for tj, x in zip(t, xs)]
+        hard.append([-a] + t)
+
+    def _solve(self, pool, hard, soft) -> List[int]:
+        try:
+            from pysat.solvers import Solver
+        except ImportError as e:  # pragma: no cover
+            raise ImportError("DeepSAT needs PySAT: pip install python-sat") from e
+        if soft:
+            from pysat.examples.rc2 import RC2
+            from pysat.formula import WCNF
+
+            wcnf = WCNF()
+            wcnf.extend(hard)
+            for clause in soft:
+                wcnf.append(clause, weight=1)
+            with RC2(wcnf, solver=self._solver_name("rc2")) as rc2:  # no time limit
+                model = rc2.compute()
+            if model is None:
+                raise ValueError("no network of this architecture fits the training data (unsatisfiable)")
+            return self._full_model(model, pool)
+        with Solver(name=self._solver_name(), bootstrap_with=hard) as solver:
+            interruptible = self._solver_name() not in self.UNINTERRUPTIBLE
+            deadline = (time.perf_counter() + self.max_seconds
+                        if self.max_seconds is not None and interruptible else None)
+            sat = self._call(solver, [], deadline)
+            if sat is None:
+                raise TimeoutError("the SAT solver found no answer within its limits "
+                                   f"(max_seconds={self.max_seconds}, max_conflicts={self.max_conflicts})")
+            if not sat:
+                raise ValueError("no network of this architecture fits the training data (unsatisfiable)")
+            return self._full_model(solver.get_model(), pool)
+
+    @staticmethod
+    def _full_model(model, pool) -> List[int]:
+        """The model as a list indexed by variable - 1 (unmentioned: false)."""
+        out = [-(v + 1) for v in range(pool.top)]
+        for lit in model:
+            if abs(lit) <= pool.top:
+                out[abs(lit) - 1] = lit
+        return out
+
+
+class _VariablePool:
+    """The SAT variables: the weights first (numbered layer by layer), then
+    whatever `new` hands out (activations, auxiliary variables)."""
+
+    def __init__(self, shapes):
+        self.offsets = np.cumsum([0] + [a * b for a, b in shapes])
+        self.shapes = shapes
+        self.top = int(self.offsets[-1])
+
+    def weight(self, l: int, k: int, j: int) -> int:
+        return int(self.offsets[l]) + k * self.shapes[l][1] + j + 1
+
+    def new(self) -> int:
+        self.top += 1
+        return self.top
+
+
 def contradictions(spec) -> np.ndarray:
     """`(n_features, n_features)` bool: `[i, j]` True iff features `i`
     and `j` can't both be true by `spec`'s constraints (`DataSpec.
@@ -711,6 +1074,21 @@ def contradictions(spec) -> np.ndarray:
                 if value is False:
                     out[i, j] = True
     return out | out.T
+
+
+def implications(spec) -> np.ndarray:
+    """`(n_features, n_features)` bool: `[i, j]` True iff feature `i`
+    implies feature `j` (`i != j`) by `spec`'s constraints (`DataSpec.
+    propagate`), e.g. ``x=a`` implies ``x!=b``, ``x>=5`` implies
+    ``x>=3``."""
+    n = spec.n_features
+    out = np.zeros((n, n), dtype=bool)
+    if spec.constraints:
+        for i in range(n):
+            for j, value in spec.propagate({i: True}).items():
+                if value is True and j != i:
+                    out[i, j] = True
+    return out
 
 
 def _attribute_groups(spec) -> np.ndarray:

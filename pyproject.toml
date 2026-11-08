@@ -32,6 +32,7 @@ imodels = ["imodels"]                      # interfaces.imodels: Bayesian rule l
 pyarc = ["pyarc"]                          # interfaces.pyarc: CBA (pyarc itself also needs Borgelt's `pyfim`, a C extension)
 boomer = ["mlrl-boomer"]                   # interfaces.boomer: BOOMER (pins scikit-learn)
 realkd = ["realkd"]                        # interfaces.realkd: optimal rule boosting (see README for Python 3.14)
+sat = ["python-sat"]                       # learners.deep.DeepSAT: SAT/MaxSAT-learned NNF networks
 notebook = ["jupyter", "nbconvert", "ipykernel"]  # regenerating tutorial/tutorial.ipynb/.pdf (PDF export also needs LaTeX + pandoc)
 test = ["pytest"]
 all = ["pandas", "scipy", "matplotlib", "networkx", "wittgenstein", "imodels", "pytest"]

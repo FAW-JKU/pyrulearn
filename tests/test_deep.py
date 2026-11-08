@@ -7,7 +7,7 @@ import pytest
 from pyrulearn.data import DataSpec, DataSpecBuilder, HorizontalBitmapRepresentation, SparseDataRepresentation
 from pyrulearn.data.io import build_dataspec, encode
 from pyrulearn.learners.deep import (
-    DeepGenetic, DeepLocalSearch, ModelInit, RandomInit, RuleSetInit, contradictions, nnf_forward,
+    DeepGenetic, DeepLocalSearch, DeepSAT, ModelInit, RandomInit, RuleSetInit, contradictions, nnf_forward,
 )
 from pyrulearn.models import ConceptModel, DeepModel
 from pyrulearn.rule import Rule
@@ -218,6 +218,93 @@ def test_trace_records_every_new_best(learner):
     assert DeepLocalSearch(layers=[3]).fit(NEG_DATA).trace is None
 
 
+def test_sat_fits_the_data_exactly():
+    pytest.importorskip("pysat")
+    for layers in ([6, 3, 1], [20]):
+        m = DeepSAT(layers=layers).fit(DATA)
+        assert (m.predict(DATA) == DATA.y).all()
+
+
+def test_maxsat_finds_the_smallest_network():
+    pytest.importorskip("pysat")
+    m = DeepSAT(layers=[6, 3, 1], minimize="weights").fit(DATA)  # one first-layer node per condition
+    assert (m.predict(DATA) == DATA.y).all()
+    assert m.n_edges == 17  # (a | b) & (c | d) & (e | (f & g)): 16 edges, plus the output's
+    # fewest conditions in a DNF: each of the 8 terms contains a prime implicant (a|c|e, ...), 4x3 + 4x4
+    m = DeepSAT(layers=[8], minimize="inputs").fit(NEG_DATA)
+    assert (m.predict(NEG_DATA) == NEG_DATA.y).all() and m.weights[0].sum() == 28
+
+
+def test_sat_with_several_classes_and_conflicting_rows():
+    pytest.importorskip("pysat")
+    y = np.where(a & b, "ab", np.where(c, "c", "other"))
+    m = DeepSAT(layers=[6]).fit(HorizontalBitmapRepresentation(NEG_SPEC, NEG_X, y))
+    assert (m.predict(HorizontalBitmapRepresentation(NEG_SPEC, NEG_X)) == y).all()
+    # the all-zero row three times more, once with the other label: the majority (its own) is kept
+    other = "pos" if DATA.y[0] == "neg" else "neg"
+    Xc = np.vstack([X, X[:1], X[:1], X[:1]])
+    yc = np.concatenate([DATA.y, [DATA.y[0], DATA.y[0], other]])
+    m = DeepSAT(layers=[6, 3, 1]).fit(HorizontalBitmapRepresentation(SPEC, Xc, yc))
+    assert (m.predict(DATA) == DATA.y).all()
+    with pytest.raises(ValueError, match="identical rows"):
+        DeepSAT(layers=[6, 3, 1], conflicts="raise").fit(HorizontalBitmapRepresentation(SPEC, Xc, yc))
+    with pytest.raises(ValueError, match="unsatisfiable"):
+        DeepSAT(layers=[1]).fit(DATA)  # one rule can't express the formula
+
+
+@pytest.mark.parametrize("first", ["and", "or"])
+@pytest.mark.parametrize("make", [
+    lambda layers, first: DeepLocalSearch(layers=layers, first=first),
+    lambda layers, first: DeepGenetic(layers=layers, first=first, population=6, generations=3),
+])
+def test_search_learners_on_any_depth_and_first_layer(make, first):
+    for layers in ([6, 6], [6, 4, 3], [8]):
+        m = make(layers, first).fit(NEG_DATA)
+        assert m.first == first and m.layers == layers
+        out = nnf_forward(m.weights, NEG_X, first)[-1][0]
+        assert ((m.predict(NEG_DATA) == "pos") == out).all()  # the model is the learner's network
+        assert (m.predict(NEG_DATA) == NEG_DATA.y).mean() > 0.6
+
+
+def test_sat_on_the_papers_architecture():
+    pytest.importorskip("pysat")
+    m = DeepSAT(layers=[6, 6], minimize="weights", max_conflicts=1000).fit(DATA)  # AND 6, OR 6, AND output
+    assert (m.predict(DATA) == DATA.y).all() and m.n_edges == 16  # as in the long paper's Fig. 4
+    for first, layers in (("or", [4]), ("or", [3, 3]), ("and", [])):
+        y = np.where(a & (b | c), "pos", "neg")  # a CNF with two clauses, a DNF with two rules
+        data = HorizontalBitmapRepresentation(SPEC, X, y)
+        if not layers:
+            with pytest.raises(ValueError, match="unsatisfiable"):  # one rule can't express it
+                DeepSAT(layers=layers, first=first).fit(data)
+            continue
+        m = DeepSAT(layers=layers, first=first).fit(data)
+        assert (m.predict(data) == y).all() and m.first == first
+
+
+def test_maxsat_linear_search_is_anytime():
+    pytest.importorskip("pysat")
+    # the optimum (16 edges) comes early; proving it would take half a minute more, which a
+    # budget of conflicts per solver call cuts off -- the same on every machine, unlike a time limit
+    m = DeepSAT(layers=[6, 6], minimize="weights", max_conflicts=1000, trace=True).fit(DATA)
+    sizes = [p.size for p in m.trace]
+    assert sizes == sorted(sizes, reverse=True) and len(set(sizes)) == len(sizes)  # each one smaller
+    assert sizes[-1] == 16 == m.n_edges and all(p.train_error == 0 for p in m.trace)
+    assert all((m.trace_model(i).predict(DATA) == DATA.y).all() for i in range(len(m.trace)))
+    assert [p.evaluations for p in m.trace] == sorted(p.evaluations for p in m.trace)  # solver calls
+    y = np.where(a & (b | c), "pos", "neg")
+    rc2 = DeepSAT(layers=[2, 2], minimize="weights", maxsat="rc2").fit(HorizontalBitmapRepresentation(SPEC, X, y))
+    # two first-layer nodes can't hold a, b and c each: (a & b) | (a & c), 4 + 2 edges, plus the output's
+    assert rc2.n_edges == 7
+    small = DeepSAT(layers=[6, 6], minimize="weights", max_conflicts=100, trace=True).fit(DATA)
+    assert [p.size for p in small.trace] == sizes[:len(small.trace)]  # the same path, cut off earlier
+    # a time limit: whatever the machine's speed, an exact fit -- or no network yet
+    try:
+        quick = DeepSAT(layers=[8], minimize="inputs", max_seconds=0.5).fit(NEG_DATA)
+        assert (quick.predict(NEG_DATA) == NEG_DATA.y).all()
+    except TimeoutError:
+        pass
+
+
 def test_parameters_are_checked():
     with pytest.raises(ValueError):
         DeepLocalSearch(moves="random")
@@ -227,6 +314,12 @@ def test_parameters_are_checked():
         RandomInit(init_prob=1.5)
     with pytest.raises(ValueError):
         DeepGenetic(population=3, elite=3)
+    with pytest.raises(ValueError, match="first"):
+        DeepLocalSearch(first="xor")
+    with pytest.raises(ValueError, match="minimize"):
+        DeepSAT(minimize="all")
+    with pytest.raises(ValueError, match="maxsat"):
+        DeepSAT(maxsat="lsu")
     with pytest.raises(ValueError, match="crossover"):
         DeepGenetic(crossover="uniform")
     with pytest.raises(ValueError, match="seeds"):

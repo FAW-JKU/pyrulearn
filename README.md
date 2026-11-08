@@ -191,7 +191,7 @@ details.
 | `experiments` | Shared infrastructure for demos and other cross-validation-style experiments: `experiments.catalog` (the catalog of benchmark datasets, see *Benchmark datasets*), `experiments.runner` (`run_cv`: per-fold encoding into `representation=` (default: the preference order's first entry, `VerticalBitmapRepresentation`), a per-fit timeout via `TimeoutRunner`, uniform measurement, fold caching), `experiments.stats` (optional `mean_rank`, `friedman_test`, `critical_difference_diagram`, never run automatically) and `experiments.report` (small Markdown-writing building blocks). Needs `pandas`/`scipy`/`matplotlib` (the `experiments` extra). |
 | `heuristics` | `RuleHeuristic`: pluggable rule-evaluation heuristics (`Precision`, `Laplace`, `MEstimate`, `WRAcc`, `FoilGain`, `Correlation`, `Entropy`, `LikelihoodRatio`, ...), the composable `LEF`, and `plot_isometrics` for drawing a heuristic into a `CoverageSpace`. |
 | `interfaces` | Bringing external rule models in. `interfaces.base` has the shared `RuleImporter` machinery (`ObjectRuleImporter`, `StringRuleImporter`, the importer registry, `PatternStringImporter`); each external tool then has its own submodule, pairing an importer with a learner wrapper: `interfaces.sklearn` (decision trees, random forests, and `RuleSetClassifier`, which wraps any `RuleModel` as a scikit-learn estimator), `interfaces.wittgenstein` (IREP, RIPPER), `interfaces.imodels` (Bayesian rule lists and sets, RuleFit, Slipper), `interfaces.weka` (JRip, PART, J48), `interfaces.lord` (the reference LORD implementation), `interfaces.pyarc` (CBA), `interfaces.boomer` (BOOMER) and `interfaces.realkd` (optimal rule boosting). |
-| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), `learners.deep` (`DeepLocalSearch`, `DeepGenetic`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
+| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), `learners.deep` (`DeepLocalSearch`, `DeepGenetic`, `DeepSAT`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
 | `models` | The `RuleModel` hierarchy, organised by how a prediction is resolved: `RuleSet` (`FlatRuleSet`, `ConceptModel`, `ConceptSet`, `DisjointRuleSet`, and the memory-compact `PooledRuleSet` that `CARMiner` returns), `RuleList` (`DecisionList`, `ConceptCascade`), `CompositeModel` (`EnsembleModel`, `PairwiseModel`, `DeepModel`) and `SingleRule`. Also the `default_prediction` policy, per-model `stats`, `Provenance`, `annotate_rules`, and the model-to-model converters. |
 | `pruning` | `PrePruningCriterion`: one per-candidate test (`ThresholdPrePruning`, `EncodingLengthRestriction`, ...) that a search can use as a filter, as a stopping trigger, or that the covering loop can use as its stop condition. |
 | `rule` | `Rule`: a conjunction of Boolean literals, with optional condition order, several output formats and constraint-aware consistency checks. No dependencies beyond numpy. |
@@ -702,17 +702,22 @@ rules apply:
     first `n` members.
   - `PairwiseModel` -- round robin: one binary member per label pair,
     each voting for one of its two labels.
-  - `DeepModel(input_spec, labels, layers)` -- a formula in negation
-    normal form: a fully connected network of alternating AND and OR
-    layers with 0/1 edge weights. The inputs are the features, the output
-    layer an OR layer with one node per label, `layers` the sizes of the
-    layers in between, like a neural network's (an odd number, AND, OR,
-    ..., AND: e.g. `[32, 16, 10, 5, 2]`; by default one AND layer of
-    `ceil(sqrt(n))` nodes for `n` features, a DNF); the weights start at
-    0, or come from `weights=`. The weights are the model and predict by matrix products; its rules
-    are a view of them (`to_concepts()`): every AND node is a rule body,
-    every OR node a concept (a `ConceptModel` with one rule per incoming
-    edge), and a concept is a feature for the layers above. By default the
+  - `DeepModel(input_spec, labels, layers, first="and")` -- a formula in
+    negation normal form: a fully connected network of alternating AND and
+    OR layers with 0/1 edge weights. The inputs are the features, the
+    output layer has one node per label, `layers` are the sizes of the
+    layers in between, like a neural network's, any number of them;
+    `first` is the type of the layer above the inputs (`"and"` or `"or"`),
+    the others alternate, so the output's type follows (`[32, 16, 10, 5,
+    2]` from AND ends in an OR output, `[6, 6]` in an AND output; by
+    default one AND layer of `ceil(sqrt(n))` nodes for `n` features, a DNF,
+    or from OR a CNF); the weights start at 0, or come from `weights=`.
+    The weights are the model and predict by matrix products; its rules
+    are a view of them (`to_concepts()`): every OR node is a concept (a
+    `ConceptModel` with one rule per incoming edge -- the AND node on it,
+    or a single input literal), so is an AND output (one rule, its
+    inputs), a hidden AND node is a rule body, and a concept is a feature
+    for the layers above. By default the
     view removes the pass-through nodes: a concept with a single rule is
     inlined, a rule whose body is a single concept replaced by that
     concept's rules.
@@ -1747,7 +1752,8 @@ beam = LRI(n_rules=50, search=BeamSearch(beam_width=3, optimistic_pruning=False)
 fully connected networks of alternating AND and OR layers with 0/1 edge
 weights over the data's features (see `DeepModel`). `layers` are the
 hidden layer sizes (by default one AND layer of `ceil(sqrt(n))` nodes,
-a DNF); the output layer has one OR node per class, or for two classes
+a DNF), `first` the type of the layer above the inputs (`"and"`, or
+`"or"`); the output layer has one node per class, or for two classes
 one for the less frequent class, the other the default. A row several
 outputs cover gets the class with the most covering rules, a row none
 covers the most frequent class. The start is a component, `init=`
@@ -1795,8 +1801,32 @@ seconds, the training error, the weights), and `model.trace_model(i)`
 turns a point into a model, e.g. to measure the test accuracy along the
 run.
 
+`DeepSAT` fits the training data exactly by SAT solving (Seip, Fürnkranz
+et al.): the weights and, per training example, every node's value are
+Boolean variables, clauses tie each node to its inputs and each output
+to the label (the known inputs and labels as constants), and CaDiCaL
+solves it through PySAT (`pip install python-sat`, the extra `sat`).
+`minimize="inputs"` or `"weights"` makes it MaxSAT: the fewest
+conditions, or the fewest edges -- the smallest network that still fits
+exactly. By default by linear search (`maxsat="linear"`): solve, demand a
+smaller network (an incremental totalizer, the bound as an assumption),
+repeat; an anytime algorithm whose every step is a smaller exact fit,
+recorded with `trace=True` and returned when `max_seconds` or
+`max_conflicts` (per solver call, the same result on every machine) runs
+out; `maxsat="rc2"` uses RC2, which only has a network at the optimum.
+Solvers: Glucose 4 by default (PySAT can interrupt it; CaDiCaL, the
+papers' solver, it can't), CaDiCaL for RC2. `constraints=True` (default)
+adds the `DataSpec`'s constraints as clauses on the first layer's weights
+-- no contradictory rules, no implied conditions.
+Identical rows are merged; rows with the same features and different
+labels keep the majority label (`conflicts="majority"`), since no network
+fits them otherwise; an architecture too small for the data raises
+`ValueError`. On the truth table of `(a | b) & (c | d) & (e | (f & g))`,
+the papers' architecture `[6, 6]` with MaxSAT gives exactly that formula,
+16 edges.
+
 ```python
-from pyrulearn.learners.deep import DeepLocalSearch, RuleSetInit
+from pyrulearn.learners.deep import DeepLocalSearch, DeepSAT, RuleSetInit
 from pyrulearn.learners.seco import Pypper
 
 model = DeepLocalSearch(layers=[32, 8, 2]).fit(train_rep)

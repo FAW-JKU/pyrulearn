@@ -35,6 +35,19 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   `trace=True` on both: the model's `trace` lists every new best network
   during the fit with its effort (candidate-rows), seconds and training
   error (`TracePoint`), `DeepModel.trace_model(i)` the network of a point.
+- `DeepSAT`: the weights by SAT solving, an exact fit of the training
+  data (Seip, Fürnkranz et al.), with the known inputs and labels as
+  constants; `minimize="inputs"`/`"weights"` for MaxSAT, the fewest
+  conditions or edges -- by an anytime linear search with a trace
+  (`maxsat="linear"`, default; `max_seconds`, `max_conflicts`) or RC2.
+  `constraints=True`: the `DataSpec`'s constraints as clauses on the
+  weights. PySAT as the optional extra `sat`. Checked against the
+  authors' code (same satisfiability, same minimal size).
+  `TracePoint.size`: the size a learner minimizes.
+- `DeepModel(first="and" | "or")` and any number of hidden layers: the
+  first layer's type, the others alternating, so the output can be an
+  AND (e.g. the papers' `[6, 6]`); an OR first layer gives CNFs. All the
+  deep learners take `first`.
 - Catalog: `CatalogEntry.csv_url`, a CSV file as a dataset's source,
   downloaded once into the data home (`fetch_csv_frame`; filled in by
   `tools/build_catalog.py` too). The tags `deep` and `artificial`: the

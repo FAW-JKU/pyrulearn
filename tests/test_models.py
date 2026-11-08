@@ -304,13 +304,13 @@ def test_pairwise_ties_use_training_frequencies_from_stats_when_no_priors_are_gi
         assert PairwiseModel(members).predict(row)[0] == "yes"
 
 
-def _nnf_reference(layers, X):
+def _nnf_reference(layers, X, first="and"):
     """A layered NNF evaluated directly: AND = all inputs with weight 1,
     OR = any input with weight 1."""
     v = X.astype(bool)
     for i, w in enumerate(layers):
         w = np.asarray(w, dtype=bool)
-        if i % 2 == 0:
+        if (i % 2 == 0) == (first == "and"):
             v = np.all(~w[None, :, :] | v[:, None, :], axis=2)
         else:
             v = np.any(w[None, :, :] & v[:, None, :], axis=2)
@@ -348,6 +348,61 @@ def test_deep_model_is_its_nnf():
                     v |= c
                 cv[m.label] = v
             assert cv["yes"].tolist() == expected.tolist()
+
+
+@pytest.mark.parametrize("first", ["and", "or"])
+@pytest.mark.parametrize("widths", [[], [5], [5, 4], [5, 4, 3], [5, 4, 3, 2]])
+def test_deep_model_of_any_depth_and_first_layer(first, widths):
+    rng = np.random.default_rng(len(widths) + (first == "or"))
+    spec = DataSpec([f"f{i}" for i in range(6)])
+    X = rng.random((200, 6)) < 0.5
+    data = HorizontalBitmapRepresentation(spec, X, np.array(["x"] * 200))
+    for _ in range(15):
+        layers = _random_layers(rng, 6, widths + [2], 0.4)
+        dm = DeepModel(spec, ["p", "q"], weights=layers, first=first, combiner=CountVoteCombiner())
+        assert dm.layers == widths and dm.first == first
+        expected = _nnf_reference(layers, X, first)  # (rows, outputs)
+        assert (dm.concept_values(data)[-2:] == expected.T).all()
+        pred = dm.predict(data)
+        assert all(p == ("p" if e[0] else "q") or (e[0] and e[1]) for p, e in zip(pred, expected) if e.any())
+        for simplify in (False, True):  # the rule views compute the same outputs
+            cv = {}
+            for m in dm.to_concepts(simplify):
+                v = np.zeros(200, dtype=bool)
+                for r in m.rules:
+                    c = np.ones(200, dtype=bool)
+                    for lit in r.conditions:
+                        c &= X[:, lit.feature] if lit.feature < 6 else cv[r.dataspec.feature_names[lit.feature]]
+                    v |= c
+                cv[m.label] = v
+            assert (np.vstack([cv["p"], cv["q"]]) == expected.T).all()
+        assert dm.coverage_matrix(data).shape == (len(dm.rules), 200)
+
+
+def test_deep_model_seip_figure_two():
+    # the papers' Fig. 2: AND 6, OR 6, AND output -- (a | b) & (c | d) & (e | (f & g))
+    spec = DataSpec(list("abcdefg"))
+    W1 = np.zeros((6, 7), dtype=int)
+    for node, inputs in enumerate([[0], [1], [2], [3], [4], [5, 6]]):
+        W1[node, inputs] = 1
+    W2 = np.zeros((6, 6), dtype=int)
+    W2[0, [0, 1]] = W2[1, [2, 3]] = W2[2, [4, 5]] = 1
+    dm = DeepModel(spec, ["y"], weights=[W1, W2, [[1, 1, 1, 0, 0, 0]]])
+    assert repr(dm) == "DeepModel(7 inputs, layers [6, 6], 1 outputs)"
+    X = np.array(list(itertools.product([0, 1], repeat=7)), dtype=bool)
+    a, b, c, d, e, f, g = X.T
+    assert ((dm.predict(HorizontalBitmapRepresentation(spec, X)) == "y") == ((a | b) & (c | d) & (e | (f & g)))).all()
+    assert str(dm).endswith("% class: y\ny(X) :- h1_1(X), h1_2(X), h1_3(X).")
+
+
+def test_deep_model_starting_with_or_is_a_cnf():
+    spec = DataSpec(["a", "b", "c"])
+    dm = DeepModel(spec, ["y"], weights=[[[1, 1, 0], [0, 1, 1]], [[1, 1]]], first="or")  # (a | b) & (b | c)
+    assert dm.layers == [2] and dm.hidden_concepts == ["h1_1", "h1_2"]
+    assert str(dm).splitlines()[:3] == ["% concept: h1_1", "h1_1(X) :- a(X).", "h1_1(X) :- b(X)."]
+    X = np.array(list(itertools.product([0, 1], repeat=3)), dtype=bool)
+    a, b, c = X.T
+    assert ((dm.predict(HorizontalBitmapRepresentation(spec, X)) == "y") == ((a | b) & (b | c))).all()
 
 
 def test_deep_model_rule_view():
@@ -390,10 +445,8 @@ def test_deep_model_inlines_a_single_rule_concept():
 
 def test_deep_model_checks_its_layers():
     spec = DataSpec(["a", "b"])
-    with pytest.raises(ValueError, match="odd number"):
-        DeepModel(spec, ["yes"], weights=[[[1, 0]]])
-    with pytest.raises(ValueError, match="odd number"):
-        DeepModel(spec, ["yes"], [4, 2])
+    with pytest.raises(ValueError, match="first"):
+        DeepModel(spec, ["yes"], [2], first="xor")
     with pytest.raises(ValueError, match="not \\[2\\]"):
         DeepModel(spec, ["yes"], [2], weights=[[[1, 0]], [[1]]])
     with pytest.raises(ValueError, match="0 or 1"):

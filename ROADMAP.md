@@ -924,10 +924,10 @@ Done:
 
 Next:
 
-- `DeepModel`: an AND output layer (an even number of hidden layers, as
-  in the papers' Fig. 2 and Beck's code); an AND node feeding several OR
-  nodes as its own intermediate concept in the rule view (the long
-  paper's step iii), concepts named by layer and node.
+- `DeepModel`: an AND node feeding several OR nodes as its own
+  intermediate concept in the rule view (the long paper's step iii).
+  (Done 2026-11-08: an AND output -- any number of hidden layers --, and
+  `first="or"`, a first OR layer.)
 - Three learners on a shared base (`DeepRuleLearner`):
   - `DeepLocalSearch`: Beck's stochastic hill climbing (his code:
     github.com/f-beck/scikit-learn-rule-network) -- per mini-batch of 50,
@@ -935,10 +935,43 @@ Next:
     weights on the whole training set kept, attribute-aware flips in the
     first layer. The first version (one random flip per step) is far
     weaker than his published numbers and gets replaced.
-  - `DeepSAT`: Seip et al.'s encoding through PySAT (CaDiCaL), an exact
-    fit; `minimize_weights=True` for their MaxSAT variant (soft unit
-    clauses on every weight, RC2). PySAT as an optional extra `sat`.
-    Inconsistent data (monk-3) is UNSAT; soft examples later.
+  - `DeepSAT` (done 2026-11-08): Seip et al.'s encoding through PySAT
+    (CaDiCaL), re-implemented with the known values as constants and
+    checked against their code; `minimize="inputs"`/`"weights"` for
+    MaxSAT, by an anytime linear search (default; trace, `max_seconds`,
+    `max_conflicts`) or RC2. Conflicting rows keep the majority label.
+    The `DataSpec`'s constraints as clauses on the weights
+    (`constraints=True`): consistent rules, but on a quick test
+    (tic-tac-toe, car-binary, monk-2, 20% training) neither faster nor
+    more accurate -- plain SAT returns an arbitrary exact fit, which
+    decides more. The linear search showed the Occam effect clearly:
+    tic-tac-toe, 20% training, NNF(1), fewest conditions -- 146
+    conditions test 0.68, 71 0.88, 45 0.96, 27 (after 15 s) 0.975, against
+    Pypper's 0.859 on that split. PySAT can interrupt Glucose, MiniSat and
+    MapleChrono but not CaDiCaL (both versions).
+    Open:
+    - Soft examples: misclassifications as soft clauses with a cost,
+      trading errors against size (a pseudo-Boolean bound for the linear
+      search, `pysat.pb`); handles noisy and inconsistent data.
+    - Other objectives: distinct features used, rules used, costs per
+      layer.
+    - External MaxSAT solvers, like the Weka/LORD interfaces: write the
+      formula as a `.wcnf` file and run an anytime solver with a time
+      limit -- Loandra (core-boosted linear search), NuWLS or SATLike
+      (local search) -- reading its `o <cost>` lines as the trace and the
+      final `v` line as the weights. The strongest option for the larger
+      datasets; needs the clauses built faster (numpy, or streamed to
+      the file) than in Python lists.
+    - Starting `DeepSAT` from another learner's network (e.g.
+      `RuleSetInit(Pypper())`); `init` is ignored so far. As solver
+      phases: the solver tries each weight first with the start's value.
+      A first try (2026-11-08, tic-tac-toe, Glucose 4) gave exactly the
+      same search path as without -- possibly Glucose ignores PySAT's
+      phases, or the start's unconnected random filler rules (64
+      conditions where Pypper has 26) got in the way; to check. Not as
+      an upper bound: the start isn't an exact fit. With soft examples it
+      would be a valid first solution, and the search would only have to
+      improve on it.
   - `DeepNeuroFuzzy`: the relaxed network (product AND/OR, weights in
     [0, 1]) trained by gradient descent in numpy, then frozen to 0/1.
   - `DeepGenetic` (added 2026-11-07): a memetic algorithm with crossover
@@ -968,6 +1001,9 @@ Next:
   kropt -- with the artificial datasets as a control. Needs budgets
   (`max_evaluations`, `max_seconds`) to compare on equal effort. Whether
   the largest ones can be run is open.
+- `RuleSetInit` puts a rule set into the first layer and passes it up
+  unchanged; a start that factors the rules (shared conditions as hidden
+  concepts) would use the deeper levels from the start.
 - **Remove `car-binary` and `connect-4-binary` again** once those
   comparisons are done: they are binary versions of `car` and
   `connect-4`, only there to match the papers' setups (also adjust
