@@ -44,6 +44,17 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   weights. PySAT as the optional extra `sat`. Checked against the
   authors' code (same satisfiability, same minimal size).
   `TracePoint.size`: the size a learner minimizes.
+  `size_penalty` (lambda): soft examples -- MaxSAT minimizes `errors +
+  lambda * size` (a regularized loss; anytime from the first solver call,
+  for the linear search by a second totalizer over the errors; integer
+  costs for the solvers); `None` (default) is the exact fit. With soft
+  examples a given `init` is the linear search's first solution.
+- `target_class` on the deep learners: the class the output node learns
+  (the most frequent other class the default); without it, as before,
+  the less frequent of two classes, or one output per class. On Beck's
+  artificial datasets it decides everything: plain SAT on NNF(1) found an
+  exact fit for the formula's class in 0.4 s, and none in an hour for
+  its negation, the less frequent class there.
 - `DeepModel(first="and" | "or")` and any number of hidden layers: the
   first layer's type, the others alternating, so the output can be an
   AND (e.g. the papers' `[6, 6]`); an OR first layer gives CNFs. All the

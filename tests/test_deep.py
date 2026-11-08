@@ -326,3 +326,79 @@ def test_parameters_are_checked():
         DeepGenetic(population=2, elite=0, seeds=[RandomInit()] * 3)
     with pytest.raises(ValueError, match="two classes"):
         DeepLocalSearch().fit(HorizontalBitmapRepresentation(SPEC, X, np.array(["x"] * 128)))
+
+
+def test_maxsat_with_soft_examples_trades_errors_for_edges():
+    pytest.importorskip("pysat")
+    y = np.where(a & (b | c), "pos", "neg")  # a DNF of two rules: 4 conditions, 2 output edges
+    data = HorizontalBitmapRepresentation(SPEC, X, y)
+    exact = DeepSAT(layers=[2], minimize="weights").fit(data)
+    assert exact.n_edges == 6
+    for maxsat in ("linear", "rc2"):
+        # an edge costs little: the exact fit again
+        m = DeepSAT(layers=[2], minimize="weights", size_penalty=0.1, maxsat=maxsat).fit(data)
+        assert (m.predict(data) == y).all() and m.n_edges == 6
+        # an edge costs more than all the errors: nothing at all, every positive example wrong
+        m = DeepSAT(layers=[2], minimize="weights", size_penalty=100, maxsat=maxsat).fit(data)
+        assert m.n_edges == 0 and (m.predict(data) != y).sum() == (y == "pos").sum()
+        # in between: the rule a alone, 2 edges and 16 errors (36) beats nothing (48 errors, 48)
+        m = DeepSAT(layers=[2], minimize="weights", size_penalty=10, maxsat=maxsat).fit(data)
+        assert m.n_edges == 2 and (m.predict(data) != y).sum() == 16
+        # lambda 0: the errors alone
+        m = DeepSAT(layers=[2], size_penalty=0, maxsat=maxsat).fit(data)
+        assert (m.predict(data) == y).all()
+    with pytest.raises(ValueError, match="needs minimize"):
+        DeepSAT(layers=[2], size_penalty=1)
+
+
+def test_maxsat_with_soft_examples_takes_conflicting_rows():
+    pytest.importorskip("pysat")
+    Xc = np.vstack([X, X[:3]])
+    y = np.where(a & b, "pos", "neg")
+    yc = np.concatenate([y, np.where(y[:3] == "pos", "neg", "pos")])  # three rows twice, with both labels
+    data = HorizontalBitmapRepresentation(SPEC, Xc, yc)
+    with pytest.raises(ValueError, match="identical rows"):
+        DeepSAT(layers=[1], conflicts="raise").fit(data)
+    m = DeepSAT(layers=[1], minimize="weights", size_penalty=0.2).fit(data)
+    assert m.n_edges == 3 and (m.predict(data) != yc).sum() == 3  # a & b; one of each pair wrong
+
+
+def test_maxsat_with_soft_examples_is_anytime_from_the_start():
+    pytest.importorskip("pysat")
+    m = DeepSAT(layers=[6, 3, 1], minimize="weights", size_penalty=0.01, max_conflicts=1000,
+                trace=True).fit(DATA)
+    costs = [p.train_error + 0.01 * p.size for p in m.trace]
+    assert m.trace[0].evaluations == 1  # the first solver call has a network: no example must fit
+    assert costs == sorted(costs, reverse=True) and len(set(costs)) == len(costs)  # each one cheaper
+
+
+def test_maxsat_with_soft_examples_starts_from_init():
+    pytest.importorskip("pysat")
+    # the formula itself as the start: the optimum already, nothing cheaper is found
+    def fit(start):
+        return DeepSAT(layers=[6, 3, 1], minimize="weights", size_penalty=0.1, max_conflicts=1000, trace=True,
+                       init=ModelInit(DeepModel(SPEC, ["pos"], weights=start))).fit(DATA)
+
+    m = fit(_seip_weights())
+    assert all((w == np.asarray(s, dtype=bool)).all() for w, s in zip(m.weights, _seip_weights()))
+    assert len(m.trace) == 1 and m.trace[0].evaluations == 0  # the start, before any solver call
+    # a start with errors: the result is never worse
+    start = [np.array(w) for w in _seip_weights()]
+    start[0][0] = 0  # the rule a loses its condition: always true
+    m = fit(start)
+    costs = [p.train_error + 0.1 * p.size for p in m.trace]
+    assert costs[0] > costs[-1] and m.trace[0].evaluations == 0
+
+
+def test_target_class_picks_the_output():
+    pytest.importorskip("pysat")
+    y = np.where(a & b, "pos", "neg")  # "pos" is the less frequent class: the output by default
+    data = HorizontalBitmapRepresentation(NEG_SPEC, NEG_X, y)
+    assert DeepSAT(layers=[2]).fit(data).outputs == ["pos"]
+    m = DeepSAT(layers=[2], target_class="neg", minimize="weights").fit(data)  # not a or not b
+    assert m.outputs == ["neg"] and m.default_prediction == "pos" and (m.predict(data) == y).all()
+    assert m.n_edges == 4
+    for learner in (DeepLocalSearch(layers=[2], target_class="neg"), DeepGenetic(layers=[2], target_class="neg")):
+        assert learner.fit(data).outputs == ["neg"]
+    with pytest.raises(ValueError, match="not a class"):
+        DeepSAT(layers=[2], target_class="maybe").fit(data)

@@ -1754,7 +1754,10 @@ weights over the data's features (see `DeepModel`). `layers` are the
 hidden layer sizes (by default one AND layer of `ceil(sqrt(n))` nodes,
 a DNF), `first` the type of the layer above the inputs (`"and"`, or
 `"or"`); the output layer has one node per class, or for two classes
-one for the less frequent class, the other the default. A row several
+one for the less frequent class, the other the default -- or, with
+`target_class`, one for that class (the most frequent other class the
+default). Which class the output learns can matter a lot: a formula may
+have a small DNF where its negation has none (see the demo). A row several
 outputs cover gets the class with the most covering rules, a row none
 covers the most frequent class. The start is a component, `init=`
 (`DeepRuleLearner._initialize`, which a subclass may override):
@@ -1804,8 +1807,8 @@ run.
 `DeepSAT` fits the training data exactly by SAT solving (Seip, Fürnkranz
 et al.): the weights and, per training example, every node's value are
 Boolean variables, clauses tie each node to its inputs and each output
-to the label (the known inputs and labels as constants), and CaDiCaL
-solves it through PySAT (`pip install python-sat`, the extra `sat`).
+to the label (the known inputs and labels as constants), solved through
+PySAT (`pip install python-sat`, the extra `sat`).
 `minimize="inputs"` or `"weights"` makes it MaxSAT: the fewest
 conditions, or the fewest edges -- the smallest network that still fits
 exactly. By default by linear search (`maxsat="linear"`): solve, demand a
@@ -1821,7 +1824,15 @@ adds the `DataSpec`'s constraints as clauses on the first layer's weights
 Identical rows are merged; rows with the same features and different
 labels keep the majority label (`conflicts="majority"`), since no network
 fits them otherwise; an architecture too small for the data raises
-`ValueError`. On the truth table of `(a | b) & (c | d) & (e | (f & g))`,
+`ValueError`. `size_penalty` (lambda) makes the examples soft: a
+misclassified example costs 1, an edge (or condition, by `minimize`)
+lambda, and MaxSAT minimizes `errors + lambda * size` -- a regularized
+loss (0-1 loss, L0 penalty), anytime from the first solver call, and no
+exact fit needed (conflicting rows simply cost an error); `None`, the
+default, is the exact fit. Then `init` (e.g. `RuleSetInit(Pypper())`)
+is the first solution: the search only looks for cheaper networks, so
+the result is never worse than the start.
+On the truth table of `(a | b) & (c | d) & (e | (f & g))`,
 the papers' architecture `[6, 6]` with MaxSAT gives exactly that formula,
 16 edges.
 

@@ -33,9 +33,10 @@ The starts (`DeepInit`):
 from __future__ import annotations
 
 import math
+from fractions import Fraction
 import time
 from abc import ABC, abstractmethod
-from typing import Any, List, NamedTuple, Optional, Sequence, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -95,16 +96,24 @@ class _Tracker:
         self.start = time.perf_counter()
         self.best = math.inf
         self.best_size = math.inf
+        self.best_cost = math.inf
         self.points: List[TracePoint] = []
 
     def count(self, n: int) -> None:
         self.evaluations += int(n)
 
-    def offer(self, weights: Sequence[np.ndarray], error: float, size: Optional[int] = None) -> None:
+    def offer(self, weights: Sequence[np.ndarray], error: float, size: Optional[int] = None,
+              cost: Optional[float] = None) -> None:
         """`weights` reach the training error `error` (and the `size` a
         learner minimizes): a new point if better -- a lower error, or the
-        same error and a smaller size."""
-        better = error < self.best or (error == self.best and size is not None and size < self.best_size)
+        same error and a smaller size; with `cost` (a learner's objective
+        trading the two), a lower cost."""
+        if cost is not None:
+            better = cost < self.best_cost
+            if better:
+                self.best_cost = cost
+        else:
+            better = error < self.best or (error == self.best and size is not None and size < self.best_size)
         if better:
             self.best = error
             self.best_size = size if size is not None else math.inf
@@ -269,7 +278,9 @@ class DeepRuleLearner(NativeRuleLearner):
     layer of ``ceil(sqrt(n))`` nodes for *n* features, a DNF; `first`, the
     type of the layer above the inputs, as in `DeepModel`); the output
     layer has one OR node per class, or for two classes one for the less
-    frequent class, the other being the default. With more classes, a row
+    frequent class, the other being the default -- or, with `target_class`,
+    one for that class, the most frequent other class the default (with
+    more classes, too: one class against the rest). With more classes, a row
     no output covers gets the most frequent class, a row several cover the
     class with the most covering rules (`CountVoteCombiner`). `init` (a
     `DeepInit`, default `RandomInit()`) gives the start weights, through
@@ -288,6 +299,7 @@ class DeepRuleLearner(NativeRuleLearner):
         init: Optional[DeepInit] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
+        target_class: Optional[Any] = None,
     ):
         if first not in ("and", "or"):
             raise ValueError(f"first must be 'and' or 'or', got {first!r}")
@@ -296,6 +308,7 @@ class DeepRuleLearner(NativeRuleLearner):
         self.init = init if init is not None else RandomInit()
         self.trace = trace
         self.random_state = random_state
+        self.target_class = target_class
         self._tracker = _Tracker(False)
 
     def _default_model(self, data: DataRepresentation) -> type:
@@ -310,7 +323,12 @@ class DeepRuleLearner(NativeRuleLearner):
         classes = [c.item() if isinstance(c, np.generic) else c for c in classes]
         if len(classes) < 2:
             raise ValueError(f"{type(self).__name__} needs at least two classes")
-        labels = [classes[int(np.argmin(counts))]] if len(classes) == 2 else classes
+        if self.target_class is not None:
+            if self.target_class not in classes:
+                raise ValueError(f"target_class {self.target_class!r} is not a class of the data ({classes})")
+            labels = [self.target_class]
+        else:
+            labels = [classes[int(np.argmin(counts))]] if len(classes) == 2 else classes
         targets = np.vstack([y == c for c in labels])
         X = np.asarray(data.X, dtype=bool)
         layers = (self.layers if self.layers is not None
@@ -325,8 +343,11 @@ class DeepRuleLearner(NativeRuleLearner):
             raise ValueError(f"the start weights have shapes {[w.shape for w in start]}, not {shapes}")
         weights = self._fit_weights(data, labels, X, targets, shapes,
                                     [np.asarray(w, dtype=bool) for w in start], sample_weight, rng)
-        default = (next(c for c in classes if c != labels[0]) if len(classes) == 2
-                   else MajorityClass(data))
+        if len(labels) == 1:  # the other class, or the most frequent of the others
+            others = [(n, c) for c, n in zip(classes, counts) if c != labels[0]]
+            default = max(others, key=lambda nc: nc[0])[1]
+        else:
+            default = MajorityClass(data)
         model = DeepModel(data.spec, labels, weights=weights, default_prediction=default,
                           combiner=CountVoteCombiner(), first=self.first)
         model.trace = self._tracker.points if self.trace else None
@@ -402,10 +423,12 @@ class DeepLocalSearch(DeepRuleLearner):
         optimize_last_layer: bool = False,
         init: Optional[DeepInit] = None,
         first: str = "and",
+        target_class: Optional[Any] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
-        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state)
+        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
+                         target_class=target_class)
         if moves not in self.MOVES:
             raise ValueError(f"moves must be one of {self.MOVES}, got {moves!r}")
         if (n_epochs is not None and n_epochs < 0) or (max_flips is not None and max_flips < 0):
@@ -623,10 +646,12 @@ class DeepGenetic(DeepRuleLearner):
         seeds: Sequence[DeepInit] = (),
         init: Optional[DeepInit] = None,
         first: str = "and",
+        target_class: Optional[Any] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
-        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state)
+        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
+                         target_class=target_class)
         if population < 2 or not 0 <= elite < population or tournament < 1:
             raise ValueError("population must be at least 2, elite below it, tournament at least 1")
         if generations < 0 or local_flips < 0 or mutations < 0 or batch_size < 1:
@@ -752,10 +777,29 @@ class DeepSAT(DeepRuleLearner):
     inputs and labels are constants, so a rule node of the first layer is
     true iff it has no edge to a feature false in the example -- no
     auxiliary variables there -- and a negative example's output needs
-    none either. Solved by CaDiCaL through PySAT (``pip install
-    python-sat``, the extra ``sat``).
+    none either. Solved through PySAT (``pip install python-sat``, the
+    extra ``sat``).
 
-    `minimize` turns it into MaxSAT, still fitting the data exactly:
+    `size_penalty` (lambda) makes the examples soft: an example the
+    network gets wrong costs 1 instead of being forbidden, a unit of size
+    (by `minimize`) costs lambda, and the objective is a regularized loss,
+    ``errors + lambda * size`` (the 0-1 loss with an L0 penalty; 0: the
+    errors alone; > 0 needs `minimize`). ``None`` (default) keeps every
+    example hard, an exact fit. Every assignment is then a network, so the
+    linear search has one after its first solver call and is anytime from
+    the start; rows with the same features and different labels need no
+    `conflicts` rule (each label counts, the network gets one of them).
+    Merged identical rows count as often as they occur; `sample_weight` is
+    not used. The solvers get integer costs in the same ratio (lambda as a
+    fraction p/q: a unit of size costs p, an error q) -- with fractional
+    ones RC2 gets lost in rounding remainders that never reach 0. With soft
+    examples, a given `init` is the linear search's first solution: the
+    solver tries its weights first (as phases) and looks only for cheaper
+    networks, so the result is never worse than the start; without
+    `init` (default) there is no start.
+
+    `minimize` turns it into MaxSAT, by default still fitting the data
+    exactly:
     ``"inputs"`` minimizes the number of conditions (the edges of the first
     layer, summed over its nodes), ``"weights"`` the number of edges -- the
     smallest network fitting the data. `maxsat` decides how:
@@ -764,18 +808,21 @@ class DeepSAT(DeepRuleLearner):
       demand fewer edges than the network found (a cardinality constraint,
       an incremental totalizer, the bound passed as an assumption so the
       solver keeps what it learned), and repeat until no smaller network
-      exists -- then the last one is optimal. An anytime algorithm: every
+      exists -- then the last one is optimal. With soft examples a second
+      totalizer counts the errors, and ``errors + lambda * size`` must
+      drop below the last network's cost (for every number r of errors, at
+      least r errors allow at most so many edges). An anytime algorithm: every
       step gives a smaller network; with `max_seconds` it returns the best
       found so far, and with `trace` every one is a `TracePoint` (effort:
       solver calls; `size`: the objective).
     - ``"rc2"``: RC2, core-guided: works up from lower bounds and has a
       network only at the optimum -- often faster to prove it, but with
-      nothing to return before; no time limit.
+      nothing to return before; no time limit, and no start.
 
     Identical training rows are merged (the encoding needs one copy); rows
     with identical features but different labels make the problem
-    unsatisfiable, so `conflicts` decides: ``"majority"`` (default) keeps
-    the most frequent label of such a group (ties: the first in sorted
+    unsatisfiable (with hard examples), so `conflicts` decides:
+    ``"majority"`` (default) keeps the most frequent label of such a group (ties: the first in sorted
     order), ``"raise"`` refuses. An unsatisfiable problem (the
     architecture too small for the data) raises `ValueError`. `max_seconds`
     limits the solving: plain SAT raises a `TimeoutError` if it has no
@@ -790,7 +837,7 @@ class DeepSAT(DeepRuleLearner):
     instead (not for RC2, nor CaDiCaL): the same result on every machine,
     where a time limit depends on its speed; a call that runs out ends
     the linear search with its best network, and plain SAT with a
-    `TimeoutError`. The start weights (`init`) are not used.
+    `TimeoutError`. With hard examples `init` is not used.
 
     `constraints` adds the `DataSpec`'s constraints as clauses on the
     weights of a first AND layer, independent of the examples: no rule
@@ -811,16 +858,20 @@ class DeepSAT(DeepRuleLearner):
         minimize: Optional[str] = None,
         maxsat: str = "linear",
         conflicts: str = "majority",
+        size_penalty: Optional[float] = None,
         max_seconds: Optional[float] = None,
         max_conflicts: Optional[int] = None,
         solver: Optional[str] = None,
         constraints: bool = True,
         init: Optional[DeepInit] = None,
         first: str = "and",
+        target_class: Optional[Any] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
-        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state)
+        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
+                         target_class=target_class)
+        self.init = init  # None: no start (the base class would put in a random one)
         if minimize not in self.MINIMIZE:
             raise ValueError(f"minimize must be one of {self.MINIMIZE}, got {minimize!r}")
         if conflicts not in self.CONFLICTS:
@@ -829,26 +880,76 @@ class DeepSAT(DeepRuleLearner):
             raise ValueError(f"maxsat must be one of {self.MAXSAT}, got {maxsat!r}")
         self.minimize = minimize
         self.maxsat = maxsat
+        if size_penalty is not None and not size_penalty >= 0:
+            raise ValueError(f"size_penalty must be >= 0 (or None: an exact fit), got {size_penalty!r}")
+        if size_penalty and minimize is None:
+            raise ValueError("size_penalty > 0 needs minimize ('weights' or 'inputs'): the size it penalizes")
         self.conflicts = conflicts
+        self.size_penalty = size_penalty
         self.max_seconds = max_seconds
         self.max_conflicts = max_conflicts
         self.solver = solver
         self.constraints = constraints
 
+    def _initialize(self, data, labels, shapes, rng):
+        """The start: `init`'s weights, or none (all False) without one."""
+        if self.init is None:
+            return [np.zeros(shape, dtype=bool) for shape in shapes]
+        return self.init.weights(data, labels, shapes, rng, self.first)
+
+    def _costs(self) -> Tuple[int, int]:
+        """Integer costs (size unit, error) in the ratio `size_penalty`
+        (RC2 gets lost in rounding remainders with fractional ones); (1, 0)
+        for an exact fit."""
+        if self.size_penalty is None:
+            return 1, 0
+        ratio = Fraction(self.size_penalty).limit_denominator(10 ** 6)
+        return ratio.numerator, ratio.denominator
+
     def _fit_weights(self, data, labels, X, targets, shapes, start, sample_weight, rng):
-        X, targets = self._consistent_rows(X, targets)
-        pool, hard, soft = self._encode(X, targets, shapes)
+        size_cost, error_cost = self._costs()
+        soft = self.size_penalty is not None
+
+        def report(weights) -> int:
+            """Offer a network to the tracker -- its training error on all
+            rows, its size and (when optimizing) its cost -- and return the
+            cost: ``size_cost * size + error_cost * errors`` (the errors by
+            the network itself; the solver's example variables may
+            undercount)."""
+            out = nnf_forward(weights, X_all, self.first)[-1]
+            error = float(((out != targets_all) * sample_weight).sum())
+            size = int(sum(w.sum() for w in (weights if self.minimize == "weights" else weights[:1])))
+            size = size if self.minimize is not None else 0
+            cost = size_cost * size
+            if soft:
+                rows_out = nnf_forward(weights, X, self.first)[-1]
+                cost += error_cost * sum(c for i, g in enumerate(groups) for column, c in g
+                                         if (rows_out[:, i] != column).any())
+            self._tracker.offer(weights, error, size if self.minimize is not None else None,
+                                cost if (edges or examples) else None)
+            return cost
+
+        X_all, targets_all = X, targets
+        if soft:
+            X, groups = self._row_groups(X, targets)
+        else:
+            X, targets = self._consistent_rows(X, targets)
+            groups = None
+        pool, hard, edges, examples = self._encode(X, targets, shapes, groups)
+        if soft and size_cost == 0:
+            edges = []  # only the errors count
         if self.constraints and self.first == "and":
             excluded = contradictions(data.spec) | implications(data.spec)
             pairs = [(i, j) for i, j in zip(*np.nonzero(np.triu(excluded | excluded.T, 1)))]
             hard += [[-pool.weight(0, k, int(i)), -pool.weight(0, k, int(j))]
                      for k in range(shapes[0][0]) for i, j in pairs]
-        if soft and self.maxsat == "linear":
-            return self._linear_search(pool, hard, soft, shapes)
-        model = self._solve(pool, hard, soft)
+        if (edges or examples) and self.maxsat == "linear":
+            given = start if soft and self.init is not None else None
+            return self._linear_search(pool, hard, edges, examples, shapes, report, given)
+        model = self._solve(pool, hard, edges, examples)
         weights = self._weights(model, pool, shapes)
         self._tracker.count(1)
-        self._tracker.offer(weights, 0.0, sum(int(w.sum()) for w in weights))
+        report(weights)
         return weights
 
     def _call(self, solver, assumptions, deadline):
@@ -882,41 +983,86 @@ class DeepSAT(DeepRuleLearner):
         return [np.array([[pool.weight(l, k, j) in true for j in range(s[1])] for k in range(s[0])], dtype=bool)
                 for l, s in enumerate(shapes)]
 
-    def _linear_search(self, pool, hard, soft, shapes) -> List[np.ndarray]:
-        """Linear search: ever smaller exact fits, until none is left or the
-        time is up; the best found."""
+    def _linear_search(self, pool, hard, edges, examples, shapes, report, start=None) -> List[np.ndarray]:
+        """Linear search: ever cheaper networks, until none is left or the
+        time is up; the best found. A `start` network (soft examples only)
+        is the first solution: the solver tries its weights first (as
+        phases) and looks only for cheaper ones."""
         from pysat.card import ITotalizer
         from pysat.solvers import Solver
 
-        lits = [-clause[0] for clause in soft]  # the weights counted
-        totalizer = ITotalizer(lits=lits, ubound=len(lits), top_id=pool.top)
+        size_cost, error_cost = self._costs()
+        error_lits = [-e for e, c in examples for _ in range(c)]  # a copy per merged example
         deadline = None if self.max_seconds is None else time.perf_counter() + self.max_seconds
         interruptible = self._solver_name() not in self.UNINTERRUPTIBLE
-        best, bound, out_of_limits = None, None, False
-        with Solver(name=self._solver_name(), bootstrap_with=hard + totalizer.cnf.clauses) as solver:
-            while bound is None or bound >= 0:
+        best, out_of_limits = None, False
+        totalizers: Dict[str, Any] = {}
+        if edges:  # up front, as the search of an exact fit has always had it
+            totalizers["edges"] = ITotalizer(lits=edges, ubound=len(edges), top_id=pool.top)
+        top = totalizers["edges"].top_id if edges else pool.top
+        with Solver(name=self._solver_name(),
+                    bootstrap_with=hard + (totalizers["edges"].cnf.clauses if edges else [])) as solver:
+            assumptions: List[int] = []
+
+            def tighten(cost) -> bool:
+                """Demand a cheaper network than `cost`; False if none can be."""
+                nonlocal assumptions
+                if examples and "errors" not in totalizers:  # counting up to what this cost allows
+                    ub = min(len(error_lits), cost // error_cost + 1)
+                    totalizers["errors"] = ITotalizer(lits=error_lits, ubound=ub, top_id=top)
+                    solver.append_formula(totalizers["errors"].cnf.clauses)
+                clauses = self._cheaper(cost, totalizers, len(edges), len(error_lits), size_cost, error_cost)
+                if clauses is None:
+                    return False
+                # a bound on the edges alone stays an assumption: the solver keeps what it learned
+                assumptions = [c[0] for c in clauses if len(c) == 1 and not examples]
+                solver.append_formula([c for c in clauses if not (len(c) == 1 and not examples)])
+                return True
+
+            go = True
+            if start is not None:
+                best = [w.copy() for w in start]
+                solver.set_phases([pool.weight(l, k, j) if w[k, j] else -pool.weight(l, k, j)
+                                   for l, w in enumerate(start) for k, j in np.ndindex(*w.shape)])
+                go = tighten(report(best))
+            while go:
                 if deadline is not None and time.perf_counter() >= deadline:
                     out_of_limits = True
                     break
-                assumptions = [] if bound is None else [-totalizer.rhs[bound]]
                 sat = self._call(solver, assumptions, deadline if interruptible else None)
                 self._tracker.count(1)
-                if not sat:  # None: a limit ran out; False: nothing smaller, the last one is optimal
+                if not sat:  # None: a limit ran out; False: nothing cheaper, the last one is optimal
                     out_of_limits = sat is None
                     break
-                model = solver.get_model()
-                true = {lit for lit in model if lit > 0}
-                size = sum(1 for v in lits if v in true)
-                best = self._weights(model, pool, shapes)
-                self._tracker.offer(best, 0.0, size)
-                bound = size - 1
-        totalizer.delete()
+                best = self._weights(solver.get_model(), pool, shapes)
+                go = tighten(report(best))
+        for totalizer in totalizers.values():
+            totalizer.delete()
         if best is None:
             if out_of_limits:
                 raise TimeoutError("no network found within the limits "
                                    f"(max_seconds={self.max_seconds}, max_conflicts={self.max_conflicts})")
             raise ValueError("no network of this architecture fits the training data (unsatisfiable)")
         return best
+
+    @staticmethod
+    def _cheaper(cost, totalizers, n_edges, n_errors, size_cost, error_cost) -> Optional[List[List[int]]]:
+        """Clauses for ``size_cost * size + error_cost * errors < cost``
+        (integers): for every r, at least r errors allow at most
+        ``(cost - 1 - error_cost * r) // size_cost`` edges (and are
+        impossible where that is negative). `None` if nothing is cheaper."""
+        clauses = []
+        for r in range(n_errors + 1):
+            rest = cost - 1 - error_cost * r
+            premise = [] if r == 0 else [-totalizers["errors"].rhs[r - 1]]  # "at least r errors"
+            if rest < 0:
+                if not premise:
+                    return None
+                clauses.append(premise)
+                break
+            if n_edges and rest // size_cost < n_edges:
+                clauses.append(premise + [-totalizers["edges"].rhs[rest // size_cost]])
+        return clauses
 
     def _consistent_rows(self, X: np.ndarray, targets: np.ndarray):
         """One row per distinct feature vector, with its majority label."""
@@ -934,9 +1080,27 @@ class DeepSAT(DeepRuleLearner):
             out[:, r] = targets[:, members[np.flatnonzero(codes[members] == best)[0]]]
         return rows, out
 
-    def _encode(self, X, targets, shapes):
+    @staticmethod
+    def _row_groups(X: np.ndarray, targets: np.ndarray):
+        """One row per distinct feature vector, and per row its labels (as
+        target columns) with how often each occurs."""
+        rows, inverse = np.unique(X, axis=0, return_inverse=True)
+        inverse = inverse.ravel()
+        groups = []
+        for r in range(len(rows)):
+            columns, counts = np.unique(targets[:, inverse == r].T, axis=0, return_counts=True)
+            groups.append([(column.astype(bool), int(c)) for column, c in zip(columns, counts)])
+        return rows, groups
+
+    def _encode(self, X, targets, shapes, groups=None):
+        """The clauses for (X, targets): hard ones and what to minimize, the
+        edge variables and the examples. Without `groups` every label is a
+        constant (an exact fit); with them (`_row_groups`) the outputs are
+        variables and each label one example variable, true only if the
+        network gets it right, with its count."""
         pool = _VariablePool(shapes)
         hard: List[List[int]] = []
+        examples: List[Tuple[int, int]] = []
         n_layers = len(shapes)
         for i in range(X.shape[0]):
             # over the constant inputs, an AND node is true iff it has no edge to a false
@@ -946,10 +1110,11 @@ class DeepSAT(DeepRuleLearner):
             below: Optional[List[int]] = None  # activation variables of the layer below
             for l, (n_nodes, n_below) in enumerate(shapes):
                 last = l == n_layers - 1
-                acts = [] if last else [pool.new() for _ in range(n_nodes)]
+                constant = last and groups is None
+                acts = [] if constant else [pool.new() for _ in range(n_nodes)]
                 for k in range(n_nodes):
                     ws = [pool.weight(l, k, j) for j in range(n_below)]
-                    a = bool(targets[k, i]) if last else acts[k]
+                    a = bool(targets[k, i]) if constant else acts[k]
                     if l == 0:
                         if a is True or a is False:
                             holds = a if self.first == "and" else not a
@@ -965,11 +1130,16 @@ class DeepSAT(DeepRuleLearner):
                     else:
                         self._or(pool, hard, a, ws, below)
                 below = acts
-        soft: List[List[int]] = []
+            if groups is not None:  # below: the outputs
+                for column, count in groups[i]:
+                    e = pool.new()
+                    hard += [[-e, o if t else -o] for o, t in zip(below, column)]
+                    examples.append((e, count))
+        edges: List[int] = []
         if self.minimize is not None:
             for l, (n_nodes, n_below) in enumerate(shapes if self.minimize == "weights" else shapes[:1]):
-                soft += [[-pool.weight(l, k, j)] for k in range(n_nodes) for j in range(n_below)]
-        return pool, hard, soft
+                edges += [pool.weight(l, k, j) for k in range(n_nodes) for j in range(n_below)]
+        return pool, hard, edges, examples
 
     @staticmethod
     def _and(pool, hard, a, ws, xs):
@@ -1003,19 +1173,22 @@ class DeepSAT(DeepRuleLearner):
         hard += [[-tj, w] for tj, w in zip(t, ws)] + [[-tj, x] for tj, x in zip(t, xs)]
         hard.append([-a] + t)
 
-    def _solve(self, pool, hard, soft) -> List[int]:
+    def _solve(self, pool, hard, edges, examples) -> List[int]:
         try:
             from pysat.solvers import Solver
         except ImportError as e:  # pragma: no cover
             raise ImportError("DeepSAT needs PySAT: pip install python-sat") from e
-        if soft:
+        if edges or examples:
             from pysat.examples.rc2 import RC2
             from pysat.formula import WCNF
 
             wcnf = WCNF()
             wcnf.extend(hard)
-            for clause in soft:
-                wcnf.append(clause, weight=1)
+            size_cost, error_cost = self._costs()
+            for w in edges:
+                wcnf.append([-w], weight=size_cost)
+            for e, count in examples:
+                wcnf.append([e], weight=error_cost * count)
             with RC2(wcnf, solver=self._solver_name("rc2")) as rc2:  # no time limit
                 model = rc2.compute()
             if model is None:

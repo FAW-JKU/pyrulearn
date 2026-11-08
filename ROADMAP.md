@@ -950,9 +950,31 @@ Next:
     Pypper's 0.859 on that split. PySAT can interrupt Glucose, MiniSat and
     MapleChrono but not CaDiCaL (both versions).
     Open:
-    - Soft examples: misclassifications as soft clauses with a cost,
-      trading errors against size (a pseudo-Boolean bound for the linear
-      search, `pysat.pb`); handles noisy and inconsistent data.
+    - The output's class (`target_class`, done 2026-11-08). The night
+      run (2026-11-08) had SAT time-outs on NNF(1) for six of the 20
+      artificial datasets, where the paper had one; the cause: our output
+      learned the less frequent class, the authors' always class 1 (the
+      formula's). On artificial-nnf-107, fold 1: drl 4 s for class 1,
+      still running after minutes for class 0; our DeepSAT 0.4 s (Glucose)
+      / 2.5 s (CaDiCaL) for class 1, nothing in an hour for class 0 --
+      with either solver. The demo now passes `target_class=True` in
+      part 1. Local search's weak NNF(1) (66% against SHS's 94%) has
+      another cause: on that fold 0.61 for class 1, 0.69 for class 0,
+      after 0.2 s -- it stops far too early on a flat network; open.
+    - Soft examples (done 2026-11-08, `size_penalty`): the objective
+      `errors + lambda * size`, a regularized loss (0-1 loss, L0
+      penalty); `None` is the exact fit. The linear search bounds it with
+      two totalizers (edges, errors) instead of a pseudo-Boolean encoding
+      (`pysat.pb` needs the extra `pindakaas`). Integer costs (lambda as
+      a fraction p/q): with float weights RC2 took 25 s instead of 0.01 s
+      on a small case -- 1 - 0.1 - 0.1 - ... never reaches 0 exactly, and
+      the remainders (~1e-16) stay soft clauses RC2 keeps finding cores
+      for; weights exact in binary (0.5, 0.125) were fast as floats. With
+      soft examples `init` is the first solution (phases, and only
+      cheaper networks wanted). Open: choosing lambda (by
+      cross-validation, or relative to the data size), `sample_weight` as
+      the examples' costs, and trying it on the demo's datasets -- noisy
+      ones in particular, and started from Pypper.
     - Other objectives: distinct features used, rules used, costs per
       layer.
     - External MaxSAT solvers, like the Weka/LORD interfaces: write the
@@ -969,9 +991,8 @@ Next:
       same search path as without -- possibly Glucose ignores PySAT's
       phases, or the start's unconnected random filler rules (64
       conditions where Pypper has 26) got in the way; to check. Not as
-      an upper bound: the start isn't an exact fit. With soft examples it
-      would be a valid first solution, and the search would only have to
-      improve on it.
+      an upper bound: the start isn't an exact fit. With soft examples
+      (`size_penalty`) it is: done, the start is the first solution.
   - `DeepNeuroFuzzy`: the relaxed network (product AND/OR, weights in
     [0, 1]) trained by gradient descent in numpy, then frozen to 0/1.
   - `DeepGenetic` (added 2026-11-07): a memetic algorithm with crossover

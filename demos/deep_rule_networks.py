@@ -107,12 +107,17 @@ def _variants(quick: bool) -> Dict[str, Tuple[str, Callable[[], NativeRuleLearne
     out: Dict[str, Tuple[str, Callable[[], NativeRuleLearner]]] = {
         "Pypper": ("Pypper()", lambda: Pypper()),
     }
+    # part 1, as in the papers: the output learns the formula's class (True)
     for arch, layers in NNF.items():
-        out[f"SAT {arch}"] = (f"DeepSAT(layers={layers})", lambda layers=layers: DeepSAT(layers=layers))
-        out[f"local search {arch}"] = (f"DeepLocalSearch(layers={layers})",
-                                       lambda layers=layers: DeepLocalSearch(layers=layers))
-    out["MaxSAT NNF(1)"] = (f"DeepSAT(layers=[20], minimize='weights', max_seconds={seconds})",
-                            lambda: DeepSAT(layers=[20], minimize="weights", max_seconds=seconds))
+        out[f"SAT {arch}"] = (f"DeepSAT(layers={layers}, target_class=True)",
+                              lambda layers=layers: DeepSAT(layers=layers, target_class=True))
+        out[f"local search {arch}"] = (f"DeepLocalSearch(layers={layers}, target_class=True)",
+                                       lambda layers=layers: DeepLocalSearch(layers=layers, target_class=True))
+        out[f"genetic {arch}"] = (f"DeepGenetic(layers={layers}, target_class=True)",
+                                  lambda layers=layers: DeepGenetic(layers=layers, target_class=True))
+    out["MaxSAT NNF(1)"] = (f"DeepSAT(layers=[20], minimize='weights', max_seconds={seconds}, target_class=True)",
+                            lambda: DeepSAT(layers=[20], minimize="weights", max_seconds=seconds,
+                                            target_class=True))
     for arch in TRACE_ARCHITECTURES:
         layers = NNF[arch]
         out[f"traced local search {arch}"] = (
@@ -180,7 +185,8 @@ def _n_jobs():
 def part1(quick: bool) -> pd.DataFrame:
     cat = Catalog.default()
     datasets = cat.select(names=QUICK_ARTIFICIAL) if quick else cat.select(tags="artificial")
-    names = (["Pypper"] + [f"SAT {a}" for a in NNF] + ["MaxSAT NNF(1)"] + [f"local search {a}" for a in NNF])
+    names = (["Pypper"] + [f"SAT {a}" for a in NNF] + ["MaxSAT NNF(1)"] + [f"local search {a}" for a in NNF]
+             + [f"genetic {a}" for a in NNF])
     return run_cv([Variant(n, quick) for n in names], datasets,
                   n_folds=QUICK_SEIP_FOLDS if quick else SEIP_FOLDS, fit_timeout=FIT_TIMEOUT,
                   random_state=RANDOM_STATE, cache_dir=CACHE_DIR, n_jobs=_n_jobs())
@@ -235,7 +241,8 @@ def _failure_note(res: pd.DataFrame, rename=lambda n: n) -> List[str]:
 
 
 def _part1_section(res: pd.DataFrame, quick: bool) -> List[str]:
-    ours = ["Pypper"] + [f"SAT {a}" for a in NNF] + ["MaxSAT NNF(1)"] + [f"local search {a}" for a in NNF]
+    ours = (["Pypper"] + [f"SAT {a}" for a in NNF] + ["MaxSAT NNF(1)"] + [f"local search {a}" for a in NNF]
+            + [f"genetic {a}" for a in NNF])
     acc = _accuracy_by_dataset(res, ours)
     times = res.pivot_table(index="dataset", columns="learner", values="fit_time").reindex(columns=ours)
     L = ["## Part 1: the SAT paper's artificial datasets\n",
@@ -245,7 +252,7 @@ def _part1_section(res: pd.DataFrame, quick: bool) -> List[str]:
     cols = []
     for arch in NNF:
         cols += [(f"SAT {arch}", "ours"), (f"SAT {arch}", "paper"), (f"local search {arch}", "ours"),
-                 (f"SHS {arch}", "paper")]
+                 (f"SHS {arch}", "paper"), (f"genetic {arch}", "ours")]
     header = "| dataset | " + " | ".join(f"{name} ({who})" for name, who in cols) + " | MaxSAT NNF(1) | Pypper |"
     L += [header, "|---|" + "--:|" * (len(cols) + 2)]
     paper = PAPER_TABLE.set_index("seed")
@@ -350,7 +357,8 @@ def _part2_section(res: pd.DataFrame, quick: bool) -> List[str]:
          "Each curve is the test accuracy (top) and the size (bottom: edges of the network's "
          "backbone, `DeepModel.pruned`) of the best network found so far, against the seconds "
          "of the fit, averaged over the folds where a network exists by then (shown once that is at least "
-         "half of all folds; a failed fold never has one). Local search and the genetic algorithm improve the training error; MaxSAT "
+         "half of all folds; a failed fold never has one). Local search and the genetic algorithm "
+         "improve the training error; MaxSAT "
          "starts from an exact fit and makes it smaller.\n"]
     L += _plot_traces(res, quick)
     L += ["Final test accuracy (%) and mean fit time (s):\n",
@@ -368,8 +376,10 @@ al. (catalog tag `artificial`; all 1,024 combinations of ten Boolean features, l
 random deep NNF), stratified {SEIP_FOLDS}-fold cross-validation. The Boolean columns become
 `x` and `not x`, the features and negations the SAT paper's networks take. Architectures as
 in the paper: NNF(1) `{NNF['NNF(1)']}`, NNF(3) `{NNF['NNF(3)']}`, NNF(5) `{NNF['NNF(5)']}`,
-first layer AND, output OR. Learners: `DeepSAT` (plain SAT, an exact fit; Glucose 4),
+first layer AND, output OR, the output learning the formula's class (`target_class=True`,
+as the papers' networks do). Learners: `DeepSAT` (plain SAT, an exact fit; Glucose 4),
 `DeepLocalSearch` (Beck's stochastic hill climbing, consistent moves, random start),
+`DeepGenetic` (the memetic algorithm, node-wise crossover, random start),
 `DeepSAT(minimize="weights")` on NNF(1) with {MAXSAT_SECONDS} s (the smallest exact fit found
 by then), Pypper.
 
