@@ -41,6 +41,8 @@ Run: `python demos/deep_rule_networks.py` with no arguments is the
 short time limits); `--full` runs everything (a few hours with
 ``--n-jobs 10``) and writes ``deep_rule_networks_report.md`` (plots in
 ``deep_rule_networks_plots/``). Needs the `experiments` and `sat` extras.
+``--report-only`` fits nothing: it writes the report and plots from what
+the cache holds (with ``--full``, of the full run).
 """
 
 from __future__ import annotations
@@ -226,6 +228,24 @@ NAME = "deep_rule_networks"
 PLOTS_DIR = os.path.join(HERE, f"{NAME}_plots")
 CACHE_DIR = os.path.join(HERE, f"_{NAME}_cache")
 N_JOBS = "1"
+#: `--report-only`: the tables from the cache, nothing fitted
+CACHED_ONLY = False
+#: (dataset, learner) -> (failed folds, folds run): what really ran, for the report -- with
+#: `stop_on_timeout` a timed-out pair's finished folds also read as time-outs
+RAN: Dict[Tuple[str, str], Tuple[int, int]] = {}
+
+
+def _run_cv(learners, datasets, **kw) -> pd.DataFrame:
+    """`run_cv` (only from the cache with `CACHED_ONLY`), noting in `RAN`
+    how many folds of each (dataset, learner) ran and how many of them
+    failed."""
+    res = run_cv(learners, datasets, cached_only=CACHED_ONLY, **kw)
+    raw = run_cv(learners, datasets, cached_only=True, stop_on_timeout=False,
+                 **{k: v for k, v in kw.items() if k not in ("n_jobs", "measure_fn")})
+    if len(raw):
+        for (ds, learner), rows in raw.groupby(["dataset", "learner"]):
+            RAN[(ds, learner)] = (int(rows["error"].notna().sum()), len(rows))
+    return res
 
 
 def _n_jobs():
@@ -237,7 +257,7 @@ def part1(quick: bool) -> pd.DataFrame:
     datasets = cat.select(names=QUICK_ARTIFICIAL) if quick else cat.select(tags="artificial")
     names = (["Pypper"] + [f"SAT {a}" for a in NNF] + ["MaxSAT NNF(1)"] + [f"local search {a}" for a in NNF]
              + [f"genetic {a}" for a in NNF] + [f"neuro-fuzzy {a}" for a in NNF])
-    return run_cv([Variant(n, quick) for n in names], datasets,
+    return _run_cv([Variant(n, quick) for n in names], datasets,
                   n_folds=QUICK_SEIP_FOLDS if quick else SEIP_FOLDS, fit_timeout=FIT_TIMEOUT,
                   random_state=RANDOM_STATE, cache_dir=CACHE_DIR, n_jobs=_n_jobs())
 
@@ -256,9 +276,9 @@ def part2(quick: bool) -> pd.DataFrame:
                   random_state=RANDOM_STATE, cache_dir=CACHE_DIR, measure_fn=trace_curve, n_jobs=_n_jobs())
     full = [d for d in datasets if d.name not in NO_MAXSAT]
     small = [d for d in datasets if d.name in NO_MAXSAT]
-    parts = [run_cv([Variant(n, quick) for n in names], full, **common)] if full else []
+    parts = [_run_cv([Variant(n, quick) for n in names], full, **common)] if full else []
     if small:
-        parts.append(run_cv([Variant(n, quick) for n in without], small, **common))
+        parts.append(_run_cv([Variant(n, quick) for n in without], small, **common))
     return pd.concat(parts, ignore_index=True)
 
 
@@ -268,9 +288,9 @@ def part3(quick: bool) -> Tuple[pd.DataFrame, pd.DataFrame]:
     names = ["Pypper"] + [f"krk {learner}" for learner in KRK_LEARNERS]
     common = dict(n_folds=QUICK_TRACE_FOLDS if quick else TRACE_FOLDS, fit_timeout=FIT_TIMEOUT,
                   random_state=RANDOM_STATE, cache_dir=CACHE_DIR, n_jobs=_n_jobs())
-    res = run_cv([Variant(n, quick) for n in names], [krk], measure_fn=trace_curve, **common)
+    res = _run_cv([Variant(n, quick) for n in names], [krk], measure_fn=trace_curve, **common)
     relational = KRKIllegal(krk.n, krk.random_state, relations=True)
-    upper = run_cv([Variant("Pypper", quick)], [relational], **common)
+    upper = _run_cv([Variant("Pypper", quick)], [relational], **common)
     return res, upper
 
 
@@ -280,8 +300,14 @@ COLORS = {"local search": "#2a78d6", "genetic": "#eb6834", "MaxSAT": "#6250d6", 
 INK, INK2, GRID, SURF = "#0b0b0b", "#52514e", "#e6e5e1", "#fcfcfb"
 
 
-def _pct(v) -> str:
-    return "time-out" if v is None or (isinstance(v, float) and np.isnan(v)) else f"{100 * v:.2f}"
+def _pct(v, dataset: str = None, learner: str = None) -> str:
+    """An accuracy in %; a failure as ``time-out``, or ``time-out (k/n)``
+    when only k of the n folds that ran failed (the others finished: with
+    parallel fits, those already running when a fold timed out)."""
+    if not (v is None or (isinstance(v, float) and np.isnan(v))):
+        return f"{100 * v:.2f}"
+    failed, ran = RAN.get((dataset, learner), (0, 0))
+    return f"time-out ({failed}/{ran})" if 0 < failed < ran else "time-out"
 
 
 def _accuracy_by_dataset(res: pd.DataFrame, names: List[str]) -> pd.DataFrame:
@@ -307,10 +333,14 @@ def _failure_note(res: pd.DataFrame, rename=lambda n: n) -> List[str]:
     folds = res.groupby(["dataset", "learner"]).size()
     by_learner: Dict[str, List[str]] = {}
     for (ds, learner), k in failed.items():
-        by_learner.setdefault(rename(learner), []).append(f"{ds} ({k}/{folds[(ds, learner)]})")
-    return ["Time-outs (failed folds / folds; the fit cap of " + f"{FIT_TIMEOUT:.0f} s, or DeepSAT "
-            "finding no network within its own limit): "
-            + "; ".join(f"{n}: {', '.join(sorted(v))}" for n, v in sorted(by_learner.items())) + ".\n"]
+        bad, ran = RAN.get((ds, learner), (k, folds[(ds, learner)]))
+        skipped = folds[(ds, learner)] - ran
+        by_learner.setdefault(rename(learner), []).append(
+            f"{ds} ({bad}/{ran}" + (f", {skipped} skipped" if skipped else "") + ")")
+    return ["Time-outs (failed folds / folds run; the fit cap of " + f"{FIT_TIMEOUT:.0f} s, or DeepSAT "
+            "finding no network within its own limit; after a time-out the folds not yet started are "
+            "skipped): " + "; ".join(f"{n}: {', '.join(sorted(v))}" for n, v in sorted(by_learner.items()))
+            + ".\n"]
 
 
 def _part1_section(res: pd.DataFrame, quick: bool) -> List[str]:
@@ -336,12 +366,12 @@ def _part1_section(res: pd.DataFrame, quick: bool) -> List[str]:
         for name, who in cols:
             v = acc.loc[ds, name] if who == "ours" else paper.loc[seed, name]
             v = None if v is None or (isinstance(v, float) and np.isnan(v)) else float(v)
-            cells.append(_pct(v))
+            cells.append(_pct(v, ds, name) if who == "ours" else _pct(v))
             if v is not None:
                 sums.setdefault(f"{name}|{who}", []).append(v)
         for name in ("MaxSAT NNF(1)", "Pypper"):
             v = acc.loc[ds, name]
-            cells.append(_pct(v))
+            cells.append(_pct(v, ds, name))
             if not np.isnan(v):
                 sums.setdefault(f"{name}|ours", []).append(v)
         L.append(f"| {ds} | " + " | ".join(cells) + " |")
@@ -458,7 +488,7 @@ def _part2_section(res: pd.DataFrame, quick: bool) -> List[str]:
           "| dataset | " + " | ".join(n.replace("traced ", "") for n in names) + " |",
           "|---|" + "--:|" * len(names)]
     for ds in acc.index:
-        L.append(f"| {ds} | " + " | ".join(f"{_pct(acc.loc[ds, n])} ({times.loc[ds, n]:.0f} s)" for n in names)
+        L.append(f"| {ds} | " + " | ".join(f"{_pct(acc.loc[ds, n], ds, n)} ({times.loc[ds, n]:.0f} s)" for n in names)
                  + " |")
     if NO_MAXSAT and not quick:
         L.append(f"MaxSAT is not run on {', '.join(NO_MAXSAT)}: its formula would have tens of millions of "
@@ -489,7 +519,7 @@ def _part3_section(res: pd.DataFrame, upper: pd.DataFrame, quick: bool) -> List[
           "| learner | accuracy | edges | seconds |", "|---|--:|--:|--:|"]
     for n in names:
         e = "" if n == "Pypper" or np.isnan(edges.get(n, np.nan)) else f"{edges[n]:.0f}"
-        L.append(f"| {n.replace('krk ', '')} | {_pct(acc.loc[krk, n]) if krk in acc.index else '-'} | {e} | "
+        L.append(f"| {n.replace('krk ', '')} | {_pct(acc.loc[krk, n], krk, n) if krk in acc.index else '-'} | {e} | "
                  f"{times.loc[krk, n]:.0f} |" if krk in times.index else f"| {n} | - | | |")
     L.append(f"| Pypper with relations | {_pct(bound)} | | |")
     return L + [""] + _failure_note(res, lambda n: n.replace("krk ", ""))
@@ -524,7 +554,9 @@ and from Pypper, lambda = {LAMBDA:g}, each with {KRK_SECONDS} s (`max_seconds`, 
 generations unbounded). No MaxSAT: the formula would have millions of variables.
 
 Each fit is capped at {FIT_TIMEOUT:.0f} s; a time-out drops the learner's whole
-cross-validation on that dataset. Times are wall-clock.
+cross-validation on that dataset (the folds not yet started are skipped; `time-out (k/n)`:
+k of the n folds that ran failed, the others -- already running -- finished). Times are
+wall-clock.
 """
 
 
@@ -556,6 +588,9 @@ if __name__ == "__main__":
     parser.add_argument("--n-jobs", default="1",
                         help="fits to run at the same time (default 1); capped at the available cores "
                              "unless given as 'N!'")
+    parser.add_argument("--report-only", action="store_true",
+                        help="fit nothing: the report and plots from what the cache holds")
     args = parser.parse_args()
     N_JOBS = args.n_jobs
+    CACHED_ONLY = args.report_only
     main(quick=not args.full)
