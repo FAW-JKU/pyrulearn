@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyrulearn"
-version = "0.5.1"
+version = "0.5.2"
 description = "Representing, learning, combining and analyzing propositional rule models: native rule learners (separate-and-conquer, Pypper, CBA, CMAR, IDS, ...) and interfaces to external ones."
 readme = "README.md"
 requires-python = ">=3.10"

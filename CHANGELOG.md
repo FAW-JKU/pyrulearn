@@ -3,7 +3,9 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
-## Unreleased
+## 0.5.2 (2026-11-08)
+
+Isometrics in heatmap colors, and a leaner PrePost representation.
 
 ### Changed
 
@@ -15,11 +17,11 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   tree node, only its pre-order number, subtree end and parent, as the
   N-lists of PrePost (Deng et al. 2012): a refinement and `coverage` test
   ancestors by binary search, and `features_of` walks up to the root. On
-  `adult` (8,000 examples) it holds 5.1 instead of 12.0 MiB with negation
-  and 1.8 instead of 2.7 MiB without; fits learn the same rules and take
-  up to a fifth longer than on `NListRepresentation` (measured on a
-  laptop on battery). `demos/representations.py` measures it again, as
-  "PrePost".
+  `adult` (8,000 examples) it holds 5.2 instead of 12.0 MiB with negation
+  and 1.9 instead of 2.9 MiB without. Fits learn the same rules; there,
+  CN2 and ENDER take about as long as on `NListRepresentation`, PFossil,
+  Pypper and PyLORD up to 30% longer with negation and up to 15% without.
+  `demos/representations.py` measures it again, as "PrePost".
 
 ## 0.5.1 (2026-11-02)
 
