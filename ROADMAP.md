@@ -1004,8 +1004,31 @@ Next:
       conditions where Pypper has 26) got in the way; to check. Not as
       an upper bound: the start isn't an exact fit. With soft examples
       (`size_penalty`) it is: done, the start is the first solution.
-  - `DeepNeuroFuzzy`: the relaxed network (product AND/OR, weights in
-    [0, 1]) trained by gradient descent in numpy, then frozen to 0/1.
+  - `DeepNeuroFuzzy` (added 2026-11-08): the relaxed network (product
+    AND/OR, weights in [0, 1]) trained by gradient descent in numpy,
+    thresholded to 0/1 after every epoch, gradients checked against
+    finite differences. Our alternating layers (the paper also puts AND
+    and OR nodes side by side in a layer). Random binarization as
+    described (binarized weights not updated) left the network empty
+    from the paper's small start -- the OR layer's weights never got
+    above 0.5 (tic-tac-toe: 0.65 test, 0 edges); with the
+    straight-through estimator (now the default) tic-tac-toe 0.984 like
+    Pypper, vote 0.920, breast-cancer 0.793 (one fold each, NNF(1)).
+    KRK illegality (1000) stays near the majority (0.68; with more epochs
+    0.80 train, 0.62 test) -- as for local search (0.69). Deep networks
+    on small data need more steps. Open: the paper's hyperparameters
+    (only a first guess here: 100 epochs, batch 64, Adam 0.01, L2 1e-4,
+    rate 0.75), an epoch budget relative to the data size, the demo.
+  - `size_penalty` for all four (done 2026-11-08): errors + lambda per
+    backbone edge. Counting all edges made local search collapse to the
+    empty network (removing a dead edge always "improved"); counting the
+    backbone fixed that, but on mini-batches the penalty still stripped
+    rules of conditions the other rows need (tic-tac-toe lambda 0.1: 112
+    training errors); applied only on the whole training set, local
+    search got better than without it (tic-tac-toe, one fold: 14 errors
+    and 95 edges, test 0.964, against 34, 225, 0.917). DeepNeuroFuzzy's
+    L1 removes few redundant edges -- in the fuzzy network they still
+    lower the loss a little; open.
   - `DeepGenetic` (added 2026-11-07): a memetic algorithm with crossover
     of aligned networks: node-wise, subtree (a node with its cone),
     mixed, none. One seed, 10-fold, nine datasets, mean accuracy NNF(1) /

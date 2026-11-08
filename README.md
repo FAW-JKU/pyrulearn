@@ -192,7 +192,7 @@ details.
 | `experiments` | Shared infrastructure for demos and other cross-validation-style experiments: `experiments.catalog` (the catalog of benchmark datasets, see *Benchmark datasets*), `experiments.runner` (`run_cv`: per-fold encoding into `representation=` (default: the preference order's first entry, `VerticalBitmapRepresentation`), a per-fit timeout via `TimeoutRunner`, uniform measurement, fold caching), `experiments.stats` (optional `mean_rank`, `friedman_test`, `critical_difference_diagram`, never run automatically) and `experiments.report` (small Markdown-writing building blocks). Needs `pandas`/`scipy`/`matplotlib` (the `experiments` extra). |
 | `heuristics` | `RuleHeuristic`: pluggable rule-evaluation heuristics (`Precision`, `Laplace`, `MEstimate`, `WRAcc`, `FoilGain`, `Correlation`, `Entropy`, `LikelihoodRatio`, ...), the composable `LEF`, and `plot_isometrics` for drawing a heuristic into a `CoverageSpace`. |
 | `interfaces` | Bringing external rule models in. `interfaces.base` has the shared `RuleImporter` machinery (`ObjectRuleImporter`, `StringRuleImporter`, the importer registry, `PatternStringImporter`); each external tool then has its own submodule, pairing an importer with a learner wrapper: `interfaces.sklearn` (decision trees, random forests, and `RuleSetClassifier`, which wraps any `RuleModel` as a scikit-learn estimator), `interfaces.wittgenstein` (IREP, RIPPER), `interfaces.imodels` (Bayesian rule lists and sets, RuleFit, Slipper), `interfaces.weka` (JRip, PART, J48), `interfaces.lord` (the reference LORD implementation), `interfaces.pyarc` (CBA), `interfaces.boomer` (BOOMER) and `interfaces.realkd` (optimal rule boosting). |
-| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), `learners.deep` (`DeepLocalSearch`, `DeepGenetic`, `DeepSAT`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
+| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), `learners.deep` (`DeepLocalSearch`, `DeepGenetic`, `DeepSAT`, `DeepNeuroFuzzy`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
 | `models` | The `RuleModel` hierarchy, organised by how a prediction is resolved: `RuleSet` (`FlatRuleSet`, `ConceptModel`, `ConceptSet`, `DisjointRuleSet`, and the memory-compact `PooledRuleSet` that `CARMiner` returns), `RuleList` (`DecisionList`, `ConceptCascade`), `CompositeModel` (`EnsembleModel`, `PairwiseModel`, `DeepModel`) and `SingleRule`. Also the `default_prediction` policy, per-model `stats`, `Provenance`, `annotate_rules`, and the model-to-model converters. |
 | `pruning` | `PrePruningCriterion`: one per-candidate test (`ThresholdPrePruning`, `EncodingLengthRestriction`, ...) that a search can use as a filter, as a stopping trigger, or that the covering loop can use as its stop condition. |
 | `rule` | `Rule`: a conjunction of Boolean literals, with optional condition order, several output formats and constraint-aware consistency checks. No dependencies beyond numpy. |
@@ -1841,8 +1841,38 @@ On the truth table of `(a | b) & (c | d) & (e | (f & g))`,
 the papers' architecture `[6, 6]` with MaxSAT gives exactly that formula,
 16 edges.
 
+`DeepNeuroFuzzy` learns the weights by gradient descent on a fuzzy
+relaxation (Wang et al., AAAI 2020: multilayer logical perceptrons with
+random binarization): during training the weights are continuous in
+[0, 1], an AND node computes `prod_j (1 - w_j (1 - x_j))`, an OR node `1 -
+prod_j (1 - w_j x_j)`; mini-batches, Adam, `loss="mse"` (the paper's) or
+`"log"`, an `l2` penalty that pushes unneeded edges to 0, the weights
+clipped to [0, 1]. Random binarization replaces a random share
+(`binarization_rate`, 0.75) of the weights by their 0/1 value in every
+step, so the network learns to live with the discrete weights it ends
+with; their gradient still updates the continuous weight
+(`straight_through`, default -- without it, from the paper's small
+start, an OR layer's weights hardly ever cross 0.5 and the network ends
+up empty). After every epoch the weights are thresholded at 0.5; the
+best of these networks on the training set is the result, and with
+`trace` each new best is a point of the anytime curve. `init` maps a 0/1
+start (e.g. `RuleSetInit(Pypper())`) to high and low weights. Our version
+keeps `DeepModel`'s alternating layers. Deeper networks on small data need
+more steps (`epochs`, `batch_size`).
+
+All four take `size_penalty` (lambda) with one meaning: the objective is
+the training error plus lambda per edge of the backbone (dead edges are
+free), so an edge has to be worth 1/lambda misclassified examples;
+`None` (default) minimizes the error alone. Local search and the genetic
+algorithm apply it where the whole training set is evaluated -- the best
+network, the fitness, the final climb -- not on mini-batches, where many
+conditions change nothing and the penalty would strip the rules;
+`DeepNeuroFuzzy` sums its loss over the training set and adds lambda
+times the sum of the weights (L1); `DeepSAT` minimizes it exactly with
+soft examples.
+
 ```python
-from pyrulearn.learners.deep import DeepLocalSearch, DeepSAT, RuleSetInit
+from pyrulearn.learners.deep import DeepLocalSearch, DeepNeuroFuzzy, DeepSAT, RuleSetInit
 from pyrulearn.learners.seco import Pypper
 
 model = DeepLocalSearch(layers=[32, 8, 2]).fit(train_rep)

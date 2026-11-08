@@ -296,6 +296,12 @@ class DeepRuleLearner(NativeRuleLearner):
     `DeepInit`, default `RandomInit()`) gives the start weights, through
     `_initialize`, which a subclass may override.
 
+    `size_penalty` (lambda) makes the objective a regularized loss, the
+    training error plus lambda per edge -- an edge has to be worth 1/lambda
+    misclassified examples; ``None`` (default) minimizes the error alone
+    (the size only breaks ties). The same meaning in all the deep
+    learners (`DeepSAT`: with soft examples).
+
     The learners are anytime algorithms: with `trace`, the model's `trace`
     lists every new best network on the training set during the fit
     (`TracePoint`s: effort, seconds, training error, weights), and
@@ -310,6 +316,7 @@ class DeepRuleLearner(NativeRuleLearner):
         trace: bool = False,
         random_state: Optional[int] = 0,
         target_class: Optional[Any] = None,
+        size_penalty: Optional[float] = None,
     ):
         if first not in ("and", "or"):
             raise ValueError(f"first must be 'and' or 'or', got {first!r}")
@@ -319,6 +326,9 @@ class DeepRuleLearner(NativeRuleLearner):
         self.trace = trace
         self.random_state = random_state
         self.target_class = target_class
+        if size_penalty is not None and not size_penalty >= 0:
+            raise ValueError(f"size_penalty must be >= 0 (or None), got {size_penalty!r}")
+        self.size_penalty = size_penalty
         self._tracker = _Tracker(False)
 
     def _default_model(self, data: DataRepresentation) -> type:
@@ -369,6 +379,28 @@ class DeepRuleLearner(NativeRuleLearner):
         self._tracker.count(X.shape[0])
         out = nnf_forward(weights, X, self.first)[-1]
         return float(((out != targets) * sample_weight).sum())
+
+    @staticmethod
+    def _size(weights: Sequence[np.ndarray]) -> int:
+        """The edges of the backbone (`pruned_weights`): dead edges, into
+        nodes the outputs don't depend on, are free -- material for later
+        moves, not part of the model."""
+        return int(sum(w.sum() for w in pruned_weights(weights)))
+
+    def _cost(self, error: float, weights: Sequence[np.ndarray]) -> float:
+        """The objective: the training error, plus `size_penalty` per edge
+        of the backbone."""
+        if self.size_penalty is None:
+            return error
+        return error + self.size_penalty * self._size(weights)
+
+    def _offer(self, weights: Sequence[np.ndarray], error: float) -> None:
+        """Offer `weights` with training `error` to the tracker: by error
+        (then size) without `size_penalty`, by cost with it."""
+        if self.size_penalty is None:
+            self._tracker.offer(weights, error)
+        else:
+            self._tracker.offer(weights, error, self._size(weights), self._cost(error, weights))
 
     def _initialize(self, data: DataRepresentation, labels: Sequence[Any], shapes: List[tuple],
                     rng: np.random.Generator) -> List[np.ndarray]:
@@ -434,11 +466,12 @@ class DeepLocalSearch(DeepRuleLearner):
         init: Optional[DeepInit] = None,
         first: str = "and",
         target_class: Optional[Any] = None,
+        size_penalty: Optional[float] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
         super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
-                         target_class=target_class)
+                         target_class=target_class, size_penalty=size_penalty)
         if moves not in self.MOVES:
             raise ValueError(f"moves must be one of {self.MOVES}, got {moves!r}")
         if (n_epochs is not None and n_epochs < 0) or (max_flips is not None and max_flips < 0):
@@ -460,8 +493,9 @@ class DeepLocalSearch(DeepRuleLearner):
         batch = n if self.batch_size is None else min(self.batch_size, n)
         n_batches = n // batch
         best = [w.copy() for w in weights]
-        best_error = self._error(weights, X, targets, sample_weight)
-        self._tracker.offer(weights, best_error)
+        error = self._error(weights, X, targets, sample_weight)
+        best_error, best_cost = error, self._cost(error, weights)
+        self._offer(weights, error)
         epochs = self.n_epochs if self.n_epochs is not None else np.iinfo(np.int32).max
         for _ in range(epochs):
             improved = False
@@ -469,17 +503,18 @@ class DeepLocalSearch(DeepRuleLearner):
             for step in steps:
                 if step is None:
                     rows = rng.permutation(n)[:batch]
-                    self._climb(weights, X[rows], targets[:, rows], sample_weight[rows], conflicts)
+                    self._climb(weights, X[rows], targets[:, rows], sample_weight[rows], conflicts, penalize=False)
                 else:
                     self._rebuild_last_layer(weights, X, targets, sample_weight)
                 error = self._error(weights, X, targets, sample_weight)
-                self._tracker.offer(weights, error)
-                if error < best_error:
-                    best, best_error, improved = [w.copy() for w in weights], error, True
-            if best_error == 0 or (self.n_epochs is None and not improved):
+                self._offer(weights, error)
+                cost = self._cost(error, weights)
+                if cost < best_cost:
+                    best, best_error, best_cost, improved = [w.copy() for w in weights], error, cost, True
+            if (best_error == 0 and self.size_penalty is None) or (self.n_epochs is None and not improved):
                 break
         weights = [w.copy() for w in best]
-        self._climb(weights, X, targets, sample_weight, conflicts, on_step=self._tracker.offer)
+        self._climb(weights, X, targets, sample_weight, conflicts, on_step=self._offer)
         return weights
 
     def _conflicts(self, spec: Any) -> Optional[np.ndarray]:
@@ -496,35 +531,89 @@ class DeepLocalSearch(DeepRuleLearner):
 
     # -- hill climbing --------------------------------------------------------
 
-    def _climb(self, weights, X, targets, sample_weight, conflicts, on_step=None) -> None:
+    def _climb(self, weights, X, targets, sample_weight, conflicts, on_step=None, penalize=True) -> None:
         """Steepest ascent on (X, targets): make the best improving flip
         until none is left (or `max_flips`); `on_step(weights, error)` after
-        each flip."""
+        each flip. With `size_penalty` (and `penalize`) a flip is judged by
+        the error plus the penalty for the backbone's edges -- only on the
+        whole training set: on a mini-batch many conditions change nothing,
+        and the penalty would strip the rules of what the other rows need."""
         flips = 0
         inputs = X.T
+        penalty = 0.0 if self.size_penalty is None or not penalize else self.size_penalty
         error = self._error(weights, X, targets, sample_weight)
+        cost = error + penalty * self._size(weights) if penalty else error
         while self.max_flips is None or flips < self.max_flips:
             values = nnf_forward(weights, X, self.first)
             errors = [self._flip_errors(weights, values, inputs, l, targets, sample_weight,
                                         conflicts if l == 0 else None)
                       for l in range(len(weights))]
             self._tracker.count(sum(w.size for w in weights) * X.shape[0])
+            if penalty:  # the backbone's change, approximated: +-1 for an edge into a used node
+                edges = self._size(weights)
+                used = self._used(weights)
+                costs = [e + penalty * (edges + used[l][:, None] * self._flip_edges(weights, l, conflicts if l == 0
+                                                                                    else None))
+                         for l, e in enumerate(errors)]
+            else:
+                costs = errors
             # Beck's order: the first layer node by node, the others edge source by source
-            order = [errors[0].ravel()] + [e.T.ravel() for e in errors[1:]]
-            flat = np.concatenate(order)
-            i = int(np.argmin(flat))
-            if not flat[i] < error:
-                return
-            for l, e in enumerate(errors):
-                if i < e.size:
-                    k, j = divmod(i, e.shape[1]) if l == 0 else divmod(i, e.shape[0])[::-1]
-                    self._flip(weights, l, k, j, conflicts if l == 0 else None)
-                    break
-                i -= e.size
-            error = float(flat.min())
+            flat = np.concatenate([costs[0].ravel()] + [c.T.ravel() for c in costs[1:]])
+            flat_errors = np.concatenate([errors[0].ravel()] + [e.T.ravel() for e in errors[1:]])
+            sizes = [e.size for e in errors]
+
+            def apply(i):
+                """Flip candidate `i` of `flat`; the layer's old weights."""
+                for l, size in enumerate(sizes):
+                    if i < size:
+                        e = errors[l]
+                        k, j = divmod(i, e.shape[1]) if l == 0 else divmod(i, e.shape[0])[::-1]
+                        saved = weights[l].copy()
+                        self._flip(weights, l, k, j, conflicts if l == 0 else None)
+                        return l, saved
+                    i -= size
+
+            if not penalty:
+                i = int(np.argmin(flat))
+                if not flat[i] < cost:
+                    return
+                apply(i)
+                cost = error = float(flat[i])
+            else:
+                # the approximation ranks the candidates; the first one whose exact cost improves is taken
+                for i in np.argsort(flat, kind="stable"):
+                    if not flat[i] < cost:
+                        return
+                    l, saved = apply(int(i))
+                    new_cost = float(flat_errors[i]) + penalty * self._size(weights)
+                    if new_cost < cost:
+                        cost, error = new_cost, float(flat_errors[i])
+                        break
+                    weights[l][:] = saved
+                else:
+                    return
             flips += 1
             if on_step is not None:
                 on_step(weights, error)
+
+    @staticmethod
+    def _used(weights) -> List[np.ndarray]:
+        """Per layer, which nodes the outputs depend on."""
+        used = [np.ones(weights[-1].shape[0], dtype=bool)]
+        for w in reversed(weights[1:]):
+            used.insert(0, w[used[0]].any(axis=0))
+        return used
+
+    @staticmethod
+    def _flip_edges(weights, l, conflicts) -> np.ndarray:
+        """How the number of edges changes with each flip of layer `l`
+        (turning on a condition also drops those it conflicts with)."""
+        w = weights[l]
+        delta = np.where(w, -1, 1)
+        if conflicts is not None:
+            dropped = w.astype(np.int32) @ conflicts.T.astype(np.int32)  # [k, j]: present conditions j drops
+            delta = delta - np.where(w, 0, dropped)
+        return delta
 
     @staticmethod
     def _flip(weights, l, k, j, conflicts) -> None:
@@ -586,12 +675,12 @@ class DeepLocalSearch(DeepRuleLearner):
     def _rebuild_last_layer(self, weights, X, targets, sample_weight) -> None:
         last = weights[-1]
         last[:] = False
-        error = self._error(weights, X, targets, sample_weight)
+        error = self._cost(self._error(weights, X, targets, sample_weight), weights)
         while True:
             best, best_at = error, None
             for k, j in zip(*np.nonzero(~last)):
                 last[k, j] = True
-                e = self._error(weights, X, targets, sample_weight)
+                e = self._cost(self._error(weights, X, targets, sample_weight), weights)
                 last[k, j] = False
                 if e < best:
                     best, best_at = e, (k, j)
@@ -657,11 +746,12 @@ class DeepGenetic(DeepRuleLearner):
         init: Optional[DeepInit] = None,
         first: str = "and",
         target_class: Optional[Any] = None,
+        size_penalty: Optional[float] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
         super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
-                         target_class=target_class)
+                         target_class=target_class, size_penalty=size_penalty)
         if population < 2 or not 0 <= elite < population or tournament < 1:
             raise ValueError("population must be at least 2, elite below it, tournament at least 1")
         if generations < 0 or local_flips < 0 or mutations < 0 or batch_size < 1:
@@ -685,7 +775,8 @@ class DeepGenetic(DeepRuleLearner):
         self.seeds = list(seeds)
 
     def _fit_weights(self, data, labels, X, targets, shapes, start, sample_weight, rng):
-        climber = DeepLocalSearch(moves=self.moves, max_flips=self.local_flips, first=self.first)
+        climber = DeepLocalSearch(moves=self.moves, max_flips=self.local_flips, first=self.first,
+                                  size_penalty=self.size_penalty)
         climber._tracker = self._tracker
         conflicts = climber._conflicts(data.spec)
         align_rows = (np.arange(len(X)) if len(X) <= self._ALIGN_ROWS
@@ -700,7 +791,7 @@ class DeepGenetic(DeepRuleLearner):
         n, batch = len(X), min(self.batch_size, len(X))
         for _ in range(self.generations):
             pop.sort(key=lambda ind: ind[1])
-            if pop[0][1][0] == 0:
+            if pop[0][1][0] == 0 and self.size_penalty is None:
                 break
             children = pop[:self.elite]
             while len(children) < self.population:
@@ -709,20 +800,22 @@ class DeepGenetic(DeepRuleLearner):
                 self._mutate(child, conflicts, rng)
                 if self.local_flips:
                     rows = rng.choice(n, batch, replace=False)
-                    climber._climb(child, X[rows], targets[:, rows], sample_weight[rows], conflicts)
+                    climber._climb(child, X[rows], targets[:, rows], sample_weight[rows], conflicts, penalize=False)
                 children.append(self._individual(child, X, targets, sample_weight))
             pop = children
         best = min(pop, key=lambda ind: ind[1])[0]
         if self.polish:
-            polisher = DeepLocalSearch(moves=self.moves, first=self.first)
+            polisher = DeepLocalSearch(moves=self.moves, first=self.first, size_penalty=self.size_penalty)
             polisher._tracker = self._tracker
-            polisher._climb(best, X, targets, sample_weight, conflicts, on_step=self._tracker.offer)
+            polisher._climb(best, X, targets, sample_weight, conflicts, on_step=self._offer)
         return best
 
     def _individual(self, weights, X, targets, sample_weight):
+        """`(weights, fitness)`: the fitness is (cost, size) -- the error
+        and the size without `size_penalty`."""
         error = self._error(weights, X, targets, sample_weight)
-        self._tracker.offer(weights, error)
-        return weights, (error, sum(int(w.sum()) for w in weights))
+        self._offer(weights, error)
+        return weights, (self._cost(error, weights), sum(int(w.sum()) for w in weights))
 
     def _select(self, pop, rng):
         picks = rng.choice(len(pop), size=min(self.tournament, len(pop)), replace=False)
@@ -880,7 +973,7 @@ class DeepSAT(DeepRuleLearner):
         random_state: Optional[int] = 0,
     ):
         super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
-                         target_class=target_class)
+                         target_class=target_class, size_penalty=size_penalty)
         self.init = init  # None: no start (the base class would put in a random one)
         if minimize not in self.MINIMIZE:
             raise ValueError(f"minimize must be one of {self.MINIMIZE}, got {minimize!r}")
@@ -890,12 +983,9 @@ class DeepSAT(DeepRuleLearner):
             raise ValueError(f"maxsat must be one of {self.MAXSAT}, got {maxsat!r}")
         self.minimize = minimize
         self.maxsat = maxsat
-        if size_penalty is not None and not size_penalty >= 0:
-            raise ValueError(f"size_penalty must be >= 0 (or None: an exact fit), got {size_penalty!r}")
         if size_penalty and minimize is None:
             raise ValueError("size_penalty > 0 needs minimize ('weights' or 'inputs'): the size it penalizes")
         self.conflicts = conflicts
-        self.size_penalty = size_penalty
         self.max_seconds = max_seconds
         self.max_conflicts = max_conflicts
         self.solver = solver
@@ -1227,6 +1317,178 @@ class DeepSAT(DeepRuleLearner):
             if abs(lit) <= pool.top:
                 out[abs(lit) - 1] = lit
         return out
+
+
+class DeepNeuroFuzzy(DeepRuleLearner):
+    """The weights of a `DeepModel` by gradient descent on a fuzzy
+    relaxation, after Wang et al.'s multilayer logical perceptron with
+    random binarization ("Transparent classification with multilayer
+    logical perceptrons and random binarization", AAAI 2020). The weights
+    are continuous in [0, 1] during training, and the nodes compute
+    differentiable versions of AND and OR over inputs in [0, 1]:
+
+    - AND: ``prod_j (1 - w_j * (1 - x_j))`` -- an input with weight 1 must
+      be true, one with weight 0 doesn't matter;
+    - OR: ``1 - prod_j (1 - w_j * x_j)``.
+
+    Trained on mini-batches (`batch_size`, `epochs`; Adam with
+    `learning_rate`) against the targets with `loss` (``"mse"``, the
+    paper's, or ``"log"``, cross-entropy), averaged, plus `l2` times the
+    sum of the squared weights, which pushes unneeded edges to 0; after
+    each step the weights are clipped to [0, 1]. With `size_penalty`
+    (lambda) the loss is summed over the training set instead (the
+    batch's mean scaled up) and lambda times the sum of the weights is
+    added (L1): for 0/1 outputs and weights, with MSE, exactly the errors
+    plus lambda per edge -- the other deep learners' objective. Random binarization: in every step a
+    random share `binarization_rate` of the weights is replaced by its 0/1
+    value (``w > 0.5``), so the network learns to work with the discrete
+    weights it will end with; with `straight_through` (default) the
+    gradient computed with the 0/1 value still updates the continuous
+    weight (the straight-through estimator), without it those weights stay
+    as they are for the step -- then, from the paper's small start, an OR
+    layer's weights hardly ever get above 0.5 (on tic-tac-toe: an empty
+    network). After every epoch the
+    weights are thresholded at 0.5, and the best of these networks on the
+    training set (fewest errors, then fewest edges; with `size_penalty`
+    the lowest cost) is the result -- with
+    `trace` each new best is a `TracePoint` (effort: rows through the
+    network, forward and backward).
+
+    The start: by default the paper's, uniform in ``[0, init_scale]``;
+    with `init` (e.g. `RuleSetInit(Pypper())`) its 0/1 network, an edge
+    as `init_high`, no edge as uniform in ``[0, init_scale]``. The
+    products run in log space, each factor at least `eps`. Our version
+    keeps `DeepModel`'s structure -- one type per layer, alternating --
+    where the paper's layers also put AND and OR nodes side by side. The
+    `DataSpec`'s constraints are not used."""
+
+    LOSSES = ("mse", "log")
+
+    def __init__(
+        self,
+        layers: Optional[Sequence[int]] = None,
+        epochs: int = 100,
+        batch_size: int = 64,
+        learning_rate: float = 0.01,
+        l2: float = 1e-4,
+        binarization_rate: float = 0.75,
+        straight_through: bool = True,
+        loss: str = "mse",
+        init_scale: float = 0.1,
+        init_high: float = 0.9,
+        eps: float = 1e-6,
+        init: Optional[DeepInit] = None,
+        first: str = "and",
+        target_class: Optional[Any] = None,
+        size_penalty: Optional[float] = None,
+        trace: bool = False,
+        random_state: Optional[int] = 0,
+    ):
+        super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
+                         target_class=target_class, size_penalty=size_penalty)
+        self.init = init  # None: the paper's random start (the base class would put in RandomInit)
+        if loss not in self.LOSSES:
+            raise ValueError(f"loss must be one of {self.LOSSES}, got {loss!r}")
+        if not 0 <= binarization_rate <= 1:
+            raise ValueError(f"binarization_rate must be in [0, 1], got {binarization_rate!r}")
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.l2 = l2
+        self.binarization_rate = binarization_rate
+        self.straight_through = straight_through
+        self.loss = loss
+        self.init_scale = init_scale
+        self.init_high = init_high
+        self.eps = eps
+
+    def _initialize(self, data, labels, shapes, rng):
+        if self.init is None:
+            return [np.zeros(shape, dtype=bool) for shape in shapes]
+        return self.init.weights(data, labels, shapes, rng, self.first)
+
+    def _fit_weights(self, data, labels, X, targets, shapes, start, sample_weight, rng):
+        W = [np.where(s, self.init_high, rng.uniform(0, self.init_scale, s.shape)) if self.init is not None
+             else rng.uniform(0, self.init_scale, s.shape) for s in start]
+        adam_m = [np.zeros_like(w) for w in W]
+        adam_v = [np.zeros_like(w) for w in W]
+        beta1, beta2, step = 0.9, 0.999, 0
+        Xf = X.astype(float)
+        T = targets.T.astype(float)  # rows x outputs
+        sw = sample_weight / sample_weight.mean()
+        n = X.shape[0]
+        best, best_key = None, None
+        for _ in range(self.epochs):
+            order = rng.permutation(n)
+            for b in range(0, n, self.batch_size):
+                rows = order[b:b + self.batch_size]
+                fixed = [rng.random(w.shape) < self.binarization_rate for w in W]
+                used = [np.where(f, (w > 0.5).astype(float), w) for w, f in zip(W, fixed)]
+                grads = self._gradients(used, Xf[rows], T[rows], sw[rows])
+                step += 1
+                for l, (w, g, f) in enumerate(zip(W, grads, fixed)):
+                    frozen = f if not self.straight_through else np.zeros_like(f)
+                    if self.size_penalty is not None:
+                        # the loss summed over the training set (the batch's mean, scaled up), plus
+                        # lambda per unit of weight: at 0/1 the errors plus lambda per edge
+                        g = g * T.shape[1] * n + self.size_penalty
+                    g = np.where(frozen, 0.0, g + 2 * self.l2 * w)
+                    adam_m[l] = beta1 * adam_m[l] + (1 - beta1) * g
+                    adam_v[l] = beta2 * adam_v[l] + (1 - beta2) * g * g
+                    m_hat = adam_m[l] / (1 - beta1 ** step)
+                    v_hat = adam_v[l] / (1 - beta2 ** step)
+                    w -= np.where(frozen, 0.0, self.learning_rate * m_hat / (np.sqrt(v_hat) + 1e-8))
+                    np.clip(w, 0.0, 1.0, out=w)
+            self._tracker.count(2 * n)  # every row forward and backward
+            crisp = pruned_weights([w > 0.5 for w in W])
+            error = self._error(crisp, X, targets, sample_weight)
+            size = int(sum(c.sum() for c in crisp))
+            if self.size_penalty is None:
+                self._tracker.offer(crisp, error, size)
+            else:
+                self._offer(crisp, error)
+            if best_key is None or (self._cost(error, crisp), size) < best_key:
+                best, best_key = crisp, (self._cost(error, crisp), size)
+        self.fuzzy_weights_ = [w.copy() for w in W]  # the continuous weights at the end, for inspection
+        return best
+
+    def _gradients(self, W, X, T, sw) -> List[np.ndarray]:
+        """The loss's gradient for each weight matrix, on one batch."""
+        eps = self.eps
+        values, caches = [X], []
+        for l, w in enumerate(W):
+            h = values[-1]
+            if _is_and(l, self.first):
+                factors = np.maximum(1.0 - w[None] * (1.0 - h[:, None, :]), eps)  # batch x out x in
+                prod = np.exp(np.log(factors).sum(axis=2))
+                out = prod
+            else:
+                factors = np.maximum(1.0 - w[None] * h[:, None, :], eps)
+                prod = np.exp(np.log(factors).sum(axis=2))
+                out = 1.0 - prod
+            caches.append((factors, prod))
+            values.append(out)
+        o = np.clip(values[-1], eps, 1 - eps)
+        if self.loss == "mse":
+            g = 2 * (o - T) / T.size
+        else:
+            g = (o - T) / (o * (1 - o)) / T.size
+        g = g * sw[:, None]
+        grads: List[np.ndarray] = [np.zeros(0)] * len(W)
+        for l in range(len(W) - 1, -1, -1):
+            w, h = W[l], values[l]
+            factors, prod = caches[l]
+            if _is_and(l, self.first):
+                # d out / d factor_j = prod / factor_j; d factor / dw = -(1 - h), d factor / dh = w
+                share = (g * prod)[:, :, None] / factors
+                grads[l] = -(share * (1.0 - h[:, None, :])).sum(axis=0)
+                g = (share * w[None]).sum(axis=1)
+            else:
+                # out = 1 - prod: d out / d factor_j = -prod / factor_j; d factor / dw = -h, d factor / dh = -w
+                share = (g * prod)[:, :, None] / factors
+                grads[l] = (share * h[:, None, :]).sum(axis=0)
+                g = (share * w[None]).sum(axis=1)
+        return grads
 
 
 class _VariablePool:

@@ -66,6 +66,18 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   reads a relational feature's value from its column (it raised
   `NotImplementedError` before); `DataSpecBuilder.add_relational(...,
   negation=True)` adds ``not {name}`` (off by default).
+- `DeepNeuroFuzzy`: the weights by gradient descent on a fuzzy
+  relaxation (Wang et al., AAAI 2020): continuous weights in [0, 1],
+  product AND/OR nodes, Adam on mini-batches, MSE or log loss, an L2
+  penalty, random binarization (by default with the straight-through
+  estimator), the weights thresholded at 0.5 after every epoch and the
+  best network kept; anytime with a trace, `init` as a start. numpy only.
+- `size_penalty` (lambda) on all four deep learners, one objective:
+  training errors + lambda per edge of the backbone (dead edges free).
+  Local search and the GA apply it on the whole training set (best
+  network, fitness, final climb), not on mini-batches; `DeepNeuroFuzzy`
+  as an L1 term on a summed loss; `DeepSAT` as before (soft examples).
+  `None` (default) leaves the learners as they were.
 - `target_class` on the deep learners: the class the output node learns
   (the most frequent other class the default); without it, as before,
   the less frequent of two classes, or one output per class. On Beck's

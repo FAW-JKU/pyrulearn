@@ -7,7 +7,8 @@ import pytest
 from pyrulearn.data import DataSpec, DataSpecBuilder, HorizontalBitmapRepresentation, SparseDataRepresentation
 from pyrulearn.data.io import build_dataspec, encode
 from pyrulearn.learners.deep import (
-    DeepGenetic, DeepLocalSearch, DeepSAT, ModelInit, RandomInit, RuleSetInit, contradictions, nnf_forward,
+    DeepGenetic, DeepLocalSearch, DeepNeuroFuzzy, DeepSAT, ModelInit, RandomInit, RuleSetInit, contradictions,
+    nnf_forward,
 )
 from pyrulearn.models import ConceptModel, DeepModel
 from pyrulearn.rule import Rule
@@ -414,3 +415,75 @@ def test_maxsat_start_counts_only_its_backbone():
                 init=ModelInit(start)).fit(DATA)
     assert m.trace[0].evaluations == 0 and m.trace[0].size == 17  # not 24: the filler's edges are dropped
     assert m.n_edges == 17 and (m.predict(DATA) == DATA.y).all()
+
+
+@pytest.mark.parametrize("first", ["and", "or"])
+@pytest.mark.parametrize("loss", ["mse", "log"])
+def test_neuro_fuzzy_gradients_match_finite_differences(first, loss):
+    rng = np.random.default_rng(0)
+    nf = DeepNeuroFuzzy(first=first, loss=loss)
+    W = [rng.uniform(0.05, 0.95, s) for s in [(4, 6), (3, 4), (1, 3)]]
+    Xf = (rng.random((10, 6)) < 0.5).astype(float)
+    T = (rng.random((10, 1)) < 0.5).astype(float)
+
+    def total_loss(W):
+        h = Xf
+        for l, w in enumerate(W):
+            is_and = (l % 2 == 0) == (first == "and")
+            f = 1 - w[None] * ((1 - h[:, None, :]) if is_and else h[:, None, :])
+            p = np.prod(np.maximum(f, 1e-6), axis=2)
+            h = p if is_and else 1 - p
+        o = np.clip(h, 1e-6, 1 - 1e-6)
+        return ((o - T) ** 2).mean() if loss == "mse" else (-(T * np.log(o) + (1 - T) * np.log(1 - o))).mean()
+
+    grads = nf._gradients(W, Xf, T, np.ones(10))
+    for l in range(3):
+        for idx in np.ndindex(*W[l].shape):
+            up = [w.copy() for w in W]
+            down = [w.copy() for w in W]
+            up[l][idx] += 1e-6
+            down[l][idx] -= 1e-6
+            assert grads[l][idx] == pytest.approx((total_loss(up) - total_loss(down)) / 2e-6, abs=1e-7)
+
+
+def test_neuro_fuzzy_learns_the_formulas():
+    y = np.where(a & (b | c), "pos", "neg")
+    data = HorizontalBitmapRepresentation(SPEC, X, y)
+    m = DeepNeuroFuzzy(layers=[2], trace=True).fit(data)
+    assert (m.predict(data) == y).all() and m.pruned().n_edges == 6  # a & b, a & c
+    errors = [p.train_error for p in m.trace]
+    assert errors == sorted(errors, reverse=True) and errors[-1] == 0
+    # deeper: more steps on 128 rows
+    m = DeepNeuroFuzzy(layers=[6, 3, 1], epochs=300, batch_size=16).fit(DATA)
+    assert (m.predict(DATA) == DATA.y).mean() >= 0.98
+    again = DeepNeuroFuzzy(layers=[6, 3, 1], epochs=300, batch_size=16).fit(DATA)
+    assert all((w == v).all() for w, v in zip(m.weights, again.weights))  # reproducible
+
+
+def test_neuro_fuzzy_starts_from_init():
+    start = DeepModel(SPEC, ["pos"], weights=_seip_weights())
+    m = DeepNeuroFuzzy(layers=[6, 3, 1], epochs=5, init=ModelInit(start)).fit(DATA)
+    assert (m.predict(DATA) == DATA.y).all()  # the start's edges begin above 0.5: exact from the first epoch
+    with pytest.raises(ValueError, match="loss"):
+        DeepNeuroFuzzy(loss="hinge")
+
+
+@pytest.mark.parametrize("make, minimal", [
+    (lambda lam: DeepLocalSearch(layers=[4], size_penalty=lam, trace=True), True),
+    (lambda lam: DeepGenetic(layers=[4], generations=5, size_penalty=lam, trace=True), True),
+    # the fuzzy network keeps redundant edges: in it they still lower the loss a little
+    (lambda lam: DeepNeuroFuzzy(layers=[4], size_penalty=lam, trace=True), False),
+])
+def test_size_penalty_trades_errors_for_edges(make, minimal):
+    y = np.where(a & (b | c), "pos", "neg")  # 48 positives; a & b, a & c: 6 edges
+    data = HorizontalBitmapRepresentation(SPEC, X, y)
+    small = make(0.01).fit(data)
+    assert (small.predict(data) == y).all()
+    if minimal:
+        assert small.pruned().n_edges == 6  # the exact DNF, nothing extra
+    costs = [p.train_error + 0.01 * p.size for p in small.trace]
+    assert costs == sorted(costs, reverse=True)  # each trace point cheaper
+    big = make(100.0).fit(data)
+    assert big.pruned().n_edges == 0  # an edge costs more than all the errors together
+    with pytest.raises(ValueError, match="size_penalty"):
+        make(-1.0)
