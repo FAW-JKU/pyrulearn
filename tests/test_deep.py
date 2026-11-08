@@ -402,3 +402,15 @@ def test_target_class_picks_the_output():
         assert learner.fit(data).outputs == ["neg"]
     with pytest.raises(ValueError, match="not a class"):
         DeepSAT(layers=[2], target_class="maybe").fit(data)
+
+
+def test_maxsat_start_counts_only_its_backbone():
+    pytest.importorskip("pysat")
+    w1, w2, w3, w4 = (np.array(w) for w in _seip_weights())
+    w1 = np.vstack([w1, np.ones((1, 7), dtype=int)])  # a seventh rule, all conditions, feeding nothing
+    w2 = np.hstack([w2, np.zeros((3, 1), dtype=int)])
+    start = DeepModel(SPEC, ["pos"], weights=[w1, w2, w3, w4])
+    m = DeepSAT(layers=[7, 3, 1], minimize="weights", size_penalty=0.1, max_conflicts=1000, trace=True,
+                init=ModelInit(start)).fit(DATA)
+    assert m.trace[0].evaluations == 0 and m.trace[0].size == 17  # not 24: the filler's edges are dropped
+    assert m.n_edges == 17 and (m.predict(DATA) == DATA.y).all()

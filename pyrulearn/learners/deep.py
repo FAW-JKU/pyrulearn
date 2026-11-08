@@ -87,6 +87,16 @@ class TracePoint(NamedTuple):
     size: Optional[int] = None
 
 
+def pruned_weights(weights: Sequence[np.ndarray]) -> List[np.ndarray]:
+    """The backbone of `weights` (as `DeepModel.pruned`): every edge into a
+    node the outputs don't depend on set to 0 -- the same function, no
+    more edges."""
+    used = [np.ones(weights[-1].shape[0], dtype=bool)]
+    for w in reversed(weights[1:]):
+        used.insert(0, w[used[0]].any(axis=0))
+    return [w & u[:, None] for w, u in zip(weights, used)]
+
+
 class _Tracker:
     """Counts a fit's effort and, with `keep`, records each new best."""
 
@@ -985,9 +995,10 @@ class DeepSAT(DeepRuleLearner):
 
     def _linear_search(self, pool, hard, edges, examples, shapes, report, start=None) -> List[np.ndarray]:
         """Linear search: ever cheaper networks, until none is left or the
-        time is up; the best found. A `start` network (soft examples only)
-        is the first solution: the solver tries its weights first (as
-        phases) and looks only for cheaper ones."""
+        time is up; the best found. Each network is pruned to its backbone
+        before its cost bounds the next step. A `start` network (soft
+        examples only), pruned too, is the first solution: the solver tries
+        its weights first (as phases) and looks only for cheaper ones."""
         from pysat.card import ITotalizer
         from pysat.solvers import Solver
 
@@ -1020,10 +1031,10 @@ class DeepSAT(DeepRuleLearner):
                 return True
 
             go = True
-            if start is not None:
-                best = [w.copy() for w in start]
+            if start is not None:  # its backbone: the same function, the cost of what is used
+                best = pruned_weights([np.asarray(w, dtype=bool) for w in start])
                 solver.set_phases([pool.weight(l, k, j) if w[k, j] else -pool.weight(l, k, j)
-                                   for l, w in enumerate(start) for k, j in np.ndindex(*w.shape)])
+                                   for l, w in enumerate(best) for k, j in np.ndindex(*w.shape)])
                 go = tighten(report(best))
             while go:
                 if deadline is not None and time.perf_counter() >= deadline:
@@ -1034,7 +1045,9 @@ class DeepSAT(DeepRuleLearner):
                 if not sat:  # None: a limit ran out; False: nothing cheaper, the last one is optimal
                     out_of_limits = sat is None
                     break
-                best = self._weights(solver.get_model(), pool, shapes)
+                # its backbone: dead edges count in the solver's size but change nothing, so the
+                # next bound starts from the edges in use
+                best = pruned_weights(self._weights(solver.get_model(), pool, shapes))
                 go = tighten(report(best))
         for totalizer in totalizers.values():
             totalizer.delete()

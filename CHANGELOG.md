@@ -48,7 +48,10 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   lambda * size` (a regularized loss; anytime from the first solver call,
   for the linear search by a second totalizer over the errors; integer
   costs for the solvers); `None` (default) is the exact fit. With soft
-  examples a given `init` is the linear search's first solution.
+  examples a given `init` is the linear search's first solution. The
+  linear search prunes every network to its backbone (`pruned_weights`)
+  before its cost bounds the next step, the start too: dead edges don't
+  count.
 - `target_class` on the deep learners: the class the output node learns
   (the most frequent other class the default); without it, as before,
   the less frequent of two classes, or one output per class. On Beck's
