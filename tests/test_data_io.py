@@ -77,11 +77,9 @@ def test_evaluate_feature():
     assert evaluate_feature(plain, float("nan")) is None
 
     expr = FeatureSpec(4, "income_gt_age", attributes=("income", "age"), op="expr", expression="income > age*1000")
-    try:
-        evaluate_feature(expr, 1)
-        assert False, "expected NotImplementedError"
-    except NotImplementedError:
-        pass
+    # a relational feature's column holds its precomputed value
+    assert evaluate_feature(expr, True) is True and evaluate_feature(expr, 0) is False
+    assert evaluate_feature(expr, None) is None
 
 
 def test_read_csv_infer():
@@ -548,3 +546,12 @@ def test_read_arff_treats_question_mark_as_missing_and_uses_the_header_domain():
     assert row["sex=male"] == 0 and row["sex=female"] == 0
     row = dict(zip(ds.feature_names, rep.X[2].astype(int)))  # c missing: no c feature holds
     assert all(v == 0 for n, v in row.items() if n.startswith("c"))
+
+
+def test_bool_columns_are_boolean_attributes():
+    df = pd.DataFrame({"a": [True, False, True], "c": ["x", "y", "x"], "y": ["p", "n", "p"]})
+    spec = build_dataspec(df, target="y").build()
+    assert spec.feature_names == ["a", "not a", "c=x", "c=y"]
+    X = np.asarray(encode(spec, df, df["y"].to_numpy()).X)
+    assert X[:, :2].astype(int).tolist() == [[1, 0], [0, 1], [1, 0]]
+    assert build_dataspec(df, target="y", include_negations=False).build().feature_names[:1] == ["a"]

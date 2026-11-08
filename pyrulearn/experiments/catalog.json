@@ -76,6 +76,386 @@
    "missing_rate": 1.0
   },
   {
+   "name": "artificial-nnf-107",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/107.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 107: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.6172,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-112",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/112.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 112: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.7549,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-118",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/118.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 118: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.5957,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-16",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/16.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 16: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.7959,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-19",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/19.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 19: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.6562,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-24",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/24.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 24: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.584,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-36",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/36.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 36: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.6943,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-44",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/44.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 44: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.7939,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-5",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/5.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 5: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.5547,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-53",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/53.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 53: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.6055,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-57",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/57.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 57: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.7705,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-60",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/60.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 60: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.7715,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-65",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/65.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 65: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.5312,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-68",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/68.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 68: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.5654,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-69",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/69.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 69: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.6924,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-70",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/70.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 70: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.6338,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-81",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/81.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 81: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.5684,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-82",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/82.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 82: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.7188,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-85",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/85.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 85: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.5312,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "artificial-nnf-89",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/89.csv",
+   "target": "class",
+   "tags": [
+    "deep",
+    "artificial"
+   ],
+   "notes": "Beck & Fürnkranz (2021), seed 89: all 1,024 combinations of ten Boolean features, labeled by a randomly generated deep NNF. Also used by Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1024,
+   "n_features": 10,
+   "n_numeric": 0,
+   "n_nominal": 10,
+   "n_classes": 2,
+   "majority_rate": 0.6084,
+   "missing_rate": 0.0
+  },
+  {
    "name": "audiology",
    "openml_id": 7,
    "tags": [
@@ -245,6 +625,25 @@
    "n_numeric": 0,
    "n_nominal": 6,
    "n_classes": 4,
+   "majority_rate": 0.7002,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "car-binary",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/car-evaluation-binary.csv",
+   "target": "class",
+   "tags": [
+    "deep"
+   ],
+   "uci": "https://archive.ics.uci.edu/dataset/19/car+evaluation",
+   "notes": "car with its most frequent class (unacc) against the other three (acc), as in Beck & Fürnkranz (2021) and Seip et al.",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 1728,
+   "n_features": 6,
+   "n_numeric": 0,
+   "n_nominal": 6,
+   "n_classes": 2,
    "majority_rate": 0.7002,
    "missing_rate": 0.0
   },
@@ -430,6 +829,25 @@
    "n_nominal": 42,
    "n_classes": 3,
    "majority_rate": 0.6583,
+   "missing_rate": 0.0
+  },
+  {
+   "name": "connect-4-binary",
+   "csv_url": "https://raw.githubusercontent.com/f-beck/scikit-learn-rule-network/11d822230f6fade7b532d833675a9af8b1f72812/sklrules/tests/data/connect-4-binary.csv",
+   "target": "class",
+   "tags": [
+    "deep"
+   ],
+   "uci": "https://archive.ics.uci.edu/dataset/26/connect+4",
+   "notes": "connect-4 without the draws (61,108 of 67,557 positions), as in Beck & Fürnkranz (2021).",
+   "original_url": "https://github.com/f-beck/scikit-learn-rule-network",
+   "license": "BSD-3-Clause",
+   "n_instances": 61108,
+   "n_features": 42,
+   "n_numeric": 0,
+   "n_nominal": 42,
+   "n_classes": 2,
+   "majority_rate": 0.7278,
    "missing_rate": 0.0
   },
   {
@@ -1012,7 +1430,8 @@
    "tags": [
     "classic",
     "lord",
-    "cc18"
+    "cc18",
+    "deep"
    ],
    "openml_name": "kr-vs-kp",
    "openml_version": 1,
@@ -1230,7 +1649,8 @@
    "name": "monks-problems-1",
    "openml_id": 333,
    "tags": [
-    "classic"
+    "classic",
+    "deep"
    ],
    "openml_name": "monks-problems-1",
    "openml_version": 1,
@@ -1248,7 +1668,8 @@
    "name": "monks-problems-2",
    "openml_id": 334,
    "tags": [
-    "classic"
+    "classic",
+    "deep"
    ],
    "openml_name": "monks-problems-2",
    "openml_version": 1,
@@ -1266,7 +1687,8 @@
    "name": "monks-problems-3",
    "openml_id": 335,
    "tags": [
-    "classic"
+    "classic",
+    "deep"
    ],
    "openml_name": "monks-problems-3",
    "openml_version": 1,
@@ -1286,7 +1708,8 @@
    "tags": [
     "classic",
     "lord",
-    "xai"
+    "xai",
+    "deep"
    ],
    "openml_name": "mushroom",
    "openml_version": 1,
@@ -1782,7 +2205,8 @@
    "tags": [
     "classic",
     "lord",
-    "cc18"
+    "cc18",
+    "deep"
    ],
    "openml_name": "tic-tac-toe",
    "openml_version": 1,
@@ -1846,7 +2270,8 @@
    "openml_id": 56,
    "tags": [
     "classic",
-    "lord"
+    "lord",
+    "deep"
    ],
    "openml_name": "vote",
    "openml_version": 1,

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyrulearn"
-version = "0.5.2"
+version = "0.6.0"
 description = "Representing, learning, combining and analyzing propositional rule models: native rule learners (separate-and-conquer, Pypper, CBA, CMAR, IDS, ...) and interfaces to external ones."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -32,6 +32,7 @@ imodels = ["imodels"]                      # interfaces.imodels: Bayesian rule l
 pyarc = ["pyarc"]                          # interfaces.pyarc: CBA (pyarc itself also needs Borgelt's `pyfim`, a C extension)
 boomer = ["mlrl-boomer"]                   # interfaces.boomer: BOOMER (pins scikit-learn)
 realkd = ["realkd"]                        # interfaces.realkd: optimal rule boosting (see README for Python 3.14)
+sat = ["python-sat"]                       # learners.deep.DeepSAT: SAT/MaxSAT-learned NNF networks
 notebook = ["jupyter", "nbconvert", "ipykernel"]  # regenerating tutorial/tutorial.ipynb/.pdf (PDF export also needs LaTeX + pandoc)
 test = ["pytest"]
 all = ["pandas", "scipy", "matplotlib", "networkx", "wittgenstein", "imodels", "pytest"]

@@ -31,7 +31,8 @@ decided when several rules apply:
 - `CompositeModel` (ABC) -- members that are themselves `RuleModel`s.
     - `EnsembleModel`   members combined by a flat (weighted) vote.
     - `PairwiseModel`   one binary member per label pair (round robin).
-    - `DeepModel`       members wired output-to-input (stacking) -- STUB.
+    - `DeepModel`       an NNF: AND nodes rule bodies, OR nodes concepts,
+                        concepts features for the later ones.
 - `SingleRule` -- one rule, wrapped so it carries stats and predicts.
 
 Cross-cutting mixins (traits, *not* hierarchy levels): `_FlatRules`
@@ -59,6 +60,7 @@ any data without storing anything.
 
 from __future__ import annotations
 
+import math
 from abc import ABC, abstractmethod
 from collections.abc import Sequence as _SequenceABC
 from itertools import chain
@@ -75,6 +77,7 @@ from .combiners import (
 )
 from .data import DataRepresentation
 from .data import DataSpec
+from .data.attributes import FeatureSpec
 from .rule import Rule, WeightedRule
 
 if TYPE_CHECKING:
@@ -648,8 +651,8 @@ class RuleModel(ABC):
 
     def __str__(self) -> str:
         """The full rendering, `to_string()` with its defaults -- what
-        `print(model)` shows. (A model without a `to_string`, such as the
-        `DeepModel` stub, falls back to its `repr`.)"""
+        `print(model)` shows. (A model without a `to_string` falls back
+        to its `repr`.)"""
         to_string = getattr(self, "to_string", None)
         return to_string() if callable(to_string) else repr(self)
 
@@ -2511,36 +2514,417 @@ class PairwiseModel(CompositeModel):
 
 
 class DeepModel(CompositeModel):
-    """Members wired into a dependency DAG -- some members consume other
-    members' predictions as extra input features ("stacking"). The
-    counterpart to `FlatRuleSet`.
+    """A formula in negation normal form: a fully connected network of
+    alternating AND and OR layers with 0/1 edge weights. The input layer
+    is the features of `input_spec`, the output layer has one node per
+    entry of `labels`; `layers` gives the sizes of the layers in between,
+    like a neural network's. `first` is the type of the layer above the
+    inputs (``"and"`` or ``"or"``), the others alternate from there, so
+    the output's type follows: with `first` ``"and"``, ``[32, 16, 10, 5,
+    2]`` is AND 32, OR 16, AND 10, OR 5, AND 2 and an OR output, ``[6, 6]``
+    AND, OR and an AND output, ``[]`` a single AND per output. By default
+    a single AND layer of ``ceil(sqrt(n))`` nodes for *n* input features:
+    a DNF, a rule set with up to that many rules (with `first` ``"or"``, a
+    CNF). The weights then start at 0 (no edges). `weights` sets them instead, one matrix per layer above
+    the inputs, the output layer's last; ``[i, j]`` is 1 iff node *i*
+    takes node *j* of the layer below as an input, and the architecture
+    follows from the shapes (checked against `layers` if both are given).
+    An AND node without inputs is true, an OR node without inputs false.
+    Negation
+    occurs only at the inputs (the data's own negation features, ``not
+    f``/``x != v``), so the network is in NNF by construction.
 
-    **STUB**: structure only. `dependencies` maps a member index to the
-    indices of the members feeding it; `predict` is not implemented --
-    the feature-augmentation plumbing (how an upstream prediction becomes
-    a downstream feature) is still to be designed."""
+    The weights are the model; its rules are a view of them, for printing
+    and export (`to_concepts`): every OR node is a concept -- a
+    `ConceptModel` with one rule per incoming edge, the inputs of the AND
+    node on that edge as its body (or the input feature, for an OR node
+    over the inputs) --, and so is an AND output, with one rule, its
+    inputs. A hidden AND node is a rule body only. A hidden concept is a
+    Boolean feature for the layers above it: the rules are defined over
+    `dataspec`, `input_spec` extended by one feature per hidden OR node
+    (`extended_spec`); the outputs feed nothing, so a label may also be a
+    feature's name. The hidden OR nodes of the *c*-th hidden OR layer are
+    named by `hidden_name` (*layer* is *c*, *node* counts from 1).
+
+    A row one output concept covers gets its label, a row several cover
+    is resolved by `combiner` over their covering rules (as in a
+    `ConceptSet`), a row none covers falls back to `default_prediction`.
+    """
 
     def __init__(
         self,
-        members: Sequence[RuleModel],
+        input_spec: DataSpec,
+        labels: Sequence[Any],
+        layers: Optional[Sequence[int]] = None,
         *,
-        dependencies: Optional[Dict[int, Sequence[int]]] = None,
+        weights: Optional[Sequence[Any]] = None,
         default_prediction: Any = None,
+        combiner: Optional[RuleCombiner] = None,
+        hidden_name: str = "h{layer}_{node}",
+        first: str = "and",
     ):
-        super().__init__(members, default_prediction=default_prediction)
-        self.dependencies: Dict[int, List[int]] = {
-            k: list(v) for k, v in (dependencies or {}).items()
-        }
+        RuleModel.__init__(self, default_prediction=default_prediction)
+        if first not in ("and", "or"):
+            raise ValueError(f"first must be 'and' or 'or', got {first!r}")
+        if weights is None:
+            if layers is None:
+                layers = [math.ceil(math.sqrt(input_spec.n_features))]
+            sizes = [input_spec.n_features] + [int(h) for h in layers] + [len(labels)]
+            weights = [np.zeros((above, below), dtype=bool) for below, above in zip(sizes, sizes[1:])]
+        else:
+            weights = [np.asarray(w) for w in weights]
+            if layers is not None and [w.shape[0] for w in weights[:-1]] != [int(h) for h in layers]:
+                raise ValueError(f"weights of hidden layers {[w.shape[0] for w in weights[:-1]]}, "
+                                 f"not {list(layers)}")
+        if not weights:
+            raise ValueError("a DeepModel needs at least its output layer")
+        width = input_spec.n_features
+        for w in weights:
+            if w.ndim != 2 or w.shape[1] != width:
+                raise ValueError(f"a layer over {width} nodes needs {width} columns, got shape {w.shape}")
+            if not np.isin(w, (0, 1)).all():
+                raise ValueError("edge weights are 0 or 1")
+            width = w.shape[0]
+        if width != len(labels):
+            raise ValueError(f"{len(labels)} labels for {width} output nodes")
+        self.input_spec = input_spec
+        self.first = first
+        self.weights: List[np.ndarray] = [w.astype(bool) for w in weights]
+        self.outputs: List[Any] = list(labels)
+        self.hidden_name = hidden_name
+        self.resolution = Combine(combiner)
+        self.dataspec = DeepModel.extended_spec(input_spec, self.hidden_concepts)
+        #: the learner's record of its run (`pyrulearn.learners.deep.TracePoint`s), if it kept one
+        self.trace: Optional[List[Any]] = None
+
+    @staticmethod
+    def extended_spec(input_spec: DataSpec, concept_labels: Sequence[Any]) -> DataSpec:
+        """`input_spec` with one more feature per concept, named by its
+        label, in order: the space a `DeepModel`'s rules are defined over."""
+        names = [str(c) for c in concept_labels]
+        clash = set(names) & set(input_spec.feature_names)
+        if clash:
+            raise ValueError(f"concept labels {sorted(clash)} clash with input features")
+        n_in = input_spec.n_features
+        return DataSpec(
+            input_spec.feature_names + names, name=input_spec.name,
+            feature_specs=list(input_spec.feature_specs) + [FeatureSpec(n_in + k, n) for k, n in enumerate(names)],
+            attributes=input_spec.attributes, constraints=input_spec.constraints,
+            missing_strategy=input_spec.missing_strategy,
+        )
+
+    @property
+    def layers(self) -> List[int]:
+        """The sizes of the hidden layers."""
+        return [w.shape[0] for w in self.weights[:-1]]
+
+    def is_and(self, layer: int) -> bool:
+        """Whether layer `layer` (0: the one above the inputs) is an AND layer."""
+        return (layer % 2 == 0) == (self.first == "and")
+
+    def _concept_layers(self) -> List[int]:
+        """The layers whose nodes are concepts: the OR layers and the output."""
+        last = len(self.weights) - 1
+        return [l for l in range(len(self.weights)) if not self.is_and(l) or l == last]
+
+    @property
+    def combiner(self) -> RuleCombiner:
+        return self.resolution.combiner  # type: ignore[attr-defined]
+
+    @combiner.setter
+    def combiner(self, value: RuleCombiner) -> None:
+        self.resolution = Combine(value)
+
+    def _concept_labels(self) -> List[Any]:
+        """The labels of all concepts, layer by layer: the hidden OR nodes,
+        then the outputs."""
+        names: List[Any] = []
+        for c, layer in enumerate(self._concept_layers()[:-1], start=1):
+            names += [self.hidden_name.format(layer=c, node=j + 1) for j in range(self.weights[layer].shape[0])]
+        return names + self.outputs
+
+    @property
+    def hidden_concepts(self) -> List[Any]:
+        """The labels of the hidden concepts (the OR nodes below the outputs)."""
+        return self._concept_labels()[:-len(self.outputs)]
+
+    @property
+    def labels(self) -> List[Any]:
+        labels = set(self.outputs)
+        dt = self._default_target()
+        if dt is not None:
+            labels.add(dt)
+        return sorted(labels, key=_sortkey)
+
+    # -- the rule view ------------------------------------------------
+
+    def _bodies(self) -> List[List[List[int]]]:
+        """Per concept, layer by layer, the body of each of its rules, as
+        `dataspec` feature indices: for an OR node, the inputs of the AND
+        node on each incoming edge (or the input feature on it); for an AND
+        output, its inputs."""
+        n_in = self.input_spec.n_features
+        last = len(self.weights) - 1
+        bodies: List[List[List[int]]] = []
+        # what each node of the layer below stands for: a feature or concept (an
+        # index), or, for a hidden AND node, its body (a list of indices)
+        below: List[Any] = list(range(n_in))
+        for l, w in enumerate(self.weights):
+            if self.is_and(l) and l != last:
+                below = [[below[j] for j in np.flatnonzero(row)] for row in w]
+                continue
+            first = n_in + len(bodies)
+            for row in w:
+                inputs = [below[j] for j in np.flatnonzero(row)]
+                if self.is_and(l):  # the AND output: one rule, its inputs
+                    bodies.append([inputs])
+                else:
+                    bodies.append([list(x) if isinstance(x, list) else [x] for x in inputs])
+            below = list(range(first, n_in + len(bodies)))
+        return bodies
+
+    def to_concepts(self, simplify: bool = True) -> List["ConceptModel"]:
+        """The rule view: one `ConceptModel` per concept (OR node, or AND
+        output), layer by layer, an OR node with one rule per incoming edge,
+        over `extended_spec` of the hidden concepts returned. `simplify` (the default) removes the
+        pass-through nodes, repeated until none is left:
+
+        - a hidden concept with a single rule is inlined: the bodies that
+          use it take that rule's conditions instead (an AND below an
+          AND); one without rules (false) removes the rules that use it;
+        - a rule whose body is a single hidden concept is replaced by that
+          concept's rules (an OR below an OR);
+
+        and hidden concepts no rule uses any more are dropped, as are a
+        concept's repeated bodies. The result may skip layers, so it is a
+        view only: the model keeps its weights. Without `simplify`, every
+        node is kept, used or not."""
+        n_in = self.input_spec.n_features
+        labels = self._concept_labels()
+        bodies = self._bodies()
+        n_hidden = len(labels) - len(self.outputs)
+        alive = [True] * len(labels)
+        if simplify:
+            def uses(body: List[int], k: int) -> bool:
+                return n_in + k in body
+
+            changed = True
+            while changed:
+                changed = False
+                for k in range(n_hidden):
+                    if not alive[k]:
+                        continue
+                    if len(bodies[k]) == 0:  # false: no body using it can hold
+                        for c in range(k + 1, len(labels)):
+                            kept = [b for b in bodies[c] if not uses(b, k)]
+                            changed |= len(kept) != len(bodies[c])
+                            bodies[c] = kept
+                    elif len(bodies[k]) == 1:
+                        for c in range(k + 1, len(labels)):
+                            for i, b in enumerate(bodies[c]):
+                                if uses(b, k):
+                                    at = b.index(n_in + k)
+                                    bodies[c][i] = list(dict.fromkeys(b[:at] + bodies[k][0] + b[at + 1:]))
+                                    changed = True
+                    else:
+                        for c in range(k + 1, len(labels)):
+                            if any(b == [n_in + k] for b in bodies[c]):
+                                new: List[List[int]] = []
+                                for b in bodies[c]:
+                                    new += [list(x) for x in bodies[k]] if b == [n_in + k] else [b]
+                                bodies[c] = new
+                                changed = True
+                used = {f - n_in for bs in bodies for b in bs for f in b if f >= n_in}
+                for k in range(n_hidden):
+                    if alive[k] and k not in used:
+                        alive[k] = False
+                        bodies[k] = []
+                        changed = True
+            for k in range(len(labels)):  # a body that came out twice (as a set) is the same rule
+                seen: set = set()
+                bodies[k] = [b for b in bodies[k] if not (frozenset(b) in seen or seen.add(frozenset(b)))]
+        keep = [k for k in range(len(labels)) if alive[k]]
+        kept_hidden = [k for k in keep if k < n_hidden]
+        new_index = {n_in + k: n_in + i for i, k in enumerate(kept_hidden)}
+        spec = (self.dataspec if len(kept_hidden) == n_hidden
+                else DeepModel.extended_spec(self.input_spec, [labels[k] for k in kept_hidden]))
+        return [ConceptModel([Rule([new_index.get(f, f) for f in b], target=labels[k], dataspec=spec)
+                              for b in bodies[k]], label=labels[k])
+                for k in keep]
+
+    @property
+    def members(self) -> List[RuleModel]:  # type: ignore[override]
+        """Every concept as a `ConceptModel`, unsimplified (`to_concepts`)."""
+        return self.to_concepts(simplify=False)
 
     def _with_members(self, members: Sequence[RuleModel]) -> "DeepModel":
-        return DeepModel(members, dependencies=self.dependencies,
-                         default_prediction=self._default_prediction)
+        raise TypeError("a DeepModel is its weights -- rebuild it from `weights`")
 
-    def predict(self, data: DataRepresentation) -> np.ndarray:
-        raise NotImplementedError(
-            "DeepModel.predict is not implemented yet -- the member-wiring / "
-            "feature-augmentation design is pending (this is a stub)."
-        )
+    def filter(self, target: Any) -> "DeepModel":
+        """Only the output concept `target` (the hidden ones stay, so it
+        still predicts as before)."""
+        keep = [k for k, o in enumerate(self.outputs) if o == target]
+        return _carry_provenance(self, DeepModel(
+            self.input_spec, [self.outputs[k] for k in keep],
+            weights=self.weights[:-1] + [self.weights[-1][keep]],
+            default_prediction=self._default_prediction, combiner=self.combiner, hidden_name=self.hidden_name,
+            first=self.first))
+
+    def remap(self, new_dataspec: DataSpec) -> "DeepModel":
+        """The same network over `new_dataspec`, the inputs matched by
+        name; an input the first layer uses must exist there."""
+        first = self.weights[0]
+        moved = np.zeros((first.shape[0], new_dataspec.n_features), dtype=bool)
+        for j, name in enumerate(self.input_spec.feature_names):
+            if first[:, j].any():
+                moved[:, new_dataspec.feature_index(name)] = first[:, j]
+        return _carry_provenance(self, DeepModel(
+            new_dataspec, self.outputs, weights=[moved] + self.weights[1:],
+            default_prediction=self._default_prediction, combiner=self.combiner, hidden_name=self.hidden_name,
+            first=self.first))
+
+    def trace_model(self, i: int) -> "DeepModel":
+        """The network of `trace[i]`, a point of the learner's run, as a
+        model with this one's outputs and default."""
+        if not self.trace:
+            raise ValueError("this model has no trace -- fit it with trace=True")
+        return DeepModel(self.input_spec, self.outputs, weights=self.trace[i].weights,
+                         default_prediction=self._default_prediction, combiner=self.combiner,
+                         hidden_name=self.hidden_name, first=self.first)
+
+    @property
+    def n_edges(self) -> int:
+        """The number of edges with weight 1."""
+        return sum(int(w.sum()) for w in self.weights)
+
+    def used_nodes(self) -> List[np.ndarray]:
+        """Per layer above the inputs, which nodes the outputs depend on: an
+        output always, a node below if it has an edge to a used node."""
+        used = [np.ones(self.weights[-1].shape[0], dtype=bool)]
+        for w in reversed(self.weights[1:]):
+            used.insert(0, w[used[0]].any(axis=0))
+        return used
+
+    def pruned(self) -> "DeepModel":
+        """The backbone: the same network with every edge into a node the
+        outputs don't depend on (`used_nodes`) set to 0. The layer sizes
+        stay; the predictions and the rule view stay the same."""
+        weights = [w & used[:, None] for w, used in zip(self.weights, self.used_nodes())]
+        return _carry_provenance(self, DeepModel(
+            self.input_spec, self.outputs, weights=weights,
+            default_prediction=self._default_prediction, combiner=self.combiner, hidden_name=self.hidden_name,
+            first=self.first))
+
+    # -- prediction ---------------------------------------------------
+
+    def _feature_values(self, data: DataRepresentation, features: Sequence[int]) -> Dict[int, np.ndarray]:
+        n_in = self.input_spec.n_features
+        return {j: data.coverage(Rule([j], n_features=n_in)) for j in features}
+
+    def node_values(self, data: DataRepresentation) -> List[np.ndarray]:
+        """The value of every node on `data`, one `(n_nodes, n_samples)`
+        bool array per layer: the first layer by coverage calls (one per
+        AND node, one per feature for an OR layer), the layers above it by
+        matrix products (an AND node holds where none of its inputs is
+        false, an OR node where one is true)."""
+        n_in = self.input_spec.n_features
+        if data.spec.n_features != n_in:
+            raise ValueError(f"data has {data.spec.n_features} features, the model's inputs {n_in}")
+        w0 = self.weights[0]
+        if not w0.shape[0]:
+            first = np.zeros((0, data.n_samples), dtype=bool)
+        elif self.is_and(0):
+            first = np.vstack([data.coverage(Rule(np.flatnonzero(row), n_features=n_in)) if row.any()
+                               else np.ones(data.n_samples, dtype=bool) for row in w0])
+        else:
+            fv = self._feature_values(data, np.flatnonzero(w0.any(axis=0)))
+            first = np.vstack([np.any([fv[j] for j in np.flatnonzero(row)], axis=0) if row.any()
+                               else np.zeros(data.n_samples, dtype=bool) for row in w0])
+        values = [first]
+        for i, w in enumerate(self.weights[1:], start=1):
+            below = values[-1]
+            if self.is_and(i):
+                values.append(w.astype(np.int32) @ (~below).astype(np.int32) == 0)
+            else:
+                values.append(w.astype(np.int32) @ below.astype(np.int32) > 0)
+        return values
+
+    def concept_values(self, data: DataRepresentation) -> np.ndarray:
+        """`(n_concepts, n_samples)` bool: every concept's value (the OR
+        nodes, and an AND output), aligned with `members` -- the hidden
+        concepts included."""
+        values = self.node_values(data)
+        return np.vstack([values[l] for l in self._concept_layers()])
+
+    def _rule_rows(self, values: List[np.ndarray], data: DataRepresentation, layers: Sequence[int]):
+        """The coverage of the rules of the concepts in `layers`, aligned
+        with their rules: an OR node's rule covers where its input on that
+        edge holds, an AND output's single rule where the output holds."""
+        rows = []
+        for l in layers:
+            w = self.weights[l]
+            if self.is_and(l):
+                rows += [values[l][k] for k in range(w.shape[0])]
+            elif l == 0:
+                fv = self._feature_values(data, np.flatnonzero(w.any(axis=0)))
+                rows += [fv[j] for row in w for j in np.flatnonzero(row)]
+            else:
+                rows += [values[l - 1][j] for row in w for j in np.flatnonzero(row)]
+        return rows
+
+    def coverage_matrix(self, data: DataRepresentation) -> np.ndarray:
+        """`(n_rules, n_samples)` bool, aligned with `rules` (unsimplified)."""
+        rows = self._rule_rows(self.node_values(data), data, self._concept_layers())
+        return np.vstack(rows) if rows else np.zeros((0, data.n_samples), dtype=bool)
+
+    def predict(self, data: DataRepresentation, combiner: Optional[RuleCombiner] = None) -> np.ndarray:
+        """`combiner`, if given, resolves rows several output concepts
+        cover for this call only (see `RuleSet.predict`)."""
+        values = self.node_values(data)
+        out = values[-1]
+        fired = out.sum(axis=0)
+        preds = np.empty(data.n_samples, dtype=object)
+        single = np.flatnonzero(fired == 1)
+        preds[single] = np.asarray(self.outputs, dtype=object)[out[:, single].argmax(axis=0)]
+        fallback = self._fallback(data)
+        for j in np.flatnonzero(fired == 0):
+            preds[j] = fallback(int(j))
+        conflicts = np.flatnonzero(fired > 1)
+        if conflicts.size:
+            strat = _resolve_combiner(self.combiner if combiner is None else combiner)
+            rules = [r for m in self.to_concepts(simplify=False)[-len(self.outputs):] for r in m.rules]
+            cover = np.vstack(self._rule_rows(values, data, [len(self.weights) - 1]))
+            for j in conflicts:
+                preds[j] = strat.resolve(rules, list(np.flatnonzero(cover[:, j])))
+        return preds
+
+    # -- printing -----------------------------------------------------
+
+    def to_string(
+        self, fmt: Optional[str] = None, ascii: bool = False, show_stats: bool = True,
+        show_resolution: bool = True, pretty: bool = False, simplify: bool = True,
+    ) -> str:
+        """The hidden concepts in order, each headed ``% concept: <label>``,
+        then the output concepts as a `ConceptSet` prints them (with the
+        default and the conflict resolution) -- `to_concepts(simplify)`,
+        by default without the pass-through nodes."""
+        concepts = self.to_concepts(simplify)
+        sections = []
+        for m in concepts:
+            if m.label not in self.outputs:
+                text = m.to_string(fmt=fmt, ascii=ascii, show_stats=show_stats,
+                                   show_resolution=False, pretty=pretty)
+                sections.append(text.replace("% class: ", "% concept: ", 1))
+        outputs = ConceptSet([m for m in concepts if m.label in self.outputs],
+                             default_prediction=self._default_prediction, combiner=self.combiner)
+        sections.append(outputs.to_string(fmt=fmt, ascii=ascii, show_stats=show_stats,
+                                          show_resolution=show_resolution, pretty=pretty))
+        return "\n\n".join(s for s in sections if s)
+
+    def __repr__(self) -> str:
+        first = "" if self.first == "and" else ", first OR"
+        return (f"DeepModel({self.input_spec.n_features} inputs, layers {self.layers}{first}, "
+                f"{len(self.outputs)} outputs)")
 
 
 # ------------------------------------------------------------------ converters ---

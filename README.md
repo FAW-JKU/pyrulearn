@@ -187,11 +187,12 @@ details.
 |---|---|
 | `combiners` | `RuleCombiner`: how a `RuleSet` resolves an example covered by several rules. List order, plain majority vote, heuristic-scored max or vote, and per-class-distribution combiners (`MacroVoteCombiner` reproduces scikit-learn's soft voting). |
 | `data` | Everything about data. **Four base representations**, all behind the same `coverage(rule)` / `features_of(row)` interface, so every rule learner runs on any of them and finds identical rules: `VerticalBitmapRepresentation` (one bit-vector per feature over the examples; the fastest for most native learners and as small as a bit matrix gets, so first in `REPRESENTATION_PREFERENCE_ORDER`, which decides what `data.io`'s loaders and `run_cv` build by default), `HorizontalBitmapRepresentation` (the same bits packed per example, the simplest to inspect directly), `SparseDataRepresentation` (scipy CSR/CSC, Eclat-style tid-lists) and `NListRepresentation` (the PPC-tree / N-list index of LORD, stored instead of the table; `PrePostNListRepresentation` is a variant). Submodules: `data.attributes` (typed attributes -- boolean, binary, nominal, numeric, set, hierarchical, relational -- and the derived Boolean features they generate, `color=red`, `age>=30`, ...; also the **constraints** among those features, `ExactlyOne`, `ThresholdChain`, `MutuallyExclusive`, `Implies`, which record what is impossible or already implied: rule search uses them to skip contradictory refinements and to drop features an added condition already determines, which **reduces the search space**, and they let a rule check its own consistency; plus `evaluate_feature` and `MissingStrategy`), `data.spec` (`DataSpec`, `DataSpecBuilder`, `merge_dataspecs`: the feature space, no data), `data.representation` (the representations above) `data.io` (ARFF/CSV reading and writing, `encode`/`binarize`, `build_dataspec`; needs `pandas`). |
+| `datasets` | Generated datasets, defined by a rule instead of downloaded: `krk_illegal(n, random_state)`, the KRK illegality task of the ILP literature (white king, white rook, black king, white to move; six nominal coordinates, ~1/3 illegal), and `KRKIllegal` -- the same as a dataset for `run_cv`. Learning it from the coordinates alone needs relations such as "same file" or "adjacent", the ILP systems' background knowledge, built from the features; `relations=True` adds that background knowledge as 24 relational features (`eq`, `adj`, `lt` of two pieces' files or ranks), which give an exact theory, and `coordinates=False` leaves out the coordinates. `parity(n_relevant, n_irrelevant, n, noise)`: the parity of a few relevant Boolean features among irrelevant ones (a flat DNF needs 2^(k-1) rules, a deep network small XOR/XNOR parts); `Parity` for `run_cv`. |
 | `evaluation` | Measured statistics (`RuleStats`, `ConfusionMatrix`, `ModelStats`), `sort_rules`, `summarize`, and coverage-space plotting (`CoverageSpace`, `coverage_space_plot`, `coverage_space_auc`, `rule_refinement_plot`, `build_refinement_graph`). |
 | `experiments` | Shared infrastructure for demos and other cross-validation-style experiments: `experiments.catalog` (the catalog of benchmark datasets, see *Benchmark datasets*), `experiments.runner` (`run_cv`: per-fold encoding into `representation=` (default: the preference order's first entry, `VerticalBitmapRepresentation`), a per-fit timeout via `TimeoutRunner`, uniform measurement, fold caching), `experiments.stats` (optional `mean_rank`, `friedman_test`, `critical_difference_diagram`, never run automatically) and `experiments.report` (small Markdown-writing building blocks). Needs `pandas`/`scipy`/`matplotlib` (the `experiments` extra). |
 | `heuristics` | `RuleHeuristic`: pluggable rule-evaluation heuristics (`Precision`, `Laplace`, `MEstimate`, `WRAcc`, `FoilGain`, `Correlation`, `Entropy`, `LikelihoodRatio`, ...), the composable `LEF`, and `plot_isometrics` for drawing a heuristic into a `CoverageSpace`. |
 | `interfaces` | Bringing external rule models in. `interfaces.base` has the shared `RuleImporter` machinery (`ObjectRuleImporter`, `StringRuleImporter`, the importer registry, `PatternStringImporter`); each external tool then has its own submodule, pairing an importer with a learner wrapper: `interfaces.sklearn` (decision trees, random forests, and `RuleSetClassifier`, which wraps any `RuleModel` as a scikit-learn estimator), `interfaces.wittgenstein` (IREP, RIPPER), `interfaces.imodels` (Bayesian rule lists and sets, RuleFit, Slipper), `interfaces.weka` (JRip, PART, J48), `interfaces.lord` (the reference LORD implementation), `interfaces.pyarc` (CBA), `interfaces.boomer` (BOOMER) and `interfaces.realkd` (optimal rule boosting). |
-| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
+| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), `learners.deep` (`DeepLocalSearch`, `DeepGenetic`, `DeepSAT`, `DeepNeuroFuzzy`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
 | `models` | The `RuleModel` hierarchy, organised by how a prediction is resolved: `RuleSet` (`FlatRuleSet`, `ConceptModel`, `ConceptSet`, `DisjointRuleSet`, and the memory-compact `PooledRuleSet` that `CARMiner` returns), `RuleList` (`DecisionList`, `ConceptCascade`), `CompositeModel` (`EnsembleModel`, `PairwiseModel`, `DeepModel`) and `SingleRule`. Also the `default_prediction` policy, per-model `stats`, `Provenance`, `annotate_rules`, and the model-to-model converters. |
 | `pruning` | `PrePruningCriterion`: one per-candidate test (`ThresholdPrePruning`, `EncodingLengthRestriction`, ...) that a search can use as a filter, as a stopping trigger, or that the covering loop can use as its stop condition. |
 | `rule` | `Rule`: a conjunction of Boolean literals, with optional condition order, several output formats and constraint-aware consistency checks. No dependencies beyond numpy. |
@@ -550,10 +551,14 @@ category) and takes each nominal attribute's values from the header's
 declared list, so an attribute declared with two values is binary even
 if only one of them occurs.
 
-Not yet handled: set-valued/hierarchical/relational attributes (ARFF/CSV
-headers can't declare them, so they're never inferred, and relational
-features can't be evaluated from raw data at all -- see
-`pyrulearn.data.attributes.evaluate_feature`).
+Not yet handled: set-valued/hierarchical attributes (ARFF/CSV headers
+can't declare them, so they're never inferred). Relational attributes
+can't be inferred either, but a frame can declare them:
+`df.attrs["relational"] = {column: {"sources": [...], "expression":
+"..."}}` makes each such precomputed Boolean column a RELATIONAL
+attribute in `build_dataspec` (with its negation), and `encode` reads
+its value from the column -- `pyrulearn.datasets.krk_illegal(...,
+relations=True)` is an example.
 
 ### Missing values
 
@@ -702,8 +707,25 @@ rules apply:
     first `n` members.
   - `PairwiseModel` -- round robin: one binary member per label pair,
     each voting for one of its two labels.
-  - `DeepModel` -- members wired into a dependency DAG ("stacking");
-    currently a stub, structure only, with no `predict` yet.
+  - `DeepModel(input_spec, labels, layers, first="and")` -- a formula in
+    negation normal form: a fully connected network of alternating AND and
+    OR layers with 0/1 edge weights. The inputs are the features, the
+    output layer has one node per label, `layers` are the sizes of the
+    layers in between, like a neural network's, any number of them;
+    `first` is the type of the layer above the inputs (`"and"` or `"or"`),
+    the others alternate, so the output's type follows (`[32, 16, 10, 5,
+    2]` from AND ends in an OR output, `[6, 6]` in an AND output; by
+    default one AND layer of `ceil(sqrt(n))` nodes for `n` features, a DNF,
+    or from OR a CNF); the weights start at 0, or come from `weights=`.
+    The weights are the model and predict by matrix products; its rules
+    are a view of them (`to_concepts()`): every OR node is a concept (a
+    `ConceptModel` with one rule per incoming edge -- the AND node on it,
+    or a single input literal), so is an AND output (one rule, its
+    inputs), a hidden AND node is a rule body, and a concept is a feature
+    for the layers above. By default the
+    view removes the pass-through nodes: a concept with a single rule is
+    inlined, a rule whose body is a single concept replaced by that
+    concept's rules.
 
 ### Printing a model
 
@@ -800,9 +822,12 @@ suppressing it for a genuine `DistributionCombiner`); `show_classes=True`/
 rule ends up showing a vector at all -- useful for naming a model's relevant
 classes as a label on its own.
 
-`EnsembleModel`/`PairwiseModel` also have `to_string` (`CompositeModel`'s
-other concrete subclass, `DeepModel`, doesn't -- it's a structure-only stub
-with no member-wiring semantics yet to print). Both render every member/pair
+`DeepModel.to_string` prints its hidden concepts, each headed
+`% concept: <label>`, then its output concepts as a `ConceptSet` prints them;
+by default without the pass-through nodes (`simplify=False` prints every
+node).
+
+`EnsembleModel`/`PairwiseModel` also have `to_string`. Both render every member/pair
 in turn plus a top-level `% classes: [...]` naming the model's own `labels`
 (from its own declared structure, not `data` -- see `_container_legend`).
 `EnsembleModel` headers each member `% member <k>`, with `(weight: ...)`
@@ -1730,6 +1755,136 @@ from pyrulearn.learners.seco import BeamSearch
 
 model = LRI(n_rules=50, max_terms=4).fit(train_rep)
 beam = LRI(n_rules=50, search=BeamSearch(beam_width=3, optimistic_pruning=False)).fit(train_rep)
+```
+
+**Deep rule networks.** `pyrulearn.learners.deep` learns `DeepModel`s:
+fully connected networks of alternating AND and OR layers with 0/1 edge
+weights over the data's features (see `DeepModel`). `layers` are the
+hidden layer sizes (by default one AND layer of `ceil(sqrt(n))` nodes,
+a DNF), `first` the type of the layer above the inputs (`"and"`, or
+`"or"`); the output layer has one node per class, or for two classes
+one for the less frequent class, the other the default -- or, with
+`target_class`, one for that class (the most frequent other class the
+default). Which class the output learns can matter a lot: a formula may
+have a small DNF where its negation has none (see the demo). A row several
+outputs cover gets the class with the most covering rules, a row none
+covers the most frequent class. The start is a component, `init=`
+(`DeepRuleLearner._initialize`, which a subclass may override):
+`RandomInit()` (random rules of about `avg_rule_length` conditions, none
+empty, none contradictory by the `DataSpec`'s constraints; several
+outputs divide the rules among them), `ModelInit(deep_model)` (another network's
+weights) or `RuleSetInit(rules)` (a rule set, or a learner fitted first:
+the network starts out as the rules' DNF per output, passed up through
+the layers). `DeepLocalSearch` is Beck & Fürnkranz's stochastic hill
+climbing: on mini-batches of `batch_size` (50) rows, the best single
+edge flip until none improves, `n_epochs` (5) passes, the best weights
+on the whole training set kept, then a last climb on all rows. A flip
+that adds a condition to a rule drops the conditions contradicting it by
+the `DataSpec`'s constraints (`moves="consistent"`, through
+`contradictions(spec)`: other values of a nominal attribute, a negation,
+contradicting thresholds; Beck's `moves="attribute"` drops the other
+values of its attribute). Beck's
+own setup is `moves="attribute", init=RandomInit(min_rule_length=0,
+consistent=False)`. The errors of all flips of a node are computed at
+once from the node's counts of true (OR) or false (AND) inputs.
+`DeepModel.pruned()` keeps the backbone: edges into nodes the outputs
+don't depend on are set to 0.
+
+`DeepGenetic` is a memetic algorithm on the same base: a population of
+starts (`init`, plus `seeds=`, e.g. `RuleSetInit(Pypper())`), tournament
+selection, the best kept (`elite`), and children made by crossover,
+mutation (`mutations` random flips on average) and a few hill-climbing
+steps (`local_flips` on a mini-batch); finally the best network is
+climbed on all rows. Crossover first aligns the parents: hidden nodes
+can be permuted without changing the network's function, so the second
+parent's nodes are matched to the first's, layer by layer, by their
+values on the training data (Hungarian method); the child then takes
+each node's incoming edges from either parent (`crossover="nodes"`), or
+one node of the second parent with its cone -- everything below it
+connected through edges of weight 1 -- and the rest from the first
+(`"subtree"`); `"mixed"` picks one per child, `"none"` copies the first
+parent (the control).
+
+Both are anytime algorithms. With `trace=True`, `model.trace` lists every
+new best network on the training set during the fit (`TracePoint`: the
+effort so far in candidate-rows -- one candidate network on one row, so
+local search and the GA, and batches of any size, compare --, the
+seconds, the training error, the weights), and `model.trace_model(i)`
+turns a point into a model, e.g. to measure the test accuracy along the
+run.
+
+`DeepSAT` fits the training data exactly by SAT solving (Seip, Fürnkranz
+et al.): the weights and, per training example, every node's value are
+Boolean variables, clauses tie each node to its inputs and each output
+to the label (the known inputs and labels as constants), solved through
+PySAT (`pip install python-sat`, the extra `sat`).
+`minimize="inputs"` or `"weights"` makes it MaxSAT: the fewest
+conditions, or the fewest edges -- the smallest network that still fits
+exactly. By default by linear search (`maxsat="linear"`): solve, demand a
+smaller network (an incremental totalizer, the bound as an assumption),
+repeat; an anytime algorithm whose every step is a smaller exact fit,
+recorded with `trace=True` and returned when `max_seconds` or
+`max_conflicts` (per solver call, the same result on every machine) runs
+out; `maxsat="rc2"` uses RC2, which only has a network at the optimum.
+Solvers: Glucose 4 by default (PySAT can interrupt it; CaDiCaL, the
+papers' solver, it can't), CaDiCaL for RC2. `constraints=True` (default)
+adds the `DataSpec`'s constraints as clauses on the first layer's weights
+-- no contradictory rules, no implied conditions.
+Identical rows are merged; rows with the same features and different
+labels keep the majority label (`conflicts="majority"`), since no network
+fits them otherwise; an architecture too small for the data raises
+`ValueError`. `size_penalty` (lambda) makes the examples soft: a
+misclassified example costs 1, an edge (or condition, by `minimize`)
+lambda, and MaxSAT minimizes `errors + lambda * size` -- a regularized
+loss (0-1 loss, L0 penalty), anytime from the first solver call, and no
+exact fit needed (conflicting rows simply cost an error); `None`, the
+default, is the exact fit. Then `init` (e.g. `RuleSetInit(Pypper())`)
+is the first solution: the search only looks for cheaper networks, so
+the result is never worse than the start.
+On the truth table of `(a | b) & (c | d) & (e | (f & g))`,
+the papers' architecture `[6, 6]` with MaxSAT gives exactly that formula,
+16 edges.
+
+`DeepNeuroFuzzy` learns the weights by gradient descent on a fuzzy
+relaxation (Wang et al., AAAI 2020: multilayer logical perceptrons with
+random binarization): during training the weights are continuous in
+[0, 1], an AND node computes `prod_j (1 - w_j (1 - x_j))`, an OR node `1 -
+prod_j (1 - w_j x_j)`; mini-batches, Adam, `loss="mse"` (the paper's) or
+`"log"`, an `l2` penalty that pushes unneeded edges to 0, the weights
+clipped to [0, 1]. Random binarization replaces a random share
+(`binarization_rate`, 0.75) of the weights by their 0/1 value in every
+step, so the network learns to live with the discrete weights it ends
+with; their gradient still updates the continuous weight
+(`straight_through`, default -- without it, from the paper's small
+start, an OR layer's weights hardly ever cross 0.5 and the network ends
+up empty). After every epoch the weights are thresholded at 0.5; the
+best of these networks on the training set is the result, and with
+`trace` each new best is a point of the anytime curve. `init` maps a 0/1
+start (e.g. `RuleSetInit(Pypper())`) to high and low weights. Our version
+keeps `DeepModel`'s alternating layers. Deeper networks on small data need
+more steps (`epochs`, `batch_size`).
+
+All four take `size_penalty` (lambda) with one meaning: the objective is
+the training error plus lambda per edge of the backbone (dead edges are
+free), so an edge has to be worth 1/lambda misclassified examples;
+`None` (default) minimizes the error alone. Local search and the genetic
+algorithm apply it where the whole training set is evaluated -- the best
+network, the fitness, the final climb -- not on mini-batches, where many
+conditions change nothing and the penalty would strip the rules;
+`DeepNeuroFuzzy` sums its loss over the training set and adds lambda
+times the sum of the weights (L1); `DeepSAT` minimizes it exactly with
+soft examples. `max_seconds` gives local search, the genetic algorithm
+and `DeepNeuroFuzzy` a time budget (DeepSAT has its own): the search ends
+with its best network when the time is up -- with unbounded epochs or
+generations, an anytime run judged by time.
+
+```python
+from pyrulearn.learners.deep import DeepLocalSearch, DeepNeuroFuzzy, DeepSAT, RuleSetInit
+from pyrulearn.learners.seco import Pypper
+
+model = DeepLocalSearch(layers=[32, 8, 2]).fit(train_rep)
+improved = DeepLocalSearch(layers=[32, 8, 2], init=RuleSetInit(Pypper())).fit(train_rep)
+print(model)  # the stacked rules, without pass-through nodes
 ```
 
 #### Boosting
@@ -2665,7 +2820,7 @@ Three categories are computed from each entry's statistics:
 | `size` | `small` (< 1,000 rows), `medium` (1,000-10,000), `large` (> 10,000) |
 | `attributes` | `categorical` (all attributes nominal), `numeric` (all numeric), `mixed` |
 
-`task` x `size` for the 100 loadable entries, for gauging how big a
+`task` x `size` for the 122 loadable entries, for gauging how big a
 `select(...)`/`.parse(...)` run is before starting it (a demo's default
 should stay small/medium -- see *Try it* below; `size="large"` climbs
 past 10,000 rows up to 581,012, so an `all` run is an overnight-on-a-
@@ -2674,17 +2829,24 @@ strong-machine job, not a quick one):
 | | binary | multiclass | total |
 |---|--:|--:|--:|
 | `small` (< 1,000 rows) | 25 | 17 | 42 |
-| `medium` (1,000-10,000) | 19 | 22 | 41 |
-| `large` (> 10,000) | 10 | 7 | 17 |
-| **total** | **54** | **46** | **100** |
+| `medium` (1,000-10,000) | 40 | 22 | 62 |
+| `large` (> 10,000) | 11 | 7 | 18 |
+| **total** | **76** | **46** | **122** |
 
 `tags` record where an entry comes from: `cc18` (the OpenML-CC18 benchmark
 suite, minus its 13 image/signal/text datasets with more than 200
 attributes), `lord` (the datasets of the LORD evaluation), `xai` (classic
 explainable-AI datasets: adult, COMPAS, German credit, HELOC, ...) and
 `classic` (traditional rule-learning benchmarks: vote, mushroom, soybean,
-the MONK's problems, promoters, kropt, ...). A few entries (e.g. SUSY, PAMAP2) are not on
-OpenML and are pointers only (`entry.loadable` is False).
+the MONK's problems, promoters, kropt, ...), `deep` (the datasets of the
+deep rule learning evaluations, Beck & Fürnkranz 2021 and Seip et al.: 20
+artificial truth tables of ten Boolean features labeled by a random deep
+NNF, the MONK's problems, tic-tac-toe, vote, kr-vs-kp, mushroom, and
+binary versions of car and connect-4) and `artificial` (generated data).
+Entries not on OpenML either read a CSV file (`csv_url`, downloaded once
+into the same data home; the `deep` datasets from Beck's repository,
+pinned to one commit) or are pointers only (e.g. SUSY, PAMAP2;
+`entry.loadable` is False).
 
 Entries also carry curated loading fixes: attribute names restored where
 the OpenML upload anonymized them (`V1`, `x1`, ...), identifier and
@@ -2877,7 +3039,7 @@ If you use pyrulearn, please cite it via [`CITATION.cff`](CITATION.cff)
   author  = {F{\"u}rnkranz, Johannes},
   title   = {pyrulearn},
   year    = {2026},
-  version = {0.5.2},
+  version = {0.6.0},
   url     = {https://github.com/juffif/pyrulearn}
 }
 ```

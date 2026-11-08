@@ -3,6 +3,119 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
+## 0.6.0 (2026-11-08)
+
+Deep Models: `DeepModel`, a rule network in negation normal form, and four
+learners for it -- `DeepLocalSearch`, `DeepGenetic`, `DeepSAT` and
+`DeepNeuroFuzzy` --, generated datasets (`pyrulearn.datasets`: KRK
+illegality, parity) and `demos/deep_rule_networks.py`.
+
+### Added
+
+- `DeepModel` is no longer a stub: a formula in negation normal form, a
+  fully connected network of alternating AND and OR layers with 0/1 edge
+  weights, `DeepModel(input_spec, labels, layers)` with the hidden layer
+  sizes like a neural network's (by default one AND layer of
+  `ceil(sqrt(n))` nodes for `n` features, a DNF) or `weights=`, instead of members and
+  `dependencies`. The weights are the model; `to_concepts()` reads them
+  as stacked rules -- every AND node a rule body, every OR node a concept
+  with one rule per incoming edge, a concept a feature for the layers
+  above -- by default without the pass-through nodes, as `to_string`
+  prints it. `node_values`/`concept_values(data)` give every node's
+  value, hidden ones included.
+- `pyrulearn.learners.deep`: `DeepLocalSearch` learns a `DeepModel` by
+  Beck & Fürnkranz's stochastic hill climbing (best single flip on
+  mini-batches, best weights kept), with flips that keep rules
+  consistent with the `DataSpec`'s constraints (`moves=`,
+  `contradictions`); on the shared base `DeepRuleLearner`
+  (architecture, targets, the start as a component: `RandomInit`,
+  `ModelInit`, `RuleSetInit` -- a rule set or a rule learner's rules as
+  the start network). `nnf_forward` evaluates weight matrices on a
+  Boolean matrix. `DeepModel.pruned()`, `used_nodes()`, `n_edges`.
+  `DeepGenetic`: a memetic algorithm -- crossover of networks aligned by
+  their nodes' values, mutation, a few hill-climbing steps per child; the
+  population can be seeded with rule learners' rules; `crossover=`
+  `"nodes"` (default), `"subtree"` (a node with its cone), `"mixed"`,
+  `"none"`.
+  `trace=True` on both: the model's `trace` lists every new best network
+  during the fit with its effort (candidate-rows), seconds and training
+  error (`TracePoint`), `DeepModel.trace_model(i)` the network of a point.
+- `DeepSAT`: the weights by SAT solving, an exact fit of the training
+  data (Seip, Fürnkranz et al.), with the known inputs and labels as
+  constants; `minimize="inputs"`/`"weights"` for MaxSAT, the fewest
+  conditions or edges -- by an anytime linear search with a trace
+  (`maxsat="linear"`, default; `max_seconds`, `max_conflicts`) or RC2.
+  `constraints=True`: the `DataSpec`'s constraints as clauses on the
+  weights. PySAT as the optional extra `sat`. Checked against the
+  authors' code (same satisfiability, same minimal size).
+  `TracePoint.size`: the size a learner minimizes.
+  `size_penalty` (lambda): soft examples -- MaxSAT minimizes `errors +
+  lambda * size` (a regularized loss; anytime from the first solver call,
+  for the linear search by a second totalizer over the errors; integer
+  costs for the solvers); `None` (default) is the exact fit. With soft
+  examples a given `init` is the linear search's first solution. The
+  linear search prunes every network to its backbone (`pruned_weights`)
+  before its cost bounds the next step, the start too: dead edges don't
+  count.
+- `pyrulearn.datasets`: generated datasets. `krk_illegal(n, random_state)`
+  -- the KRK illegality task (Muggleton et al. 1989): positions of white
+  king, white rook and black king, white to move, labeled illegal or
+  legal by the rules, `n` distinct ones drawn from all 8^6; the six
+  coordinates nominal. `KRKIllegal`: the same as a dataset for `run_cv`.
+  `relations=True`: the ILP background knowledge as 24 relational
+  features (`eq`, `adj`, `lt` of two pieces' files or ranks), with which
+  the task has an exact theory; `coordinates=False` keeps only those.
+- Relational attributes from data: a frame's `attrs["relational"]`
+  (`{column: {"sources", "expression"}}`) makes those precomputed Boolean
+  columns RELATIONAL attributes in `build_dataspec`; `evaluate_feature`
+  reads a relational feature's value from its column (it raised
+  `NotImplementedError` before); `DataSpecBuilder.add_relational(...,
+  negation=True)` adds ``not {name}`` (off by default).
+- `DeepNeuroFuzzy`: the weights by gradient descent on a fuzzy
+  relaxation (Wang et al., AAAI 2020): continuous weights in [0, 1],
+  product AND/OR nodes, Adam on mini-batches, MSE or log loss, an L2
+  penalty, random binarization (by default with the straight-through
+  estimator), the weights thresholded at 0.5 after every epoch and the
+  best network kept; anytime with a trace, `init` as a start. numpy only.
+- `size_penalty` (lambda) on all four deep learners, one objective:
+  training errors + lambda per edge of the backbone (dead edges free).
+  Local search and the GA apply it on the whole training set (best
+  network, fitness, final climb), not on mini-batches; `DeepNeuroFuzzy`
+  as an L1 term on a summed loss; `DeepSAT` as before (soft examples).
+  `None` (default) leaves the learners as they were.
+- `max_seconds` on `DeepLocalSearch`, `DeepGenetic`, `DeepNeuroFuzzy`: a
+  time budget for the fit, the best network so far when it is up.
+- `pyrulearn.datasets.parity(n_relevant, n_irrelevant, n, noise)` and
+  `Parity`: the parity of a few relevant Boolean features among
+  irrelevant ones (Pypper, 5-fold: 0.71 for 3 of 10, 0.62 for 4 of 10,
+  0.52 for 5 of 10).
+- `pyrulearn.datasets.parity_groups(n_groups, group_size, threshold,
+  n_irrelevant, n, noise)` and `ParityGroups`: at least `threshold` of
+  `n_groups` groups of Boolean features have odd parity -- hidden
+  concepts that pay off one by one, and a flat DNF much larger than the
+  deep network (2 of 4 groups of three: 96 rules of six conditions
+  against a network of 82 edges).
+- `target_class` on the deep learners: the class the output node learns
+  (the most frequent other class the default); without it, as before,
+  the less frequent of two classes, or one output per class. On Beck's
+  artificial datasets it decides everything: plain SAT on NNF(1) found an
+  exact fit for the formula's class in 0.4 s, and none in an hour for
+  its negation, the less frequent class there.
+- `DeepModel(first="and" | "or")` and any number of hidden layers: the
+  first layer's type, the others alternating, so the output can be an
+  AND (e.g. the papers' `[6, 6]`); an OR first layer gives CNFs. All the
+  deep learners take `first`.
+- Catalog: `CatalogEntry.csv_url`, a CSV file as a dataset's source,
+  downloaded once into the data home (`fetch_csv_frame`; filled in by
+  `tools/build_catalog.py` too). The tags `deep` and `artificial`: the
+  datasets of Beck & Fürnkranz (2021) and Seip et al. -- their 20
+  artificial datasets (`artificial-nnf-5`, ...), `car-binary` and
+  `connect-4-binary` from Beck's repository, and the MONK's problems,
+  tic-tac-toe, vote, kr-vs-kp and mushroom already in the catalog.
+- `build_dataspec`: a column of dtype `bool` is a Boolean attribute
+  (`x`, and `not x` with negations) instead of a binary nominal one
+  (`x=False`/`x=True`).
+
 ## 0.5.2 (2026-11-08)
 
 Isometrics in heatmap colors, and a leaner PrePost representation.

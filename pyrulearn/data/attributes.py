@@ -287,10 +287,10 @@ def evaluate_feature(spec: FeatureSpec, value: Any) -> Optional[bool]:
     ``"False"`` (truthy in Python) -- convert such columns to real
     booleans before calling this.
 
-    ``op == "expr"`` (relational features) has no stored evaluation rule,
-    only a display `expression` (see `DataSpecBuilder.add_relational`),
-    so it always raises `NotImplementedError` -- relational columns must
-    be precomputed and supplied directly.
+    ``op == "expr"`` (relational features) has no evaluation rule of its
+    own, only a display `expression` (see `DataSpecBuilder.add_relational`):
+    its column holds the precomputed truth value, which is coerced with
+    ``bool()`` like a plain Boolean feature's.
     """
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return None
@@ -313,11 +313,7 @@ def evaluate_feature(spec: FeatureSpec, value: Any) -> Optional[bool]:
     if spec.op == "has":
         return spec.value in value
     if spec.op == "expr":
-        raise NotImplementedError(
-            f"Relational feature {spec.name!r} has no stored evaluation rule "
-            "(only a display expression); its Boolean column must be "
-            "precomputed and supplied directly."
-        )
+        return bool(value)  # the column is the precomputed value
     raise ValueError(f"Unknown FeatureSpec op {spec.op!r}")
 
 

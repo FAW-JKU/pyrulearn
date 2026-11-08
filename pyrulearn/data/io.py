@@ -142,7 +142,15 @@ def build_dataspec(
     an ARFF header's value list), else the non-missing values observed
     in `df`. Exactly two values make it a BINARY attribute
     (`DataSpecBuilder.add_binary`: ``x=a``/``x=b``, each the other's
-    negation, no ``!=`` columns); otherwise it's NOMINAL.
+    negation, no ``!=`` columns); otherwise it's NOMINAL. A column of
+    dtype ``bool`` is a BOOLEAN attribute (`DataSpecBuilder.add_boolean`:
+    ``x``, and ``not x`` with negations). A column named in
+    ``df.attrs["relational"]`` (``{column: {"sources": [...],
+    "expression": "..."}}``, e.g. from `pyrulearn.datasets.krk_illegal`)
+    is a RELATIONAL attribute instead (`DataSpecBuilder.add_relational`,
+    negated like the others): a precomputed Boolean feature derived from
+    the `sources` columns. pandas keeps `attrs` through row selections,
+    so a cross-validation fold carries it.
 
     `include_negations` (default True) is the builder-wide default for
     whether each attribute also gets explicit negation features
@@ -161,14 +169,22 @@ def build_dataspec(
     builder = DataSpecBuilder(negation=include_negations)
     y = df[target].to_numpy() if target is not None else None
 
+    relational = df.attrs.get("relational", {})
     for col in df.columns:
         if col == target:
             continue
         declared = (arff_types or {}).get(col)
-        kind = declared if declared is not None else _infer_csv_column_type(df[col], max_ordinal_values)
         negation = overrides.get(col)
+        if col in relational:
+            rel = relational[col]
+            builder.add_relational(col, list(rel.get("sources", ())), expression=rel.get("expression"),
+                                   negation=include_negations if negation is None else negation)
+            continue
+        kind = declared if declared is not None else _infer_csv_column_type(df[col], max_ordinal_values)
 
-        if kind in ("nominal", "string"):
+        if declared is None and pd.api.types.is_bool_dtype(df[col]):
+            builder.add_boolean(col, negation=negation)
+        elif kind in ("nominal", "string"):
             declared_domain = (domains or {}).get(col)
             domain = (list(declared_domain) if declared_domain is not None
                       else sorted(df[col].dropna().unique().tolist()))

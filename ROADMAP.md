@@ -899,6 +899,194 @@ identical models). Sharing one `data` array between CSR and CSC (half
 the saving, no time cost) was left out: the two store the cells in
 different orders, so it only works while every value is `True`.
 
+## Deep rule networks: NNF networks and their learners
+
+**In progress (branch `deep-models`, from 2026-11-07).** Learning
+formulas in negation normal form as fully connected networks of
+alternating AND and OR layers with 0/1 edge weights (Beck & Fürnkranz
+2021, "An empirical investigation into deep and shallow rule learning";
+Seip et al., "Towards SAT-based learning of NNF networks", SYNASC 2025, and
+its unpublished long version for JAIR, with MaxSAT).
+
+Done:
+
+- `DeepModel` holds the weights (`layers` are the hidden sizes, like a
+  neural network's; default one AND layer of `ceil(sqrt(n))` nodes);
+  predicts by matrix products; its rules are a view for printing and
+  export (`to_concepts`): every AND node a rule body, every OR node a
+  concept with one rule per incoming edge, pass-through nodes removed.
+- The datasets of both papers in the catalog, tags `deep` and
+  `artificial`: Beck's 20 artificial truth tables and binary car and
+  connect-4, read from his repository (`csv_url`, pinned to a commit).
+- A `bool` column is a Boolean attribute (`x`, `not x`), so the
+  artificial data comes in both papers' encodings: with negations (the
+  SAT papers' 2d inputs) or without (Beck's).
+
+Next:
+
+- `DeepModel`: an AND node feeding several OR nodes as its own
+  intermediate concept in the rule view (the long paper's step iii).
+  (Done 2026-11-08: an AND output -- any number of hidden layers --, and
+  `first="or"`, a first OR layer.)
+- Three learners on a shared base (`DeepRuleLearner`):
+  - `DeepLocalSearch`: Beck's stochastic hill climbing (his code:
+    github.com/f-beck/scikit-learn-rule-network) -- per mini-batch of 50,
+    the best of all single flips until none improves, 5 epochs, the best
+    weights on the whole training set kept, attribute-aware flips in the
+    first layer. The first version (one random flip per step) is far
+    weaker than his published numbers and gets replaced.
+  - `DeepSAT` (done 2026-11-08): Seip et al.'s encoding through PySAT
+    (CaDiCaL), re-implemented with the known values as constants and
+    checked against their code; `minimize="inputs"`/`"weights"` for
+    MaxSAT, by an anytime linear search (default; trace, `max_seconds`,
+    `max_conflicts`) or RC2. Conflicting rows keep the majority label.
+    The `DataSpec`'s constraints as clauses on the weights
+    (`constraints=True`): consistent rules, but on a quick test
+    (tic-tac-toe, car-binary, monk-2, 20% training) neither faster nor
+    more accurate -- plain SAT returns an arbitrary exact fit, which
+    decides more. The linear search showed the Occam effect clearly:
+    tic-tac-toe, 20% training, NNF(1), fewest conditions -- 146
+    conditions test 0.68, 71 0.88, 45 0.96, 27 (after 15 s) 0.975, against
+    Pypper's 0.859 on that split. PySAT can interrupt Glucose, MiniSat and
+    MapleChrono but not CaDiCaL (both versions).
+    Open:
+    - KRK illegality as a test of hidden concepts (`pyrulearn.datasets`,
+      added 2026-11-08): the coordinates alone, so "same file", "same
+      rank", "adjacent" -- the ILP systems' background knowledge -- have
+      to appear as hidden nodes (an OR over eight ANDs `wrf=v & bkf=v`,
+      ...). Pypper, 1000 positions, 5-fold (majority 0.68): coordinates
+      0.792, coordinates + relations 0.998, relations alone 0.998
+      (`relations=True`, `coordinates=False`; the upper bound). Fossil
+      used KRK with training sets up to 1000 (and 2000). To look at: the learned interior nodes (`to_concepts()`), and wider
+      first layers than NNF(3)'s 32. kropt itself (28,056 positions, 18
+      classes) is out of reach for the full demo; a binary version on a
+      sample would be possible.
+    - The output's class (`target_class`, done 2026-11-08). The night
+      run (2026-11-08) had SAT time-outs on NNF(1) for six of the 20
+      artificial datasets, where the paper had one; the cause: our output
+      learned the less frequent class, the authors' always class 1 (the
+      formula's). On artificial-nnf-107, fold 1: drl 4 s for class 1,
+      still running after minutes for class 0; our DeepSAT 0.4 s (Glucose)
+      / 2.5 s (CaDiCaL) for class 1, nothing in an hour for class 0 --
+      with either solver. The demo now passes `target_class=True` in
+      part 1. Local search's weak NNF(1) (66% against SHS's 94%) has
+      another cause: on that fold 0.61 for class 1, 0.69 for class 0,
+      after 0.2 s -- it stops far too early on a flat network; open.
+    - Soft examples (done 2026-11-08, `size_penalty`): the objective
+      `errors + lambda * size`, a regularized loss (0-1 loss, L0
+      penalty); `None` is the exact fit. The linear search bounds it with
+      two totalizers (edges, errors) instead of a pseudo-Boolean encoding
+      (`pysat.pb` needs the extra `pindakaas`). Integer costs (lambda as
+      a fraction p/q): with float weights RC2 took 25 s instead of 0.01 s
+      on a small case -- 1 - 0.1 - 0.1 - ... never reaches 0 exactly, and
+      the remainders (~1e-16) stay soft clauses RC2 keeps finding cores
+      for; weights exact in binary (0.5, 0.125) were fast as floats. With
+      soft examples `init` is the first solution (phases, and only
+      cheaper networks wanted). Open: choosing lambda (by
+      cross-validation, or relative to the data size), `sample_weight` as
+      the examples' costs, and trying it on the demo's datasets -- noisy
+      ones in particular, and started from Pypper.
+    - Other objectives: distinct features used, rules used, costs per
+      layer.
+    - External MaxSAT solvers, like the Weka/LORD interfaces: write the
+      formula as a `.wcnf` file and run an anytime solver with a time
+      limit -- Loandra (core-boosted linear search), NuWLS or SATLike
+      (local search) -- reading its `o <cost>` lines as the trace and the
+      final `v` line as the weights. The strongest option for the larger
+      datasets; needs the clauses built faster (numpy, or streamed to
+      the file) than in Python lists.
+    - Starting `DeepSAT` from another learner's network (e.g.
+      `RuleSetInit(Pypper())`); `init` is ignored so far. As solver
+      phases: the solver tries each weight first with the start's value.
+      A first try (2026-11-08, tic-tac-toe, Glucose 4) gave exactly the
+      same search path as without -- possibly Glucose ignores PySAT's
+      phases, or the start's unconnected random filler rules (64
+      conditions where Pypper has 26) got in the way; to check. Not as
+      an upper bound: the start isn't an exact fit. With soft examples
+      (`size_penalty`) it is: done, the start is the first solution.
+  - `DeepNeuroFuzzy` (added 2026-11-08): the relaxed network (product
+    AND/OR, weights in [0, 1]) trained by gradient descent in numpy,
+    thresholded to 0/1 after every epoch, gradients checked against
+    finite differences. Our alternating layers (the paper also puts AND
+    and OR nodes side by side in a layer). Random binarization as
+    described (binarized weights not updated) left the network empty
+    from the paper's small start -- the OR layer's weights never got
+    above 0.5 (tic-tac-toe: 0.65 test, 0 edges); with the
+    straight-through estimator (now the default) tic-tac-toe 0.984 like
+    Pypper, vote 0.920, breast-cancer 0.793 (one fold each, NNF(1)).
+    KRK illegality (1000) stays near the majority (0.68; with more epochs
+    0.80 train, 0.62 test) -- as for local search (0.69). Deep networks
+    on small data need more steps. Open: the paper's hyperparameters
+    (only a first guess here: 100 epochs, batch 64, Adam 0.01, L2 1e-4,
+    rate 0.75), an epoch budget relative to the data size, the demo.
+  - `size_penalty` for all four (done 2026-11-08): errors + lambda per
+    backbone edge. Counting all edges made local search collapse to the
+    empty network (removing a dead edge always "improved"); counting the
+    backbone fixed that, but on mini-batches the penalty still stripped
+    rules of conditions the other rows need (tic-tac-toe lambda 0.1: 112
+    training errors); applied only on the whole training set, local
+    search got better than without it (tic-tac-toe, one fold: 14 errors
+    and 95 edges, test 0.964, against 34, 225, 0.917). DeepNeuroFuzzy's
+    L1 removes few redundant edges -- in the fuzzy network they still
+    lower the loss a little; open.
+  - `DeepGenetic` (added 2026-11-07): a memetic algorithm with crossover
+    of aligned networks: node-wise, subtree (a node with its cone),
+    mixed, none. One seed, 10-fold, nine datasets, mean accuracy NNF(1) /
+    NNF(3): nodes 0.925 / 0.932, subtree 0.907 / 0.929, mixed 0.911 /
+    0.922, none 0.908 / 0.922 -- but the same node-wise configuration
+    with other random numbers gave 0.916 / 0.925, and single datasets
+    move by up to 0.06 (monk-2), so several seeds are needed to decide
+    whether crossover helps. Not tried: deep rules (a top-level AND node
+    with its cone) as genes, Pittsburgh style.
+- Sanity checks against the papers' numbers, with their encodings;
+  otherwise our framework's encoding comes first.
+- Consistency of rules (start and moves) is logical: what the
+  `DataSpec`'s constraints imply (`contradictions`). A `DataSpec` of bare
+  feature names has none. Later, as a `DataSpec` method: inferring
+  constraints from data (e.g. features never true together, or one
+  implying another), so that such specs get them too.
+- Results so far (2026-11-07, 10-fold, nine datasets; mean accuracy):
+  Pypper 0.929; local search NNF(1) 0.811, NNF(3) 0.925; GA NNF(1) 0.925,
+  NNF(3) 0.932; both started from Pypper's rules 0.948-0.952 -- the gain
+  comes from the start, the GA adds little over local search there.
+- A demo of the anytime behaviour (`trace=True`): test accuracy against
+  effort, averaged over folds, for local search and the GA, random and
+  Pypper-seeded, NNF(1) and NNF(3), on larger datasets where a deeper
+  structure may pay off -- adult, kr-vs-kp, mushroom, connect-4-binary,
+  kropt -- with the artificial datasets as a control. Needs budgets
+  (`max_evaluations`, `max_seconds`) to compare on equal effort. Whether
+  the largest ones can be run is open.
+- `RuleSetInit` puts a rule set into the first layer and passes it up
+  unchanged; a start that factors the rules (shared conditions as hidden
+  concepts) would use the deeper levels from the start.
+- Hidden concepts (full demo run on ab7a5b3 and follow-ups, 2026-11-08):
+  no learner has built one yet. KRK (`[128, 16, 4]`): NeuroFuzzy from
+  Pypper beats Pypper (0.858 vs 0.792) with one hidden concept, "rook on
+  the black king's file or rank" (an OR of the 15 `eq` pairs), the layers
+  above pass it through; with lambda 0.25 it adds flat fragments of "kings
+  adjacent" (0.846), not "files close AND ranks close". Parity-4 is
+  learnt flat by NNF(1) as well (8 rules fit `[20]`); parity-6-of-12
+  (1000 rows) defeats every learner (no subset of the six features tells
+  anything, so a group's parity earns nothing). `parity_groups` (at least
+  2 of 4 groups odd, 1000 rows, lambda 1) rewards the groups one by one,
+  but no learner finds them either: groups of three, everything near the
+  majority (0.688), local search on `[32, 8, 8]` best with 0.733; groups
+  of two (plus 4 irrelevant), local search on `[32, 8, 8]` 0.874 against
+  Pypper 0.825 and flat local search 0.833 -- with 6-8 used OR nodes, but
+  none of them a group's parity (each agrees with every group's on about
+  half the rows): a tangle of partial terms, not the concepts.
+- Next steps (the user, 2026-11-08), new algorithms rather than changes to
+  the current ones:
+  1. A better start than Pypper, whose rules are too simple (general,
+     short): FOIL's, say.
+  2. A search -- and possibly a start -- driven by examples (e.g. a
+     misclassified example picks the moves, rules seeded from examples):
+     a different algorithm.
+- **Remove `car-binary` and `connect-4-binary` again** once those
+  comparisons are done: they are binary versions of `car` and
+  `connect-4`, only there to match the papers' setups (also adjust
+  `test_deep_datasets_are_the_papers`, which counts 29 `deep` entries).
+
 ## Other planned work
 
 - **Decision tables** (Kohavi, *The Power of Decision Tables*, ECML 1995),

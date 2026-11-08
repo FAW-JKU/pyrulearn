@@ -26,8 +26,13 @@ Three computed categories organize the pool:
 OpenML-CC18 benchmark suite, OpenML study 99, minus its image/signal/text
 datasets with more than 200 features), ``lord`` (the datasets of the
 LORD evaluation, Huynh, Fürnkranz & Beck 2023), ``xai`` (classic
-explainable-AI datasets such as adult or COMPAS) and ``classic`` (the
-traditional rule-learning benchmarks: vote, mushroom, soybean, ...).
+explainable-AI datasets such as adult or COMPAS), ``classic`` (the
+traditional rule-learning benchmarks: vote, mushroom, soybean, ...),
+``deep`` (the datasets of the deep rule learning evaluations, Beck &
+Fürnkranz 2021 and Seip et al.: their 20 artificial datasets, monk-1/2/3,
+tic-tac-toe, vote, kr-vs-kp, mushroom and binary versions of car and
+connect-4) and ``artificial`` (generated data, e.g. truth tables
+labeled by a random formula).
 
 `load` fetches through `sklearn.datasets.fetch_openml`, whose own cache
 (``~/scikit_learn_data`` unless `data_home` or ``$PYRULEARN_DATA_HOME``
@@ -38,8 +43,10 @@ OpenML upload anonymized them (``V1``, ``x1``, ...), `drop` removes
 identifier and leakage columns, `missing_markers` (values that encode
 "not measured", e.g. Pima diabetes's zeros) become missing, and
 `nominal` columns (categories stored as integer codes) become
-categorical. Entries with no
-`openml_id` are pointers only (`loadable` is False).
+categorical. An entry not on OpenML can name a `csv_url` instead: a
+CSV file, downloaded once into the same data home (``pyrulearn_csv/``)
+and read with pandas (empty cells missing). Entries with neither are
+pointers only (`loadable` is False).
 
 The catalog file (``catalog.json``, next to this module) is maintained
 with ``tools/build_catalog.py``: the curated fields (`openml_id`,
@@ -76,8 +83,9 @@ COMPUTED_FIELDS = (
 class CatalogEntry:
     """One dataset: where to get it, how to read it, and its statistics.
 
-    Curated: `name`, `openml_id`, `target` (only when OpenML's default
-    target is missing or wrong), `tags`, `uci`/`kaggle` (page URLs),
+    Curated: `name`, `openml_id` or `csv_url` (where the data comes
+    from), `target` (only when OpenML's default target is missing or
+    wrong; always for a `csv_url`), `tags`, `uci`/`kaggle` (page URLs),
     `rename` (``{openml_column: name}``, applied first -- every other
     curated field uses the new names), `drop` (identifier or leakage
     columns), `nominal` (columns stored as numbers that are really
@@ -90,6 +98,7 @@ class CatalogEntry:
 
     name: str
     openml_id: Optional[int] = None
+    csv_url: Optional[str] = None
     target: Optional[str] = None
     tags: List[str] = field(default_factory=list)
     uci: Optional[str] = None
@@ -142,7 +151,7 @@ class CatalogEntry:
 
     @property
     def loadable(self) -> bool:
-        return self.openml_id is not None
+        return self.openml_id is not None or self.csv_url is not None
 
     @property
     def openml_url(self) -> Optional[str]:
@@ -161,9 +170,13 @@ class CatalogEntry:
 
         Needs `pandas`; raises `ValueError` for a pointer-only entry.
         """
-        if self.openml_id is None:
+        if self.openml_id is None and self.csv_url is None:
             links = ", ".join(u for u in (self.uci, self.kaggle, self.original_url) if u) or "no link recorded"
             raise ValueError(f"{self.name!r} has no OpenML id and can't be loaded automatically ({links})")
+        if self.openml_id is None:
+            if not self.target:
+                raise ValueError(f"{self.name!r} reads a CSV file -- set the entry's `target`")
+            return self.prepare(fetch_csv_frame(self.csv_url, data_home), self.target, drop_degenerate), self.target
         frame, default_target = fetch_openml_frame(self.openml_id, data_home)
         target = self.target or self.rename.get(default_target, default_target)
         if not target:
@@ -196,6 +209,30 @@ def fetch_openml_frame(openml_id: int, data_home: Optional[str] = None):
     if default and "," in default:
         raise ValueError(f"OpenML dataset {openml_id} has several default targets ({default})")
     return bunch.frame.copy(), default
+
+
+def fetch_csv_frame(url: str, data_home: Optional[str] = None):
+    """The CSV file at `url` as a DataFrame (empty cells missing), read
+    from ``pyrulearn_csv/`` in the data home (`data_home`,
+    ``$PYRULEARN_DATA_HOME`` or ``~/scikit_learn_data``), where the first
+    call downloads it."""
+    import hashlib
+    import urllib.request
+
+    import pandas as pd
+
+    home = data_home or os.environ.get("PYRULEARN_DATA_HOME") or os.path.join("~", "scikit_learn_data")
+    folder = os.path.join(os.path.expanduser(home), "pyrulearn_csv")
+    path = os.path.join(folder, hashlib.sha1(url.encode("utf-8")).hexdigest()[:12] + "_"
+                        + os.path.basename(url.split("?")[0]))
+    if not os.path.exists(path):
+        os.makedirs(folder, exist_ok=True)
+        with urllib.request.urlopen(url, timeout=120) as response:
+            data = response.read()
+        with open(path + ".part", "wb") as f:
+            f.write(data)
+        os.replace(path + ".part", path)
+    return pd.read_csv(path)
 
 
 def prepare_frame(df, target: str, nominal: Sequence[str] = (), missing_markers: Optional[Dict[str, List[Any]]] = None,
