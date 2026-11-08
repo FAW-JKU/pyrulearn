@@ -302,6 +302,11 @@ class DeepRuleLearner(NativeRuleLearner):
     (the size only breaks ties). The same meaning in all the deep
     learners (`DeepSAT`: with soft examples).
 
+    `max_seconds` (local search, the genetic algorithm, `DeepNeuroFuzzy`;
+    `DeepSAT` has its own) ends the search when the time since the start of
+    the fit is up, with the best network so far -- for runs with many
+    epochs or generations, judged by time.
+
     The learners are anytime algorithms: with `trace`, the model's `trace`
     lists every new best network on the training set during the fit
     (`TracePoint`s: effort, seconds, training error, weights), and
@@ -379,6 +384,12 @@ class DeepRuleLearner(NativeRuleLearner):
         self._tracker.count(X.shape[0])
         out = nnf_forward(weights, X, self.first)[-1]
         return float(((out != targets) * sample_weight).sum())
+
+    def _time_up(self) -> bool:
+        """Whether the fit's `max_seconds` (if the learner has one) are
+        spent, counted from the start of the fit."""
+        limit = getattr(self, "max_seconds", None)
+        return limit is not None and time.perf_counter() - self._tracker.start >= limit
 
     @staticmethod
     def _size(weights: Sequence[np.ndarray]) -> int:
@@ -466,12 +477,14 @@ class DeepLocalSearch(DeepRuleLearner):
         init: Optional[DeepInit] = None,
         first: str = "and",
         target_class: Optional[Any] = None,
+        max_seconds: Optional[float] = None,
         size_penalty: Optional[float] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
         super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
                          target_class=target_class, size_penalty=size_penalty)
+        self.max_seconds = max_seconds
         if moves not in self.MOVES:
             raise ValueError(f"moves must be one of {self.MOVES}, got {moves!r}")
         if (n_epochs is not None and n_epochs < 0) or (max_flips is not None and max_flips < 0):
@@ -501,6 +514,8 @@ class DeepLocalSearch(DeepRuleLearner):
             improved = False
             steps = [None] * n_batches + (["last"] if self.optimize_last_layer else [])
             for step in steps:
+                if self._time_up():
+                    break
                 if step is None:
                     rows = rng.permutation(n)[:batch]
                     self._climb(weights, X[rows], targets[:, rows], sample_weight[rows], conflicts, penalize=False)
@@ -511,7 +526,8 @@ class DeepLocalSearch(DeepRuleLearner):
                 cost = self._cost(error, weights)
                 if cost < best_cost:
                     best, best_error, best_cost, improved = [w.copy() for w in weights], error, cost, True
-            if (best_error == 0 and self.size_penalty is None) or (self.n_epochs is None and not improved):
+            if ((best_error == 0 and self.size_penalty is None) or (self.n_epochs is None and not improved)
+                    or self._time_up()):
                 break
         weights = [w.copy() for w in best]
         self._climb(weights, X, targets, sample_weight, conflicts, on_step=self._offer)
@@ -543,7 +559,7 @@ class DeepLocalSearch(DeepRuleLearner):
         penalty = 0.0 if self.size_penalty is None or not penalize else self.size_penalty
         error = self._error(weights, X, targets, sample_weight)
         cost = error + penalty * self._size(weights) if penalty else error
-        while self.max_flips is None or flips < self.max_flips:
+        while (self.max_flips is None or flips < self.max_flips) and not self._time_up():
             values = nnf_forward(weights, X, self.first)
             errors = [self._flip_errors(weights, values, inputs, l, targets, sample_weight,
                                         conflicts if l == 0 else None)
@@ -746,12 +762,14 @@ class DeepGenetic(DeepRuleLearner):
         init: Optional[DeepInit] = None,
         first: str = "and",
         target_class: Optional[Any] = None,
+        max_seconds: Optional[float] = None,
         size_penalty: Optional[float] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
         super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
                          target_class=target_class, size_penalty=size_penalty)
+        self.max_seconds = max_seconds
         if population < 2 or not 0 <= elite < population or tournament < 1:
             raise ValueError("population must be at least 2, elite below it, tournament at least 1")
         if generations < 0 or local_flips < 0 or mutations < 0 or batch_size < 1:
@@ -776,7 +794,7 @@ class DeepGenetic(DeepRuleLearner):
 
     def _fit_weights(self, data, labels, X, targets, shapes, start, sample_weight, rng):
         climber = DeepLocalSearch(moves=self.moves, max_flips=self.local_flips, first=self.first,
-                                  size_penalty=self.size_penalty)
+                                  size_penalty=self.size_penalty, max_seconds=self.max_seconds)
         climber._tracker = self._tracker
         conflicts = climber._conflicts(data.spec)
         align_rows = (np.arange(len(X)) if len(X) <= self._ALIGN_ROWS
@@ -790,11 +808,13 @@ class DeepGenetic(DeepRuleLearner):
                for ws in starts]
         n, batch = len(X), min(self.batch_size, len(X))
         for _ in range(self.generations):
+            if self._time_up():
+                break
             pop.sort(key=lambda ind: ind[1])
             if pop[0][1][0] == 0 and self.size_penalty is None:
                 break
             children = pop[:self.elite]
-            while len(children) < self.population:
+            while len(children) < self.population and not self._time_up():
                 a, b = self._select(pop, rng), self._select(pop, rng)
                 child = self._crossover(a[0], b[0], X[align_rows], rng)
                 self._mutate(child, conflicts, rng)
@@ -802,10 +822,11 @@ class DeepGenetic(DeepRuleLearner):
                     rows = rng.choice(n, batch, replace=False)
                     climber._climb(child, X[rows], targets[:, rows], sample_weight[rows], conflicts, penalize=False)
                 children.append(self._individual(child, X, targets, sample_weight))
-            pop = children
+            pop = children if len(children) >= 2 else pop
         best = min(pop, key=lambda ind: ind[1])[0]
         if self.polish:
-            polisher = DeepLocalSearch(moves=self.moves, first=self.first, size_penalty=self.size_penalty)
+            polisher = DeepLocalSearch(moves=self.moves, first=self.first, size_penalty=self.size_penalty,
+                                       max_seconds=self.max_seconds)
             polisher._tracker = self._tracker
             polisher._climb(best, X, targets, sample_weight, conflicts, on_step=self._offer)
         return best
@@ -1380,12 +1401,14 @@ class DeepNeuroFuzzy(DeepRuleLearner):
         init: Optional[DeepInit] = None,
         first: str = "and",
         target_class: Optional[Any] = None,
+        max_seconds: Optional[float] = None,
         size_penalty: Optional[float] = None,
         trace: bool = False,
         random_state: Optional[int] = 0,
     ):
         super().__init__(layers=layers, first=first, init=init, trace=trace, random_state=random_state,
                          target_class=target_class, size_penalty=size_penalty)
+        self.max_seconds = max_seconds
         self.init = init  # None: the paper's random start (the base class would put in RandomInit)
         if loss not in self.LOSSES:
             raise ValueError(f"loss must be one of {self.LOSSES}, got {loss!r}")
@@ -1419,8 +1442,12 @@ class DeepNeuroFuzzy(DeepRuleLearner):
         n = X.shape[0]
         best, best_key = None, None
         for _ in range(self.epochs):
+            if self._time_up() and best is not None:
+                break
             order = rng.permutation(n)
             for b in range(0, n, self.batch_size):
+                if self._time_up() and best is not None:
+                    break
                 rows = order[b:b + self.batch_size]
                 fixed = [rng.random(w.shape) < self.binarization_rate for w in W]
                 used = [np.where(f, (w > 0.5).astype(float), w) for w, f in zip(W, fixed)]

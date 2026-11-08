@@ -1,5 +1,10 @@
 """Generated datasets: data defined by a rule rather than downloaded.
 
+`parity` -- the parity of a few relevant Boolean features among
+irrelevant ones: a flat DNF needs 2^(k-1) rules of k conditions, a deep
+network builds it from small parts (XOR and XNOR of pairs, then of those).
+`Parity` is the same as a dataset for `run_cv`.
+
 `krk_illegal` -- the KRK illegality task of the ILP literature (Muggleton,
 Bain, Hayes-Michie & Michie, "An experimental comparison of human and
 machine learning formalisms", ML 1989): a chess position of white king,
@@ -127,3 +132,64 @@ class KRKIllegal:
 
     def load(self, data_home: Optional[str] = None, drop_degenerate: bool = True) -> Tuple[object, str]:
         return krk_illegal(self.n, self.random_state, self.relations, self.coordinates), self.target
+
+
+def parity(n_relevant: int = 4, n_irrelevant: int = 6, n: Optional[int] = None, noise: float = 0.0,
+           random_state: Optional[int] = 0):
+    """A `pandas.DataFrame` of Boolean features ``x1``, ``x2``, ... (dtype
+    bool) and ``class``: ``"odd"`` if an odd number of the first
+    `n_relevant` features is true, else ``"even"``; the other
+    `n_irrelevant` features don't matter. All 2^(n_relevant +
+    n_irrelevant) rows, in order (``n=None``), or `n` distinct ones drawn
+    uniformly. `noise` flips each label with that probability."""
+    import pandas as pd
+
+    d = n_relevant + n_irrelevant
+    if n_relevant < 1 or n_irrelevant < 0:
+        raise ValueError("parity needs at least one relevant feature and no negative number of irrelevant ones")
+    if not 0 <= noise <= 1:
+        raise ValueError(f"noise must be in [0, 1], got {noise!r}")
+    rng = np.random.default_rng(random_state)
+    total = 2 ** d
+    if n is None:
+        codes = np.arange(total)
+    else:
+        if not 0 < n <= total:
+            raise ValueError(f"n must be between 1 and {total}, got {n}")
+        codes = np.sort(rng.choice(total, size=n, replace=False))
+    bits = ((codes[:, None] >> np.arange(d - 1, -1, -1)) & 1).astype(bool)
+    odd = bits[:, :n_relevant].sum(axis=1) % 2 == 1
+    if noise:
+        odd = odd ^ (rng.random(len(odd)) < noise)
+    frame = {f"x{i + 1}": bits[:, i] for i in range(d)}
+    frame["class"] = np.where(odd, "odd", "even")
+    return pd.DataFrame(frame)
+
+
+@dataclass(frozen=True)
+class Parity:
+    """`parity(...)` as a dataset for `run_cv` (its `name` -- which keys
+    the cache -- says how it was made)."""
+
+    n_relevant: int = 4
+    n_irrelevant: int = 6
+    n: Optional[int] = None
+    noise: float = 0.0
+    random_state: Optional[int] = 0
+    openml_id = None
+    openml_version = None
+    target = "class"
+
+    @property
+    def name(self) -> str:
+        out = f"parity-{self.n_relevant}-of-{self.n_relevant + self.n_irrelevant}"
+        if self.n is not None:
+            out += f"-n{self.n}"
+        if self.noise:
+            out += f"-noise{self.noise:g}"
+        if self.random_state not in (None, 0) and (self.n is not None or self.noise):
+            out += f"-seed{self.random_state}"
+        return out
+
+    def load(self, data_home: Optional[str] = None, drop_degenerate: bool = True) -> Tuple[object, str]:
+        return parity(self.n_relevant, self.n_irrelevant, self.n, self.noise, self.random_state), self.target

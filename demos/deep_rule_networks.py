@@ -4,7 +4,7 @@ demos/deep_rule_networks.py
 
 Deep rule networks -- `pyrulearn.models.DeepModel`s, formulas in negation
 normal form learned as fully connected networks of alternating AND and OR
-layers with 0/1 weights -- in two parts.
+layers with 0/1 weights -- in three parts.
 
 **Part 1, the SAT paper's artificial datasets.** Seip, Fürnkranz et al.
 ("A SAT-based approach to learning Boolean circuits in negation normal
@@ -15,18 +15,24 @@ Boolean features, labeled by random deep NNFs (the catalog's tag
 ``artificial``). Their architectures: NNF(1) ``[20]``, NNF(3) ``[32, 8,
 2]``, NNF(5) ``[32, 16, 8, 4, 2]``. Here: `DeepSAT` (an exact fit, the
 paper's method), `DeepLocalSearch` (Beck's hill climbing with our
-consistent moves), `DeepSAT` with MaxSAT on NNF(1) (the smallest network
-fitting the data, with a time limit -- the anytime linear search returns
-the smallest found), and Pypper, against the paper's Table 1
-(`PAPER_TABLE`).
+consistent moves), `DeepGenetic`, `DeepNeuroFuzzy`, `DeepSAT` with MaxSAT
+on NNF(1) (the smallest network fitting the data, with a time limit), and
+Pypper, against the paper's Table 1 (`PAPER_TABLE`).
 
 **Part 2, the learners over time.** On a few datasets (`TRACE_DATASETS`),
-the learners run with `trace=True`, so every new best network during a
-fit is recorded; each is measured on the test fold, which gives test
-accuracy (and network size) against seconds -- local search and the
-genetic algorithm improving the training error, MaxSAT shrinking an exact
-fit -- with Pypper as the reference. Local search also starts from
-Pypper's rules (`RuleSetInit`).
+the four learners run with `trace=True` and the same regularized
+objective (`size_penalty=LAMBDA`: errors plus lambda per edge), each from
+a random start and from Pypper's rules (`RuleSetInit`); every new best
+network during a fit is measured on the test fold, which gives test
+accuracy (and network size) against seconds, with Pypper as the
+reference.
+
+**Part 3, KRK illegality.** 1000 positions, the coordinates only
+(`pyrulearn.datasets.KRKIllegal`): "same file", "adjacent" and so on have
+to appear as hidden nodes, so a wide network ``[128, 16, 4]`` (the rules
+need about ``[76, 5, 3]``) and a time budget per fit, to see how far the
+anytime learners get -- against Pypper on the coordinates and Pypper with
+the relations given (the upper bound).
 
 Times are wall-clock, so they depend on the machine and its load.
 
@@ -45,11 +51,12 @@ from typing import Callable, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
+from pyrulearn.datasets import KRKIllegal, Parity
 from pyrulearn.experiments.catalog import Catalog
 from pyrulearn.experiments.report import render_setup_section
 from pyrulearn.experiments.runner import run_cv
 from pyrulearn.learners.base import NativeRuleLearner
-from pyrulearn.learners.deep import DeepGenetic, DeepLocalSearch, DeepSAT, RuleSetInit
+from pyrulearn.learners.deep import DeepGenetic, DeepLocalSearch, DeepNeuroFuzzy, DeepSAT, RuleSetInit
 from pyrulearn.learners.seco import Pypper
 
 RANDOM_STATE = 0
@@ -91,13 +98,31 @@ PAPER_TABLE = pd.DataFrame(
 
 # -- part 2 --------------------------------------------------------------------
 
-TRACE_DATASETS = ["tic-tac-toe", "monks-problems-2", "car-binary", "artificial-nnf-24", "kr-vs-kp"]
+#: the size penalty of part 2 and 3: an edge has to be worth one misclassified example
+#: (a pilot on five datasets, k = 1/lambda in 1, 3, 10, 30: 1 was best on the noisy ones)
+LAMBDA = 1.0
+TRACE_DATASETS = ["tic-tac-toe", "kr-vs-kp", "vote", "mushroom", "breast-cancer", "SPECT", Parity(4, 6)]
 QUICK_TRACE_DATASETS = ["tic-tac-toe"]
+#: datasets whose MaxSAT formula would be too large (millions of clauses in Python lists)
+NO_MAXSAT = ["mushroom"]
 TRACE_FOLDS, QUICK_TRACE_FOLDS = 5, 2
 #: seconds the MaxSAT search gets per fit
 TRACE_MAXSAT_SECONDS, QUICK_TRACE_MAXSAT_SECONDS = 300, 10
+#: the other learners' time budget per fit in part 2 -- below the fit cap, so a long final
+#: climb (mushroom, kr-vs-kp) returns its best network instead of losing the fit
+TRACE_SECONDS, QUICK_TRACE_SECONDS = 900, 30
 TRACE_ARCHITECTURES = ["NNF(1)", "NNF(3)"]
-TRACE_LEARNERS = ["local search", "local search from Pypper", "genetic", "MaxSAT"]
+ALGORITHMS = ["local search", "genetic", "MaxSAT", "neuro-fuzzy"]
+TRACE_LEARNERS = [f"{a}{s}" for a in ALGORITHMS for s in ("", " from Pypper")]
+
+# -- part 3 --------------------------------------------------------------------
+
+KRK, QUICK_KRK = KRKIllegal(1000), KRKIllegal(300)
+KRK_ARCHITECTURE = [128, 16, 4]
+#: seconds per fit; the learners get epochs and generations enough for the time to end them
+KRK_SECONDS, QUICK_KRK_SECONDS = 1500, 20
+KRK_ALGORITHMS = ["local search", "genetic", "neuro-fuzzy"]
+KRK_LEARNERS = [f"{a}{s}" for a in KRK_ALGORITHMS for s in ("", " from Pypper")]
 
 
 def _variants(quick: bool) -> Dict[str, Tuple[str, Callable[[], NativeRuleLearner]]]:
@@ -115,24 +140,49 @@ def _variants(quick: bool) -> Dict[str, Tuple[str, Callable[[], NativeRuleLearne
                                        lambda layers=layers: DeepLocalSearch(layers=layers, target_class=True))
         out[f"genetic {arch}"] = (f"DeepGenetic(layers={layers}, target_class=True)",
                                   lambda layers=layers: DeepGenetic(layers=layers, target_class=True))
+        out[f"neuro-fuzzy {arch}"] = (f"DeepNeuroFuzzy(layers={layers}, target_class=True)",
+                                      lambda layers=layers: DeepNeuroFuzzy(layers=layers, target_class=True))
     out["MaxSAT NNF(1)"] = (f"DeepSAT(layers=[20], minimize='weights', max_seconds={seconds}, target_class=True)",
                             lambda: DeepSAT(layers=[20], minimize="weights", max_seconds=seconds,
                                             target_class=True))
+    # parts 2 and 3: one objective (errors + LAMBDA per edge), a random start or Pypper's rules
+    krk_seconds = QUICK_KRK_SECONDS if quick else KRK_SECONDS
+
+    budget = QUICK_TRACE_SECONDS if quick else TRACE_SECONDS
+
+    def make(algorithm, layers, pypper, seconds, unbounded=False):
+        kw = dict(layers=layers, size_penalty=LAMBDA, trace=True)
+        if pypper:
+            kw["init"] = RuleSetInit(Pypper())
+        if algorithm == "MaxSAT":
+            return DeepSAT(minimize="weights", max_seconds=trace_seconds, **kw)
+        kw["max_seconds"] = seconds  # unbounded: stopped by the time, not by the epochs or generations
+        if algorithm == "local search":
+            return DeepLocalSearch(n_epochs=10 ** 6 if unbounded else 5, **kw)
+        if algorithm == "genetic":
+            return DeepGenetic(generations=10 ** 6 if unbounded else 20, **kw)
+        return DeepNeuroFuzzy(epochs=10 ** 6 if unbounded else 100, **kw)
+
+    def describe(algorithm, layers, pypper, seconds, unbounded=False):
+        start = ", init=RuleSetInit(Pypper())" if pypper else ""
+        if algorithm == "MaxSAT":
+            return (f"DeepSAT(layers={layers}, minimize='weights', size_penalty={LAMBDA}, "
+                    f"max_seconds={trace_seconds}{start}, trace=True)")
+        name = {"local search": "DeepLocalSearch", "genetic": "DeepGenetic", "neuro-fuzzy": "DeepNeuroFuzzy"}
+        extra = f", max_seconds={seconds}" + (", unbounded epochs" if unbounded else "")
+        return f"{name[algorithm]}(layers={layers}, size_penalty={LAMBDA}{start}{extra}, trace=True)"
+
     for arch in TRACE_ARCHITECTURES:
-        layers = NNF[arch]
-        out[f"traced local search {arch}"] = (
-            f"DeepLocalSearch(layers={layers}, trace=True)",
-            lambda layers=layers: DeepLocalSearch(layers=layers, trace=True))
-        out[f"traced local search from Pypper {arch}"] = (
-            f"DeepLocalSearch(layers={layers}, init=RuleSetInit(Pypper()), trace=True)",
-            lambda layers=layers: DeepLocalSearch(layers=layers, init=RuleSetInit(Pypper()), trace=True))
-        out[f"traced genetic {arch}"] = (
-            f"DeepGenetic(layers={layers}, trace=True)",
-            lambda layers=layers: DeepGenetic(layers=layers, trace=True))
-        out[f"traced MaxSAT {arch}"] = (
-            f"DeepSAT(layers={layers}, minimize='weights', max_seconds={trace_seconds}, trace=True)",
-            lambda layers=layers: DeepSAT(layers=layers, minimize="weights", max_seconds=trace_seconds,
-                                          trace=True))
+        for algorithm in ALGORITHMS:
+            for pypper in (False, True):
+                name = f"traced {algorithm}{' from Pypper' if pypper else ''} {arch}"
+                out[name] = (describe(algorithm, NNF[arch], pypper, budget),
+                             lambda a=algorithm, l=NNF[arch], p=pypper: make(a, l, p, budget))
+    for algorithm in KRK_ALGORITHMS:
+        for pypper in (False, True):
+            name = f"krk {algorithm}{' from Pypper' if pypper else ''}"
+            out[name] = (describe(algorithm, KRK_ARCHITECTURE, pypper, krk_seconds, unbounded=True),
+                         lambda a=algorithm, p=pypper: make(a, KRK_ARCHITECTURE, p, krk_seconds, unbounded=True))
     return out
 
 
@@ -186,24 +236,47 @@ def part1(quick: bool) -> pd.DataFrame:
     cat = Catalog.default()
     datasets = cat.select(names=QUICK_ARTIFICIAL) if quick else cat.select(tags="artificial")
     names = (["Pypper"] + [f"SAT {a}" for a in NNF] + ["MaxSAT NNF(1)"] + [f"local search {a}" for a in NNF]
-             + [f"genetic {a}" for a in NNF])
+             + [f"genetic {a}" for a in NNF] + [f"neuro-fuzzy {a}" for a in NNF])
     return run_cv([Variant(n, quick) for n in names], datasets,
                   n_folds=QUICK_SEIP_FOLDS if quick else SEIP_FOLDS, fit_timeout=FIT_TIMEOUT,
                   random_state=RANDOM_STATE, cache_dir=CACHE_DIR, n_jobs=_n_jobs())
 
 
+def _datasets(names) -> list:
+    """Catalog entries for names, generated datasets as they are."""
+    catalog = Catalog.default()
+    return [catalog.select(names=[d])[0] if isinstance(d, str) else d for d in names]
+
+
 def part2(quick: bool) -> pd.DataFrame:
-    datasets = Catalog.default().select(names=QUICK_TRACE_DATASETS if quick else TRACE_DATASETS)
+    datasets = _datasets(QUICK_TRACE_DATASETS if quick else TRACE_DATASETS)
     names = ["Pypper"] + [f"traced {learner} {arch}" for arch in TRACE_ARCHITECTURES for learner in TRACE_LEARNERS]
-    return run_cv([Variant(n, quick) for n in names], datasets,
-                  n_folds=QUICK_TRACE_FOLDS if quick else TRACE_FOLDS, fit_timeout=FIT_TIMEOUT,
+    without = [n for n in names if "MaxSAT" not in n]
+    common = dict(n_folds=QUICK_TRACE_FOLDS if quick else TRACE_FOLDS, fit_timeout=FIT_TIMEOUT,
                   random_state=RANDOM_STATE, cache_dir=CACHE_DIR, measure_fn=trace_curve, n_jobs=_n_jobs())
+    full = [d for d in datasets if d.name not in NO_MAXSAT]
+    small = [d for d in datasets if d.name in NO_MAXSAT]
+    parts = [run_cv([Variant(n, quick) for n in names], full, **common)] if full else []
+    if small:
+        parts.append(run_cv([Variant(n, quick) for n in without], small, **common))
+    return pd.concat(parts, ignore_index=True)
+
+
+def part3(quick: bool) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """The KRK runs, and Pypper on the positions with the relations given."""
+    krk = QUICK_KRK if quick else KRK
+    names = ["Pypper"] + [f"krk {learner}" for learner in KRK_LEARNERS]
+    common = dict(n_folds=QUICK_TRACE_FOLDS if quick else TRACE_FOLDS, fit_timeout=FIT_TIMEOUT,
+                  random_state=RANDOM_STATE, cache_dir=CACHE_DIR, n_jobs=_n_jobs())
+    res = run_cv([Variant(n, quick) for n in names], [krk], measure_fn=trace_curve, **common)
+    relational = KRKIllegal(krk.n, krk.random_state, relations=True)
+    upper = run_cv([Variant("Pypper", quick)], [relational], **common)
+    return res, upper
 
 
 # -- the report ----------------------------------------------------------------
 
-COLORS = {"local search": "#2a78d6", "local search from Pypper": "#1baf7a", "genetic": "#eb6834",
-          "MaxSAT": "#6250d6"}
+COLORS = {"local search": "#2a78d6", "genetic": "#eb6834", "MaxSAT": "#6250d6", "neuro-fuzzy": "#1baf7a"}
 INK, INK2, GRID, SURF = "#0b0b0b", "#52514e", "#e6e5e1", "#fcfcfb"
 
 
@@ -242,7 +315,7 @@ def _failure_note(res: pd.DataFrame, rename=lambda n: n) -> List[str]:
 
 def _part1_section(res: pd.DataFrame, quick: bool) -> List[str]:
     ours = (["Pypper"] + [f"SAT {a}" for a in NNF] + ["MaxSAT NNF(1)"] + [f"local search {a}" for a in NNF]
-            + [f"genetic {a}" for a in NNF])
+            + [f"genetic {a}" for a in NNF] + [f"neuro-fuzzy {a}" for a in NNF])
     acc = _accuracy_by_dataset(res, ours)
     times = res.pivot_table(index="dataset", columns="learner", values="fit_time").reindex(columns=ours)
     L = ["## Part 1: the SAT paper's artificial datasets\n",
@@ -252,7 +325,7 @@ def _part1_section(res: pd.DataFrame, quick: bool) -> List[str]:
     cols = []
     for arch in NNF:
         cols += [(f"SAT {arch}", "ours"), (f"SAT {arch}", "paper"), (f"local search {arch}", "ours"),
-                 (f"SHS {arch}", "paper"), (f"genetic {arch}", "ours")]
+                 (f"SHS {arch}", "paper"), (f"genetic {arch}", "ours"), (f"neuro-fuzzy {arch}", "ours")]
     header = "| dataset | " + " | ".join(f"{name} ({who})" for name, who in cols) + " | MaxSAT NNF(1) | Pypper |"
     L += [header, "|---|" + "--:|" * (len(cols) + 2)]
     paper = PAPER_TABLE.set_index("seed")
@@ -291,7 +364,12 @@ def _curve(points: List[list], grid: np.ndarray, column: int) -> np.ndarray:
     return np.where(idx >= 0, v[np.clip(idx, 0, None)], np.nan)
 
 
-def _plot_traces(res: pd.DataFrame, quick: bool) -> List[str]:
+def _plot_traces(res: pd.DataFrame, quick: bool, panels: List[Tuple[str, str]], algorithms: List[str],
+                 references: Dict[str, List[Tuple[str, float]]], prefix: str = "") -> List[str]:
+    """One figure per dataset: a column per (title, learner-name suffix) in
+    `panels`, test accuracy above and backbone edges below; a color per
+    algorithm, solid from a random start, dashed from Pypper; horizontal
+    `references` (label, accuracy) per dataset."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -301,37 +379,43 @@ def _plot_traces(res: pd.DataFrame, quick: bool) -> List[str]:
     lines = []
     for ds in datasets:
         sub = res[res["dataset"] == ds]
-        pypper = sub[(sub["learner"] == "Pypper") & sub["error"].isna()]["accuracy"].mean()
-        fig, axes = plt.subplots(2, len(TRACE_ARCHITECTURES), figsize=(5.5 * len(TRACE_ARCHITECTURES), 7.2),
-                                 sharex=True, facecolor=SURF, squeeze=False)
-        t_max = max((pt[0] for tr in sub["trace"].dropna() for pt in tr), default=1.0)
+        fig, axes = plt.subplots(2, len(panels), figsize=(5.5 * len(panels) + 1.5, 7.2), sharex=True,
+                                 facecolor=SURF, squeeze=False)
+        t_max = max((pt[0] for tr in sub["trace"].dropna() for pt in tr), default=1.0) if "trace" in sub else 1.0
         grid = np.geomspace(0.01, max(t_max, 0.02) * 1.05, 300)
-        for c, arch in enumerate(TRACE_ARCHITECTURES):
+        for c, (title, suffix) in enumerate(panels):
             for r, (column, label) in enumerate(((4, "test accuracy"), (5, "edges (backbone)"))):
                 ax = axes[r][c]
                 ax.set_facecolor(SURF)
-                for learner, color in COLORS.items():
-                    rows = sub[sub["learner"] == f"traced {learner} {arch}"]
-                    # a failed fold counts as one without a network at any time
-                    curves = [_curve(tr, grid, column) if isinstance(tr, list) and tr and pd.isna(err)
-                              else np.full(len(grid), np.nan)
-                              for tr, err in zip(rows["trace"], rows["error"])]
-                    if not curves or all(np.isnan(c).all() for c in curves):
-                        continue
-                    stack = np.vstack(curves)
-                    enough = np.sum(~np.isnan(stack), axis=0) >= max(1, len(curves) // 2 + 1)
-                    with np.errstate(all="ignore"):
-                        mean = np.where(enough, np.nanmean(stack, axis=0), np.nan)
-                    ax.step(grid, mean, where="post", color=color, lw=2, label=learner)
-                if r == 0 and not np.isnan(pypper):
-                    ax.axhline(pypper, color=INK2, lw=1)
-                    ax.annotate(f"Pypper {pypper:.3f}", (grid[0], pypper), xytext=(2, 4),
-                                textcoords="offset points", color=INK2, fontsize=8.5)
+                for algorithm in algorithms:
+                    for pypper in (False, True):
+                        name = f"{prefix}{algorithm}{' from Pypper' if pypper else ''}{suffix}"
+                        rows = sub[sub["learner"] == name]
+                        # a failed fold counts as one without a network at any time
+                        curves = [_curve(tr, grid, column) if isinstance(tr, list) and tr and pd.isna(err)
+                                  else np.full(len(grid), np.nan)
+                                  for tr, err in zip(rows["trace"], rows["error"])] if len(rows) else []
+                        if not curves or all(np.isnan(cv).all() for cv in curves):
+                            continue
+                        stack = np.vstack(curves)
+                        enough = np.sum(~np.isnan(stack), axis=0) >= max(1, len(curves) // 2 + 1)
+                        with np.errstate(all="ignore"):
+                            mean = np.where(enough, np.nanmean(stack, axis=0), np.nan)
+                        ax.step(grid, mean, where="post", color=COLORS[algorithm], lw=2,
+                                ls="--" if pypper else "-",
+                                label=f"{algorithm}{' from Pypper' if pypper else ''}")
+                if r == 0:
+                    for k, (ref_label, value) in enumerate(references.get(ds, [])):
+                        if value is None or np.isnan(value):
+                            continue
+                        ax.axhline(value, color=INK2, lw=1, ls=("-", ":")[k % 2])
+                        ax.annotate(f"{ref_label} {value:.3f}", (grid[0], value), xytext=(2, 4),
+                                    textcoords="offset points", color=INK2, fontsize=8.5)
                 ax.set_xscale("log")
                 if r == 1:
-                    ax.set_yscale("log")
+                    ax.set_yscale("symlog", linthresh=1)  # an empty network (0 edges) stays visible
                     ax.set_xlabel("seconds (log scale)", color=INK2, fontsize=9)
-                ax.set_title(f"{arch}: {label}", color=INK, fontsize=10, loc="left")
+                ax.set_title(f"{title}: {label}", color=INK, fontsize=10, loc="left")
                 ax.grid(True, axis="y", color=GRID, lw=1)
                 ax.set_axisbelow(True)
                 for s_ in ("top", "right"):
@@ -339,9 +423,16 @@ def _plot_traces(res: pd.DataFrame, quick: bool) -> List[str]:
                 for s_ in ("left", "bottom"):
                     ax.spines[s_].set_color(GRID)
                 ax.tick_params(colors=INK2, labelsize=8.5)
-        axes[0][0].legend(frameon=False, fontsize=8.5, loc="lower right")
-        fig.suptitle(f"{ds}: the best network so far, mean over folds", x=0.01, ha="left", color=INK, fontsize=11)
-        fig.tight_layout(rect=(0, 0, 1, 0.96))
+        handles, labels = axes[0][0].get_legend_handles_labels()
+        for row in axes:  # the legend from whichever panel has the most lines
+            for ax in row:
+                h, lab = ax.get_legend_handles_labels()
+                if len(h) > len(handles):
+                    handles, labels = h, lab
+        fig.legend(handles, labels, frameon=False, fontsize=8.5, loc="center right")
+        fig.suptitle(f"{ds}: the best network so far, mean over folds (dashed: from Pypper)", x=0.01, ha="left",
+                     color=INK, fontsize=11)
+        fig.tight_layout(rect=(0, 0, 1 - 1.5 / (5.5 * len(panels) + 1.5), 0.96))
         path = os.path.join(PLOTS_DIR, f"{NAME}{'_quick' if quick else ''}_{ds}.png")
         fig.savefig(path, dpi=130, facecolor=SURF)
         plt.close(fig)
@@ -357,17 +448,51 @@ def _part2_section(res: pd.DataFrame, quick: bool) -> List[str]:
          "Each curve is the test accuracy (top) and the size (bottom: edges of the network's "
          "backbone, `DeepModel.pruned`) of the best network found so far, against the seconds "
          "of the fit, averaged over the folds where a network exists by then (shown once that is at least "
-         "half of all folds; a failed fold never has one). Local search and the genetic algorithm "
-         "improve the training error; MaxSAT "
-         "starts from an exact fit and makes it smaller.\n"]
-    L += _plot_traces(res, quick)
+         f"half of all folds; a failed fold never has one). All four learners minimize the training errors "
+         f"plus {LAMBDA:g} per edge; solid from a random start, dashed from Pypper's rules.\n"]
+    refs = {ds: [("Pypper", res[(res["dataset"] == ds) & (res["learner"] == "Pypper")]["accuracy"].mean())]
+            for ds in res["dataset"].unique()}
+    L += _plot_traces(res, quick, [(arch, f" {arch}") for arch in TRACE_ARCHITECTURES], ALGORITHMS, refs,
+                      prefix="traced ")
     L += ["Final test accuracy (%) and mean fit time (s):\n",
           "| dataset | " + " | ".join(n.replace("traced ", "") for n in names) + " |",
           "|---|" + "--:|" * len(names)]
     for ds in acc.index:
         L.append(f"| {ds} | " + " | ".join(f"{_pct(acc.loc[ds, n])} ({times.loc[ds, n]:.0f} s)" for n in names)
                  + " |")
+    if NO_MAXSAT and not quick:
+        L.append(f"MaxSAT is not run on {', '.join(NO_MAXSAT)}: its formula would have tens of millions of "
+                 "clauses.\n")
     return L + [""] + _failure_note(res, lambda n: n.replace("traced ", ""))
+
+
+def _part3_section(res: pd.DataFrame, upper: pd.DataFrame, quick: bool) -> List[str]:
+    krk = (QUICK_KRK if quick else KRK).name
+    names = ["Pypper"] + [f"krk {learner}" for learner in KRK_LEARNERS]
+    acc = _accuracy_by_dataset(res, names)
+    times = res.pivot_table(index="dataset", columns="learner", values="fit_time").reindex(columns=names)
+    edges = {}
+    for n in names[1:]:
+        rows = res[(res["learner"] == n) & res["error"].isna()]
+        last = [tr[-1][5] for tr in rows.get("trace", pd.Series(dtype=object)) if isinstance(tr, list) and tr]
+        edges[n] = np.mean(last) if last else np.nan
+    pypper = acc.loc[krk, "Pypper"] if krk in acc.index else np.nan
+    bound = upper[upper["error"].isna()]["accuracy"].mean()
+    L = ["## Part 3: KRK illegality\n",
+         f"{krk}: the coordinates only, stratified {QUICK_TRACE_FOLDS if quick else TRACE_FOLDS}-fold; network "
+         f"`{KRK_ARCHITECTURE}`, {QUICK_KRK_SECONDS if quick else KRK_SECONDS} s per fit, errors plus "
+         f"{LAMBDA:g} per edge. Reference lines: Pypper on the coordinates, and Pypper with the 24 relations "
+         "given (`relations=True`), what the background knowledge allows.\n"]
+    L += _plot_traces(res, quick, [(f"{KRK_ARCHITECTURE}", "")], KRK_ALGORITHMS,
+                      {krk: [("Pypper", pypper), ("Pypper with relations", bound)]}, prefix="krk ")
+    L += ["Final test accuracy (%), backbone edges and mean fit time (s):\n",
+          "| learner | accuracy | edges | seconds |", "|---|--:|--:|--:|"]
+    for n in names:
+        e = "" if n == "Pypper" or np.isnan(edges.get(n, np.nan)) else f"{edges[n]:.0f}"
+        L.append(f"| {n.replace('krk ', '')} | {_pct(acc.loc[krk, n]) if krk in acc.index else '-'} | {e} | "
+                 f"{times.loc[krk, n]:.0f} |" if krk in times.index else f"| {n} | - | | |")
+    L.append(f"| Pypper with relations | {_pct(bound)} | | |")
+    return L + [""] + _failure_note(res, lambda n: n.replace("krk ", ""))
 
 
 DESCRIPTION = f"""
@@ -379,25 +504,37 @@ in the paper: NNF(1) `{NNF['NNF(1)']}`, NNF(3) `{NNF['NNF(3)']}`, NNF(5) `{NNF['
 first layer AND, output OR, the output learning the formula's class (`target_class=True`,
 as the papers' networks do). Learners: `DeepSAT` (plain SAT, an exact fit; Glucose 4),
 `DeepLocalSearch` (Beck's stochastic hill climbing, consistent moves, random start),
-`DeepGenetic` (the memetic algorithm, node-wise crossover, random start),
+`DeepGenetic` (the memetic algorithm, node-wise crossover, random start), `DeepNeuroFuzzy`
+(gradient descent on the fuzzy relaxation, random binarization, random start),
 `DeepSAT(minimize="weights")` on NNF(1) with {MAXSAT_SECONDS} s (the smallest exact fit found
 by then), Pypper.
 
-Part 2: {", ".join(TRACE_DATASETS)}, stratified {TRACE_FOLDS}-fold. NNF(1) and NNF(3);
-local search (random start, and started from Pypper's rules, `RuleSetInit(Pypper())`),
-the genetic algorithm (`DeepGenetic`, node-wise crossover), MaxSAT (`DeepSAT(minimize=
-"weights")`, {TRACE_MAXSAT_SECONDS} s), all with `trace=True`; Pypper as the reference.
+Part 2: {", ".join(d if isinstance(d, str) else d.name for d in TRACE_DATASETS)}, stratified
+{TRACE_FOLDS}-fold (parity-4-of-10: the parity of four of ten Boolean features, all 1,024 rows).
+NNF(1) and NNF(3); local search, the genetic algorithm, MaxSAT (`DeepSAT(minimize="weights")`
+with soft examples, {TRACE_MAXSAT_SECONDS} s) and `DeepNeuroFuzzy`, each from a random start and
+from Pypper's rules (`RuleSetInit(Pypper())`), all minimizing the training errors plus
+lambda = {LAMBDA:g} per edge (`size_penalty`), with `trace=True`; Pypper as the reference.
+Local search, the genetic algorithm and `DeepNeuroFuzzy` stop after {TRACE_SECONDS} s at the
+latest (`max_seconds`), with their best network so far.
+
+Part 3: KRK illegality, {KRK.n} positions (coordinates only), stratified {TRACE_FOLDS}-fold,
+network `{KRK_ARCHITECTURE}`; local search, the genetic algorithm and `DeepNeuroFuzzy`, random
+and from Pypper, lambda = {LAMBDA:g}, each with {KRK_SECONDS} s (`max_seconds`, epochs and
+generations unbounded). No MaxSAT: the formula would have millions of variables.
 
 Each fit is capped at {FIT_TIMEOUT:.0f} s; a time-out drops the learner's whole
 cross-validation on that dataset. Times are wall-clock.
 """
 
 
-def write_report(res1: pd.DataFrame, res2: pd.DataFrame, quick: bool, path: str) -> None:
+def write_report(res1: pd.DataFrame, res2: pd.DataFrame, res3: pd.DataFrame, upper: pd.DataFrame,
+                 quick: bool, path: str) -> None:
     L = [f"# Deep rule networks{' (quick run)' if quick else ''}\n",
          render_setup_section(DESCRIPTION)]
     L += _part1_section(res1, quick)
     L += _part2_section(res2, quick)
+    L += _part3_section(res3, upper, quick)
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(L))
     print(f"Report -> {path}")
@@ -406,8 +543,9 @@ def write_report(res1: pd.DataFrame, res2: pd.DataFrame, quick: bool, path: str)
 def main(quick: bool = True) -> None:
     res1 = part1(quick)
     res2 = part2(quick)
+    res3, upper = part3(quick)
     report = os.path.join(HERE, f"{NAME}_{'quick_' if quick else ''}report.md")
-    write_report(res1, res2, quick, report)
+    write_report(res1, res2, res3, upper, quick, report)
 
 
 if __name__ == "__main__":

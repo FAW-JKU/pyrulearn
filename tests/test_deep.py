@@ -487,3 +487,17 @@ def test_size_penalty_trades_errors_for_edges(make, minimal):
     assert big.pruned().n_edges == 0  # an edge costs more than all the errors together
     with pytest.raises(ValueError, match="size_penalty"):
         make(-1.0)
+
+
+@pytest.mark.parametrize("make", [
+    lambda: DeepLocalSearch(layers=[32, 8, 2], n_epochs=10 ** 6, max_seconds=1.0),
+    lambda: DeepGenetic(layers=[32, 8, 2], generations=10 ** 6, max_seconds=1.0),
+    lambda: DeepNeuroFuzzy(layers=[32, 8, 2], epochs=10 ** 6, max_seconds=1.0),
+])
+def test_time_budget_ends_the_search(make):
+    import time
+
+    start = time.perf_counter()
+    m = make().fit(DATA)
+    assert time.perf_counter() - start < 10  # the budget, plus one step and the model
+    assert m.predict(DATA).shape == (128,)

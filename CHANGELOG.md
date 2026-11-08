@@ -78,6 +78,12 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   network, fitness, final climb), not on mini-batches; `DeepNeuroFuzzy`
   as an L1 term on a summed loss; `DeepSAT` as before (soft examples).
   `None` (default) leaves the learners as they were.
+- `max_seconds` on `DeepLocalSearch`, `DeepGenetic`, `DeepNeuroFuzzy`: a
+  time budget for the fit, the best network so far when it is up.
+- `pyrulearn.datasets.parity(n_relevant, n_irrelevant, n, noise)` and
+  `Parity`: the parity of a few relevant Boolean features among
+  irrelevant ones (Pypper, 5-fold: 0.71 for 3 of 10, 0.62 for 4 of 10,
+  0.52 for 5 of 10).
 - `target_class` on the deep learners: the class the output node learns
   (the most frequent other class the default); without it, as before,
   the less frequent of two classes, or one output per class. On Beck's

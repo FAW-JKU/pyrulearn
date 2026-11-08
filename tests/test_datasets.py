@@ -91,3 +91,23 @@ def test_krk_relations_only():
     assert KRKIllegal(200, relations=True, coordinates=False).name == "krk-illegal-200-relational-only"
     with pytest.raises(ValueError, match="needs relations"):
         krk_illegal(200, coordinates=False)
+
+
+def test_parity():
+    from pyrulearn.datasets import Parity, parity
+
+    d = parity(3, 2)
+    assert len(d) == 32 and list(d.columns) == ["x1", "x2", "x3", "x4", "x5", "class"]
+    assert d["x1"].dtype == bool
+    odd = (d[["x1", "x2", "x3"]].sum(axis=1) % 2 == 1)
+    np.testing.assert_array_equal(d["class"] == "odd", odd)  # x4, x5 don't matter
+    s = parity(4, 6, n=300, random_state=1)
+    assert len(s) == 300 and not s.drop(columns="class").duplicated().any()
+    noisy = parity(4, 6, noise=0.1, random_state=2)
+    clean = parity(4, 6)
+    assert 0.05 < (noisy["class"] != clean["class"]).mean() < 0.15
+    assert Parity().name == "parity-4-of-10" and Parity(3, 5, n=100, noise=0.05).name == "parity-3-of-8-n100-noise0.05"
+    df, target = Parity(3, 2).load()
+    assert target == "class" and df.equals(d)
+    with pytest.raises(ValueError):
+        parity(0, 3)
