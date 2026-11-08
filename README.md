@@ -187,6 +187,7 @@ details.
 |---|---|
 | `combiners` | `RuleCombiner`: how a `RuleSet` resolves an example covered by several rules. List order, plain majority vote, heuristic-scored max or vote, and per-class-distribution combiners (`MacroVoteCombiner` reproduces scikit-learn's soft voting). |
 | `data` | Everything about data. **Four base representations**, all behind the same `coverage(rule)` / `features_of(row)` interface, so every rule learner runs on any of them and finds identical rules: `VerticalBitmapRepresentation` (one bit-vector per feature over the examples; the fastest for most native learners and as small as a bit matrix gets, so first in `REPRESENTATION_PREFERENCE_ORDER`, which decides what `data.io`'s loaders and `run_cv` build by default), `HorizontalBitmapRepresentation` (the same bits packed per example, the simplest to inspect directly), `SparseDataRepresentation` (scipy CSR/CSC, Eclat-style tid-lists) and `NListRepresentation` (the PPC-tree / N-list index of LORD, stored instead of the table; `PrePostNListRepresentation` is a variant). Submodules: `data.attributes` (typed attributes -- boolean, binary, nominal, numeric, set, hierarchical, relational -- and the derived Boolean features they generate, `color=red`, `age>=30`, ...; also the **constraints** among those features, `ExactlyOne`, `ThresholdChain`, `MutuallyExclusive`, `Implies`, which record what is impossible or already implied: rule search uses them to skip contradictory refinements and to drop features an added condition already determines, which **reduces the search space**, and they let a rule check its own consistency; plus `evaluate_feature` and `MissingStrategy`), `data.spec` (`DataSpec`, `DataSpecBuilder`, `merge_dataspecs`: the feature space, no data), `data.representation` (the representations above) `data.io` (ARFF/CSV reading and writing, `encode`/`binarize`, `build_dataspec`; needs `pandas`). |
+| `datasets` | Generated datasets, defined by a rule instead of downloaded: `krk_illegal(n, random_state)`, the KRK illegality task of the ILP literature (white king, white rook, black king, white to move; six nominal coordinates, ~1/3 illegal), and `KRKIllegal` -- the same as a dataset for `run_cv`. Learning it from the coordinates alone needs relations such as "same file" or "adjacent", the ILP systems' background knowledge, built from the features; `relations=True` adds that background knowledge as 24 relational features (`eq`, `adj`, `lt` of two pieces' files or ranks), which give an exact theory, and `coordinates=False` leaves out the coordinates. |
 | `evaluation` | Measured statistics (`RuleStats`, `ConfusionMatrix`, `ModelStats`), `sort_rules`, `summarize`, and coverage-space plotting (`CoverageSpace`, `coverage_space_plot`, `coverage_space_auc`, `rule_refinement_plot`, `build_refinement_graph`). |
 | `experiments` | Shared infrastructure for demos and other cross-validation-style experiments: `experiments.catalog` (the catalog of benchmark datasets, see *Benchmark datasets*), `experiments.runner` (`run_cv`: per-fold encoding into `representation=` (default: the preference order's first entry, `VerticalBitmapRepresentation`), a per-fit timeout via `TimeoutRunner`, uniform measurement, fold caching), `experiments.stats` (optional `mean_rank`, `friedman_test`, `critical_difference_diagram`, never run automatically) and `experiments.report` (small Markdown-writing building blocks). Needs `pandas`/`scipy`/`matplotlib` (the `experiments` extra). |
 | `heuristics` | `RuleHeuristic`: pluggable rule-evaluation heuristics (`Precision`, `Laplace`, `MEstimate`, `WRAcc`, `FoilGain`, `Correlation`, `Entropy`, `LikelihoodRatio`, ...), the composable `LEF`, and `plot_isometrics` for drawing a heuristic into a `CoverageSpace`. |
@@ -550,10 +551,14 @@ category) and takes each nominal attribute's values from the header's
 declared list, so an attribute declared with two values is binary even
 if only one of them occurs.
 
-Not yet handled: set-valued/hierarchical/relational attributes (ARFF/CSV
-headers can't declare them, so they're never inferred, and relational
-features can't be evaluated from raw data at all -- see
-`pyrulearn.data.attributes.evaluate_feature`).
+Not yet handled: set-valued/hierarchical attributes (ARFF/CSV headers
+can't declare them, so they're never inferred). Relational attributes
+can't be inferred either, but a frame can declare them:
+`df.attrs["relational"] = {column: {"sources": [...], "expression":
+"..."}}` makes each such precomputed Boolean column a RELATIONAL
+attribute in `build_dataspec` (with its negation), and `encode` reads
+its value from the column -- `pyrulearn.datasets.krk_illegal(...,
+relations=True)` is an example.
 
 ### Missing values
 

@@ -863,22 +863,32 @@ class DataSpecBuilder:
         )
         return indices
 
-    def add_relational(self, name: str, attributes: Sequence[str], expression: Optional[str] = None) -> int:
+    def add_relational(self, name: str, attributes: Sequence[str], expression: Optional[str] = None,
+                       negation: bool = False) -> int:
         """Add a single relational feature derived from multiple existing
         attributes (e.g. ``income_gt_age_scaled`` reading ``income`` and
         ``age``, with ``expression="income > age * 1000"``). This builder
         does not compute the feature's value itself -- it only records
         provenance (which source `attributes` it reads) and an optional
         human-readable `expression` for display; the actual Boolean column
-        must already exist in the data passed to `attach_data`/`build`.
-        No constraints are generated, since the relationship between a
-        relational feature and its sources isn't inferrable in general.
-        Returns the feature index.
+        (named `name`) must already exist in the data -- `encode`/`binarize`
+        read it from there. With `negation` (off by default, unlike the
+        builder-wide default, so a relational attribute stays one feature
+        unless asked) it also gets ``not {name}``, mutually exclusive with
+        it, as `add_boolean` does. No constraints with the sources are
+        generated, since the relationship between a relational feature and
+        its sources isn't inferrable in general. Returns the feature index.
         """
         idx = len(self._names)
         self._names.append(name)
         self._specs.append(FeatureSpec(idx, name, attributes=tuple(attributes), op="expr", expression=expression))
-        self._attributes[name] = Attribute(name, AttributeType.RELATIONAL, sources=tuple(attributes))
+        if negation:
+            neg_idx = len(self._names)
+            self._names.append(f"not {name}")
+            self._specs.append(FeatureSpec(neg_idx, f"not {name}", attribute=name, op="not"))
+            self._constraints.append(MutuallyExclusive([idx, neg_idx]))
+        self._attributes[name] = Attribute(name, AttributeType.RELATIONAL, sources=tuple(attributes),
+                                           negation=negation)
         return idx
 
     def build(self, name: Optional[str] = None, missing_strategy: Optional[MissingStrategy] = None) -> DataSpec:
@@ -961,7 +971,7 @@ def _rebuilt_with_negation(spec: DataSpec, negation: bool) -> DataSpec:
             builder._add_hierarchy(name, attr.hierarchy, missing_values=attr.missing_values)
         elif t == AttributeType.RELATIONAL:
             fs = spec.feature_spec(spec.feature_index(name))
-            builder.add_relational(name, list(attr.sources), expression=fs.expression)
+            builder.add_relational(name, list(attr.sources), expression=fs.expression, negation=attr.negation)
         else:
             raise ValueError(f"Unknown AttributeType {t!r} for attribute {name!r}")
     return builder.build(name=spec.name, missing_strategy=spec.missing_strategy)
@@ -1002,7 +1012,7 @@ def _copy_attribute(builder: DataSpecBuilder, name: str, attr: Attribute, src: D
         builder._add_hierarchy(name, attr.hierarchy, missing_values=attr.missing_values)
     elif attr.type == AttributeType.RELATIONAL:
         spec = src.feature_spec(src.feature_index(name))
-        builder.add_relational(name, list(attr.sources), expression=spec.expression)
+        builder.add_relational(name, list(attr.sources), expression=spec.expression, negation=attr.negation)
     else:
         raise ValueError(f"Unknown AttributeType {attr.type!r} for attribute {name!r}")
 
@@ -1099,11 +1109,13 @@ def _merge_attribute(
     elif t == AttributeType.RELATIONAL:
         spec_a = a.feature_spec(a.feature_index(name))
         spec_b = b.feature_spec(b.feature_index(name))
-        if attr_a.sources != attr_b.sources or spec_a.expression != spec_b.expression:
+        if (attr_a.sources != attr_b.sources or spec_a.expression != spec_b.expression
+                or attr_a.negation != attr_b.negation):
             raise ValueError(
                 f"Cannot merge attribute {name!r}: relational attributes differ in "
-                "sources/expression -- reconcile them by hand before merging."
+                "sources/expression/negation -- reconcile them by hand before merging."
             )
-        builder.add_relational(name, list(attr_a.sources), expression=spec_a.expression)
+        builder.add_relational(name, list(attr_a.sources), expression=spec_a.expression,
+                               negation=attr_a.negation)
     else:
         raise ValueError(f"Unknown AttributeType {t!r} for attribute {name!r}")

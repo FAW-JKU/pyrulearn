@@ -52,6 +52,20 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   linear search prunes every network to its backbone (`pruned_weights`)
   before its cost bounds the next step, the start too: dead edges don't
   count.
+- `pyrulearn.datasets`: generated datasets. `krk_illegal(n, random_state)`
+  -- the KRK illegality task (Muggleton et al. 1989): positions of white
+  king, white rook and black king, white to move, labeled illegal or
+  legal by the rules, `n` distinct ones drawn from all 8^6; the six
+  coordinates nominal. `KRKIllegal`: the same as a dataset for `run_cv`.
+  `relations=True`: the ILP background knowledge as 24 relational
+  features (`eq`, `adj`, `lt` of two pieces' files or ranks), with which
+  the task has an exact theory; `coordinates=False` keeps only those.
+- Relational attributes from data: a frame's `attrs["relational"]`
+  (`{column: {"sources", "expression"}}`) makes those precomputed Boolean
+  columns RELATIONAL attributes in `build_dataspec`; `evaluate_feature`
+  reads a relational feature's value from its column (it raised
+  `NotImplementedError` before); `DataSpecBuilder.add_relational(...,
+  negation=True)` adds ``not {name}`` (off by default).
 - `target_class` on the deep learners: the class the output node learns
   (the most frequent other class the default); without it, as before,
   the less frequent of two classes, or one output per class. On Beck's

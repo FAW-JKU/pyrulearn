@@ -77,11 +77,9 @@ def test_evaluate_feature():
     assert evaluate_feature(plain, float("nan")) is None
 
     expr = FeatureSpec(4, "income_gt_age", attributes=("income", "age"), op="expr", expression="income > age*1000")
-    try:
-        evaluate_feature(expr, 1)
-        assert False, "expected NotImplementedError"
-    except NotImplementedError:
-        pass
+    # a relational feature's column holds its precomputed value
+    assert evaluate_feature(expr, True) is True and evaluate_feature(expr, 0) is False
+    assert evaluate_feature(expr, None) is None
 
 
 def test_read_csv_infer():

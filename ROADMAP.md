@@ -950,6 +950,17 @@ Next:
     Pypper's 0.859 on that split. PySAT can interrupt Glucose, MiniSat and
     MapleChrono but not CaDiCaL (both versions).
     Open:
+    - KRK illegality as a test of hidden concepts (`pyrulearn.datasets`,
+      added 2026-11-08): the coordinates alone, so "same file", "same
+      rank", "adjacent" -- the ILP systems' background knowledge -- have
+      to appear as hidden nodes (an OR over eight ANDs `wrf=v & bkf=v`,
+      ...). Pypper, 1000 positions, 5-fold (majority 0.68): coordinates
+      0.792, coordinates + relations 0.998, relations alone 0.998
+      (`relations=True`, `coordinates=False`; the upper bound). Fossil
+      used KRK with training sets up to 1000 (and 2000). To look at: the learned interior nodes (`to_concepts()`), and wider
+      first layers than NNF(3)'s 32. kropt itself (28,056 positions, 18
+      classes) is out of reach for the full demo; a binary version on a
+      sample would be possible.
     - The output's class (`target_class`, done 2026-11-08). The night
       run (2026-11-08) had SAT time-outs on NNF(1) for six of the 20
       artificial datasets, where the paper had one; the cause: our output
