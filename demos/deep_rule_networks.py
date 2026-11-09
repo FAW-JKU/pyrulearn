@@ -535,7 +535,8 @@ def _plot_traces(res: pd.DataFrame, quick: bool, panels: List[Tuple[str, str]], 
         fig.legend(handles, labels, frameon=False, fontsize=8.5, loc="center right")
         styles = {"-": "solid", "--": "dashed", ":": "dotted"}
         legend = ", ".join(f"{styles[style]}: {f'from {start}' if start else 'random start'}" for start, style in starts)
-        fig.suptitle(f"{ds}: the best network so far, mean over folds ({legend})", x=0.01, ha="left",
+        fig.suptitle(f"{ds}: the best network so far, mean over folds{chr(10) if len(panels) == 1 else ' '}({legend})",
+                     x=0.01, ha="left",
                      color=INK, fontsize=11)
         fig.tight_layout(rect=(0, 0, 1 - 1.5 / (5.5 * len(panels) + 1.5), 0.96))
         path = os.path.join(PLOTS_DIR, f"{NAME}{'_quick' if quick else ''}{tag}_{ds}.png")
@@ -616,6 +617,8 @@ def _part4_section(res2: pd.DataFrame, res3: pd.DataFrame, res4: pd.DataFrame, k
         return rows[column].mean() if len(rows) else np.nan
 
     def cell(res, ds, learner):
+        if not ((res["dataset"] == ds) & (res["learner"] == learner)).any():
+            return "not run"
         acc, edges = mean(res, ds, learner, "accuracy"), mean(res, ds, learner, "edges")
         if np.isnan(acc):
             return _pct(acc, ds, learner)

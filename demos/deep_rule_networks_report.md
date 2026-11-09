@@ -29,6 +29,9 @@ network `[128, 16, 4]`; local search, the genetic algorithm and `DeepNeuroFuzzy`
 and from Pypper, lambda = 1, each with 1500 s (`max_seconds`, epochs and
 generations unbounded). No MaxSAT: the formula would have millions of variables.
 
+Part 4: parts 2 and 3 with the learners started from FOIL's rules instead of Pypper's
+(`FoilInit`: `PFoil` for the output's class, at most one rule per first-layer node).
+
 Each fit is capped at 1800 s; a time-out drops the learner's whole
 cross-validation on that dataset (the folds not yet started are skipped; `time-out (k/n)`:
 k of the n folds that ran failed, the others -- already running -- finished). Times are
@@ -117,3 +120,56 @@ Final test accuracy (%), backbone edges and mean fit time (s):
 | neuro-fuzzy | 68.00 | 0 | 1500 |
 | neuro-fuzzy from Pypper | 85.80 | 45 | 1500 |
 | Pypper with relations | 99.80 | | |
+
+## Part 4: FOIL as the start
+
+Parts 2 and 3 with the learners started from FOIL's rules (`PFoil` for the class the network learns, at most one rule per first-layer node: `FoilInit`) instead of Pypper's. Final test accuracy (%) with the backbone's edges in brackets; *start*: the rule set itself (Pypper; FOIL cut to the layer's width).
+
+**NNF(1)** `[20]`:
+
+| dataset | Pypper (start) | FOIL (start) | local search from Pypper | local search from FOIL | genetic from Pypper | genetic from FOIL | MaxSAT from Pypper | MaxSAT from FOIL | neuro-fuzzy from Pypper | neuro-fuzzy from FOIL |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| tic-tac-toe | 98.33 | 93.62 | 98.33 (32) | 96.87 (53) | 98.33 (32) | 96.66 (52) | 98.33 (32) | 93.62 (60) | 98.33 (32) | 98.33 (32) |
+| kr-vs-kp | 98.97 | 98.97 | 99.00 (56) | 99.16 (83) | 99.00 (55) | 99.22 (83) | 98.97 (57) | 98.97 (93) | 98.59 (43) | 98.66 (47) |
+| vote | 95.86 | 89.20 | 95.86 (8) | 95.40 (27) | 95.86 (7) | 95.86 (19) | 95.17 (4) | 95.17 (3) | 95.17 (4) | 95.63 (3) |
+| breast-cancer | 74.45 | 52.45 | 74.46 (4) | 66.09 (51) | 74.46 (4) | 67.48 (53) | 70.65 (6) | 71.66 (8) | 74.46 (4) | 72.70 (7) |
+| SPECT | 79.80 | 56.19 | 80.92 (7) | 79.40 (22) | 83.13 (7) | 78.67 (22) | 83.14 (7) | 83.14 (7) | 80.91 (7) | 82.02 (7) |
+| parity-4-of-10 | 62.39 | 73.71 | 95.12 (36) | 100.00 (40) | 95.12 (36) | 100.00 (40) | 99.22 (45) | 100.00 (43) | 80.77 (39) | 100.00 (40) |
+| mushroom | 99.96 | 100.00 | 99.96 (16) | 100.00 (16) | 99.96 (16) | 100.00 (16) | not run | not run | 99.96 (16) | 100.00 (16) |
+
+**NNF(3)** `[32, 8, 2]`:
+
+| dataset | Pypper (start) | FOIL (start) | local search from Pypper | local search from FOIL | genetic from Pypper | genetic from FOIL | MaxSAT from Pypper | MaxSAT from FOIL | neuro-fuzzy from Pypper | neuro-fuzzy from FOIL |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| tic-tac-toe | 98.33 | 93.62 | 98.33 (34) | 96.87 (53) | 98.33 (34) | 96.87 (51) | 98.33 (34) | 93.62 (62) | 98.33 (34) | 98.33 (34) |
+| kr-vs-kp | 98.97 | 98.44 | 98.94 (57) | 99.12 (88) | 99.00 (57) | 99.31 (80) | 98.97 (59) | 98.44 (106) | 98.53 (45) | 98.66 (46) |
+| vote | 95.86 | 89.20 | 95.86 (10) | 95.40 (29) | 95.63 (10) | 95.63 (22) | 95.63 (8) | 95.63 (5) | 95.17 (6) | 95.63 (6) |
+| breast-cancer | 74.45 | 52.45 | 73.41 (5) | 65.74 (41) | 73.42 (7) | 70.98 (2) | 72.38 (6) | 71.68 (4) | 74.46 (6) | 73.41 (9) |
+| SPECT | 79.80 | 56.19 | 80.92 (10) | 77.53 (21) | 80.53 (9) | 79.40 (0) | 82.75 (9) | 84.26 (9) | 80.91 (7) | 79.76 (6) |
+| parity-4-of-10 | 62.39 | 84.24 | 100.00 (43) | 100.00 (42) | 100.00 (41) | 100.00 (42) | 99.80 (38) | 97.95 (50) | 66.40 (14) | 100.00 (42) |
+| mushroom | 99.96 | 100.00 | 99.96 (18) | 100.00 (18) | 99.96 (18) | 100.00 (18) | not run | not run | 99.96 (18) | 100.00 (18) |
+
+**KRK** (`[128, 16, 4]`, 1500 s per fit):
+
+| learner | from Pypper | from FOIL |
+|---|--:|--:|
+| the start | 79.20 | 73.30 |
+| local search | 79.20 (40) | 68.00 (0) |
+| genetic | 79.20 (40) | 81.60 (220) |
+| neuro-fuzzy | 85.80 (45) | 88.40 (59) |
+
+![tic-tac-toe](deep_rule_networks_plots/deep_rule_networks_foil_tic-tac-toe.png)
+
+![kr-vs-kp](deep_rule_networks_plots/deep_rule_networks_foil_kr-vs-kp.png)
+
+![vote](deep_rule_networks_plots/deep_rule_networks_foil_vote.png)
+
+![breast-cancer](deep_rule_networks_plots/deep_rule_networks_foil_breast-cancer.png)
+
+![SPECT](deep_rule_networks_plots/deep_rule_networks_foil_SPECT.png)
+
+![parity-4-of-10](deep_rule_networks_plots/deep_rule_networks_foil_parity-4-of-10.png)
+
+![mushroom](deep_rule_networks_plots/deep_rule_networks_foil_mushroom.png)
+
+![krk-illegal-1000](deep_rule_networks_plots/deep_rule_networks_foil_krk-illegal-1000.png)
