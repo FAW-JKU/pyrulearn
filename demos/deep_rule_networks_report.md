@@ -30,7 +30,8 @@ and from Pypper, lambda = 1, each with 1500 s (`max_seconds`, epochs and
 generations unbounded). No MaxSAT: the formula would have millions of variables.
 
 Part 4: parts 2 and 3 with the learners started from FOIL's rules instead of Pypper's
-(`FoilInit`: `PFoil` for the output's class, at most one rule per first-layer node).
+(`FoilInit`: `PFoil` for the output's class, at most one rule per first-layer node), and from
+both (`PypperFoilInit`: Pypper's rules, then FOIL's new ones, the same limit).
 
 Each fit is capped at 1800 s; a time-out drops the learner's whole
 cross-validation on that dataset (the folds not yet started are skipped; `time-out (k/n)`:
@@ -121,42 +122,98 @@ Final test accuracy (%), backbone edges and mean fit time (s):
 | neuro-fuzzy from Pypper | 85.80 | 45 | 1500 |
 | Pypper with relations | 99.80 | | |
 
-## Part 4: FOIL as the start
+## Part 4: FOIL and Pypper+FOIL as the start
 
-Parts 2 and 3 with the learners started from FOIL's rules (`PFoil` for the class the network learns, at most one rule per first-layer node: `FoilInit`) instead of Pypper's. Final test accuracy (%) with the backbone's edges in brackets; *start*: the rule set itself (Pypper; FOIL cut to the layer's width).
+Parts 2 and 3 with the learners started from Pypper's rules, FOIL's (`PFoil` for the class the network learns, at most one rule per first-layer node: `FoilInit`) and both (`PypperFoilInit`: Pypper's rules, then FOIL's new ones, at most one rule per first-layer node; the union of the two DNFs). Final test accuracy (%) with the backbone's edges in brackets; *the start*: the start network itself (the first point of local search's trace).
 
 **NNF(1)** `[20]`:
 
-| dataset | Pypper (start) | FOIL (start) | local search from Pypper | local search from FOIL | genetic from Pypper | genetic from FOIL | MaxSAT from Pypper | MaxSAT from FOIL | neuro-fuzzy from Pypper | neuro-fuzzy from FOIL |
-|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-| tic-tac-toe | 98.33 | 93.62 | 98.33 (32) | 96.87 (53) | 98.33 (32) | 96.66 (52) | 98.33 (32) | 93.62 (60) | 98.33 (32) | 98.33 (32) |
-| kr-vs-kp | 98.97 | 98.97 | 99.00 (56) | 99.16 (83) | 99.00 (55) | 99.22 (83) | 98.97 (57) | 98.97 (93) | 98.59 (43) | 98.66 (47) |
-| vote | 95.86 | 89.20 | 95.86 (8) | 95.40 (27) | 95.86 (7) | 95.86 (19) | 95.17 (4) | 95.17 (3) | 95.17 (4) | 95.63 (3) |
-| breast-cancer | 74.45 | 52.45 | 74.46 (4) | 66.09 (51) | 74.46 (4) | 67.48 (53) | 70.65 (6) | 71.66 (8) | 74.46 (4) | 72.70 (7) |
-| SPECT | 79.80 | 56.19 | 80.92 (7) | 79.40 (22) | 83.13 (7) | 78.67 (22) | 83.14 (7) | 83.14 (7) | 80.91 (7) | 82.02 (7) |
-| parity-4-of-10 | 62.39 | 73.71 | 95.12 (36) | 100.00 (40) | 95.12 (36) | 100.00 (40) | 99.22 (45) | 100.00 (43) | 80.77 (39) | 100.00 (40) |
-| mushroom | 99.96 | 100.00 | 99.96 (16) | 100.00 (16) | 99.96 (16) | 100.00 (16) | not run | not run | 99.96 (16) | 100.00 (16) |
+| dataset | learner | from Pypper | from FOIL | from Pypper+FOIL |
+|---|---|--:|--:|--:|
+| tic-tac-toe | the start | 98.33 (32) | 93.62 (60) | 93.62 (68) |
+| | local search | 98.33 (32) | 96.87 (53) | 96.87 (53) |
+| | genetic | 98.33 (32) | 96.66 (52) | 97.29 (49) |
+| | MaxSAT | 98.33 (32) | 93.62 (60) | 93.62 (68) |
+| | neuro-fuzzy | 98.33 (32) | 98.33 (32) | 98.33 (32) |
+| kr-vs-kp | the start | 98.97 (57) | 98.97 (93) | 98.94 (94) |
+| | local search | 99.00 (56) | 99.16 (83) | 99.09 (72) |
+| | genetic | 99.00 (55) | 99.22 (83) | 99.19 (63) |
+| | MaxSAT | 98.97 (57) | 98.97 (93) | 98.94 (94) |
+| | neuro-fuzzy | 98.59 (43) | 98.66 (47) | 98.62 (44) |
+| vote | the start | 95.86 (8) | 89.20 (47) | 88.97 (55) |
+| | local search | 95.86 (8) | 95.40 (27) | 95.40 (28) |
+| | genetic | 95.86 (7) | 95.86 (19) | 95.63 (15) |
+| | MaxSAT | 95.17 (4) | 95.17 (3) | 95.63 (4) |
+| | neuro-fuzzy | 95.17 (4) | 95.63 (3) | 95.63 (2) |
+| breast-cancer | the start | 74.45 (3) | 52.45 (72) | 51.75 (75) |
+| | local search | 74.46 (4) | 66.09 (51) | 65.38 (55) |
+| | genetic | 74.46 (4) | 67.48 (53) | 68.16 (43) |
+| | MaxSAT | 70.65 (6) | 71.66 (8) | 72.37 (10) |
+| | neuro-fuzzy | 74.46 (4) | 72.70 (7) | 72.70 (7) |
+| SPECT | the start | 79.80 (6) | 56.19 (34) | 56.19 (40) |
+| | local search | 80.92 (7) | 79.40 (22) | 78.66 (24) |
+| | genetic | 83.13 (7) | 78.67 (22) | 80.53 (24) |
+| | MaxSAT | 83.14 (7) | 83.14 (7) | 83.15 (7) |
+| | neuro-fuzzy | 80.91 (7) | 82.02 (7) | 82.76 (6) |
+| parity-4-of-10 | the start | 62.39 (21) | 74.69 (145) | 70.10 (142) |
+| | local search | 95.12 (36) | 100.00 (40) | 95.12 (36) |
+| | genetic | 95.12 (36) | 100.00 (40) | 100.00 (40) |
+| | MaxSAT | 99.22 (45) | 100.00 (43) | 100.00 (43) |
+| | neuro-fuzzy | 80.77 (39) | 100.00 (40) | 100.00 (40) |
+| mushroom | the start | 99.96 (16) | 100.00 (17) | 100.00 (22) |
+| | local search | 99.96 (16) | 100.00 (16) | 100.00 (16) |
+| | genetic | 99.96 (16) | 100.00 (16) | 100.00 (15) |
+| | MaxSAT | not run | not run | not run |
+| | neuro-fuzzy | 99.96 (16) | 100.00 (16) | 100.00 (16) |
 
 **NNF(3)** `[32, 8, 2]`:
 
-| dataset | Pypper (start) | FOIL (start) | local search from Pypper | local search from FOIL | genetic from Pypper | genetic from FOIL | MaxSAT from Pypper | MaxSAT from FOIL | neuro-fuzzy from Pypper | neuro-fuzzy from FOIL |
-|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-| tic-tac-toe | 98.33 | 93.62 | 98.33 (34) | 96.87 (53) | 98.33 (34) | 96.87 (51) | 98.33 (34) | 93.62 (62) | 98.33 (34) | 98.33 (34) |
-| kr-vs-kp | 98.97 | 98.44 | 98.94 (57) | 99.12 (88) | 99.00 (57) | 99.31 (80) | 98.97 (59) | 98.44 (106) | 98.53 (45) | 98.66 (46) |
-| vote | 95.86 | 89.20 | 95.86 (10) | 95.40 (29) | 95.63 (10) | 95.63 (22) | 95.63 (8) | 95.63 (5) | 95.17 (6) | 95.63 (6) |
-| breast-cancer | 74.45 | 52.45 | 73.41 (5) | 65.74 (41) | 73.42 (7) | 70.98 (2) | 72.38 (6) | 71.68 (4) | 74.46 (6) | 73.41 (9) |
-| SPECT | 79.80 | 56.19 | 80.92 (10) | 77.53 (21) | 80.53 (9) | 79.40 (0) | 82.75 (9) | 84.26 (9) | 80.91 (7) | 79.76 (6) |
-| parity-4-of-10 | 62.39 | 84.24 | 100.00 (43) | 100.00 (42) | 100.00 (41) | 100.00 (42) | 99.80 (38) | 97.95 (50) | 66.40 (14) | 100.00 (42) |
-| mushroom | 99.96 | 100.00 | 99.96 (18) | 100.00 (18) | 99.96 (18) | 100.00 (18) | not run | not run | 99.96 (18) | 100.00 (18) |
+| dataset | learner | from Pypper | from FOIL | from Pypper+FOIL |
+|---|---|--:|--:|--:|
+| tic-tac-toe | the start | 98.33 (34) | 93.62 (62) | 93.62 (70) |
+| | local search | 98.33 (34) | 96.87 (53) | 96.87 (53) |
+| | genetic | 98.33 (34) | 96.87 (51) | 96.87 (54) |
+| | MaxSAT | 98.33 (34) | 93.62 (62) | 93.62 (70) |
+| | neuro-fuzzy | 98.33 (34) | 98.33 (34) | 98.33 (34) |
+| kr-vs-kp | the start | 98.97 (59) | 98.44 (106) | 98.22 (134) |
+| | local search | 98.94 (57) | 99.12 (88) | 99.12 (92) |
+| | genetic | 99.00 (57) | 99.31 (80) | 99.22 (80) |
+| | MaxSAT | 98.97 (59) | 98.44 (106) | 98.22 (134) |
+| | neuro-fuzzy | 98.53 (45) | 98.66 (46) | 98.66 (46) |
+| vote | the start | 95.86 (10) | 89.20 (49) | 88.97 (57) |
+| | local search | 95.86 (10) | 95.40 (29) | 95.17 (26) |
+| | genetic | 95.63 (10) | 95.63 (22) | 95.40 (22) |
+| | MaxSAT | 95.63 (8) | 95.63 (5) | 95.63 (4) |
+| | neuro-fuzzy | 95.17 (6) | 95.63 (6) | 95.17 (5) |
+| breast-cancer | the start | 74.45 (5) | 52.45 (74) | 51.75 (77) |
+| | local search | 73.41 (5) | 65.74 (41) | 67.14 (32) |
+| | genetic | 73.42 (7) | 70.98 (2) | 70.98 (11) |
+| | MaxSAT | 72.38 (6) | 71.68 (4) | 70.98 (1) |
+| | neuro-fuzzy | 74.46 (6) | 73.41 (9) | 72.70 (9) |
+| SPECT | the start | 79.80 (8) | 56.19 (36) | 56.19 (42) |
+| | local search | 80.92 (10) | 77.53 (21) | 78.62 (17) |
+| | genetic | 80.53 (9) | 79.40 (0) | 79.40 (0) |
+| | MaxSAT | 82.75 (9) | 84.26 (9) | 82.78 (10) |
+| | neuro-fuzzy | 80.91 (7) | 79.76 (6) | 80.89 (5) |
+| parity-4-of-10 | the start | 62.39 (23) | 87.87 (197) | 84.07 (212) |
+| | local search | 100.00 (43) | 100.00 (42) | 100.00 (41) |
+| | genetic | 100.00 (41) | 100.00 (42) | 100.00 (42) |
+| | MaxSAT | 99.80 (38) | 97.95 (50) | 97.95 (49) |
+| | neuro-fuzzy | 66.40 (14) | 100.00 (42) | 100.00 (42) |
+| mushroom | the start | 99.96 (18) | 100.00 (19) | 100.00 (24) |
+| | local search | 99.96 (18) | 100.00 (18) | 100.00 (18) |
+| | genetic | 99.96 (18) | 100.00 (18) | 100.00 (17) |
+| | MaxSAT | not run | not run | not run |
+| | neuro-fuzzy | 99.96 (18) | 100.00 (18) | 100.00 (18) |
 
 **KRK** (`[128, 16, 4]`, 1500 s per fit):
 
-| learner | from Pypper | from FOIL |
-|---|--:|--:|
-| the start | 79.20 | 73.30 |
-| local search | 79.20 (40) | 68.00 (0) |
-| genetic | 79.20 (40) | 81.60 (220) |
-| neuro-fuzzy | 85.80 (45) | 88.40 (59) |
+| learner | from Pypper | from FOIL | from Pypper+FOIL |
+|---|--:|--:|--:|
+| the start | 79.20 (40) | 73.30 (218) | 73.80 (245) |
+| local search | 79.20 (40) | 68.00 (0) | 68.00 (0) |
+| genetic | 79.20 (40) | 81.60 (220) | 81.30 (203) |
+| neuro-fuzzy | 85.80 (45) | 88.40 (59) | 88.20 (59) |
 
 ![tic-tac-toe](deep_rule_networks_plots/deep_rule_networks_foil_tic-tac-toe.png)
 
