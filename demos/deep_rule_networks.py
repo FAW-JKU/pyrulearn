@@ -38,7 +38,8 @@ the relations given (the upper bound).
 from FOIL's rules (`PFoil`, for the class the network learns, at most as
 many rules as the first layer has nodes: `FoilInit`) instead of
 Pypper's: FOIL's rules are more and longer, a richer start than Pypper's
-few general ones. Compared with the runs from Pypper's rules.
+few general ones -- and from both (`PypperFoilInit`: Pypper's rules, then
+FOIL's new ones). Compared with the runs from Pypper's rules.
 
 Times are wall-clock, so they depend on the machine and its load.
 
@@ -54,6 +55,7 @@ the cache holds (with ``--full``, of the full run).
 from __future__ import annotations
 
 import os
+from types import SimpleNamespace
 from typing import Callable, Dict, List, Tuple
 
 import numpy as np
@@ -136,7 +138,7 @@ KRK_LEARNERS = [f"{a}{s}" for a in KRK_ALGORITHMS for s in ("", " from Pypper")]
 # -- part 4 --------------------------------------------------------------------
 
 #: the starts compared in part 4 (the line style of their curves)
-STARTS = {"Pypper": "--", "FOIL": ":"}
+STARTS = {"Pypper": "--", "FOIL": ":", "Pypper+FOIL": "-."}
 
 
 class FoilInit(DeepInit):
@@ -150,6 +152,26 @@ class FoilInit(DeepInit):
             raise ValueError("FoilInit is for one output (two classes)")
         rules = PFoil(target_class=labels[0], max_rules=shapes[0][0]).fit(data)
         return RuleSetInit(rules).weights(data, labels, shapes, rng, first)
+
+
+class PypperFoilInit(DeepInit):
+    """Both rule sets as the start: Pypper's rules for the class the
+    network's (single) output learns -- few, general --, then FOIL's
+    (`PFoil`) that are not among them -- more, specific --, at most as
+    many as the first layer has nodes, all put in by `RuleSetInit`: the
+    union of the two DNFs."""
+
+    def weights(self, data, labels, shapes, rng, first="and"):
+        if len(labels) != 1:
+            raise ValueError("PypperFoilInit is for one output (two classes)")
+        rules, seen = [], set()
+        for model in (Pypper().fit(data), PFoil(target_class=labels[0]).fit(data)):
+            for r in model.rules:
+                key = frozenset(r.dataspec.feature_name(c.feature) for c in r.conditions)
+                if r.target == labels[0] and key not in seen:
+                    seen.add(key)
+                    rules.append(r)
+        return RuleSetInit(SimpleNamespace(rules=rules[:shapes[0][0]])).weights(data, labels, shapes, rng, first)
 
 
 class FoilRules(NativeRuleLearner):
@@ -200,6 +222,8 @@ def _variants(quick: bool) -> Dict[str, Tuple[str, Callable[[], NativeRuleLearne
             kw["init"] = RuleSetInit(Pypper())
         elif start == "FOIL":
             kw["init"] = FoilInit()
+        elif start == "Pypper+FOIL":
+            kw["init"] = PypperFoilInit()
         if algorithm == "MaxSAT":
             return DeepSAT(minimize="weights", max_seconds=trace_seconds, **kw)
         kw["max_seconds"] = seconds  # unbounded: stopped by the time, not by the epochs or generations
@@ -211,7 +235,9 @@ def _variants(quick: bool) -> Dict[str, Tuple[str, Callable[[], NativeRuleLearne
 
     def describe(algorithm, layers, start, seconds, unbounded=False):
         start = {"": "", "Pypper": ", init=RuleSetInit(Pypper())",
-                 "FOIL": ", init=FoilInit() (PFoil, the output's class, at most a rule per first-layer node)"}[start]
+                 "FOIL": ", init=FoilInit() (PFoil, the output's class, at most a rule per first-layer node)",
+                 "Pypper+FOIL": ", init=PypperFoilInit() (Pypper's rules, then PFoil's new ones, at most a rule "
+                                "per first-layer node)"}[start]
         if algorithm == "MaxSAT":
             return (f"DeepSAT(layers={layers}, minimize='weights', size_penalty={LAMBDA}, "
                     f"max_seconds={trace_seconds}{start}, trace=True)")
@@ -221,14 +247,14 @@ def _variants(quick: bool) -> Dict[str, Tuple[str, Callable[[], NativeRuleLearne
 
     for arch in TRACE_ARCHITECTURES:
         for algorithm in ALGORITHMS:
-            for start in ("", "Pypper", "FOIL"):
+            for start in ("", *STARTS):
                 name = f"traced {algorithm}{f' from {start}' if start else ''} {arch}"
                 out[name] = (describe(algorithm, NNF[arch], start, budget),
                              lambda a=algorithm, l=NNF[arch], s=start: make(a, l, s, budget))
         out[f"FOIL start {arch}"] = (f"PFoil(target_class=minority, max_rules={NNF[arch][0]})",
                                      lambda n=NNF[arch][0]: FoilRules(n))
     for algorithm in KRK_ALGORITHMS:
-        for start in ("", "Pypper", "FOIL"):
+        for start in ("", *STARTS):
             name = f"krk {algorithm}{f' from {start}' if start else ''}"
             out[name] = (describe(algorithm, KRK_ARCHITECTURE, start, krk_seconds, unbounded=True),
                          lambda a=algorithm, s=start: make(a, KRK_ARCHITECTURE, s, krk_seconds, unbounded=True))
@@ -347,7 +373,8 @@ def part4(quick: bool) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Parts 2 and 3 started from FOIL's rules (and the FOIL starts on their own)."""
     datasets = _datasets(QUICK_TRACE_DATASETS if quick else TRACE_DATASETS)
     names = [f"FOIL start {arch}" for arch in TRACE_ARCHITECTURES] + [
-        f"traced {a} from FOIL {arch}" for arch in TRACE_ARCHITECTURES for a in ALGORITHMS]
+        f"traced {a} from {start} {arch}" for arch in TRACE_ARCHITECTURES for a in ALGORITHMS
+        for start in ("FOIL", "Pypper+FOIL")]
     without = [n for n in names if "MaxSAT" not in n]
     common = dict(n_folds=QUICK_TRACE_FOLDS if quick else TRACE_FOLDS, fit_timeout=FIT_TIMEOUT,
                   random_state=RANDOM_STATE, cache_dir=CACHE_DIR, measure_fn=trace_curve, n_jobs=_n_jobs())
@@ -357,7 +384,8 @@ def part4(quick: bool) -> Tuple[pd.DataFrame, pd.DataFrame]:
     if small:
         parts.append(_run_cv([Variant(n, quick) for n in without], small, **common))
     krk = QUICK_KRK if quick else KRK
-    krk_names = ["krk FOIL start"] + [f"krk {a} from FOIL" for a in KRK_ALGORITHMS]
+    krk_names = ["krk FOIL start"] + [f"krk {a} from {start}" for a in KRK_ALGORITHMS
+                                      for start in ("FOIL", "Pypper+FOIL")]
     return pd.concat(parts, ignore_index=True), _run_cv([Variant(n, quick) for n in krk_names], [krk], **common)
 
 
@@ -533,7 +561,7 @@ def _plot_traces(res: pd.DataFrame, quick: bool, panels: List[Tuple[str, str]], 
                 if len(h) > len(handles):
                     handles, labels = h, lab
         fig.legend(handles, labels, frameon=False, fontsize=8.5, loc="center right")
-        styles = {"-": "solid", "--": "dashed", ":": "dotted"}
+        styles = {"-": "solid", "--": "dashed", ":": "dotted", "-.": "dash-dotted"}
         legend = ", ".join(f"{styles[style]}: {f'from {start}' if start else 'random start'}" for start, style in starts)
         fig.suptitle(f"{ds}: the best network so far, mean over folds{chr(10) if len(panels) == 1 else ' '}({legend})",
                      x=0.01, ha="left",
@@ -603,60 +631,75 @@ def _part3_section(res: pd.DataFrame, upper: pd.DataFrame, quick: bool) -> List[
 
 def _part4_section(res2: pd.DataFrame, res3: pd.DataFrame, res4: pd.DataFrame, krk4: pd.DataFrame,
                    quick: bool) -> List[str]:
-    """FOIL against Pypper as the start: final test accuracy and edges per
-    dataset, learner and architecture, and the curves of both starts."""
+    """The starts compared: final test accuracy and edges per dataset,
+    learner and architecture, from Pypper's rules, FOIL's and both, and
+    the curves of all three."""
+    title = "## Part 4: FOIL and Pypper+FOIL as the start\n"
     if res4.empty or "dataset" not in res4:
-        return ["## Part 4: FOIL as the start\n", "(No results yet.)\n"]
+        return [title, "(No results yet.)\n"]
     both = pd.concat([res2, res4], ignore_index=True)
+    krk = pd.concat([res3, krk4], ignore_index=True)
+    starts = list(STARTS)
 
-    def mean(res, ds, learner, column):
-        rows = res[(res["dataset"] == ds) & (res["learner"] == learner) & res["error"].isna()]
-        if column == "edges":
-            last = [tr[-1][5] for tr in rows.get("trace", pd.Series(dtype=object)) if isinstance(tr, list) and tr]
-            return np.mean(last) if last else np.nan
-        return rows[column].mean() if len(rows) else np.nan
+    def rows(res, ds, learner):
+        return res[(res["dataset"] == ds) & (res["learner"] == learner)]
 
     def cell(res, ds, learner):
-        if not ((res["dataset"] == ds) & (res["learner"] == learner)).any():
+        r = rows(res, ds, learner)
+        if not len(r):
             return "not run"
-        acc, edges = mean(res, ds, learner, "accuracy"), mean(res, ds, learner, "edges")
-        if np.isnan(acc):
-            return _pct(acc, ds, learner)
-        return f"{100 * acc:.2f}" + ("" if np.isnan(edges) else f" ({edges:.0f})")
+        ok = r[r["error"].isna()]
+        if not len(ok):
+            return _pct(np.nan, ds, learner)
+        last = [tr[-1][5] for tr in ok.get("trace", pd.Series(dtype=object)) if isinstance(tr, list) and tr]
+        return f"{100 * ok['accuracy'].mean():.2f}" + (f" ({np.mean(last):.0f})" if last else "")
 
-    L = ["## Part 4: FOIL as the start\n",
-         "Parts 2 and 3 with the learners started from FOIL's rules (`PFoil` for the class the network "
-         "learns, at most one rule per first-layer node: `FoilInit`) instead of Pypper's. Final test "
-         "accuracy (%) with the backbone's edges in brackets; *start*: the rule set itself (Pypper; "
-         "FOIL cut to the layer's width).\n"]
+    def start_cell(res, ds, learner):
+        """The start itself: the first point of local search's trace (its start network)."""
+        ok = rows(res, ds, learner)
+        ok = ok[ok["error"].isna()] if len(ok) else ok
+        first = [tr[0] for tr in ok.get("trace", pd.Series(dtype=object)) if isinstance(tr, list) and tr]
+        if not first:
+            return "not run"
+        return f"{100 * np.mean([p[4] for p in first]):.2f} ({np.mean([p[5] for p in first]):.0f})"
+
+    L = [title,
+         "Parts 2 and 3 with the learners started from Pypper's rules, FOIL's (`PFoil` for the class the "
+         "network learns, at most one rule per first-layer node: `FoilInit`) and both (`PypperFoilInit`: "
+         "Pypper's rules, then FOIL's new ones, at most one rule per first-layer node; the union of the "
+         "two DNFs). Final test accuracy (%) with the backbone's edges in brackets; *the start*: the start "
+         "network itself (the first point of local search's trace).\n"]
     for arch in TRACE_ARCHITECTURES:
         L += [f"**{arch}** `{NNF[arch]}`:\n",
-              "| dataset | Pypper (start) | FOIL (start) | " + " | ".join(
-                  f"{a} from Pypper | {a} from FOIL" for a in ALGORITHMS) + " |",
-              "|---|" + "--:|" * (2 + 2 * len(ALGORITHMS))]
+              "| dataset | learner | " + " | ".join(f"from {s_}" for s_ in starts) + " |",
+              "|---|---|" + "--:|" * len(starts)]
         for ds in dict.fromkeys(res4["dataset"]):
-            cells = [cell(both, ds, "Pypper"), cell(both, ds, f"FOIL start {arch}")]
+            L.append(f"| {ds} | the start | " + " | ".join(
+                start_cell(both, ds, f"traced local search from {s_} {arch}") for s_ in starts) + " |")
             for a in ALGORITHMS:
-                cells += [cell(both, ds, f"traced {a} from Pypper {arch}"), cell(both, ds, f"traced {a} from FOIL {arch}")]
-            L.append(f"| {ds} | " + " | ".join(cells) + " |")
+                L.append(f"| | {a} | " + " | ".join(cell(both, ds, f"traced {a} from {s_} {arch}") for s_ in starts)
+                         + " |")
         L.append("")
-    krk = pd.concat([res3, krk4], ignore_index=True)
     ds = (QUICK_KRK if quick else KRK).name
     L += [f"**KRK** (`{KRK_ARCHITECTURE}`, {QUICK_KRK_SECONDS if quick else KRK_SECONDS} s per fit):\n",
-          "| learner | from Pypper | from FOIL |", "|---|--:|--:|",
-          f"| the start | {cell(krk, ds, 'Pypper')} | {cell(krk, ds, 'krk FOIL start')} |"]
+          "| learner | " + " | ".join(f"from {s_}" for s_ in starts) + " |", "|---|" + "--:|" * len(starts),
+          "| the start | " + " | ".join(start_cell(krk, ds, f"krk local search from {s_}") for s_ in starts) + " |"]
     for a in KRK_ALGORITHMS:
-        L.append(f"| {a} | {cell(krk, ds, f'krk {a} from Pypper')} | {cell(krk, ds, f'krk {a} from FOIL')} |")
+        L.append(f"| {a} | " + " | ".join(cell(krk, ds, f"krk {a} from {s_}") for s_ in starts) + " |")
     L.append("")
-    starts = tuple((s, STARTS[s]) for s in ("Pypper", "FOIL"))
-    refs = {d: [("Pypper", mean(both, d, "Pypper", "accuracy")),
-                ("FOIL (NNF(1))", mean(both, d, "FOIL start NNF(1)", "accuracy"))] for d in res4["dataset"].unique()}
+    styles = tuple((s_, STARTS[s_]) for s_ in starts)
+
+    def accuracy(res, d, learner):
+        r = rows(res, d, learner)
+        return r[r["error"].isna()]["accuracy"].mean() if len(r) else np.nan
+
+    refs = {d: [("Pypper", accuracy(both, d, "Pypper")), ("FOIL (NNF(1))", accuracy(both, d, "FOIL start NNF(1)"))]
+            for d in res4["dataset"].unique()}
     L += _plot_traces(both, quick, [(arch, f" {arch}") for arch in TRACE_ARCHITECTURES], ALGORITHMS, refs,
-                      prefix="traced ", starts=starts, tag="_foil")
+                      prefix="traced ", starts=styles, tag="_foil")
     L += _plot_traces(krk, quick, [(f"{KRK_ARCHITECTURE}", "")], KRK_ALGORITHMS,
-                      {ds: [("Pypper", mean(krk, ds, "Pypper", "accuracy")),
-                            ("FOIL", mean(krk, ds, "krk FOIL start", "accuracy"))]},
-                      prefix="krk ", starts=starts, tag="_foil")
+                      {ds: [("Pypper", accuracy(krk, ds, "Pypper")), ("FOIL", accuracy(krk, ds, "krk FOIL start"))]},
+                      prefix="krk ", starts=styles, tag="_foil")
     return L + _failure_note(res4, lambda n: n.replace("traced ", "")) + _failure_note(krk4, lambda n: n.replace("krk ", ""))
 
 
@@ -689,7 +732,8 @@ and from Pypper, lambda = {LAMBDA:g}, each with {KRK_SECONDS} s (`max_seconds`, 
 generations unbounded). No MaxSAT: the formula would have millions of variables.
 
 Part 4: parts 2 and 3 with the learners started from FOIL's rules instead of Pypper's
-(`FoilInit`: `PFoil` for the output's class, at most one rule per first-layer node).
+(`FoilInit`: `PFoil` for the output's class, at most one rule per first-layer node), and from
+both (`PypperFoilInit`: Pypper's rules, then FOIL's new ones, the same limit).
 
 Each fit is capped at {FIT_TIMEOUT:.0f} s; a time-out drops the learner's whole
 cross-validation on that dataset (the folds not yet started are skipped; `time-out (k/n)`:
