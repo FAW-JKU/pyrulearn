@@ -4,7 +4,7 @@ title: "pyrulearn"
 type: software
 version: 0.6.0
 license: GPL-3.0-or-later
-repository-code: "https://github.com/juffif/pyrulearn"
+repository-code: "https://github.com/FAW-JKU/pyrulearn"
 abstract: >-
   pyrulearn is a Python library for representing, learning, combining and
   analyzing propositional rule models over Boolean data: native rule learners

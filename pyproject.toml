@@ -38,9 +38,9 @@ test = ["pytest"]
 all = ["pandas", "scipy", "matplotlib", "networkx", "wittgenstein", "imodels", "pytest"]
 
 [project.urls]
-Homepage = "https://github.com/juffif/pyrulearn"
-Repository = "https://github.com/juffif/pyrulearn"
-Issues = "https://github.com/juffif/pyrulearn/issues"
+Homepage = "https://github.com/FAW-JKU/pyrulearn"
+Repository = "https://github.com/FAW-JKU/pyrulearn"
+Issues = "https://github.com/FAW-JKU/pyrulearn/issues"
 
 [tool.setuptools.packages.find]
 include = ["pyrulearn*"]

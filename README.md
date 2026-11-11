@@ -1,6 +1,6 @@
 # pyrulearn
 
-[![CI](https://github.com/juffif/pyrulearn/actions/workflows/ci.yml/badge.svg)](https://github.com/juffif/pyrulearn/actions/workflows/ci.yml)
+[![CI](https://github.com/FAW-JKU/pyrulearn/actions/workflows/ci.yml/badge.svg)](https://github.com/FAW-JKU/pyrulearn/actions/workflows/ci.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 A Python library for **representing, learning, combining and analyzing
@@ -85,7 +85,7 @@ two learners across a few benchmark datasets.
 ## Install
 
 ```
-pip install git+https://github.com/juffif/pyrulearn.git
+pip install git+https://github.com/FAW-JKU/pyrulearn.git
 ```
 
 Requires Python ≥ 3.10, `numpy` and `scikit-learn` (the latter because
@@ -106,7 +106,7 @@ Requires Python ≥ 3.10, `numpy` and `scikit-learn` (the latter because
 | `test` | `pytest` | running the test suite |
 | `all` | all of the above except `pyarc`, `boomer` and `realkd` | |
 
-For example `pip install "pyrulearn[data,plot] @ git+https://github.com/juffif/pyrulearn.git"`.
+For example `pip install "pyrulearn[data,plot] @ git+https://github.com/FAW-JKU/pyrulearn.git"`.
 For development, clone the repository and run `pip install -e ".[all]"`, then `pytest`.
 The Weka, LORD and pyarc interfaces additionally need those external
 tools (Java and `weka.jar`, LORD's Java implementation, `pyarc` with `pyfim`);
@@ -3040,7 +3040,7 @@ If you use pyrulearn, please cite it via [`CITATION.cff`](CITATION.cff)
   title   = {pyrulearn},
   year    = {2026},
   version = {0.6.0},
-  url     = {https://github.com/juffif/pyrulearn}
+  url     = {https://github.com/FAW-JKU/pyrulearn}
 }
 ```
 
