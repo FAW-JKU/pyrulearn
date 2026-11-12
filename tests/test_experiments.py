@@ -200,21 +200,25 @@ def test_timeout_runner_records_a_timeout_instead_of_raising():
 
 
 def test_timeout_runner_exits_cleanly_after_killing_a_worker_that_never_read_its_task():
-    """A worker killed before reading its task (here: 8 MB, not read within the timeout) used to leave the
-    queue's feeder thread blocked on a full pipe, and Python joins that thread at exit --
-    the process hung. Run in a subprocess, so a regression fails the test instead of
-    hanging it."""
+    """A worker killed before reading its task used to leave the queue's feeder thread
+    blocked on a full pipe, and Python joins that thread at exit -- the process hung.
+    Here the worker is killed while it is still starting, with 8 MB queued for it: `run`
+    can't be used for this, since it waits for the worker first, which then reads the
+    task at once (and on Windows, where a short timeout lasts a timer tick of about 15 ms,
+    may even answer in time). Run in a subprocess, so a regression fails the test instead
+    of hanging it."""
     import os
     import subprocess
     import sys
     code = ("from pyrulearn.experiments.runner import TimeoutRunner\n"
-            "runner = TimeoutRunner(timeout=0.001)\n"
-            "print(runner.run(len, b'x' * (8 << 20)))\n"
-            "runner.close()\n")
+            "runner = TimeoutRunner(timeout=1.0)\n"
+            "runner.task_q.put((len, (b'x' * (8 << 20),), {}))  # the worker is still starting\n"
+            "runner.close()\n"
+            "print('closed')\n")
     env = {**os.environ, "PYTHONPATH": os.pathsep.join(sys.path)}
     proc = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60, env=env)
     assert proc.returncode == 0, proc.stderr
-    assert "timeout" in proc.stdout
+    assert "closed" in proc.stdout
 
 
 def test_timeout_runner_does_not_count_a_new_workers_start_up():
