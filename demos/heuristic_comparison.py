@@ -26,6 +26,14 @@ over m in {2, 4, 8, 16, 32}. Weka's JRip (as in the paper) and our own
 Pypper (both also with ordered class binarization) are included as
 benchmarks. Kloesgen is left out.
 
+A separate section repeats the heuristics that inversion changes (all
+but Correlation, WRA and Accuracy, which rank rules the same way
+inverted or not) with inverted refinement, after Stecher, Janssen &
+Fürnkranz (ECML PKDD 2014): the search adds the condition that is best
+by the inverted heuristic `Inverted(h)` and returns the rule on its
+refinement path that is best by `h` itself (`SingleRuleLearner(
+Inverted(h), selection=h)`).
+
 Differences from the paper: numeric attributes are discretized by
 `build_dataspec` (tree-based, `MAX_INTERVALS` intervals per attribute)
 rather than tested at every midpoint between adjacent values, ties are
@@ -48,6 +56,7 @@ import os
 from typing import Optional
 
 import numpy as np
+import pandas as pd
 
 from pyrulearn.experiments.catalog import Catalog
 from pyrulearn.data.discretization import TreeDiscretizer
@@ -57,7 +66,7 @@ from pyrulearn.experiments.report import (
 from pyrulearn.experiments.runner import run_cv
 from pyrulearn.experiments.stats import mean_rank, win_counts
 from pyrulearn.heuristics import (
-    Accuracy, Correlation, CoverageDifference, FBeta, Laplace, LinearCost, LinearCostRates,
+    Accuracy, Correlation, CoverageDifference, FBeta, Inverted, Laplace, LinearCost, LinearCostRates,
     MEstimate, Precision, WRAcc,
 )
 from pyrulearn.interfaces.weka import WekaJRip
@@ -107,9 +116,11 @@ REPORT_PATH = os.path.join(HERE, "heuristic_comparison_report.md")
 PLOTS_DIR = os.path.join(HERE, "heuristic_comparison_plots")
 TRADEOFF_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_tradeoff.png")
 M_SWEEP_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_m_sweep.png")
+INVERTED_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_inverted.png")
 QUICK_REPORT_PATH = os.path.join(HERE, "heuristic_comparison_quick_report.md")
 QUICK_TRADEOFF_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_quick_tradeoff.png")
 QUICK_M_SWEEP_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_quick_m_sweep.png")
+QUICK_INVERTED_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_quick_inverted.png")
 CACHE_DIR = os.path.join(HERE, "_heuristic_comparison_cache")
 
 
@@ -140,11 +151,14 @@ def _cost_ratio(c: float) -> float:
 
 class HeuristicSeCo(SeCo):
     """The paper's covering learner with one fixed heuristic, named by
-    `label` in the results."""
+    `label` in the results; with a `selection`, the heuristic refines and
+    the selection picks the rule on the refinement path."""
 
-    def __init__(self, label: str, heuristic, random_state: Optional[int] = None):
+    def __init__(self, label: str, heuristic, random_state: Optional[int] = None, selection=None):
+        # no selection: the learner's parameters (and so its cached results) as before
+        extra = {} if selection is None else {"selection": selection}
         super().__init__(
-            single_rule_learner=SingleRuleLearner(heuristic=heuristic, search=BeamSearch(beam_width=1)),
+            single_rule_learner=SingleRuleLearner(heuristic=heuristic, search=BeamSearch(beam_width=1), **extra),
             stop_covering=ThresholdPrePruning(CoverageDifference(), 0, operator="<="),
             random_state=random_state,
         )
@@ -161,7 +175,7 @@ class HeuristicSeCo(SeCo):
         return ConceptModel if self.target_class is not None else ConceptCascade
 
 
-def build_heuristic_variants():
+def _heuristic_specs():
     specs = [(f"m-estimate (m={m})", MEstimate(m=m)) for m in M_SWEEP]
     specs += [
         (f"m-estimate (m={PAPER_M})", MEstimate(m=PAPER_M)),
@@ -174,11 +188,30 @@ def build_heuristic_variants():
         ("Laplace", Laplace()),
         ("Accuracy", Accuracy()),
     ]
-    return [HeuristicSeCo(label, h, random_state=RANDOM_STATE) for label, h in specs]
+    return specs
+
+
+def build_heuristic_variants():
+    return [HeuristicSeCo(label, h, random_state=RANDOM_STATE) for label, h in _heuristic_specs()]
+
+
+# heuristics that rank every rule the same way inverted or not (Inverted warns): nothing to compare
+SAME_INVERTED = ("Correlation", "WRA", "Accuracy")
+INVERTED_SUFFIX = ", inverted refinement"
+
+
+def _inverted_label(label: str) -> str:
+    return label + INVERTED_SUFFIX
+
+
+def build_inverted_variants():
+    """Refine by `Inverted(h)`, select the rule on the refinement path by `h`."""
+    return [HeuristicSeCo(_inverted_label(label), Inverted(h), random_state=RANDOM_STATE, selection=h)
+            for label, h in _heuristic_specs() if label not in SAME_INVERTED]
 
 
 def build_learners():
-    return build_heuristic_variants() + [
+    return build_heuristic_variants() + build_inverted_variants() + [
         WekaJRip(jar=WEKA_JAR, java=WEKA_JAVA),
         Pypper(random_state=RANDOM_STATE),
     ]
@@ -226,14 +259,25 @@ of the paper's tests at every midpoint. Each fit is capped at
 A fold that times out fails the whole cross-validation of that learner on that dataset (`run_cv`'s `stop_on_timeout`): its remaining folds are not run, and all its folds count as failures, so no mean rests on just the folds that finished.
 
 Measures: test accuracy, number of rules and conditions, fit time.{_concurrency_note()}
+
+The summary and the per-dataset results below are for the heuristics as
+in the paper; the [last section](#inverted-heuristics-for-refinement)
+compares them with inverted refinement.
 """
 
 
+def _is_inverted(learner: str) -> bool:
+    return learner.endswith(INVERTED_SUFFIX)
+
+
 def write_report(results, datasets, n_folds: int, report_path: str,
-                 tradeoff_plot_path: str, m_sweep_plot_path: str, quick: bool) -> None:
+                 tradeoff_plot_path: str, m_sweep_plot_path: str, inverted_plot_path: str,
+                 quick: bool) -> None:
     results = results.copy()
     results["conds_per_rule"] = results["n_conditions"] / results["n_rules"]
     plots_dir = os.path.basename(os.path.dirname(tradeoff_plot_path))
+    inverted = results[results["learner"].map(_is_inverted)]
+    results = results[~results["learner"].map(_is_inverted)]
 
     lines = ["# Rule learning heuristics in separate-and-conquer (after Janssen & Fürnkranz)\n\n"]
     lines.append(render_setup_section(_build_description(datasets, n_folds, quick)))
@@ -260,13 +304,67 @@ def write_report(results, datasets, n_folds: int, report_path: str,
 
     lines.append("## Per-dataset results, per learner (mean across folds)\n\n")
     lines.append(render_results_table(
-        results, ["accuracy", "n_rules", "n_conditions", "fit_time"],
+        results, ["accuracy", "n_rules", "conds_per_rule", "n_conditions", "fit_time"],
         group_by=["dataset", "learner"], include_overall=False))
     lines.append("\n")
+
+    lines += _inverted_section(results, inverted, plots_dir, inverted_plot_path)
 
     with open(report_path, "w", encoding="utf-8") as f:
         f.writelines(lines)
     print(f"Report -> {report_path}")
+
+
+def _inverted_section(results, inverted, plots_dir: str, inverted_plot_path: str) -> list:
+    lines = [
+        "## Inverted heuristics for refinement\n\n",
+        "The same learner, but refining by the inverted heuristic: the search adds the "
+        "condition that is best by `Inverted(h)`, h(N - n, P - p), and returns the rule on "
+        "its refinement path that is best by `h` itself (`SingleRuleLearner(Inverted(h), "
+        "selection=h)`), after Stecher, Janssen & Fürnkranz (ECML PKDD 2014). `P` and `N` "
+        "are the examples left in the current covering step. The inverted heuristic judges "
+        "a refinement from the universal rule, where the search starts, rather than from "
+        "the empty rule: it prefers the refinement whose excluded examples are the purest "
+        "in negatives (see the [isometrics](heuristic_isometrics_report.md#inverted-heuristics)). "
+        "Correlation, WRA and Accuracy are left out: they rank every rule the same way "
+        "inverted or not. The inverted cost measures rank like the cost measures with the "
+        "inverse cost ratio, so for them inverted refinement means refining by another "
+        "cost.\n\n",
+        f"![regular vs. inverted refinement]({plots_dir}/{os.path.basename(inverted_plot_path)})\n\n",
+    ]
+    regular_means = results.groupby("learner")[
+        ["accuracy", "n_rules", "n_conditions", "conds_per_rule", "fit_time"]].mean(numeric_only=True)
+    inverted_means = inverted.groupby("learner")[
+        ["accuracy", "n_rules", "n_conditions", "conds_per_rule", "fit_time"]].mean(numeric_only=True)
+    per_dataset = (pd.concat([results, inverted], ignore_index=True).groupby(["learner", "dataset"])["accuracy"]
+                   .mean().unstack("dataset"))
+    failures = inverted.groupby("learner")["error"].apply(lambda e: e.notna().sum())
+    lines.append("| heuristic | accuracy | inverted | n_rules | inverted | conds/rule | inverted | "
+                 "n_conditions | inverted | inverted better / worse / tied | inverted failures |\n"
+                 "|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n")
+    labels = sorted((label for label in regular_means.index if _inverted_label(label) in inverted_means.index),
+                    key=lambda label: -regular_means.loc[label, "accuracy"])
+    for label in labels:
+        reg, inv = regular_means.loc[label], inverted_means.loc[_inverted_label(label)]
+        diff = per_dataset.loc[_inverted_label(label)] - per_dataset.loc[label]
+        better, worse = int((diff > 1e-12).sum()), int((diff < -1e-12).sum())
+        tied = int(diff.notna().sum()) - better - worse
+        lines.append(
+            f"| {label} | {format_accuracy(reg['accuracy'])} | {format_accuracy(inv['accuracy'])} | "
+            f"{format_mean_count(reg['n_rules'])} | {format_mean_count(inv['n_rules'])} | "
+            f"{format_mean_count(reg['conds_per_rule'])} | {format_mean_count(inv['conds_per_rule'])} | "
+            f"{format_mean_count(reg['n_conditions'])} | {format_mean_count(inv['n_conditions'])} | "
+            f"{better} / {worse} / {tied} | {int(failures.get(_inverted_label(label), 0))} |\n")
+    lines.append("\nMeans across every dataset and fold. `n_rules`: rules per rule set, `conds/rule`: "
+                 "conditions per rule (the mean rule length), `n_conditions`: conditions in the whole rule "
+                 "set; `inverted better / worse / tied`: datasets where the mean accuracy with inverted "
+                 "refinement is higher, lower, or the same.\n\n")
+    lines.append("### Per-dataset results with inverted refinement (mean across folds)\n\n")
+    lines.append(render_results_table(
+        inverted, ["accuracy", "n_rules", "conds_per_rule", "n_conditions", "fit_time"],
+        group_by=["dataset", "learner"], include_overall=False))
+    lines.append("\n")
+    return lines
 
 
 def _m_of(label: str) -> Optional[float]:
@@ -275,7 +373,7 @@ def _m_of(label: str) -> Optional[float]:
     return None
 
 
-def write_plots(results, tradeoff_plot_path: str, m_sweep_plot_path: str) -> None:
+def write_plots(results, tradeoff_plot_path: str, m_sweep_plot_path: str, inverted_plot_path: str) -> None:
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -284,7 +382,8 @@ def write_plots(results, tradeoff_plot_path: str, m_sweep_plot_path: str) -> Non
     except ImportError:
         return
     os.makedirs(os.path.dirname(tradeoff_plot_path), exist_ok=True)
-    summary = results.groupby("learner")[["accuracy", "n_conditions"]].mean(numeric_only=True)
+    all_summary = results.groupby("learner")[["accuracy", "n_conditions"]].mean(numeric_only=True)
+    summary = all_summary[[not _is_inverted(learner) for learner in all_summary.index]]
 
     fig, ax = plt.subplots(figsize=(8, 6))
     for learner, row in summary.iterrows():
@@ -328,6 +427,33 @@ def write_plots(results, tradeoff_plot_path: str, m_sweep_plot_path: str) -> Non
     plt.close(fig)
     print(f"Plot   -> {m_sweep_plot_path}")
 
+    # regular -> inverted refinement, one arrow per heuristic
+    fig, ax = plt.subplots(figsize=(8, 6))
+    pairs = [(label, _inverted_label(label)) for label in summary.index
+             if _inverted_label(label) in all_summary.index]
+    for label, inv in pairs:
+        start, end = summary.loc[label], all_summary.loc[inv]
+        ax.annotate("", xy=(end["n_conditions"], end["accuracy"]),
+                    xytext=(start["n_conditions"], start["accuracy"]),
+                    arrowprops=dict(arrowstyle="->", color="gray", lw=0.8))
+        ax.scatter(start["n_conditions"], start["accuracy"], color="tab:blue", marker="o", s=40)
+        ax.scatter(end["n_conditions"], end["accuracy"], color="tab:orange", marker="D", s=40)
+        ax.annotate(label, (start["n_conditions"], start["accuracy"]), fontsize=7,
+                    xytext=(4, 3), textcoords="offset points")
+    ax.scatter([], [], color="tab:blue", marker="o", label="h refines and selects")
+    ax.scatter([], [], color="tab:orange", marker="D", label="Inverted(h) refines, h selects")
+    ax.set_xscale("log")
+    ax.set_xlabel("mean number of conditions (log)")
+    ax.set_ylabel("mean test accuracy")
+    ax.yaxis.set_major_formatter(PercentFormatter(1.0))
+    ax.set_title("regular vs. inverted refinement")
+    ax.legend(loc="best", fontsize=8)
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(inverted_plot_path, dpi=110)
+    plt.close(fig)
+    print(f"Plot   -> {inverted_plot_path}")
+
 
 def main(datasets_spec: Optional[str] = None) -> None:
     quick = datasets_spec is None
@@ -336,13 +462,15 @@ def main(datasets_spec: Optional[str] = None) -> None:
     report_path = QUICK_REPORT_PATH if quick else REPORT_PATH
     tradeoff_plot_path = QUICK_TRADEOFF_PLOT_PATH if quick else TRADEOFF_PLOT_PATH
     m_sweep_plot_path = QUICK_M_SWEEP_PLOT_PATH if quick else M_SWEEP_PLOT_PATH
+    inverted_plot_path = QUICK_INVERTED_PLOT_PATH if quick else INVERTED_PLOT_PATH
 
     datasets = Catalog.default().parse(spec, random_state=RANDOM_STATE)
     results = run_cv(build_learners(), datasets, n_folds=n_folds, fit_timeout=FIT_TIMEOUT,
                      discretizer=TreeDiscretizer(max_intervals=MAX_INTERVALS), random_state=RANDOM_STATE, cache_dir=CACHE_DIR,
                      n_jobs=_n_jobs())
-    write_report(results, datasets, n_folds, report_path, tradeoff_plot_path, m_sweep_plot_path, quick)
-    write_plots(results, tradeoff_plot_path, m_sweep_plot_path)
+    write_report(results, datasets, n_folds, report_path, tradeoff_plot_path, m_sweep_plot_path,
+                 inverted_plot_path, quick)
+    write_plots(results, tradeoff_plot_path, m_sweep_plot_path, inverted_plot_path)
 
 
 if __name__ == "__main__":

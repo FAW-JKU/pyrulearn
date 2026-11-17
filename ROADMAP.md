@@ -1165,12 +1165,16 @@ Next:
     the better default -- to be seen in the experiments.
   - *A beam returning its `k` best rules* by the selection (only
     `BranchAndBoundSearch(k=...)` returns `k` rules so far).
-  - *Demos.* Add to `heuristic_isometrics` and `heuristic_comparison`,
-    e.g. inverted precision for refinement with Laplace for selection.
-    (Also listed in the README.)
+  - *Demos* (done on the branch): `heuristic_isometrics` has a formula
+    table, regular and inverted, and the inverted isometrics next to the
+    regular ones; `heuristic_comparison` repeats every heuristic that
+    inversion changes with `Inverted(h)` refining and `h` selecting. Still
+    open: inverted refinement with a *different* selection (e.g. inverted
+    precision with Laplace), as in Stecher et al.
   - *Paper.* Algorithm 1's `FindRules` with the refinements of a round
     collected first, then `R` updated (filtering, `h_s`) and `Q` (stopping),
-    then `FilterRules(Q, R, h_r, h_s)`.
+    then `FilterRules(Q, R, h_r, h_s)`; and the subsection on inverted
+    heuristics (a stub before *Gain Heuristics* so far).
 - **README**: subsections under *Native learning algorithms* for the
   learners that are only mentioned in tables so far -- CBA, CMAR, IDS and
   RuleFit.

@@ -1170,6 +1170,15 @@ Heuristics that read past `tp`/`fp`/`fn`/`tn`, or compose others:
 - `DeltaGain(base)` -- turns any ordinary heuristic into a `GainHeuristic`:
   scores a refinement by how much `base`'s own score improved relative to its
   parent.
+- `Inverted(base)` -- the inverted heuristic of Stecher, Janssen & Fürnkranz,
+  `base(N - n, P - p)`: `base` evaluated from the upper right corner of the
+  coverage space, where a top-down search starts, i.e. on the examples a
+  rule excludes, with the classes exchanged. Meant for refining a rule, with
+  a regular heuristic choosing the rule on the refinement path:
+  `SingleRuleLearner(Inverted(Precision()), selection=Laplace())` (the
+  `selection` defaults to the heuristic itself). It warns for a heuristic
+  that ranks rules the same way inverted (`Accuracy`, `WRAcc`,
+  `Correlation`, ...), and a gain heuristic can't be inverted.
 
 A `GainHeuristic`'s `score(stats, parent_stats)` takes the parent rule's
 `RuleStats` as a *mandatory second argument*, not an optional field read off
@@ -2906,7 +2915,9 @@ report and plots are checked in next to the script:
   classes on many-class data; and JRip and J48 on raw numeric data vs.
   discretized.
 - `heuristic_comparison` -- rule learning heuristics inside one plain
-  separate-and-conquer learner, after Janssen & Fürnkranz (2010).
+  separate-and-conquer learner, after Janssen & Fürnkranz (2010), and with
+  inverted heuristics for refinement, after Stecher, Janssen & Fürnkranz
+  (2014).
 - `seco_learners_comparison` -- CN2, PFoil, PFossil, Pypper and PyLORD
   against JRip and the Java LORD.
 - `representations` -- fit time of the four data representations over
@@ -2970,12 +2981,11 @@ Development plans, with the reasons behind them, are in
   residual IREP\* re-growth pass is the one piece still missing from its
   optimization phase (`ReplaceReviseOptimization` itself is already done).
 
-- **Inverted heuristics** (Stecher, Janssen & Fürnkranz): evaluating a
-  refinement in the coverage space of the rule it refines -- the origin
-  moved to the parent rule's own coverage point -- rather than from the
-  empty rule, which favors longer, more specific rules in top-down search.
-  They would fit in as a heuristic wrapper next to `DeltaGain`, plotted
-  by `heuristic_isometrics` and compared in `heuristic_comparison`.
+- **Parent-relative inverted heuristics** (Stecher, Janssen & Fürnkranz):
+  `Inverted(h)` evaluates a rule from the corner of the current coverage
+  space; the variant relative to the parent rule's own coverage point
+  compares a refinement with its parent, like a gain heuristic, and would
+  fit in next to `DeltaGain`.
 
 - **Representation and analysis extensions.** Rule bodies beyond pure
   conjunctions (e.g. general CNF/DNF rules); native readers for sparse
