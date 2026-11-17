@@ -431,7 +431,7 @@ def write_report() -> None:
         "positives. Stecher, Janssen & Fürnkranz (2014) refine a rule by an inverted "
         "heuristic and choose the rule on the refinement path by a regular one "
         "(`SingleRuleLearner(Inverted(Precision()), selection=Laplace())`); the "
-        f"[heuristic comparison]({comparison}#inverted-heuristics-for-refinement) tests "
+        f"[heuristic comparison]({comparison}#m-estimates-for-refinement-and-for-selection) tests "
         "this.\n\n",
         "Left: the regular heuristic, right: the inverted one, both in coverage space "
         "(counts); ROC space only rescales the axes. Only the heuristics where inversion "

@@ -1167,10 +1167,14 @@ Next:
     `BranchAndBoundSearch(k=...)` returns `k` rules so far).
   - *Demos* (done on the branch): `heuristic_isometrics` has a formula
     table, regular and inverted, and the inverted isometrics next to the
-    regular ones; `heuristic_comparison` repeats every heuristic that
-    inversion changes with `Inverted(h)` refining and `h` selecting. Still
-    open: inverted refinement with a *different* selection (e.g. inverted
-    precision with Laplace), as in Stecher et al.
+    regular ones; `heuristic_comparison` has two m x m matrices of the
+    m-estimate, m for refinement x m for selection, regular and inverted
+    refinement (m in 0.1 ... 32; heatmaps of accuracy and rule length).
+    Quick runs (36 datasets, 3-fold, Laplace selection) found the inverted
+    m-estimate hardly reacting to m below a few hundred: it counts the
+    examples a rule excludes, early on almost the whole data. So a
+    relative m (a fraction of `P + N`) or the parent-relative variant
+    may be needed for the inverted side.
   - *Paper.* Algorithm 1's `FindRules` with the refinements of a round
     collected first, then `R` updated (filtering, `h_s`) and `Q` (stopping),
     then `FilterRules(Q, R, h_r, h_s)`; and the subsection on inverted

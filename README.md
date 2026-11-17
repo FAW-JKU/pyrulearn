@@ -2915,9 +2915,9 @@ report and plots are checked in next to the script:
   classes on many-class data; and JRip and J48 on raw numeric data vs.
   discretized.
 - `heuristic_comparison` -- rule learning heuristics inside one plain
-  separate-and-conquer learner, after Janssen & Fürnkranz (2010), and with
-  inverted heuristics for refinement, after Stecher, Janssen & Fürnkranz
-  (2014).
+  separate-and-conquer learner, after Janssen & Fürnkranz (2010), and the
+  m-estimate with one m for refinement and another for selection, regular
+  and inverted (Stecher, Janssen & Fürnkranz, 2014).
 - `seco_learners_comparison` -- CN2, PFoil, PFossil, Pypper and PyLORD
   against JRip and the Java LORD.
 - `representations` -- fit time of the four data representations over
