@@ -5,6 +5,28 @@ is in early development (alpha): until 1.0, minor versions may change the API.
 
 ## Unreleased
 
+### Added
+
+- Separate refinement and selection heuristics: `SingleRuleLearner` and
+  the searches take an optional `selection=` heuristic. The `heuristic`
+  then only decides which refinements a search pursues (the beam, the
+  next step of a walk); the selection picks the rule it returns among all
+  it reached, and, for a rule of any class, its head. `filtering` is the
+  selection's criterion, `stopping` the refinement's. `BeamSearch`,
+  `HillClimbing` and `GainAscentHillClimbing` support it (hill climbing
+  then returns the best rule on its walk, not its endpoint);
+  `BranchAndBoundSearch` and branching (`branch_similarity`) don't.
+  Without a selection, every learner behaves as before.
+- `Inverted(h)`: an inverted heuristic (Stecher, Janssen & Fürnkranz),
+  ``h(N - n, P - p)`` -- `h` evaluated from the upper right corner of the
+  coverage space, on the examples a rule excludes, with the classes
+  exchanged. Meant for refining, with an ordinary heuristic as the
+  selection, e.g. ``SingleRuleLearner(Inverted(Precision()),
+  selection=Laplace())``. Warns for a heuristic that ranks rules the same
+  way inverted (`Accuracy`, `WRAcc`, `Correlation`, ...). A gain
+  heuristic can't be inverted, and a class-neutral one (`Entropy`) only
+  in a search for a rule of a fixed class.
+
 ### Fixed
 
 - `TimeoutRunner` (and so `run_cv`) no longer counts a new worker

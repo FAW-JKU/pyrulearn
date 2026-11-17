@@ -1141,43 +1141,36 @@ Next:
   is `h_inv(p, n) = h(N - n, P - p)`: refinements start in the upper
   right corner of the coverage space, so that point becomes the origin.
   It only makes sense for *refining*; the rule finally picked from the
-  refinement path should still be judged by a regular heuristic. Plan
-  (do it in a branch, `inverted-heuristics`, private until decided):
-  - *Selection objective.* `SingleRuleLearner` and the searches get an
-    optional `selection=` (default `None`: the same as the heuristic, so
-    every existing learner keeps its current code path). Today each
-    search uses its one `Objective` for both jobs. With `selection` set:
-    `BeamSearch` ranks the beam by the refinement heuristic, but tracks
-    `best_rule` (and its optimistic pruning bound) by the selection
-    heuristic; `HillClimbing` walks by the refinement heuristic, keeps the
-    best rule along the path by the selection heuristic and returns it
-    instead of the endpoint (it currently returns the endpoint, correct
-    only because a single heuristic makes the walk strictly improving),
-    and stops by consistency rather than at the refinement heuristic's
-    local maximum, with optimistic pruning by the selection bound;
-    `BranchAndBoundSearch` rejects a separate selection (refinement order
-    doesn't matter to an exhaustive search). The best-of-all-classes
-    choice (`HeadPerRule`) is selection, too. Possible extension: a beam
-    returning its `k` best rules by the selection heuristic (only
+  refinement path should still be judged by a regular heuristic.
+  *Done on the branch `refine-select`* (private until decided): an
+  optional `selection=` heuristic in `SingleRuleLearner` and the searches
+  (`FindRules(D, h_r, h_s)`: `stopping` and the beam belong to the
+  refinement, `filtering` and the best rule to the selection; hill
+  climbing returns the best rule on its walk, and for a rule of any class
+  the selection chooses the head; `BranchAndBoundSearch` and branching
+  have none), and `Inverted(h)` with the data's `N`, `P`. Without a
+  selection nothing changes (`selection` is a class attribute, so cache
+  keys stay as they were). Open:
+  - *Check* that a few SeCo comparison demos, re-run from scratch, give
+    identical results.
+  - *Parent-relative variant* of `Inverted`: relative to the parent
+    rule's coverage (`N̂`, `P̂`; check which one Stecher et al. use) it
+    compares a child with its parent, like `FoilGain`, so it fits
+    `GainHeuristic` / `GainAscentHillClimbing` but not a beam. For a
+    linear heuristic the two coincide.
+  - *Hill climbing's stop.* With a selection, the walk still stops at the
+    refinement heuristic's local maximum (`stop_at_local_optimum`); for an
+    inverted heuristic, walking on toward consistency
+    (`stop_at_local_optimum=False`) and selecting the best prefix may be
+    the better default -- to be seen in the experiments.
+  - *A beam returning its `k` best rules* by the selection (only
     `BranchAndBoundSearch(k=...)` returns `k` rules so far).
-  - *`Inverted(h)`* in `pyrulearn.heuristics`, in two variants: with the
-    whole data's `N`, `P` it is a plain `RuleHeuristic` and works in every
-    search; relative to the parent rule's coverage (`N̂`, `P̂`; check
-    which one Stecher et al. use) it compares a child with its parent,
-    like `FoilGain`, so it fits `GainHeuristic` / `GainAscentHillClimbing`
-    but not a beam. For a linear heuristic (cost-weighted difference) the
-    two coincide; for precision, Laplace, m-estimate they differ.
-  - *Other learners.* The searches are also used by boosting (SLIPPER,
-    the gradient-boosting beam), CPAR, LRI, OPUS, PyLORD and
-    `pruning.py`; with `selection=None` none of them changes. Careful
-    with `HillClimbing(stop_at_local_optimum=False)` (RIPPER, LRI), whose
-    endpoint is deliberately not the best rule: it must keep returning
-    the endpoint without `selection`. Check with the full test suite,
-    a few SeCo comparison demos re-run from scratch with identical
-    results, and new tests where the endpoint isn't the best rule.
   - *Demos.* Add to `heuristic_isometrics` and `heuristic_comparison`,
     e.g. inverted precision for refinement with Laplace for selection.
     (Also listed in the README.)
+  - *Paper.* Algorithm 1's `FindRules` with the refinements of a round
+    collected first, then `R` updated (filtering, `h_s`) and `Q` (stopping),
+    then `FilterRules(Q, R, h_r, h_s)`.
 - **README**: subsections under *Native learning algorithms* for the
   learners that are only mentioned in tables so far -- CBA, CMAR, IDS and
   RuleFit.

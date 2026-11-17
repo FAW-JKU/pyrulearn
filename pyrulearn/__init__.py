@@ -85,6 +85,7 @@ from .heuristics import (
     GainHeuristic,
     GeneralizedMEstimate,
     GHeuristic,
+    Inverted,
     Laplace,
     LEF,
     LengthPenalized,
@@ -156,7 +157,7 @@ __all__ = [
     "WRAcc", "YoudenJ",
     "Accuracy", "CoverageDifference", "Support", "Coverage",
     "LinearCost", "LinearCostRates", "LengthPenalized", "MinimalLength", "FoilGain", "DeltaGain", "Correlation", "Entropy", "LikelihoodRatio", "ChiSquare",
-    "LEF",
+    "LEF", "Inverted",
 ]
 __version__ = "0.6.0"
 
