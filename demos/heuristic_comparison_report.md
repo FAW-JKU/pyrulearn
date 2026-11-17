@@ -33,11 +33,12 @@ A fold that times out fails the whole cross-validation of that learner on that d
 
 Measures: test accuracy, number of rules and conditions, fit time.
 
-Every learner runs single-threaded; fits run 8 at a time (`run_cv`'s `n_jobs`), each in its own process and timed there, with the numerical libraries limited to one thread (`OMP_NUM_THREADS=1` and its relatives). A check of the `dense_vs_modular` learners on 11 datasets found the fit times of 5 concurrent fits as close to a sequential run as a second sequential run (per-learner ratios and rankings alike); time ratios between learners are reproducible to about +-10% either way.
+Every learner runs single-threaded; fits run 5 at a time (`run_cv`'s `n_jobs`), each in its own process and timed there, with the numerical libraries limited to one thread (`OMP_NUM_THREADS=1` and its relatives). A check of the `dense_vs_modular` learners on 11 datasets found the fit times of 5 concurrent fits as close to a sequential run as a second sequential run (per-learner ratios and rankings alike); time ratios between learners are reproducible to about +-10% either way.
 
 The summary and the per-dataset results below are for the heuristics as
-in the paper; the [last section](#inverted-heuristics-for-refinement)
-compares them with inverted refinement.
+in the paper; the [last section](#m-estimates-for-refinement-and-for-selection)
+varies the m-estimate's m separately for refinement and for selection,
+with and without inversion.
 
 ![accuracy vs. theory size](heuristic_comparison_plots/heuristic_comparison_tradeoff.png)
 
@@ -647,426 +648,135 @@ compares them with inverted refinement.
 | zoo | m-estimate (m=8) | 93.00% | 8.3 | 2.2 | 18.6 | 0.021 |
 | zoo | relative cost (c_r=0.342) | 93.00% | 7.9 | 2.2 | 17.3 | 0.016 |
 
-## Inverted heuristics for refinement
+## m-estimates for refinement and for selection
 
-The same learner, but refining by the inverted heuristic: the search adds the condition that is best by `Inverted(h)`, h(N - n, P - p), and returns the rule on its refinement path that is best by `h` itself (`SingleRuleLearner(Inverted(h), selection=h)`), after Stecher, Janssen & Fürnkranz (ECML PKDD 2014). `P` and `N` are the examples left in the current covering step. The inverted heuristic judges a refinement from the universal rule, where the search starts, rather than from the empty rule: it prefers the refinement whose excluded examples are the purest in negatives (see the [isometrics](heuristic_isometrics_report.md#inverted-heuristics)). Correlation, WRA and Accuracy are left out: they rank every rule the same way inverted or not. The inverted cost measures rank like the cost measures with the inverse cost ratio, so for them inverted refinement means refining by another cost.
+The m-estimate does two jobs in the learner: it chooses the condition to add (refinement), and it chooses the rule on the refinement path that is returned (selection). Here the two get an m of their own -- `SingleRuleLearner(MEstimate(m_r), selection=MEstimate(m_s))` -- for every pair of m in {0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32}; the diagonal (m_r = m_s) is the plain m-estimate. The second matrix refines by the inverted m-estimate instead, `Inverted(MEstimate(m_r))`, h(N - n, P - p), after Stecher, Janssen & Fürnkranz (ECML PKDD 2014): it judges a refinement from the universal rule, where the search starts, rather than from the empty rule, and prefers the refinement whose excluded examples are the purest in negatives (see the [isometrics](heuristic_isometrics_report.md#inverted-heuristics)). `P` and `N` are the examples left in the current covering step, and the selection is always the regular m-estimate.
 
-![regular vs. inverted refinement](heuristic_comparison_plots/heuristic_comparison_inverted.png)
+Rows: m for refinement, columns: m for selection; means across every dataset and fold. Both heatmaps of a figure share one color scale.
 
-| heuristic | accuracy | inverted | n_rules | inverted | conds/rule | inverted | n_conditions | inverted | inverted better / worse / tied | inverted failures |
-|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-| m-estimate (m=16) | 83.82% | 82.30% | 17.2 | 9.5 | 3.3 | 11.7 | 60.8 | 138.7 | 14 / 20 / 2 | 0 |
-| m-estimate (m=8) | 83.42% | 82.69% | 22.4 | 12.5 | 3.1 | 12.9 | 77.3 | 211.6 | 17 / 16 / 3 | 0 |
-| m-estimate (m=32) | 83.36% | 81.83% | 12.9 | 7.3 | 3.6 | 9.7 | 48.4 | 83.7 | 15 / 19 / 2 | 0 |
-| m-estimate (m=22.466) | 83.17% | 82.15% | 14.9 | 8.4 | 3.4 | 10.7 | 54.4 | 110.5 | 14 / 20 / 2 | 0 |
-| m-estimate (m=4) | 82.92% | 82.60% | 28.2 | 16.7 | 3.0 | 13.9 | 91.9 | 309.3 | 20 / 14 / 2 | 0 |
-| m-estimate (m=2) | 82.62% | 82.33% | 35.6 | 22.0 | 2.9 | 14.5 | 115.3 | 414.7 | 15 / 19 / 2 | 0 |
-| relative cost (c_r=0.342) | 82.30% | 81.47% | 9.6 | 5.1 | 3.3 | 5.8 | 35.3 | 27.2 | 18 / 14 / 4 | 0 |
-| F-measure (beta=0.5) | 81.77% | 81.35% | 19.5 | 13.6 | 2.9 | 4.0 | 61.5 | 52.2 | 14 / 19 / 3 | 0 |
-| Laplace | 81.67% | 82.12% | 43.6 | 24.7 | 2.7 | 14.2 | 134.0 | 455.7 | 18 / 16 / 2 | 0 |
-| Precision | 81.53% | 80.05% | 68.0 | 50.2 | 2.7 | 13.0 | 205.5 | 950.1 | 8 / 28 / 0 | 0 |
-| cost (c=0.437) | 81.40% | 81.82% | 44.4 | 34.6 | 2.6 | 2.9 | 143.1 | 116.1 | 19 / 13 / 4 | 0 |
+![m for refinement vs. m for selection, accuracy](heuristic_comparison_plots/heuristic_comparison_m_matrix_accuracy.png)
 
-Means across every dataset and fold. `n_rules`: rules per rule set, `conds/rule`: conditions per rule (the mean rule length), `n_conditions`: conditions in the whole rule set; `inverted better / worse / tied`: datasets where the mean accuracy with inverted refinement is higher, lower, or the same.
+![m for refinement vs. m for selection, rule length](heuristic_comparison_plots/heuristic_comparison_m_matrix_rule_length.png)
 
-### Per-dataset results with inverted refinement (mean across folds)
+### Accuracy
 
-| dataset | learner | accuracy | n_rules | conds_per_rule | n_conditions | fit_time |
-|---|---|---|---|---|---|---|
-| anneal | F-measure (beta=0.5), inverted refinement | 93.09% | 11.3 | 1.5 | 16.5 | 0.031 |
-| anneal | Laplace, inverted refinement | 95.99% | 20.2 | 13.2 | 269.2 | 0.243 |
-| anneal | Precision, inverted refinement | 96.21% | 24.1 | 12.3 | 297.9 | 0.179 |
-| anneal | cost (c=0.437), inverted refinement | 93.98% | 14.7 | 1.7 | 25.6 | 0.028 |
-| anneal | m-estimate (m=16), inverted refinement | 94.43% | 9.5 | 6.1 | 58.2 | 0.085 |
-| anneal | m-estimate (m=2), inverted refinement | 95.88% | 18.1 | 12.5 | 227.8 | 0.235 |
-| anneal | m-estimate (m=22.466), inverted refinement | 92.87% | 7.5 | 6.1 | 45.7 | 0.061 |
-| anneal | m-estimate (m=32), inverted refinement | 91.87% | 6.5 | 5.3 | 34.8 | 0.053 |
-| anneal | m-estimate (m=4), inverted refinement | 95.88% | 15.5 | 11.4 | 176.3 | 0.189 |
-| anneal | m-estimate (m=8), inverted refinement | 94.54% | 13.4 | 10.6 | 143.9 | 0.160 |
-| anneal | relative cost (c_r=0.342), inverted refinement | 93.76% | 6.9 | 3.2 | 22.1 | 0.018 |
-| audiology | F-measure (beta=0.5), inverted refinement | 80.97% | 36.6 | 2.2 | 80.8 | 0.112 |
-| audiology | Laplace, inverted refinement | 83.20% | 27.7 | 2.4 | 66.0 | 0.185 |
-| audiology | Precision, inverted refinement | 74.35% | 60.9 | 4.6 | 277.4 | 0.181 |
-| audiology | cost (c=0.437), inverted refinement | 80.97% | 40.3 | 2.1 | 86.6 | 0.096 |
-| audiology | m-estimate (m=16), inverted refinement | 82.31% | 24.1 | 2.6 | 61.8 | 0.127 |
-| audiology | m-estimate (m=2), inverted refinement | 84.55% | 25.2 | 2.5 | 61.8 | 0.174 |
-| audiology | m-estimate (m=22.466), inverted refinement | 82.31% | 24.1 | 2.6 | 61.8 | 0.132 |
-| audiology | m-estimate (m=32), inverted refinement | 82.77% | 23.2 | 2.5 | 59.1 | 0.122 |
-| audiology | m-estimate (m=4), inverted refinement | 84.55% | 25.1 | 2.5 | 61.5 | 0.168 |
-| audiology | m-estimate (m=8), inverted refinement | 82.77% | 24.5 | 2.5 | 60.7 | 0.155 |
-| audiology | relative cost (c_r=0.342), inverted refinement | 82.77% | 23.2 | 2.5 | 59.1 | 0.121 |
-| balance-scale | F-measure (beta=0.5), inverted refinement | 79.37% | 14.9 | 3.0 | 45.0 | 0.060 |
-| balance-scale | Laplace, inverted refinement | 61.11% | 76.2 | 12.0 | 915.5 | 0.553 |
-| balance-scale | Precision, inverted refinement | 62.72% | 84.8 | 12.0 | 1014.4 | 0.606 |
-| balance-scale | cost (c=0.437), inverted refinement | 75.04% | 63.3 | 3.7 | 233.7 | 0.140 |
-| balance-scale | m-estimate (m=16), inverted refinement | 76.13% | 7.9 | 6.4 | 51.4 | 0.074 |
-| balance-scale | m-estimate (m=2), inverted refinement | 63.67% | 60.3 | 12.4 | 747.7 | 0.529 |
-| balance-scale | m-estimate (m=22.466), inverted refinement | 77.57% | 6.2 | 5.9 | 36.4 | 0.053 |
-| balance-scale | m-estimate (m=32), inverted refinement | 77.75% | 5.5 | 5.1 | 28.1 | 0.049 |
-| balance-scale | m-estimate (m=4), inverted refinement | 77.90% | 14.6 | 7.9 | 116.8 | 0.139 |
-| balance-scale | m-estimate (m=8), inverted refinement | 78.38% | 10.6 | 6.8 | 72.8 | 0.100 |
-| balance-scale | relative cost (c_r=0.342), inverted refinement | 76.48% | 3.7 | 2.9 | 10.9 | 0.027 |
-| breast-cancer | F-measure (beta=0.5), inverted refinement | 68.57% | 1.7 | 5.8 | 10.7 | 0.012 |
-| breast-cancer | Laplace, inverted refinement | 65.09% | 27.4 | 21.9 | 600.0 | 0.332 |
-| breast-cancer | Precision, inverted refinement | 64.70% | 40.2 | 21.8 | 875.8 | 0.411 |
-| breast-cancer | cost (c=0.437), inverted refinement | 69.58% | 11.9 | 2.8 | 34.5 | 0.024 |
-| breast-cancer | m-estimate (m=16), inverted refinement | 61.83% | 5.4 | 19.0 | 105.0 | 0.069 |
-| breast-cancer | m-estimate (m=2), inverted refinement | 62.68% | 24.1 | 22.1 | 532.1 | 0.317 |
-| breast-cancer | m-estimate (m=22.466), inverted refinement | 63.58% | 2.8 | 15.4 | 46.2 | 0.035 |
-| breast-cancer | m-estimate (m=32), inverted refinement | 63.93% | 1.9 | 14.2 | 27.6 | 0.021 |
-| breast-cancer | m-estimate (m=4), inverted refinement | 60.91% | 15.4 | 22.0 | 342.2 | 0.208 |
-| breast-cancer | m-estimate (m=8), inverted refinement | 63.66% | 7.4 | 19.4 | 148.1 | 0.094 |
-| breast-cancer | relative cost (c_r=0.342), inverted refinement | 67.43% | 1.4 | 12.5 | 17.9 | 0.019 |
-| breast-w | F-measure (beta=0.5), inverted refinement | 94.71% | 6.1 | 4.6 | 28.1 | 0.107 |
-| breast-w | Laplace, inverted refinement | 90.55% | 6.8 | 17.2 | 117.3 | 0.213 |
-| breast-w | Precision, inverted refinement | 94.27% | 33.2 | 4.4 | 148.0 | 0.227 |
-| breast-w | cost (c=0.437), inverted refinement | 94.28% | 6.8 | 2.0 | 13.4 | 0.058 |
-| breast-w | m-estimate (m=16), inverted refinement | 93.27% | 4.6 | 15.9 | 73.7 | 0.166 |
-| breast-w | m-estimate (m=2), inverted refinement | 89.84% | 6.8 | 18.2 | 124.5 | 0.261 |
-| breast-w | m-estimate (m=22.466), inverted refinement | 92.98% | 4.4 | 14.5 | 65.1 | 0.166 |
-| breast-w | m-estimate (m=32), inverted refinement | 92.27% | 3.8 | 12.4 | 46.5 | 0.131 |
-| breast-w | m-estimate (m=4), inverted refinement | 90.41% | 5.8 | 18.9 | 109.9 | 0.231 |
-| breast-w | m-estimate (m=8), inverted refinement | 93.27% | 5.4 | 18.1 | 97.1 | 0.227 |
-| breast-w | relative cost (c_r=0.342), inverted refinement | 94.13% | 2.6 | 3.6 | 8.7 | 0.045 |
-| colic | F-measure (beta=0.5), inverted refinement | 81.80% | 8.6 | 3.0 | 25.7 | 0.063 |
-| colic | Laplace, inverted refinement | 77.47% | 20.8 | 11.7 | 242.8 | 0.314 |
-| colic | Precision, inverted refinement | 75.02% | 50.6 | 7.7 | 389.4 | 0.364 |
-| colic | cost (c=0.437), inverted refinement | 81.80% | 22.7 | 2.5 | 57.7 | 0.081 |
-| colic | m-estimate (m=16), inverted refinement | 79.65% | 7.3 | 11.0 | 80.6 | 0.183 |
-| colic | m-estimate (m=2), inverted refinement | 75.81% | 18.6 | 12.6 | 232.6 | 0.369 |
-| colic | m-estimate (m=22.466), inverted refinement | 79.92% | 6.2 | 10.7 | 66.6 | 0.147 |
-| colic | m-estimate (m=32), inverted refinement | 80.71% | 4.0 | 9.8 | 40.1 | 0.124 |
-| colic | m-estimate (m=4), inverted refinement | 78.57% | 15.1 | 12.6 | 188.8 | 0.313 |
-| colic | m-estimate (m=8), inverted refinement | 76.94% | 10.6 | 12.0 | 125.9 | 0.239 |
-| colic | relative cost (c_r=0.342), inverted refinement | 85.61% | 1.1 | 2.9 | 3.9 | 0.043 |
-| credit-approval | F-measure (beta=0.5), inverted refinement | 83.33% | 9.7 | 8.4 | 60.7 | 0.074 |
-| credit-approval | Laplace, inverted refinement | 75.94% | 35.9 | 25.1 | 901.9 | 0.754 |
-| credit-approval | Precision, inverted refinement | 78.12% | 69.7 | 25.5 | 1780.0 | 1.093 |
-| credit-approval | cost (c=0.437), inverted refinement | 81.59% | 20.6 | 2.7 | 57.4 | 0.056 |
-| credit-approval | m-estimate (m=16), inverted refinement | 84.20% | 6.1 | 16.8 | 106.7 | 0.146 |
-| credit-approval | m-estimate (m=2), inverted refinement | 80.72% | 28.1 | 27.9 | 786.1 | 0.712 |
-| credit-approval | m-estimate (m=22.466), inverted refinement | 84.06% | 4.2 | 15.0 | 63.6 | 0.101 |
-| credit-approval | m-estimate (m=32), inverted refinement | 85.51% | 4.1 | 15.2 | 62.7 | 0.093 |
-| credit-approval | m-estimate (m=4), inverted refinement | 81.30% | 18.8 | 25.5 | 483.1 | 0.453 |
-| credit-approval | m-estimate (m=8), inverted refinement | 82.46% | 10.4 | 22.2 | 238.1 | 0.248 |
-| credit-approval | relative cost (c_r=0.342), inverted refinement | 83.62% | 1.2 | 7.5 | 8.9 | 0.025 |
-| credit-g | F-measure (beta=0.5), inverted refinement | 75.10% | 2.0 | 11.2 | 21.8 | 0.030 |
-| credit-g | Laplace, inverted refinement | 69.10% | 43.6 | 33.3 | 1452.1 | 0.947 |
-| credit-g | Precision, inverted refinement | 67.60% | 125.9 | 31.1 | 3923.8 | 2.273 |
-| credit-g | cost (c=0.437), inverted refinement | 69.70% | 109.9 | 3.5 | 380.9 | 0.288 |
-| credit-g | m-estimate (m=16), inverted refinement | 67.70% | 17.2 | 29.3 | 506.3 | 0.397 |
-| credit-g | m-estimate (m=2), inverted refinement | 68.60% | 42.8 | 33.3 | 1425.5 | 1.049 |
-| credit-g | m-estimate (m=22.466), inverted refinement | 67.70% | 12.3 | 27.9 | 343.3 | 0.273 |
-| credit-g | m-estimate (m=32), inverted refinement | 71.20% | 7.1 | 25.0 | 181.1 | 0.185 |
-| credit-g | m-estimate (m=4), inverted refinement | 68.60% | 37.3 | 33.1 | 1234.5 | 0.902 |
-| credit-g | m-estimate (m=8), inverted refinement | 69.00% | 29.6 | 31.5 | 932.6 | 0.676 |
-| credit-g | relative cost (c_r=0.342), inverted refinement | 71.40% | 1.3 | 20.2 | 26.8 | 0.045 |
-| diabetes | F-measure (beta=0.5), inverted refinement | 75.27% | 2.9 | 4.3 | 12.3 | 0.027 |
-| diabetes | Laplace, inverted refinement | 71.61% | 48.0 | 19.5 | 936.7 | 0.780 |
-| diabetes | Precision, inverted refinement | 68.88% | 81.8 | 20.0 | 1639.8 | 1.048 |
-| diabetes | cost (c=0.437), inverted refinement | 73.96% | 20.7 | 3.0 | 63.3 | 0.069 |
-| diabetes | m-estimate (m=16), inverted refinement | 72.24% | 7.1 | 12.5 | 89.2 | 0.110 |
-| diabetes | m-estimate (m=2), inverted refinement | 72.00% | 38.4 | 18.0 | 693.4 | 0.680 |
-| diabetes | m-estimate (m=22.466), inverted refinement | 71.86% | 5.3 | 11.6 | 61.9 | 0.084 |
-| diabetes | m-estimate (m=32), inverted refinement | 71.86% | 4.0 | 10.3 | 41.8 | 0.065 |
-| diabetes | m-estimate (m=4), inverted refinement | 74.09% | 21.5 | 16.8 | 361.0 | 0.353 |
-| diabetes | m-estimate (m=8), inverted refinement | 72.00% | 10.6 | 14.0 | 149.7 | 0.181 |
-| diabetes | relative cost (c_r=0.342), inverted refinement | 73.03% | 1.9 | 6.1 | 12.1 | 0.033 |
-| glass | F-measure (beta=0.5), inverted refinement | 63.53% | 20.2 | 3.6 | 73.3 | 0.109 |
-| glass | Laplace, inverted refinement | 70.54% | 21.2 | 9.9 | 208.8 | 0.279 |
-| glass | Precision, inverted refinement | 63.59% | 41.4 | 12.1 | 502.7 | 0.415 |
-| glass | cost (c=0.437), inverted refinement | 63.55% | 26.9 | 2.8 | 75.8 | 0.076 |
-| glass | m-estimate (m=16), inverted refinement | 70.52% | 10.0 | 9.3 | 91.2 | 0.189 |
-| glass | m-estimate (m=2), inverted refinement | 70.06% | 19.3 | 10.5 | 202.1 | 0.307 |
-| glass | m-estimate (m=22.466), inverted refinement | 67.19% | 8.7 | 9.8 | 84.6 | 0.167 |
-| glass | m-estimate (m=32), inverted refinement | 65.32% | 8.1 | 9.5 | 77.0 | 0.161 |
-| glass | m-estimate (m=4), inverted refinement | 69.13% | 16.9 | 11.1 | 186.1 | 0.279 |
-| glass | m-estimate (m=8), inverted refinement | 71.06% | 12.8 | 10.6 | 135.8 | 0.230 |
-| glass | relative cost (c_r=0.342), inverted refinement | 64.07% | 6.6 | 7.0 | 46.3 | 0.103 |
-| hayes-roth | F-measure (beta=0.5), inverted refinement | 85.62% | 6.8 | 1.8 | 12.5 | 0.043 |
-| hayes-roth | Laplace, inverted refinement | 85.00% | 8.8 | 4.7 | 41.3 | 0.070 |
-| hayes-roth | Precision, inverted refinement | 84.38% | 9.5 | 4.7 | 45.4 | 0.055 |
-| hayes-roth | cost (c=0.437), inverted refinement | 83.75% | 7.8 | 1.8 | 13.9 | 0.026 |
-| hayes-roth | m-estimate (m=16), inverted refinement | 86.25% | 7.0 | 2.4 | 17.3 | 0.045 |
-| hayes-roth | m-estimate (m=2), inverted refinement | 85.62% | 8.6 | 4.0 | 35.1 | 0.069 |
-| hayes-roth | m-estimate (m=22.466), inverted refinement | 85.00% | 6.8 | 2.3 | 15.7 | 0.043 |
-| hayes-roth | m-estimate (m=32), inverted refinement | 84.38% | 6.4 | 2.1 | 13.8 | 0.035 |
-| hayes-roth | m-estimate (m=4), inverted refinement | 86.25% | 8.0 | 3.5 | 28.8 | 0.062 |
-| hayes-roth | m-estimate (m=8), inverted refinement | 86.25% | 7.8 | 3.4 | 27.0 | 0.057 |
-| hayes-roth | relative cost (c_r=0.342), inverted refinement | 85.62% | 6.4 | 2.2 | 14.1 | 0.036 |
-| heart-c | F-measure (beta=0.5), inverted refinement | 74.28% | 12.3 | 4.2 | 48.4 | 0.052 |
-| heart-c | Laplace, inverted refinement | 72.94% | 17.4 | 14.0 | 243.9 | 0.185 |
-| heart-c | Precision, inverted refinement | 66.04% | 42.0 | 14.3 | 604.0 | 0.377 |
-| heart-c | cost (c=0.437), inverted refinement | 73.95% | 20.2 | 3.2 | 64.1 | 0.040 |
-| heart-c | m-estimate (m=16), inverted refinement | 73.57% | 6.8 | 11.0 | 76.5 | 0.080 |
-| heart-c | m-estimate (m=2), inverted refinement | 74.92% | 16.2 | 14.6 | 235.7 | 0.201 |
-| heart-c | m-estimate (m=22.466), inverted refinement | 71.62% | 5.0 | 9.4 | 47.9 | 0.065 |
-| heart-c | m-estimate (m=32), inverted refinement | 73.96% | 3.7 | 7.8 | 30.8 | 0.035 |
-| heart-c | m-estimate (m=4), inverted refinement | 71.61% | 13.9 | 13.9 | 192.3 | 0.165 |
-| heart-c | m-estimate (m=8), inverted refinement | 71.32% | 9.8 | 12.6 | 124.3 | 0.105 |
-| heart-c | relative cost (c_r=0.342), inverted refinement | 77.19% | 2.7 | 5.4 | 14.9 | 0.026 |
-| heart-h | F-measure (beta=0.5), inverted refinement | 76.85% | 7.3 | 5.0 | 34.7 | 0.088 |
-| heart-h | Laplace, inverted refinement | 68.39% | 22.4 | 15.6 | 350.8 | 0.343 |
-| heart-h | Precision, inverted refinement | 70.03% | 40.7 | 15.7 | 640.3 | 0.468 |
-| heart-h | cost (c=0.437), inverted refinement | 75.54% | 17.4 | 3.2 | 56.7 | 0.094 |
-| heart-h | m-estimate (m=16), inverted refinement | 76.17% | 4.1 | 12.3 | 50.6 | 0.088 |
-| heart-h | m-estimate (m=2), inverted refinement | 72.74% | 17.8 | 15.5 | 276.7 | 0.333 |
-| heart-h | m-estimate (m=22.466), inverted refinement | 77.23% | 4.2 | 11.5 | 48.4 | 0.103 |
-| heart-h | m-estimate (m=32), inverted refinement | 78.24% | 2.9 | 9.9 | 29.4 | 0.065 |
-| heart-h | m-estimate (m=4), inverted refinement | 73.80% | 10.7 | 14.2 | 151.2 | 0.218 |
-| heart-h | m-estimate (m=8), inverted refinement | 78.59% | 7.0 | 14.2 | 99.5 | 0.148 |
-| heart-h | relative cost (c_r=0.342), inverted refinement | 75.86% | 1.8 | 5.6 | 11.0 | 0.039 |
-| heart-statlog | F-measure (beta=0.5), inverted refinement | 70.00% | 12.9 | 4.3 | 53.7 | 0.139 |
-| heart-statlog | Laplace, inverted refinement | 68.15% | 16.9 | 13.7 | 233.1 | 0.256 |
-| heart-statlog | Precision, inverted refinement | 68.52% | 38.5 | 15.1 | 583.3 | 0.535 |
-| heart-statlog | cost (c=0.437), inverted refinement | 70.74% | 17.6 | 3.2 | 56.5 | 0.106 |
-| heart-statlog | m-estimate (m=16), inverted refinement | 72.22% | 6.3 | 10.2 | 66.1 | 0.108 |
-| heart-statlog | m-estimate (m=2), inverted refinement | 69.63% | 16.1 | 14.8 | 239.5 | 0.339 |
-| heart-statlog | m-estimate (m=22.466), inverted refinement | 72.96% | 5.3 | 9.3 | 49.6 | 0.130 |
-| heart-statlog | m-estimate (m=32), inverted refinement | 71.85% | 4.0 | 8.8 | 35.6 | 0.082 |
-| heart-statlog | m-estimate (m=4), inverted refinement | 71.11% | 13.0 | 14.1 | 184.5 | 0.276 |
-| heart-statlog | m-estimate (m=8), inverted refinement | 72.59% | 8.3 | 13.0 | 108.2 | 0.162 |
-| heart-statlog | relative cost (c_r=0.342), inverted refinement | 77.41% | 3.1 | 6.6 | 21.4 | 0.075 |
-| hepatitis | F-measure (beta=0.5), inverted refinement | 77.58% | 8.0 | 3.5 | 27.2 | 0.052 |
-| hepatitis | Laplace, inverted refinement | 79.54% | 7.5 | 6.9 | 51.4 | 0.081 |
-| hepatitis | Precision, inverted refinement | 78.29% | 13.9 | 6.3 | 87.4 | 0.088 |
-| hepatitis | cost (c=0.437), inverted refinement | 77.62% | 9.4 | 2.5 | 24.0 | 0.039 |
-| hepatitis | m-estimate (m=16), inverted refinement | 78.21% | 4.0 | 6.3 | 25.3 | 0.054 |
-| hepatitis | m-estimate (m=2), inverted refinement | 77.62% | 6.7 | 7.3 | 48.9 | 0.100 |
-| hepatitis | m-estimate (m=22.466), inverted refinement | 78.25% | 3.4 | 6.3 | 22.0 | 0.047 |
-| hepatitis | m-estimate (m=32), inverted refinement | 76.29% | 2.4 | 6.2 | 14.6 | 0.042 |
-| hepatitis | m-estimate (m=4), inverted refinement | 80.12% | 5.7 | 7.5 | 42.7 | 0.089 |
-| hepatitis | m-estimate (m=8), inverted refinement | 77.62% | 4.1 | 6.7 | 27.3 | 0.064 |
-| hepatitis | relative cost (c_r=0.342), inverted refinement | 76.88% | 1.7 | 6.6 | 11.1 | 0.022 |
-| hypothyroid | F-measure (beta=0.5), inverted refinement | 98.91% | 12.7 | 3.7 | 47.1 | 0.129 |
-| hypothyroid | Laplace, inverted refinement | 98.75% | 16.7 | 15.7 | 265.6 | 0.402 |
-| hypothyroid | Precision, inverted refinement | 98.86% | 48.6 | 20.3 | 991.4 | 0.957 |
-| hypothyroid | cost (c=0.437), inverted refinement | 98.91% | 14.8 | 2.9 | 43.3 | 0.106 |
-| hypothyroid | m-estimate (m=16), inverted refinement | 99.07% | 6.7 | 9.3 | 62.1 | 0.137 |
-| hypothyroid | m-estimate (m=2), inverted refinement | 98.89% | 12.6 | 14.5 | 186.0 | 0.290 |
-| hypothyroid | m-estimate (m=22.466), inverted refinement | 99.02% | 6.0 | 8.7 | 51.7 | 0.128 |
-| hypothyroid | m-estimate (m=32), inverted refinement | 99.07% | 5.4 | 7.0 | 38.8 | 0.116 |
-| hypothyroid | m-estimate (m=4), inverted refinement | 99.05% | 9.5 | 12.6 | 120.8 | 0.213 |
-| hypothyroid | m-estimate (m=8), inverted refinement | 99.07% | 7.3 | 11.3 | 82.1 | 0.153 |
-| hypothyroid | relative cost (c_r=0.342), inverted refinement | 98.94% | 3.7 | 3.4 | 12.6 | 0.073 |
-| ionosphere | F-measure (beta=0.5), inverted refinement | 90.61% | 11.9 | 2.3 | 27.5 | 0.117 |
-| ionosphere | Laplace, inverted refinement | 88.59% | 8.6 | 14.8 | 126.3 | 0.616 |
-| ionosphere | Precision, inverted refinement | 91.45% | 17.0 | 7.1 | 122.3 | 0.138 |
-| ionosphere | cost (c=0.437), inverted refinement | 88.62% | 13.6 | 2.0 | 27.4 | 0.067 |
-| ionosphere | m-estimate (m=16), inverted refinement | 86.33% | 6.6 | 21.9 | 146.0 | 0.444 |
-| ionosphere | m-estimate (m=2), inverted refinement | 89.44% | 8.4 | 17.3 | 144.6 | 0.596 |
-| ionosphere | m-estimate (m=22.466), inverted refinement | 89.17% | 6.3 | 19.6 | 123.2 | 0.446 |
-| ionosphere | m-estimate (m=32), inverted refinement | 85.20% | 4.6 | 13.7 | 64.2 | 0.331 |
-| ionosphere | m-estimate (m=4), inverted refinement | 88.87% | 8.2 | 18.9 | 154.5 | 0.553 |
-| ionosphere | m-estimate (m=8), inverted refinement | 88.02% | 7.3 | 14.5 | 105.4 | 0.502 |
-| ionosphere | relative cost (c_r=0.342), inverted refinement | 89.17% | 2.0 | 1.1 | 2.3 | 0.095 |
-| iris | F-measure (beta=0.5), inverted refinement | 92.67% | 4.1 | 3.6 | 14.6 | 0.046 |
-| iris | Laplace, inverted refinement | 93.33% | 4.1 | 4.4 | 17.7 | 0.046 |
-| iris | Precision, inverted refinement | 91.33% | 12.3 | 5.3 | 65.7 | 0.111 |
-| iris | cost (c=0.437), inverted refinement | 93.33% | 4.0 | 3.3 | 12.7 | 0.021 |
-| iris | m-estimate (m=16), inverted refinement | 91.33% | 2.1 | 4.2 | 8.8 | 0.044 |
-| iris | m-estimate (m=2), inverted refinement | 92.67% | 4.0 | 4.4 | 17.4 | 0.060 |
-| iris | m-estimate (m=22.466), inverted refinement | 91.33% | 2.1 | 4.2 | 8.8 | 0.041 |
-| iris | m-estimate (m=32), inverted refinement | 91.33% | 2.1 | 4.2 | 8.8 | 0.047 |
-| iris | m-estimate (m=4), inverted refinement | 93.33% | 3.9 | 4.4 | 17.1 | 0.061 |
-| iris | m-estimate (m=8), inverted refinement | 92.67% | 3.5 | 4.1 | 14.3 | 0.058 |
-| iris | relative cost (c_r=0.342), inverted refinement | 92.67% | 2.2 | 3.6 | 7.8 | 0.033 |
-| kr-vs-kp | F-measure (beta=0.5), inverted refinement | 96.34% | 6.0 | 2.6 | 15.5 | 0.054 |
-| kr-vs-kp | Laplace, inverted refinement | 98.53% | 33.9 | 17.0 | 575.8 | 0.570 |
-| kr-vs-kp | Precision, inverted refinement | 98.97% | 46.0 | 18.9 | 868.8 | 0.610 |
-| kr-vs-kp | cost (c=0.437), inverted refinement | 97.09% | 37.5 | 4.6 | 173.6 | 0.195 |
-| kr-vs-kp | m-estimate (m=16), inverted refinement | 97.56% | 11.9 | 13.4 | 159.8 | 0.225 |
-| kr-vs-kp | m-estimate (m=2), inverted refinement | 98.56% | 33.3 | 17.1 | 572.1 | 0.590 |
-| kr-vs-kp | m-estimate (m=22.466), inverted refinement | 97.87% | 10.3 | 12.3 | 126.6 | 0.187 |
-| kr-vs-kp | m-estimate (m=32), inverted refinement | 97.94% | 9.2 | 10.9 | 100.9 | 0.179 |
-| kr-vs-kp | m-estimate (m=4), inverted refinement | 98.15% | 26.2 | 16.1 | 423.1 | 0.482 |
-| kr-vs-kp | m-estimate (m=8), inverted refinement | 97.56% | 18.0 | 15.3 | 278.6 | 0.332 |
-| kr-vs-kp | relative cost (c_r=0.342), inverted refinement | 94.34% | 3.0 | 3.3 | 9.8 | 0.048 |
-| lymph | F-measure (beta=0.5), inverted refinement | 86.52% | 8.0 | 2.8 | 23.2 | 0.027 |
-| lymph | Laplace, inverted refinement | 81.86% | 8.2 | 10.6 | 86.3 | 0.056 |
-| lymph | Precision, inverted refinement | 79.10% | 20.3 | 10.7 | 217.5 | 0.155 |
-| lymph | cost (c=0.437), inverted refinement | 83.67% | 11.4 | 2.3 | 26.3 | 0.018 |
-| lymph | m-estimate (m=16), inverted refinement | 79.76% | 6.0 | 9.1 | 54.9 | 0.036 |
-| lymph | m-estimate (m=2), inverted refinement | 83.14% | 7.9 | 11.4 | 90.1 | 0.056 |
-| lymph | m-estimate (m=22.466), inverted refinement | 80.43% | 5.6 | 7.1 | 40.6 | 0.031 |
-| lymph | m-estimate (m=32), inverted refinement | 85.10% | 5.0 | 6.1 | 30.2 | 0.030 |
-| lymph | m-estimate (m=4), inverted refinement | 81.14% | 7.5 | 10.7 | 80.0 | 0.056 |
-| lymph | m-estimate (m=8), inverted refinement | 81.90% | 6.8 | 10.4 | 70.8 | 0.044 |
-| lymph | relative cost (c_r=0.342), inverted refinement | 85.76% | 5.2 | 4.7 | 24.9 | 0.025 |
-| molecular-biology_promoters | F-measure (beta=0.5), inverted refinement | 77.36% | 3.1 | 3.9 | 11.1 | 0.024 |
-| molecular-biology_promoters | Laplace, inverted refinement | 83.27% | 2.3 | 5.2 | 11.7 | 0.018 |
-| molecular-biology_promoters | Precision, inverted refinement | 68.91% | 10.6 | 4.3 | 45.8 | 0.061 |
-| molecular-biology_promoters | cost (c=0.437), inverted refinement | 79.36% | 3.8 | 3.1 | 11.0 | 0.018 |
-| molecular-biology_promoters | m-estimate (m=16), inverted refinement | 85.91% | 2.4 | 4.9 | 11.5 | 0.027 |
-| molecular-biology_promoters | m-estimate (m=2), inverted refinement | 83.27% | 2.3 | 5.2 | 11.7 | 0.025 |
-| molecular-biology_promoters | m-estimate (m=22.466), inverted refinement | 86.09% | 2.5 | 4.7 | 11.4 | 0.024 |
-| molecular-biology_promoters | m-estimate (m=32), inverted refinement | 79.36% | 2.7 | 4.2 | 11.2 | 0.030 |
-| molecular-biology_promoters | m-estimate (m=4), inverted refinement | 83.27% | 2.3 | 5.2 | 11.7 | 0.027 |
-| molecular-biology_promoters | m-estimate (m=8), inverted refinement | 83.27% | 2.3 | 5.3 | 11.9 | 0.026 |
-| molecular-biology_promoters | relative cost (c_r=0.342), inverted refinement | 77.64% | 2.5 | 4.1 | 10.1 | 0.021 |
-| monks-problems-1 | F-measure (beta=0.5), inverted refinement | 89.44% | 2.4 | 2.4 | 6.2 | 0.007 |
-| monks-problems-1 | Laplace, inverted refinement | 100.00% | 7.5 | 5.0 | 45.1 | 0.018 |
-| monks-problems-1 | Precision, inverted refinement | 99.46% | 11.8 | 6.4 | 77.4 | 0.034 |
-| monks-problems-1 | cost (c=0.437), inverted refinement | 89.64% | 3.6 | 2.2 | 10.4 | 0.008 |
-| monks-problems-1 | m-estimate (m=16), inverted refinement | 94.06% | 5.0 | 4.6 | 26.4 | 0.020 |
-| monks-problems-1 | m-estimate (m=2), inverted refinement | 99.82% | 7.7 | 5.1 | 47.1 | 0.027 |
-| monks-problems-1 | m-estimate (m=22.466), inverted refinement | 92.06% | 3.5 | 3.6 | 14.2 | 0.010 |
-| monks-problems-1 | m-estimate (m=32), inverted refinement | 92.80% | 3.4 | 3.4 | 13.0 | 0.009 |
-| monks-problems-1 | m-estimate (m=4), inverted refinement | 99.82% | 7.7 | 5.1 | 47.1 | 0.023 |
-| monks-problems-1 | m-estimate (m=8), inverted refinement | 99.64% | 7.4 | 5.0 | 43.9 | 0.025 |
-| monks-problems-1 | relative cost (c_r=0.342), inverted refinement | 93.13% | 2.9 | 3.2 | 9.3 | 0.006 |
-| monks-problems-2 | F-measure (beta=0.5), inverted refinement | 65.72% | 0.0 | n/a | 0.0 | 0.003 |
-| monks-problems-2 | Laplace, inverted refinement | 88.85% | 36.7 | 9.2 | 338.3 | 0.114 |
-| monks-problems-2 | Precision, inverted refinement | 83.36% | 55.0 | 9.5 | 523.8 | 0.224 |
-| monks-problems-2 | cost (c=0.437), inverted refinement | 73.06% | 72.6 | 6.0 | 436.4 | 0.176 |
-| monks-problems-2 | m-estimate (m=16), inverted refinement | 75.71% | 7.6 | 7.2 | 54.0 | 0.025 |
-| monks-problems-2 | m-estimate (m=2), inverted refinement | 87.18% | 34.1 | 9.1 | 310.9 | 0.139 |
-| monks-problems-2 | m-estimate (m=22.466), inverted refinement | 74.54% | 7.4 | 7.0 | 51.2 | 0.024 |
-| monks-problems-2 | m-estimate (m=32), inverted refinement | 72.39% | 5.9 | 6.8 | 39.6 | 0.021 |
-| monks-problems-2 | m-estimate (m=4), inverted refinement | 78.70% | 20.9 | 8.3 | 176.8 | 0.089 |
-| monks-problems-2 | m-estimate (m=8), inverted refinement | 76.87% | 11.2 | 7.5 | 83.9 | 0.036 |
-| monks-problems-2 | relative cost (c_r=0.342), inverted refinement | 69.72% | 5.7 | 6.8 | 39.2 | 0.019 |
-| monks-problems-3 | F-measure (beta=0.5), inverted refinement | 96.58% | 2.6 | 1.5 | 4.5 | 0.008 |
-| monks-problems-3 | Laplace, inverted refinement | 98.02% | 5.6 | 5.1 | 28.5 | 0.019 |
-| monks-problems-3 | Precision, inverted refinement | 97.47% | 13.0 | 6.0 | 77.8 | 0.043 |
-| monks-problems-3 | cost (c=0.437), inverted refinement | 96.04% | 2.2 | 1.3 | 3.2 | 0.005 |
-| monks-problems-3 | m-estimate (m=16), inverted refinement | 98.92% | 3.0 | 2.5 | 7.5 | 0.011 |
-| monks-problems-3 | m-estimate (m=2), inverted refinement | 97.84% | 5.2 | 4.5 | 23.4 | 0.020 |
-| monks-problems-3 | m-estimate (m=22.466), inverted refinement | 98.92% | 3.0 | 2.0 | 6.1 | 0.009 |
-| monks-problems-3 | m-estimate (m=32), inverted refinement | 98.92% | 3.0 | 1.9 | 5.8 | 0.009 |
-| monks-problems-3 | m-estimate (m=4), inverted refinement | 98.38% | 3.5 | 4.1 | 14.7 | 0.013 |
-| monks-problems-3 | m-estimate (m=8), inverted refinement | 98.56% | 3.2 | 3.8 | 12.3 | 0.012 |
-| monks-problems-3 | relative cost (c_r=0.342), inverted refinement | 96.40% | 2.0 | 1.0 | 2.0 | 0.006 |
-| mushroom | F-measure (beta=0.5), inverted refinement | 99.89% | 5.6 | 1.6 | 9.0 | 0.045 |
-| mushroom | Laplace, inverted refinement | 100.00% | 3.0 | 7.0 | 20.9 | 0.100 |
-| mushroom | Precision, inverted refinement | 99.98% | 15.9 | 4.0 | 63.3 | 0.150 |
-| mushroom | cost (c=0.437), inverted refinement | 100.00% | 7.8 | 1.7 | 13.6 | 0.059 |
-| mushroom | m-estimate (m=16), inverted refinement | 100.00% | 3.0 | 7.0 | 20.9 | 0.105 |
-| mushroom | m-estimate (m=2), inverted refinement | 100.00% | 3.0 | 7.0 | 20.9 | 0.120 |
-| mushroom | m-estimate (m=22.466), inverted refinement | 100.00% | 3.0 | 7.0 | 20.9 | 0.122 |
-| mushroom | m-estimate (m=32), inverted refinement | 100.00% | 3.0 | 7.0 | 20.9 | 0.124 |
-| mushroom | m-estimate (m=4), inverted refinement | 100.00% | 3.0 | 7.0 | 20.9 | 0.122 |
-| mushroom | m-estimate (m=8), inverted refinement | 100.00% | 3.0 | 7.0 | 20.9 | 0.113 |
-| mushroom | relative cost (c_r=0.342), inverted refinement | 99.93% | 2.0 | 8.2 | 16.3 | 0.049 |
-| primary-tumor | F-measure (beta=0.5), inverted refinement | 38.05% | 64.4 | 4.2 | 268.9 | 0.344 |
-| primary-tumor | Laplace, inverted refinement | 40.10% | 73.8 | 10.4 | 769.5 | 0.524 |
-| primary-tumor | Precision, inverted refinement | 35.70% | 102.8 | 11.3 | 1164.5 | 0.607 |
-| primary-tumor | cost (c=0.437), inverted refinement | 35.69% | 71.6 | 3.7 | 262.9 | 0.214 |
-| primary-tumor | m-estimate (m=16), inverted refinement | 46.93% | 21.4 | 7.5 | 161.4 | 0.184 |
-| primary-tumor | m-estimate (m=2), inverted refinement | 41.87% | 62.5 | 10.3 | 642.8 | 0.436 |
-| primary-tumor | m-estimate (m=22.466), inverted refinement | 47.23% | 17.9 | 7.1 | 126.4 | 0.176 |
-| primary-tumor | m-estimate (m=32), inverted refinement | 46.63% | 15.8 | 6.7 | 105.7 | 0.152 |
-| primary-tumor | m-estimate (m=4), inverted refinement | 42.76% | 40.3 | 9.2 | 370.4 | 0.283 |
-| primary-tumor | m-estimate (m=8), inverted refinement | 45.46% | 28.1 | 8.6 | 241.4 | 0.213 |
-| primary-tumor | relative cost (c_r=0.342), inverted refinement | 43.67% | 10.4 | 5.2 | 54.2 | 0.123 |
-| segment | F-measure (beta=0.5), inverted refinement | 83.98% | 28.4 | 4.2 | 119.9 | 0.215 |
-| segment | Laplace, inverted refinement | 95.54% | 40.7 | 32.2 | 1311.5 | 1.453 |
-| segment | Precision, inverted refinement | 94.37% | 95.8 | 33.9 | 3261.4 | 2.333 |
-| segment | cost (c=0.437), inverted refinement | 91.13% | 144.1 | 3.5 | 499.5 | 0.530 |
-| segment | m-estimate (m=16), inverted refinement | 94.46% | 18.5 | 29.0 | 535.0 | 0.631 |
-| segment | m-estimate (m=2), inverted refinement | 95.32% | 36.0 | 32.1 | 1152.7 | 1.346 |
-| segment | m-estimate (m=22.466), inverted refinement | 94.07% | 15.6 | 26.5 | 412.2 | 0.501 |
-| segment | m-estimate (m=32), inverted refinement | 94.07% | 14.3 | 24.0 | 343.6 | 0.469 |
-| segment | m-estimate (m=4), inverted refinement | 94.72% | 31.2 | 32.1 | 1002.1 | 1.149 |
-| segment | m-estimate (m=8), inverted refinement | 95.02% | 24.5 | 30.7 | 752.2 | 0.888 |
-| segment | relative cost (c_r=0.342), inverted refinement | 90.78% | 7.7 | 4.8 | 37.1 | 0.146 |
-| solar-flare | F-measure (beta=0.5), inverted refinement | 74.30% | 10.3 | 5.8 | 57.9 | 0.116 |
-| solar-flare | Laplace, inverted refinement | 74.02% | 23.3 | 16.7 | 389.8 | 0.366 |
-| solar-flare | Precision, inverted refinement | 73.92% | 28.1 | 14.9 | 420.6 | 0.311 |
-| solar-flare | cost (c=0.437), inverted refinement | 73.92% | 22.2 | 3.4 | 75.8 | 0.108 |
-| solar-flare | m-estimate (m=16), inverted refinement | 73.55% | 7.0 | 12.0 | 84.2 | 0.136 |
-| solar-flare | m-estimate (m=2), inverted refinement | 73.27% | 18.3 | 17.4 | 318.3 | 0.350 |
-| solar-flare | m-estimate (m=22.466), inverted refinement | 73.83% | 5.7 | 11.3 | 64.4 | 0.117 |
-| solar-flare | m-estimate (m=32), inverted refinement | 73.73% | 5.0 | 9.3 | 47.6 | 0.107 |
-| solar-flare | m-estimate (m=4), inverted refinement | 72.89% | 14.2 | 16.7 | 237.2 | 0.279 |
-| solar-flare | m-estimate (m=8), inverted refinement | 72.98% | 9.3 | 14.6 | 139.4 | 0.192 |
-| solar-flare | relative cost (c_r=0.342), inverted refinement | 73.36% | 3.0 | 4.9 | 14.7 | 0.062 |
-| sonar | F-measure (beta=0.5), inverted refinement | 64.95% | 7.3 | 7.0 | 48.7 | 0.156 |
-| sonar | Laplace, inverted refinement | 67.86% | 4.5 | 32.6 | 145.4 | 0.420 |
-| sonar | Precision, inverted refinement | 60.57% | 36.3 | 8.4 | 303.7 | 0.557 |
-| sonar | cost (c=0.437), inverted refinement | 68.74% | 12.5 | 3.2 | 40.4 | 0.089 |
-| sonar | m-estimate (m=16), inverted refinement | 68.81% | 3.9 | 28.7 | 112.5 | 0.327 |
-| sonar | m-estimate (m=2), inverted refinement | 66.43% | 4.4 | 33.7 | 147.8 | 0.411 |
-| sonar | m-estimate (m=22.466), inverted refinement | 68.83% | 3.6 | 26.1 | 94.1 | 0.291 |
-| sonar | m-estimate (m=32), inverted refinement | 65.93% | 3.4 | 24.8 | 83.6 | 0.268 |
-| sonar | m-estimate (m=4), inverted refinement | 66.90% | 4.3 | 33.4 | 143.4 | 0.390 |
-| sonar | m-estimate (m=8), inverted refinement | 68.38% | 4.1 | 34.4 | 141.1 | 0.360 |
-| sonar | relative cost (c_r=0.342), inverted refinement | 70.64% | 3.0 | 19.0 | 57.0 | 0.166 |
-| soybean | F-measure (beta=0.5), inverted refinement | 90.78% | 37.5 | 3.6 | 134.8 | 0.200 |
-| soybean | Laplace, inverted refinement | 91.66% | 31.1 | 11.9 | 369.2 | 0.363 |
-| soybean | Precision, inverted refinement | 87.27% | 71.2 | 10.5 | 750.5 | 0.541 |
-| soybean | cost (c=0.437), inverted refinement | 91.81% | 46.3 | 2.2 | 103.4 | 0.122 |
-| soybean | m-estimate (m=16), inverted refinement | 92.98% | 22.2 | 7.0 | 156.8 | 0.203 |
-| soybean | m-estimate (m=2), inverted refinement | 92.09% | 29.8 | 11.6 | 346.5 | 0.361 |
-| soybean | m-estimate (m=22.466), inverted refinement | 93.71% | 22.1 | 6.6 | 146.0 | 0.206 |
-| soybean | m-estimate (m=32), inverted refinement | 93.86% | 21.3 | 5.7 | 121.6 | 0.193 |
-| soybean | m-estimate (m=4), inverted refinement | 92.10% | 27.5 | 10.1 | 276.6 | 0.313 |
-| soybean | m-estimate (m=8), inverted refinement | 93.57% | 24.2 | 8.4 | 203.3 | 0.237 |
-| soybean | relative cost (c_r=0.342), inverted refinement | 94.44% | 20.4 | 3.0 | 61.3 | 0.133 |
-| tic-tac-toe | F-measure (beta=0.5), inverted refinement | 81.42% | 13.4 | 3.9 | 54.2 | 0.062 |
-| tic-tac-toe | Laplace, inverted refinement | 91.13% | 36.9 | 10.3 | 380.2 | 0.258 |
-| tic-tac-toe | Precision, inverted refinement | 88.41% | 53.9 | 10.1 | 544.2 | 0.377 |
-| tic-tac-toe | cost (c=0.437), inverted refinement | 87.90% | 51.2 | 4.1 | 210.6 | 0.172 |
-| tic-tac-toe | m-estimate (m=16), inverted refinement | 81.62% | 12.1 | 8.2 | 99.6 | 0.089 |
-| tic-tac-toe | m-estimate (m=2), inverted refinement | 91.23% | 35.4 | 10.3 | 365.1 | 0.274 |
-| tic-tac-toe | m-estimate (m=22.466), inverted refinement | 78.81% | 11.5 | 7.7 | 89.0 | 0.092 |
-| tic-tac-toe | m-estimate (m=32), inverted refinement | 74.84% | 8.7 | 6.9 | 60.8 | 0.071 |
-| tic-tac-toe | m-estimate (m=4), inverted refinement | 89.98% | 30.0 | 10.1 | 303.9 | 0.233 |
-| tic-tac-toe | m-estimate (m=8), inverted refinement | 86.01% | 22.1 | 9.2 | 203.9 | 0.161 |
-| tic-tac-toe | relative cost (c_r=0.342), inverted refinement | 70.46% | 4.8 | 5.6 | 29.0 | 0.039 |
-| vehicle | F-measure (beta=0.5), inverted refinement | 69.40% | 25.4 | 6.3 | 156.9 | 0.270 |
-| vehicle | Laplace, inverted refinement | 70.44% | 69.8 | 46.4 | 3240.4 | 2.614 |
-| vehicle | Precision, inverted refinement | 66.07% | 176.3 | 40.3 | 7110.6 | 4.232 |
-| vehicle | cost (c=0.437), inverted refinement | 66.66% | 134.0 | 3.6 | 478.0 | 0.437 |
-| vehicle | m-estimate (m=16), inverted refinement | 67.26% | 22.0 | 39.5 | 866.7 | 0.817 |
-| vehicle | m-estimate (m=2), inverted refinement | 67.96% | 64.6 | 47.4 | 3064.4 | 2.763 |
-| vehicle | m-estimate (m=22.466), inverted refinement | 67.48% | 19.6 | 36.2 | 709.2 | 0.688 |
-| vehicle | m-estimate (m=32), inverted refinement | 70.21% | 15.0 | 32.4 | 488.8 | 0.528 |
-| vehicle | m-estimate (m=4), inverted refinement | 68.79% | 51.5 | 46.5 | 2392.8 | 2.161 |
-| vehicle | m-estimate (m=8), inverted refinement | 67.49% | 33.9 | 43.1 | 1466.1 | 1.319 |
-| vehicle | relative cost (c_r=0.342), inverted refinement | 66.66% | 7.3 | 17.0 | 128.3 | 0.214 |
-| vote | F-measure (beta=0.5), inverted refinement | 93.78% | 5.1 | 3.3 | 17.1 | 0.042 |
-| vote | Laplace, inverted refinement | 91.97% | 12.7 | 5.8 | 74.0 | 0.109 |
-| vote | Precision, inverted refinement | 93.13% | 17.6 | 6.1 | 107.6 | 0.129 |
-| vote | cost (c=0.437), inverted refinement | 94.05% | 3.6 | 2.9 | 10.6 | 0.017 |
-| vote | m-estimate (m=16), inverted refinement | 95.18% | 4.3 | 3.6 | 15.9 | 0.041 |
-| vote | m-estimate (m=2), inverted refinement | 92.67% | 8.8 | 5.2 | 46.0 | 0.116 |
-| vote | m-estimate (m=22.466), inverted refinement | 95.18% | 4.3 | 3.6 | 15.8 | 0.043 |
-| vote | m-estimate (m=32), inverted refinement | 94.72% | 3.9 | 3.4 | 13.8 | 0.043 |
-| vote | m-estimate (m=4), inverted refinement | 92.67% | 7.7 | 4.8 | 37.2 | 0.088 |
-| vote | m-estimate (m=8), inverted refinement | 93.12% | 5.5 | 4.4 | 24.7 | 0.057 |
-| vote | relative cost (c_r=0.342), inverted refinement | 94.27% | 2.7 | 3.1 | 8.8 | 0.022 |
-| vowel | F-measure (beta=0.5), inverted refinement | 70.51% | 68.2 | 4.1 | 280.4 | 0.333 |
-| vowel | Laplace, inverted refinement | 77.98% | 59.9 | 26.0 | 1556.5 | 1.177 |
-| vowel | Precision, inverted refinement | 75.66% | 197.4 | 23.3 | 4594.0 | 2.588 |
-| vowel | cost (c=0.437), inverted refinement | 81.31% | 163.2 | 2.9 | 466.7 | 0.310 |
-| vowel | m-estimate (m=16), inverted refinement | 74.65% | 39.4 | 23.6 | 928.9 | 0.670 |
-| vowel | m-estimate (m=2), inverted refinement | 77.98% | 58.4 | 26.2 | 1532.4 | 1.028 |
-| vowel | m-estimate (m=22.466), inverted refinement | 73.74% | 36.7 | 21.5 | 787.5 | 0.580 |
-| vowel | m-estimate (m=32), inverted refinement | 72.02% | 33.3 | 20.2 | 672.4 | 0.529 |
-| vowel | m-estimate (m=4), inverted refinement | 77.88% | 55.0 | 25.8 | 1423.5 | 0.962 |
-| vowel | m-estimate (m=8), inverted refinement | 76.97% | 48.9 | 24.7 | 1209.2 | 0.817 |
-| vowel | relative cost (c_r=0.342), inverted refinement | 55.66% | 16.8 | 8.7 | 146.4 | 0.223 |
-| wine | F-measure (beta=0.5), inverted refinement | 94.38% | 2.8 | 2.7 | 7.2 | 0.014 |
-| wine | Laplace, inverted refinement | 94.97% | 2.5 | 3.1 | 7.5 | 0.018 |
-| wine | Precision, inverted refinement | 90.98% | 11.8 | 3.8 | 45.1 | 0.057 |
-| wine | cost (c=0.437), inverted refinement | 95.56% | 4.3 | 2.0 | 8.7 | 0.013 |
-| wine | m-estimate (m=16), inverted refinement | 94.97% | 2.5 | 3.1 | 7.5 | 0.020 |
-| wine | m-estimate (m=2), inverted refinement | 94.97% | 2.5 | 3.1 | 7.5 | 0.024 |
-| wine | m-estimate (m=22.466), inverted refinement | 94.97% | 2.5 | 3.1 | 7.5 | 0.021 |
-| wine | m-estimate (m=32), inverted refinement | 94.97% | 2.7 | 3.0 | 7.6 | 0.019 |
-| wine | m-estimate (m=4), inverted refinement | 94.97% | 2.5 | 3.1 | 7.5 | 0.024 |
-| wine | m-estimate (m=8), inverted refinement | 94.97% | 2.5 | 3.1 | 7.5 | 0.019 |
-| wine | relative cost (c_r=0.342), inverted refinement | 94.97% | 3.2 | 2.3 | 7.2 | 0.016 |
-| zoo | F-measure (beta=0.5), inverted refinement | 93.00% | 9.7 | 2.3 | 22.6 | 0.025 |
-| zoo | Laplace, inverted refinement | 95.00% | 6.0 | 2.1 | 12.7 | 0.013 |
-| zoo | Precision, inverted refinement | 94.00% | 8.9 | 4.3 | 38.5 | 0.029 |
-| zoo | cost (c=0.437), inverted refinement | 93.00% | 9.7 | 2.3 | 22.6 | 0.018 |
-| zoo | m-estimate (m=16), inverted refinement | 95.00% | 6.0 | 2.1 | 12.7 | 0.017 |
-| zoo | m-estimate (m=2), inverted refinement | 95.00% | 6.0 | 2.1 | 12.7 | 0.016 |
-| zoo | m-estimate (m=22.466), inverted refinement | 95.00% | 6.0 | 2.1 | 12.7 | 0.015 |
-| zoo | m-estimate (m=32), inverted refinement | 95.00% | 6.0 | 2.1 | 12.7 | 0.017 |
-| zoo | m-estimate (m=4), inverted refinement | 95.00% | 6.0 | 2.1 | 12.7 | 0.016 |
-| zoo | m-estimate (m=8), inverted refinement | 95.00% | 6.0 | 2.1 | 12.7 | 0.017 |
-| zoo | relative cost (c_r=0.342), inverted refinement | 95.00% | 6.0 | 2.1 | 12.7 | 0.015 |
+Regular m-estimate for refinement:
+
+| refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| m=0.1 | 81.54% | 81.56% | 81.74% | 81.46% | 80.58% | 80.41% | 80.18% | 78.90% | 77.96% |
+| m=0.2 | 81.62% | 81.62% | 81.84% | 81.48% | 80.68% | 80.46% | 80.18% | 78.87% | 77.93% |
+| m=0.5 | 81.81% | 81.81% | 81.84% | 81.59% | 80.78% | 80.53% | 80.32% | 78.96% | 77.97% |
+| m=1 | 82.01% | 82.01% | 82.03% | 82.08% | 81.24% | 81.08% | 80.53% | 79.09% | 77.99% |
+| m=2 | 82.39% | 82.39% | 82.39% | 82.42% | 82.62% | 82.21% | 80.73% | 79.48% | 78.32% |
+| m=4 | 82.87% | 82.87% | 82.88% | 82.96% | 83.01% | 82.92% | 81.57% | 80.38% | 78.92% |
+| m=8 | 82.93% | 82.94% | 82.95% | 83.04% | 83.04% | 83.60% | 83.42% | 82.13% | 80.26% |
+| m=16 | 83.22% | 83.22% | 83.24% | 83.25% | 83.25% | 83.71% | 83.74% | 83.82% | 82.08% |
+| m=32 | 83.03% | 83.03% | 83.04% | 83.17% | 83.04% | 83.44% | 83.41% | 83.58% | 83.36% |
+
+Inverted m-estimate for refinement:
+
+| refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| m=0.1 | 82.02% | 82.01% | 82.06% | 82.23% | 82.33% | 82.46% | 82.51% | 82.43% | 81.89% |
+| m=0.2 | 82.02% | 82.01% | 82.06% | 82.23% | 82.33% | 82.46% | 82.51% | 82.44% | 81.89% |
+| m=0.5 | 82.01% | 82.00% | 82.06% | 82.21% | 82.30% | 82.50% | 82.48% | 82.46% | 81.96% |
+| m=1 | 82.07% | 82.06% | 82.15% | 82.28% | 82.35% | 82.53% | 82.58% | 82.39% | 81.93% |
+| m=2 | 81.88% | 81.87% | 81.96% | 82.16% | 82.33% | 82.58% | 82.65% | 82.40% | 81.94% |
+| m=4 | 81.88% | 81.87% | 81.97% | 82.24% | 82.30% | 82.60% | 82.49% | 82.22% | 81.94% |
+| m=8 | 82.08% | 82.07% | 82.13% | 82.34% | 82.10% | 82.65% | 82.69% | 82.27% | 81.80% |
+| m=16 | 81.92% | 81.95% | 82.06% | 82.10% | 82.38% | 82.85% | 82.68% | 82.30% | 81.86% |
+| m=32 | 81.98% | 81.97% | 82.02% | 81.99% | 82.34% | 82.53% | 82.32% | 82.37% | 81.83% |
+
+### Number of rules
+
+Regular m-estimate for refinement:
+
+| refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| m=0.1 | 47.7 | 46.3 | 42.6 | 37.7 | 28.2 | 16.5 | 11.7 | 8.4 | 6.2 |
+| m=0.2 | 47.1 | 47.0 | 42.6 | 37.7 | 28.1 | 16.6 | 11.8 | 8.4 | 6.2 |
+| m=0.5 | 45.0 | 44.9 | 44.7 | 38.3 | 28.9 | 16.9 | 11.9 | 8.4 | 6.3 |
+| m=1 | 41.5 | 41.4 | 41.2 | 40.9 | 29.1 | 17.4 | 12.1 | 8.6 | 6.4 |
+| m=2 | 36.9 | 36.8 | 36.5 | 36.2 | 35.6 | 19.2 | 12.9 | 9.2 | 6.6 |
+| m=4 | 32.3 | 32.2 | 31.9 | 31.6 | 30.7 | 28.2 | 16.4 | 10.8 | 7.1 |
+| m=8 | 28.8 | 28.7 | 28.4 | 28.0 | 27.0 | 24.0 | 22.4 | 13.3 | 8.4 |
+| m=16 | 26.1 | 26.1 | 25.8 | 25.3 | 24.0 | 20.8 | 18.6 | 17.2 | 11.0 |
+| m=32 | 24.7 | 24.6 | 24.4 | 23.7 | 22.3 | 18.6 | 16.2 | 14.3 | 12.9 |
+
+Inverted m-estimate for refinement:
+
+| refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| m=0.1 | 25.9 | 25.8 | 25.5 | 24.6 | 22.0 | 16.8 | 12.7 | 9.5 | 7.4 |
+| m=0.2 | 25.9 | 25.8 | 25.5 | 24.6 | 22.0 | 16.8 | 12.7 | 9.5 | 7.3 |
+| m=0.5 | 25.9 | 25.8 | 25.5 | 24.6 | 22.0 | 16.8 | 12.7 | 9.5 | 7.3 |
+| m=1 | 25.9 | 25.8 | 25.5 | 24.6 | 22.0 | 16.7 | 12.7 | 9.5 | 7.4 |
+| m=2 | 25.9 | 25.8 | 25.5 | 24.6 | 22.0 | 16.7 | 12.7 | 9.5 | 7.4 |
+| m=4 | 25.8 | 25.7 | 25.4 | 24.5 | 22.0 | 16.7 | 12.6 | 9.5 | 7.3 |
+| m=8 | 25.8 | 25.7 | 25.3 | 24.5 | 21.9 | 16.6 | 12.5 | 9.5 | 7.3 |
+| m=16 | 25.7 | 25.7 | 25.4 | 24.5 | 22.0 | 16.6 | 12.7 | 9.5 | 7.3 |
+| m=32 | 25.7 | 25.6 | 25.3 | 24.5 | 21.9 | 16.8 | 12.8 | 9.5 | 7.3 |
+
+### Conditions per rule
+
+Regular m-estimate for refinement:
+
+| refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| m=0.1 | 2.7 | 2.7 | 2.6 | 2.5 | 2.3 | 2.0 | 1.8 | 1.7 | 1.6 |
+| m=0.2 | 2.7 | 2.7 | 2.6 | 2.5 | 2.3 | 2.0 | 1.8 | 1.7 | 1.6 |
+| m=0.5 | 2.7 | 2.7 | 2.7 | 2.6 | 2.4 | 2.1 | 1.8 | 1.7 | 1.6 |
+| m=1 | 2.8 | 2.8 | 2.8 | 2.8 | 2.5 | 2.2 | 1.9 | 1.8 | 1.6 |
+| m=2 | 2.9 | 2.9 | 2.9 | 2.9 | 2.9 | 2.4 | 2.2 | 2.0 | 1.7 |
+| m=4 | 3.1 | 3.1 | 3.1 | 3.1 | 3.1 | 3.0 | 2.6 | 2.3 | 2.0 |
+| m=8 | 3.6 | 3.6 | 3.6 | 3.6 | 3.6 | 3.4 | 3.1 | 2.7 | 2.4 |
+| m=16 | 4.6 | 4.6 | 4.6 | 4.6 | 4.5 | 4.2 | 3.7 | 3.3 | 2.9 |
+| m=32 | 6.0 | 6.0 | 6.0 | 5.9 | 5.8 | 5.5 | 5.0 | 4.2 | 3.6 |
+
+Inverted m-estimate for refinement:
+
+| refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| m=0.1 | 14.7 | 14.7 | 14.7 | 14.6 | 14.5 | 13.9 | 13.0 | 11.9 | 10.3 |
+| m=0.2 | 14.7 | 14.7 | 14.7 | 14.6 | 14.5 | 14.0 | 13.0 | 11.9 | 10.3 |
+| m=0.5 | 14.7 | 14.7 | 14.7 | 14.6 | 14.5 | 14.0 | 13.0 | 11.9 | 10.3 |
+| m=1 | 14.7 | 14.7 | 14.7 | 14.6 | 14.5 | 14.0 | 13.0 | 11.9 | 10.3 |
+| m=2 | 14.7 | 14.7 | 14.7 | 14.6 | 14.5 | 14.0 | 13.0 | 11.9 | 10.2 |
+| m=4 | 14.7 | 14.7 | 14.7 | 14.6 | 14.4 | 13.9 | 12.9 | 11.9 | 10.2 |
+| m=8 | 14.6 | 14.6 | 14.6 | 14.5 | 14.4 | 13.9 | 12.9 | 11.8 | 10.1 |
+| m=16 | 14.4 | 14.4 | 14.4 | 14.3 | 14.2 | 13.7 | 12.8 | 11.7 | 10.0 |
+| m=32 | 14.3 | 14.3 | 14.2 | 14.2 | 14.0 | 13.5 | 12.6 | 11.3 | 9.7 |
+
+### Conditions in the rule set
+
+Regular m-estimate for refinement:
+
+| refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| m=0.1 | 146.9 | 141.9 | 129.2 | 111.1 | 78.9 | 39.3 | 24.7 | 16.2 | 11.0 |
+| m=0.2 | 145.6 | 145.3 | 129.0 | 111.3 | 78.5 | 39.7 | 25.0 | 16.4 | 11.0 |
+| m=0.5 | 140.5 | 140.2 | 139.2 | 114.6 | 82.4 | 41.2 | 25.5 | 16.7 | 11.2 |
+| m=1 | 131.4 | 131.1 | 130.1 | 128.3 | 85.0 | 43.6 | 26.7 | 17.3 | 11.6 |
+| m=2 | 123.1 | 122.9 | 121.5 | 119.6 | 115.3 | 53.2 | 31.5 | 20.5 | 12.8 |
+| m=4 | 117.5 | 117.3 | 115.8 | 113.5 | 107.9 | 91.9 | 46.9 | 27.1 | 15.4 |
+| m=8 | 123.8 | 123.6 | 121.0 | 118.1 | 111.5 | 89.9 | 77.3 | 38.6 | 21.1 |
+| m=16 | 144.5 | 144.5 | 142.7 | 138.1 | 129.4 | 99.2 | 76.7 | 60.8 | 34.3 |
+| m=32 | 182.3 | 182.1 | 180.7 | 173.3 | 160.1 | 123.3 | 93.0 | 65.5 | 48.4 |
+
+Inverted m-estimate for refinement:
+
+| refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| m=0.1 | 493.4 | 492.3 | 485.5 | 467.1 | 415.1 | 311.8 | 214.2 | 142.0 | 90.7 |
+| m=0.2 | 493.4 | 492.3 | 485.5 | 467.1 | 415.1 | 312.1 | 214.2 | 141.8 | 90.7 |
+| m=0.5 | 493.5 | 492.4 | 485.9 | 467.0 | 414.8 | 312.5 | 214.2 | 140.7 | 90.7 |
+| m=1 | 492.9 | 491.9 | 485.2 | 466.6 | 414.6 | 311.5 | 215.1 | 141.5 | 91.2 |
+| m=2 | 492.3 | 491.2 | 484.5 | 466.1 | 414.7 | 312.2 | 213.8 | 141.5 | 91.2 |
+| m=4 | 488.9 | 487.7 | 482.1 | 463.8 | 412.4 | 309.3 | 212.5 | 141.1 | 90.3 |
+| m=8 | 487.7 | 487.4 | 481.2 | 463.8 | 411.6 | 307.6 | 211.6 | 140.7 | 87.4 |
+| m=16 | 482.7 | 482.1 | 476.7 | 458.1 | 410.1 | 303.4 | 213.9 | 138.7 | 87.2 |
+| m=32 | 480.2 | 479.6 | 474.4 | 457.5 | 403.6 | 303.6 | 211.9 | 135.5 | 83.7 |
+
+Failed folds in the matrices (beyond the sweep's own learners): 0.
 
