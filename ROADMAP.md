@@ -1136,11 +1136,48 @@ Next:
   isometrics as `CoverageDifference`, so this needs checking whether a
   cheaper-but-equivalent swap exists there too, not assuming the same
   substitution applies.
-- **Inverted heuristics** (Stecher, Janssen & Fürnkranz): a refinement
-  evaluated in the coverage space of its parent rule instead of the empty
-  rule. Implement in `pyrulearn.heuristics`, then add to the
-  `heuristic_isometrics` and `heuristic_comparison` demos. (Also listed in
-  the README.)
+- **Inverted heuristics and separate refinement / selection heuristics**
+  (Stecher, Janssen & Fürnkranz; Valmarska et al.). An inverted heuristic
+  is `h_inv(p, n) = h(N - n, P - p)`: refinements start in the upper
+  right corner of the coverage space, so that point becomes the origin.
+  It only makes sense for *refining*; the rule finally picked from the
+  refinement path should still be judged by a regular heuristic. Plan
+  (do it in a branch, `inverted-heuristics`, private until decided):
+  - *Selection objective.* `SingleRuleLearner` and the searches get an
+    optional `selection=` (default `None`: the same as the heuristic, so
+    every existing learner keeps its current code path). Today each
+    search uses its one `Objective` for both jobs. With `selection` set:
+    `BeamSearch` ranks the beam by the refinement heuristic, but tracks
+    `best_rule` (and its optimistic pruning bound) by the selection
+    heuristic; `HillClimbing` walks by the refinement heuristic, keeps the
+    best rule along the path by the selection heuristic and returns it
+    instead of the endpoint (it currently returns the endpoint, correct
+    only because a single heuristic makes the walk strictly improving),
+    and stops by consistency rather than at the refinement heuristic's
+    local maximum, with optimistic pruning by the selection bound;
+    `BranchAndBoundSearch` rejects a separate selection (refinement order
+    doesn't matter to an exhaustive search). The best-of-all-classes
+    choice (`HeadPerRule`) is selection, too. Possible extension: a beam
+    returning its `k` best rules by the selection heuristic (only
+    `BranchAndBoundSearch(k=...)` returns `k` rules so far).
+  - *`Inverted(h)`* in `pyrulearn.heuristics`, in two variants: with the
+    whole data's `N`, `P` it is a plain `RuleHeuristic` and works in every
+    search; relative to the parent rule's coverage (`N̂`, `P̂`; check
+    which one Stecher et al. use) it compares a child with its parent,
+    like `FoilGain`, so it fits `GainHeuristic` / `GainAscentHillClimbing`
+    but not a beam. For a linear heuristic (cost-weighted difference) the
+    two coincide; for precision, Laplace, m-estimate they differ.
+  - *Other learners.* The searches are also used by boosting (SLIPPER,
+    the gradient-boosting beam), CPAR, LRI, OPUS, PyLORD and
+    `pruning.py`; with `selection=None` none of them changes. Careful
+    with `HillClimbing(stop_at_local_optimum=False)` (RIPPER, LRI), whose
+    endpoint is deliberately not the best rule: it must keep returning
+    the endpoint without `selection`. Check with the full test suite,
+    a few SeCo comparison demos re-run from scratch with identical
+    results, and new tests where the endpoint isn't the best rule.
+  - *Demos.* Add to `heuristic_isometrics` and `heuristic_comparison`,
+    e.g. inverted precision for refinement with Laplace for selection.
+    (Also listed in the README.)
 - **README**: subsections under *Native learning algorithms* for the
   learners that are only mentioned in tables so far -- CBA, CMAR, IDS and
   RuleFit.
