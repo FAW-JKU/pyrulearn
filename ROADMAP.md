@@ -1142,7 +1142,7 @@ Next:
   right corner of the coverage space, so that point becomes the origin.
   It only makes sense for *refining*; the rule finally picked from the
   refinement path should still be judged by a regular heuristic.
-  *Done on the branch `refine-select`* (private until decided): an
+  *Released in 0.7.0*: an
   optional `selection=` heuristic in `SingleRuleLearner` and the searches
   (`FindRules(D, h_r, h_s)`: `stopping` and the beam belong to the
   refinement, `filtering` and the best rule to the selection; hill
@@ -1164,7 +1164,7 @@ Next:
     the better default -- to be seen in the experiments.
   - *A beam returning its `k` best rules* by the selection (only
     `BranchAndBoundSearch(k=...)` returns `k` rules so far).
-  - *Demos* (done on the branch): `heuristic_isometrics` has a formula
+  - *Demos* (done): `heuristic_isometrics` has a formula
     table, regular and inverted, and the inverted isometrics next to the
     regular ones; `heuristic_comparison` has two m x m matrices of the
     m-estimate, m for refinement x m for selection, regular and inverted

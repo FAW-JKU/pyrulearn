@@ -3046,7 +3046,7 @@ If you use pyrulearn, please cite it via [`CITATION.cff`](CITATION.cff)
   author  = {F{\"u}rnkranz, Johannes},
   title   = {pyrulearn},
   year    = {2026},
-  version = {0.6.0},
+  version = {0.7.0},
   url     = {https://github.com/FAW-JKU/pyrulearn}
 }
 ```

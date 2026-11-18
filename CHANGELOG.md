@@ -3,7 +3,13 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
-## Unreleased
+## 0.7.0 (2026-11-18)
+
+Inverted Heuristics: separate heuristics for refining a rule and for
+selecting it (`selection=`), and `Inverted(h)`, the inverted heuristic of
+Stecher, Janssen & Fürnkranz, relative to the rule being refined; the
+heuristic comparison demo compares regular and inverted m-estimates for
+refinement against m-estimates for selection.
 
 ### Added
 
