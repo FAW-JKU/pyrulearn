@@ -147,6 +147,19 @@ class RuleSearch(ABC):
     its own docstring, and each search's, for exactly
     how each applies
     both.
+
+    `selection` (optional) separates *selecting* the rule to return from
+    *refining*: `heuristic` decides which refinements a search pursues
+    (the beam, the next step of a walk), `selection` -- a plain
+    `RuleHeuristic` -- which of the rules it reached is the best, as in
+    ``FindRules(D, h_r, h_s)``. `filtering` is then the criterion of the
+    selection (which rules may be returned), `stopping` that of the
+    refinement (when to stop refining). For a rule of any class
+    (`HeadObjective`), the selection also chooses the head of the rule it
+    returns. Without it, `heuristic` does both, as before. Meant for a
+    refinement heuristic that isn't a sensible measure of a rule's
+    quality on its own, such as an inverted heuristic
+    (`pyrulearn.heuristics.Inverted`).
     """
 
     @abstractmethod
@@ -159,6 +172,7 @@ class RuleSearch(ABC):
         example_mask: Optional[np.ndarray] = None,
         filtering: Optional[PrePruningCriterion] = None,
         stopping: Optional[PrePruningCriterion] = None,
+        selection: Optional[RuleHeuristic] = None,
     ) -> Optional[Rule]:
         raise NotImplementedError
 
@@ -171,13 +185,15 @@ class RuleSearch(ABC):
         example_mask: Optional[np.ndarray] = None,
         filtering: Optional[PrePruningCriterion] = None,
         stopping: Optional[PrePruningCriterion] = None,
+        selection: Optional[RuleHeuristic] = None,
     ) -> List[Rule]:
         """Every rule one search yields -- for a search that can yield
         several (`GainAscentHillClimbing` with `branch_similarity`, CPAR's),
         in the order they were found; `SeCo`'s covering loop accepts each.
         Default: just `search`'s rule (none if it found nothing)."""
         rule = self.search(data, target_class, heuristic, initial_candidates,
-                           example_mask=example_mask, filtering=filtering, stopping=stopping)
+                           example_mask=example_mask, filtering=filtering, stopping=stopping,
+                           **({} if selection is None else {"selection": selection}))
         return [] if rule is None else [rule]
 
 
@@ -649,6 +665,28 @@ class Objective(ABC):
     def consistent(self, stats) -> bool:
         return False
 
+    @property
+    def relative_to_parent(self) -> bool:
+        """Whether a refinement is scored relative to its parent (see
+        `pyrulearn.heuristics.RuleHeuristic.relative_to_parent`): its
+        score then takes the parent's statistics."""
+        return bool(getattr(getattr(self, "heuristic", None), "relative_to_parent", False))
+
+    def parents(self, stats: Sequence[Any], index: np.ndarray) -> Any:
+        """The statistics of the parent of each refinement in a batch,
+        `stats[index[i]]` for the i-th -- for `batch_score` relative to
+        the parents."""
+        def column(name):
+            return np.asarray([float(getattr(st, name)) for st in stats])[index]
+        return RuleStats(tp=column("tp"), fp=column("fp"), fn=column("fn"), tn=column("tn"))
+
+    def restat(self, batch) -> Any:
+        """`batch` -- statistics from another objective of the same kind,
+        the refinement's -- as this objective's own: unchanged for one
+        whose statistics don't depend on the heuristic; with the head this
+        objective's heuristic chooses for a `HeadObjective`."""
+        return batch
+
 
 class HeuristicObjective(Objective):
     """A `RuleHeuristic` as an `Objective`: statistics are `RuleStats`
@@ -677,7 +715,7 @@ class HeuristicObjective(Objective):
         return features, RuleStats(tp=tps, fp=fps, fn=fns, tn=tns, length=stats.length + 1), same, dead
 
     def batch_score(self, batch, parent=None):
-        if parent is not None and isinstance(self.heuristic, GainHeuristic):
+        if parent is not None and (isinstance(self.heuristic, GainHeuristic) or self.heuristic.relative_to_parent):
             return self.heuristic.batch_score(batch, parent)
         return self.heuristic.batch_score(batch)
 
@@ -685,7 +723,7 @@ class HeuristicObjective(Objective):
         return self.heuristic.score(stats)
 
     def score_one(self, stats, parent=None) -> Score:
-        if parent is not None and isinstance(self.heuristic, GainHeuristic):
+        if parent is not None and (isinstance(self.heuristic, GainHeuristic) or self.heuristic.relative_to_parent):
             return batch_score_one(self.heuristic, stats, parent)
         return batch_score_one(self.heuristic, stats)
 
@@ -732,6 +770,31 @@ def as_objective(heuristic: Union[RuleHeuristic, Objective]) -> Objective:
     """`heuristic` itself if it's already an `Objective`, else wrapped in a
     `HeuristicObjective`."""
     return heuristic if isinstance(heuristic, Objective) else HeuristicObjective(heuristic)
+
+
+def selection_objective(objective: Objective, selection: Optional[Union[RuleHeuristic, Objective]],
+                        data, target_class: Any, example_mask: Optional[np.ndarray]) -> Optional[Objective]:
+    """The objective a search selects its result by (see `RuleSearch`):
+    None without a `selection`, else `selection` as an objective of the
+    same kind as the search's own `objective` -- for a fixed class or for
+    a rule of any class -- started (`begin`) on the same data. A
+    selection compares rules reached from different parents, so it can't
+    be a gain heuristic."""
+    if selection is None:
+        return None
+    sel = as_objective(selection)
+    heuristic = getattr(sel, "heuristic", None)
+    if isinstance(heuristic, GainHeuristic):
+        raise ValueError(f"a selection compares rules from different parents and can't be the gain heuristic "
+                         f"{type(heuristic).__name__}")
+    if sel.relative_to_parent:
+        raise ValueError(f"a selection compares rules from different parents and can't score them relative to "
+                         f"their parents, as {heuristic!r} does")
+    if not any(isinstance(objective, kind) and isinstance(sel, kind) for kind in (HeuristicObjective, HeadObjective)):
+        raise ValueError(f"a selection needs a heuristic of the same kind as the search's ({objective!r}); "
+                         f"got {sel!r}")
+    sel.begin(data, target_class, example_mask)
+    return sel
 
 
 def _check_criteria(objective: Objective, *criteria: Optional[PrePruningCriterion]) -> None:
@@ -877,6 +940,7 @@ class HeadObjective(Objective):
     def __init__(self, heuristic: RuleHeuristic):
         self.heuristic = heuristic
         self._gain = isinstance(heuristic, GainHeuristic)
+        self._relative = heuristic.relative_to_parent
 
     @property
     def supports_bound(self) -> bool:
@@ -897,6 +961,11 @@ class HeadObjective(Objective):
         """The class `stats`' rule predicts."""
         return self.classes[int(stats.head)]
 
+    def restat(self, batch: HeadStats) -> HeadStats:
+        """`batch` with the head (and score) this objective's heuristic
+        chooses -- e.g. a refinement's statistics for a selection."""
+        return self._stats(batch.covered, batch.count, batch.length, None)
+
     def _stats(self, covered: np.ndarray, count: Any, length: Any, parent: Optional[HeadStats]) -> HeadStats:
         if self._gain and parent is None:   # a root has no parent to gain over: the covered majority
             head = covered.argmax(axis=0)
@@ -910,8 +979,9 @@ class HeadObjective(Objective):
             head = np.full(covered.shape[1:], int(parent.head), dtype=np.int64)
             score = self.heuristic.head_scores(covered, self.totals, length, parent.covered)[int(parent.head)]
         else:
-            score, head = self.heuristic.best_head(covered, self.totals, length,
-                                                   parent.covered if self._gain else None)
+            score, head = self.heuristic.best_head(
+                covered, self.totals, length,
+                parent.covered if (self._gain or self._relative) and parent is not None else None)
         pick = lambda a: np.take_along_axis(a, np.asarray(head)[None, ...], axis=0)[0]   # noqa: E731
         tp = pick(covered)
         n_covered = covered.sum(axis=0)
@@ -944,6 +1014,8 @@ class HeadObjective(Objective):
         return np.asarray(batch.score, dtype=float)
 
     def score_one(self, stats: HeadStats, parent=None) -> Score:
+        if parent is not None and self._relative:   # rescored relative to `parent`
+            return float(self._stats(stats.covered, stats.count, stats.length, parent).score)
         return float(stats.score)
 
     def batch_bound(self, batch: HeadStats):
@@ -1121,6 +1193,7 @@ class BeamSearch(RuleSearch):
         example_mask: Optional[np.ndarray] = None,
         filtering: Optional[PrePruningCriterion] = None,
         stopping: Optional[PrePruningCriterion] = None,
+        selection: Optional[RuleHeuristic] = None,
     ) -> Optional[Rule]:
         if not initial_candidates:
             raise ValueError("BeamSearch.search needs at least one initial candidate")
@@ -1128,6 +1201,16 @@ class BeamSearch(RuleSearch):
         objective = as_objective(heuristic)
         _check_criteria(objective, filtering, stopping)
         objective.begin(data, target_class, example_mask)
+        # the selection: what `best_rule` is chosen and bounded by -- the
+        # objective itself without a separate one
+        sel = selection_objective(objective, selection, data, target_class, example_mask)
+        separate = sel is not None
+        relative = objective.relative_to_parent
+        if relative and not separate:
+            raise ValueError(f"BeamSearch with {heuristic!r}, which scores a rule relative to its parent, needs a "
+                             f"selection: the rules of different rounds have no common score to pick the best by")
+        if not separate:
+            sel = objective
 
         def promises_improvement(stats: RuleStats, threshold: Optional[Score]) -> bool:
             # optimistic pruning: if even the hypothetical perfect
@@ -1143,8 +1226,9 @@ class BeamSearch(RuleSearch):
             # class's docstring.
             if not self.optimistic_pruning or threshold is None:
                 return True
-            # bound_one: `threshold` came from batch_score
-            return objective.bound_one(stats) > threshold
+            # bound_one: `threshold` came from batch_score -- the
+            # selection's, as is the bound: it's about what may be returned
+            return sel.bound_one(stats) > threshold
 
         def is_eligible(rule: Rule, stats: RuleStats) -> bool:
             if objective.dead(stats):
@@ -1159,11 +1243,16 @@ class BeamSearch(RuleSearch):
         # and their constraint closure (`_UNSET` for the seeds, computed on
         # first use), which each child extends instead of recomputing, and
         # their score, which a child keeping all their rows inherits exactly
-        beam: List[Tuple[Rule, FrozenSet[int], Any, RuleStats, Any, Score]] = []
+        # (and the selection's score, the same one without a separate selection)
+        beam: List[Tuple[Rule, FrozenSet[int], Any, RuleStats, Any, Score, Score]] = []
+        seed_stats = []
         for rule, mask in initial_candidates:
             handle = handle_for(data, rule, example_mask)
             stats = objective.rule_stats(data, target_class, rule, handle)
-            beam.append((rule, mask, handle, stats, _UNSET, objective.score_one(stats)))
+            s = objective.score_one(stats)
+            sst = sel.restat(stats) if separate else stats
+            seed_stats.append(sst)
+            beam.append((rule, mask, handle, stats, _UNSET, s, sel.score_one(sst) if separate else s))
         # best_rule tracks the best filtering-eligible rule seen *strictly
         # before* the round currently being evaluated (see the stopping
         # block below for why the timing matters) -- if none is ever seen
@@ -1175,11 +1264,11 @@ class BeamSearch(RuleSearch):
         # Pruning etc. all treat it specially -- so a search that stops
         # before refining anywhere should return None, not the seed.
         best_rule: Optional[Rule] = None
-        best_score: Optional[Score] = None
-        for rule, mask, handle, stats, _, s in beam:   # s: compared with batch_score values below
+        best_score: Optional[Score] = None   # the selection's
+        for (rule, _, _, _, _, _, s), sst in zip(beam, seed_stats):   # s: compared with batch_score values below
             if rule.length() == 0:
                 continue
-            if is_eligible(rule, stats) and (best_score is None or s > best_score):
+            if is_eligible(rule, sst) and (best_score is None or s > best_score):
                 best_rule, best_score = rule, s
 
         depth = 0
@@ -1248,7 +1337,7 @@ class BeamSearch(RuleSearch):
             dead_by_parent: List[Set[int]] = []
             parts: List[Tuple[np.ndarray, ...]] = []
             batches: List[Any] = []
-            for pi, (rule, mask, handle, stats, _, _) in enumerate(refinable):
+            for pi, (rule, mask, handle, stats, _, _, _) in enumerate(refinable):
                 features, batch, same, dead = objective.children(data, target_class, mask, handle, stats)
                 dead_by_parent.append(dead)
                 bits = 0
@@ -1267,14 +1356,26 @@ class BeamSearch(RuleSearch):
                 np.concatenate([p[j] for p in parts]) for j in range(4)
             )
             c_stats = objective.concat(batches)
-            scores = objective.batch_score(c_stats)
-            for i in np.flatnonzero(c_same).tolist():     # changes nothing: exactly its parent's score
-                set_score(scores, i, refinable[int(c_parent[i])][5])
+            if relative:   # each child relative to its own parent; one that changes nothing excludes nothing
+                scores = objective.batch_score(c_stats, objective.parents([e[3] for e in refinable], c_parent))
+            else:
+                scores = objective.batch_score(c_stats)
+                for i in np.flatnonzero(c_same).tolist():     # changes nothing: exactly its parent's score
+                    set_score(scores, i, refinable[int(c_parent[i])][5])
             # ties broken toward the shorter (more general) rule -- otherwise
             # an arbitrary, sort-order-dependent longer duplicate could win a
             # beam slot over an equally-good shorter one; equal keys stay in
             # arrival order (stable)
             order = rank_best_first(scores, c_length).tolist()
+            # the selection's scores of the same children, and its order
+            if separate:
+                c_sel = sel.restat(c_stats)
+                sel_scores = sel.batch_score(c_sel)
+                for i in np.flatnonzero(c_same).tolist():
+                    set_score(sel_scores, i, refinable[int(c_parent[i])][6])
+                sel_order = rank_best_first(sel_scores, c_length).tolist()
+            else:
+                c_sel, sel_scores, sel_order = c_stats, scores, order
 
             def candidate(i: int) -> Tuple[Score, int, int, RuleStats]:
                 return score_at(scores, i), int(c_parent[i]), int(c_feature[i]), objective.at(c_stats, i)
@@ -1283,7 +1384,7 @@ class BeamSearch(RuleSearch):
             closures: Dict[int, Any] = {pi: entry[4] for pi, entry in enumerate(refinable)}
 
             def build(pi: int, f: int, with_handle: bool):
-                prule, pmask, phandle, _, _, _ = refinable[pi]
+                prule, pmask, phandle, _, _, _, _ = refinable[pi]
                 if closures[pi] is _UNSET:  # a seed's: computed on first use
                     try:
                         closures[pi] = parent_closure(dataspec, prule)
@@ -1295,18 +1396,23 @@ class BeamSearch(RuleSearch):
                     data, dataspec, prule, closures[pi], pmask, f, phandle if with_handle else None,
                 )
 
-            new_beam: List[Tuple[Rule, FrozenSet[int], Any, RuleStats, Any, Score]] = []
-            built: List[Tuple[Score, Rule, RuleStats]] = []
+            new_beam: List[Tuple[Rule, FrozenSet[int], Any, RuleStats, Any, Score, Score]] = []
+            built: Dict[int, Optional[Rule]] = {}   # candidate -> its rule (None: contradictory)
             walked = 0
+            top = None
             while walked < len(order) and len(new_beam) < self.beam_width:
-                s, pi, f, st = candidate(order[walked])
+                i = order[walked]
+                s, pi, f, st = candidate(i)
                 walked += 1
                 child = build(pi, f, with_handle=True)
+                built[i] = None if child is None else child[0]
                 if child is None:
                     continue  # contradicts its parent: never a candidate
                 crule, cmask, chandle, cclosure = child
-                new_beam.append((crule, cmask - dead_by_parent[pi], chandle, st, cclosure, s))
-                built.append((s, crule, st))
+                new_beam.append((crule, cmask - dead_by_parent[pi], chandle, st, cclosure, s,
+                                 score_at(sel_scores, i)))
+                if top is None:
+                    top = i
             if not new_beam:
                 break
             beam = new_beam
@@ -1327,19 +1433,29 @@ class BeamSearch(RuleSearch):
                 top_rule, top_stats, data, target_class, example_mask
             ):
                 if stopping.accept(top_rule, top_stats, data, target_class, example_mask):
-                    return top_rule
+                    if not separate:
+                        return top_rule
+                    # with a selection, the top rule is only one more candidate
+                    top_sel = beam[0][6]
+                    if is_eligible(top_rule, sel.at(c_sel, top)) and (best_score is None or top_sel > best_score):
+                        return top_rule
                 return best_rule  # None if nothing acceptable came before this round
 
             # advance best_rule to this round's highest-scoring eligible
-            # candidate (walking past any that fail `filtering` -- past the
-            # beam, if need be), not necessarily the top one
-            eligible = next(((s, rule) for s, rule, st in built if is_eligible(rule, st)), None)
-            while eligible is None and walked < len(order):
-                s, pi, f, st = candidate(order[walked])
-                walked += 1
-                child = build(pi, f, with_handle=False)
-                if child is not None and is_eligible(child[0], st):
-                    eligible = (s, child[0])
+            # candidate by the selection (walking past any that fail
+            # `filtering` -- past the beam, if need be), not necessarily the
+            # top one; rules built for the beam aren't built again
+            eligible = None
+            for i in sel_order:
+                if i in built:
+                    crule = built[i]
+                else:
+                    _, pi, f, _ = candidate(i)
+                    child = build(pi, f, with_handle=False)
+                    crule = built[i] = None if child is None else child[0]
+                if crule is not None and is_eligible(crule, sel.at(c_sel, i)):
+                    eligible = (score_at(sel_scores, i), crule)
+                    break
             if eligible is not None and (best_score is None or eligible[0] > best_score):
                 best_rule, best_score = eligible[1], eligible[0]
 
@@ -1441,13 +1557,19 @@ class HillClimbing(RuleSearch):
             )
 
     def _child_scores(self, objective: Objective, children: Any, parent_stats: Any) -> Any:
+        if objective.relative_to_parent:
+            return objective.batch_score(children, parent_stats)
         return objective.batch_score(children)
 
     def _improvement_threshold(self, objective: Objective, parent_stats: Any) -> Score:
         # the best child must strictly beat this to be worth moving to:
         # the current rule's own score (a local maximum of the objective),
         # computed the way the children's are -- a child with the parent's
-        # exact stats must tie, not win by a rounding difference
+        # exact stats must tie, not win by a rounding difference. Scored
+        # relative to its parent, the rule's own score is relative to
+        # itself: that of a refinement excluding nothing.
+        if objective.relative_to_parent:
+            return objective.score_one(parent_stats, parent_stats)
         return objective.score_one(parent_stats)
 
     def _improves(self, value: Score, threshold: Score) -> bool:
@@ -1460,7 +1582,7 @@ class HillClimbing(RuleSearch):
         # best returnable rule so far (`best_stats` -- None before any
         # exists), no child down this lineage will either. Subsumes the
         # old fp == 0 floor.
-        if best_stats is None:
+        if best_stats is None or objective.relative_to_parent:   # no common scale with the best rule
             return False
         return objective.bound(stats) <= objective.score(best_stats)
 
@@ -1473,6 +1595,7 @@ class HillClimbing(RuleSearch):
         example_mask: Optional[np.ndarray] = None,
         filtering: Optional[PrePruningCriterion] = None,
         stopping: Optional[PrePruningCriterion] = None,
+        selection: Optional[RuleHeuristic] = None,
     ) -> Optional[Rule]:
         if not initial_candidates:
             raise ValueError(f"{type(self).__name__}.search needs at least one initial candidate")
@@ -1485,6 +1608,7 @@ class HillClimbing(RuleSearch):
         self._reject_heuristic(objective)
         _check_criteria(objective, filtering, stopping)
         objective.begin(data, target_class, example_mask)
+        sel = selection_objective(objective, selection, data, target_class, example_mask)
         dataspec = data.spec
 
         def is_eligible(rule: Rule, stats: RuleStats) -> bool:
@@ -1504,6 +1628,24 @@ class HillClimbing(RuleSearch):
         rule, mask = initial_candidates[0]
         handle = handle_for(data, rule, example_mask)
         stats = objective.rule_stats(data, target_class, rule, handle)
+
+        # with a selection: the best eligible rule on the walk by the
+        # selection, which is what's returned (the walk's endpoint needn't
+        # be it); `stopping` only ends the walk
+        best: Optional[Tuple[Rule, Score]] = None
+
+        def consider(rule: Rule, stats: RuleStats) -> None:
+            nonlocal best
+            if rule.length() == 0:
+                return
+            sst = sel.restat(stats)
+            if is_eligible(rule, sst):
+                score = sel.score_one(sst)
+                if best is None or score > best[1]:
+                    best = (rule, score)
+
+        if sel is not None:
+            consider(rule, stats)
         # what `stopping` falls back to: the most recent eligible rule
         # from *before* the step that triggered it. The length-0 seed
         # never counts -- a walk that's stopped before refining anywhere
@@ -1521,7 +1663,11 @@ class HillClimbing(RuleSearch):
             if not self.stop_at_local_optimum and objective.consistent(stats):
                 break  # the rule is consistent -- nothing left to add
 
-            if self.stop_at_local_optimum and self.optimistic_pruning and self._optimistic_stop(
+            if sel is not None:
+                # nothing further down can beat the best rule by the selection
+                if self.optimistic_pruning and best is not None and sel.bound_one(stats) <= best[1]:
+                    break
+            elif self.stop_at_local_optimum and self.optimistic_pruning and self._optimistic_stop(
                 objective, stats, last_eligible[1] if last_eligible is not None else None
             ):
                 break
@@ -1556,13 +1702,20 @@ class HillClimbing(RuleSearch):
             depth += 1
 
             if stopping is not None and stopping.evaluate(rule, stats, data, target_class, example_mask):
+                if sel is not None:
+                    consider(rule, stats)   # eligible only if `stopping` accepts it
+                    return best[0] if best is not None else None
                 if stopping.accept(rule, stats, data, target_class, example_mask):
                     return rule
                 return last_eligible[0] if last_eligible is not None else None
 
-            if is_eligible(rule, stats):
+            if sel is not None:
+                consider(rule, stats)
+            elif is_eligible(rule, stats):
                 last_eligible = (rule, stats)
 
+        if sel is not None:
+            return best[0] if best is not None else None
         if is_eligible(rule, stats):
             return rule
         return last_eligible[0] if last_eligible is not None else None
@@ -1576,12 +1729,16 @@ class HillClimbing(RuleSearch):
         example_mask: Optional[np.ndarray] = None,
         filtering: Optional[PrePruningCriterion] = None,
         stopping: Optional[PrePruningCriterion] = None,
+        selection: Optional[RuleHeuristic] = None,
     ) -> List[Rule]:
         """With `branch_similarity` (`GainAscentHillClimbing`): every
         lineage's rule, see `_branching_walk`. Otherwise `search`'s."""
         if getattr(self, "branch_similarity", None) is None:
             return super().search_all(data, target_class, heuristic, initial_candidates,
-                                      example_mask=example_mask, filtering=filtering, stopping=stopping)
+                                      example_mask=example_mask, filtering=filtering, stopping=stopping,
+                                      selection=selection)
+        if selection is not None:
+            raise ValueError("branch_similarity yields every lineage's rule; it has no selection")
         if len(initial_candidates) != 1:
             raise ValueError(f"{type(self).__name__}.search_all needs exactly one initial candidate")
         objective = as_objective(heuristic)
@@ -1756,6 +1913,15 @@ class GainAscentHillClimbing(HillClimbing):
         return not self._improves(objective.heuristic.score(_optimistic_stats(stats), stats), 0.0)
 
 
+def _no_selection(search: RuleSearch, selection) -> None:
+    """An exhaustive search finds the best rule by its heuristic, in
+    whatever order it refines: a separate selection would be its
+    heuristic."""
+    if selection is not None:
+        raise ValueError(f"{type(search).__name__} refines exhaustively: pass the selection heuristic as its "
+                         f"heuristic instead of a separate selection")
+
+
 class _Descending:
     """Heap key ordering scores from highest to lowest -- for floats and for
     `LEF`'s tuples alike, which can't simply be negated."""
@@ -1829,12 +1995,14 @@ class BranchAndBoundSearch(RuleSearch):
         self.dominance_pruning = dominance_pruning
 
     def search(self, data, target_class, heuristic, initial_candidates, example_mask=None,
-               filtering=None, stopping=None) -> Optional[Rule]:
+               filtering=None, stopping=None, selection=None) -> Optional[Rule]:
+        _no_selection(self, selection)
         rules = self._search(data, target_class, heuristic, initial_candidates, example_mask, filtering, stopping)
         return rules[0] if rules else None
 
     def search_all(self, data, target_class, heuristic, initial_candidates, example_mask=None,
-                   filtering=None, stopping=None) -> List[Rule]:
+                   filtering=None, stopping=None, selection=None) -> List[Rule]:
+        _no_selection(self, selection)
         return self._search(data, target_class, heuristic, initial_candidates, example_mask, filtering, stopping)
 
     def _search(self, data, target_class, heuristic, initial_candidates, example_mask, filtering, stopping) -> List[Rule]:
@@ -1843,6 +2011,9 @@ class BranchAndBoundSearch(RuleSearch):
             raise ValueError(f"BranchAndBoundSearch needs an objective scoring each rule on its own, got "
                              f"{getattr(objective, 'heuristic', objective)!r} (a gain is only meaningful "
                              "against its parent, so it has no bound)")
+        if objective.relative_to_parent:
+            raise ValueError(f"BranchAndBoundSearch compares rules of different parents and can't score them "
+                             f"relative to their parents, as {objective.heuristic!r} does")
         if len(initial_candidates) != 1:
             raise ValueError("BranchAndBoundSearch needs exactly one initial candidate")
         _check_criteria(objective, filtering, stopping)
@@ -2222,11 +2393,13 @@ class HeadPerSeedExample(HeadSelection):
 class HeadPerRule(HeadSelection):
     """The class chosen once per rule: one complete search per class
     still in scope, and the best of their rules, each scored by the
-    learner's heuristic for its class on the remaining examples (a gain
-    heuristic over the scope as a whole)."""
+    learner's heuristic -- its selection heuristic, if it has one -- for
+    its class on the remaining examples (a gain heuristic over the scope
+    as a whole)."""
 
     def next_rules(self, learner, data, remaining, seed, space_init):
-        heuristic = learner.single_rule_learner.heuristic
+        srl = learner.single_rule_learner
+        heuristic = getattr(srl, "selection", None) or srl.heuristic
         if not isinstance(heuristic, RuleHeuristic):
             raise ValueError(f"HeadPerRule() compares rules by a RuleHeuristic, got {type(heuristic).__name__}")
         support = data.scope(remaining)[0]
@@ -2426,7 +2599,20 @@ class SingleRuleLearner:
     into `search` itself -- keeps `RuleSearch` implementations reusable
     regardless of which policy is in effect, the same way `heuristic`
     already works.
+
+    `selection` (optional, a plain `RuleHeuristic`) separates the two
+    jobs of `heuristic`: `heuristic` then only refines -- it decides
+    which refinements the search pursues -- and `selection` picks the
+    rule the search returns among all it reached, and, for a rule of any
+    class, its head (see `RuleSearch`). E.g. ``heuristic=Inverted(
+    Precision()), selection=Laplace()``. Without it, `heuristic` does
+    both.
     """
+
+    #: the selection heuristic, None: `heuristic` (a class attribute, so
+    #: that a learner without one has the same parameters -- and cache
+    #: keys -- as before it existed)
+    selection: Optional[RuleHeuristic] = None
 
     def __init__(
         self,
@@ -2437,6 +2623,7 @@ class SingleRuleLearner:
         space_init: Optional[SearchSpaceInit] = None,
         filtering: Optional[PrePruningCriterion] = None,
         stopping: Optional[PrePruningCriterion] = None,
+        selection: Optional[RuleHeuristic] = None,
     ):
         self.heuristic = heuristic
         self.search = search if search is not None else BeamSearch()
@@ -2446,6 +2633,8 @@ class SingleRuleLearner:
         self._space_init_given = space_init is not None   # else a seed implies SeedExample()
         self.filtering = filtering
         self.stopping = stopping
+        if selection is not None:
+            self.selection = selection
 
     def learn_one_rule(
         self, data: DataRepresentation, target_class: Any,
@@ -2463,13 +2652,15 @@ class SingleRuleLearner:
         search_mask, context = self.preparation.prepare(data, target_class, example_mask)
         initial = si.initial_candidates(data, target_class, search_mask)
         objective = self._objective(target_class)
+        selection = self._selection(target_class)
         rule = self.search.search(
             data, target_class, objective, initial,
             example_mask=search_mask, filtering=self.filtering, stopping=self.stopping,
+            **({} if selection is None else {"selection": selection}),
         )
         if rule is None:
             return None
-        rule = self._with_head(rule, data, objective, search_mask)
+        rule = self._with_head(rule, data, objective if selection is None else selection, search_mask)
         return self.postprocessing.postprocess(rule, data, rule.target if target_class is None else target_class,
                                                context)
 
@@ -2486,11 +2677,14 @@ class SingleRuleLearner:
         search_mask, context = self.preparation.prepare(data, target_class, example_mask)
         initial = si.initial_candidates(data, target_class, search_mask)
         objective = self._objective(target_class)
+        selection = self._selection(target_class)
         rules = self.search.search_all(
             data, target_class, objective, initial,
             example_mask=search_mask, filtering=self.filtering, stopping=self.stopping,
+            **({} if selection is None else {"selection": selection}),
         )
-        rules = [self._with_head(rule, data, objective, search_mask) for rule in rules]
+        head = objective if selection is None else selection
+        rules = [self._with_head(rule, data, head, search_mask) for rule in rules]
         return [self.postprocessing.postprocess(rule, data, rule.target if target_class is None else target_class,
                                                 context) for rule in rules]
 
@@ -2505,11 +2699,19 @@ class SingleRuleLearner:
                              f"head, got {type(self.heuristic).__name__}")
         return HeadObjective(self.heuristic)
 
+    def _selection(self, target_class: Any) -> Optional[Union[RuleHeuristic, Objective]]:
+        """What the search selects its result by: None without a
+        `selection`; for a rule of any class, the selection choosing the
+        head (`HeadObjective`)."""
+        if self.selection is None:
+            return None
+        return self.selection if target_class is not None else HeadObjective(self.selection)
+
     @staticmethod
     def _with_head(rule: Rule, data, objective, search_mask) -> Rule:
-        """`rule` with the head the search chose for it (`HeadObjective`),
-        or unchanged for a fixed target class -- before post-processing,
-        which then keeps that head."""
+        """`rule` with the head the search chose for it (`HeadObjective`:
+        the selection's, if there is one), or unchanged for a fixed target
+        class -- before post-processing, which then keeps that head."""
         if not isinstance(objective, HeadObjective):
             return rule
         stats = objective.rule_stats(data, None, rule, handle_for(data, rule, search_mask))
@@ -2683,9 +2885,11 @@ class ReplaceReviseOptimization(RuleSetOptimizer):
             open_feats = frozenset(range(ds.n_features)) - {l.feature for l in start.conditions}
             initial = [(Rule(list(start.conditions), target=target_class, dataspec=ds,
                              n_features=start.n_features), open_feats)]
+        selection = srl._selection(target_class)
         grown = srl.search.search(
             data, target_class, srl.heuristic, initial,
             example_mask=grow_mask, filtering=srl.filtering, stopping=srl.stopping,
+            **({} if selection is None else {"selection": selection}),
         )
         if grown is None or grown.length() == 0:
             return None

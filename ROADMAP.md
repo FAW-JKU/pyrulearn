@@ -1141,43 +1141,52 @@ Next:
   is `h_inv(p, n) = h(N - n, P - p)`: refinements start in the upper
   right corner of the coverage space, so that point becomes the origin.
   It only makes sense for *refining*; the rule finally picked from the
-  refinement path should still be judged by a regular heuristic. Plan
-  (do it in a branch, `inverted-heuristics`, private until decided):
-  - *Selection objective.* `SingleRuleLearner` and the searches get an
-    optional `selection=` (default `None`: the same as the heuristic, so
-    every existing learner keeps its current code path). Today each
-    search uses its one `Objective` for both jobs. With `selection` set:
-    `BeamSearch` ranks the beam by the refinement heuristic, but tracks
-    `best_rule` (and its optimistic pruning bound) by the selection
-    heuristic; `HillClimbing` walks by the refinement heuristic, keeps the
-    best rule along the path by the selection heuristic and returns it
-    instead of the endpoint (it currently returns the endpoint, correct
-    only because a single heuristic makes the walk strictly improving),
-    and stops by consistency rather than at the refinement heuristic's
-    local maximum, with optimistic pruning by the selection bound;
-    `BranchAndBoundSearch` rejects a separate selection (refinement order
-    doesn't matter to an exhaustive search). The best-of-all-classes
-    choice (`HeadPerRule`) is selection, too. Possible extension: a beam
-    returning its `k` best rules by the selection heuristic (only
+  refinement path should still be judged by a regular heuristic.
+  *Released in 0.7.0*: an
+  optional `selection=` heuristic in `SingleRuleLearner` and the searches
+  (`FindRules(D, h_r, h_s)`: `stopping` and the beam belong to the
+  refinement, `filtering` and the best rule to the selection; hill
+  climbing returns the best rule on its walk, and for a rule of any class
+  the selection chooses the head; `BranchAndBoundSearch` and branching
+  have none), and `Inverted(h)` relative to the parent rule (`N̂`, `P̂`;
+  see `relative_to_parent`; `BeamSearch` needs a selection with it, a
+  selection and `BranchAndBoundSearch` can't be one). Without a
+  selection nothing changes (`selection` is a class attribute, so cache
+  keys stay as they were). Open:
+  - *Check* that a few SeCo comparison demos, re-run from scratch, give
+    identical results.
+  - *Check against the paper* that Stecher et al.'s inverted m-estimate
+    uses the parent's class distribution as its prior, as `Inverted` does.
+  - *Hill climbing's stop.* With a selection, the walk still stops at the
+    refinement heuristic's local maximum (`stop_at_local_optimum`); for an
+    inverted heuristic, walking on toward consistency
+    (`stop_at_local_optimum=False`) and selecting the best prefix may be
+    the better default -- to be seen in the experiments.
+  - *A beam returning its `k` best rules* by the selection (only
     `BranchAndBoundSearch(k=...)` returns `k` rules so far).
-  - *`Inverted(h)`* in `pyrulearn.heuristics`, in two variants: with the
-    whole data's `N`, `P` it is a plain `RuleHeuristic` and works in every
-    search; relative to the parent rule's coverage (`N̂`, `P̂`; check
-    which one Stecher et al. use) it compares a child with its parent,
-    like `FoilGain`, so it fits `GainHeuristic` / `GainAscentHillClimbing`
-    but not a beam. For a linear heuristic (cost-weighted difference) the
-    two coincide; for precision, Laplace, m-estimate they differ.
-  - *Other learners.* The searches are also used by boosting (SLIPPER,
-    the gradient-boosting beam), CPAR, LRI, OPUS, PyLORD and
-    `pruning.py`; with `selection=None` none of them changes. Careful
-    with `HillClimbing(stop_at_local_optimum=False)` (RIPPER, LRI), whose
-    endpoint is deliberately not the best rule: it must keep returning
-    the endpoint without `selection`. Check with the full test suite,
-    a few SeCo comparison demos re-run from scratch with identical
-    results, and new tests where the endpoint isn't the best rule.
-  - *Demos.* Add to `heuristic_isometrics` and `heuristic_comparison`,
-    e.g. inverted precision for refinement with Laplace for selection.
-    (Also listed in the README.)
+  - *Demos* (done): `heuristic_isometrics` has a formula
+    table, regular and inverted, and the inverted isometrics next to the
+    regular ones; `heuristic_comparison` has two m x m matrices of the
+    m-estimate, m for refinement x m for selection, regular and inverted
+    refinement (m in 0.1 ... 32; heatmaps of accuracy and rule length).
+    With the inversion relative to the whole data (the first version),
+    the inverted m-estimate hardly reacted to m up to 32 and reached its
+    best (83.27%, selection m = 4, about 12 conditions per rule) only at
+    m in the thousands: m was weighed against every example a rule
+    excludes, not those its last condition excludes. Hence the inversion
+    relative to the parent rule. With it (full run, 10-fold), the
+    inverted m-estimate is the better refinement heuristic: best 84.20%
+    (refinement m = 16, selection m = 4) vs. 83.82% for the regular one
+    (m = 16 for both), better than the regular one in almost every
+    cell, and much less sensitive to a selection m that is too large
+    (82.3% vs. 78.0% at selection m = 32). Rules are longer (5-9
+    conditions vs. 2-6), shrinking as the refinement m grows; the
+    number of rules is set by the selection m alone. Open: m beyond 32
+    for refinement (16 and 32 are about equal).
+  - *Paper.* Algorithm 1's `FindRules` with the refinements of a round
+    collected first, then `R` updated (filtering, `h_s`) and `Q` (stopping),
+    then `FilterRules(Q, R, h_r, h_s)`; and the subsection on inverted
+    heuristics (a stub before *Gain Heuristics* so far).
 - **README**: subsections under *Native learning algorithms* for the
   learners that are only mentioned in tables so far -- CBA, CMAR, IDS and
   RuleFit.

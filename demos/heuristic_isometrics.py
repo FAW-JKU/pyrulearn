@@ -21,6 +21,14 @@ ROC space:
    out of 100+ barely moves anything), so this uses a much smaller
    space instead, where the same absolute shift is a real fraction of
    the total.
+4. Inverted heuristics (`Inverted(h)`, h(N-n, P-p)): `h` evaluated
+   from the upper right corner of coverage space, on the examples a rule
+   excludes, with the classes exchanged. In a search the corner is the
+   rule being refined; the plots show the first refinement, from the
+   universal rule. A summary table at the top gives
+   every heuristic's formula, regular and inverted; the section at the
+   end shows the regular and the inverted isometrics side by side for
+   every heuristic where inversion changes the ranking.
 
 `LengthPenalized` (needs `stats.length`, which defaults to 0 here --
 indistinguishable from its wrapped heuristic on this kind of plot) is
@@ -39,6 +47,7 @@ size with these larger parameter values.
 
 import os
 import re
+import warnings
 
 import matplotlib
 matplotlib.use("Agg")
@@ -58,6 +67,7 @@ from pyrulearn.heuristics import (
     GainHeuristic,
     GeneralizedMEstimate,
     GHeuristic,
+    Inverted,
     Laplace,
     LikelihoodRatio,
     LinearCost,
@@ -130,6 +140,54 @@ HEURISTICS = [
      "heuristic needs a parent rule): p * (log2 precision - log2 P/(P+N))."),
 ]
 
+# formulas for the summary table: name -> (h(p, n), h(N - n, P - p)).
+# "unchanged": the inverted heuristic ranks every rule the same way
+# (`Inverted` warns); "n.a.": it can't be inverted (a gain heuristic).
+# Both are checked against the library in `_formula_table`.
+UNCHANGED, NOT_APPLICABLE = "unchanged", "n.a."
+FORMULAS = {
+    "CoveredNegatives": ("-n", "-(P - p), ranks like Recall"),
+    "Recall": ("p/P", "(N - n)/N, ranks like CoveredNegatives"),
+    "Precision": ("p/(p + n)", "(N - n)/(N - n + P - p)"),
+    "FBeta(1)": ("(1 + β²) p/(β² P + p + n)", "(1 + β²)(N - n)/(β² N + N - n + P - p)"),
+    "Laplace": ("(p + 1)/(p + n + 2)", "(N - n + 1)/(N - n + P - p + 2)"),
+    "MEstimate(20)": ("(p + m P/(P + N))/(p + n + m)", "(N - n + m N/(P + N))/(N - n + P - p + m)"),
+    "GeneralizedMEstimate(20, 0.9)": ("(p + m c)/(p + n + m)", "(N - n + m c)/(N - n + P - p + m)"),
+    "GHeuristic(30)": ("p/(n + g)", "(N - n)/(P - p + g)"),
+    "WRAcc": ("(p + n)/(P + N) · (p/(p + n) - P/(P + N))", UNCHANGED),
+    "YoudenJ": ("p/P - n/N", UNCHANGED),
+    "Accuracy": ("(p + N - n)/(P + N)", UNCHANGED),
+    "CoverageDifference": ("p - n", UNCHANGED),
+    "Support": ("(p + n)/(P + N)", "(P + N - p - n)/(P + N), the reverse ranking"),
+    "Coverage": ("p + n", "P + N - p - n, the reverse ranking"),
+    "LinearCost(2.0)": ("p - c n", "N - n - c (P - p), ranks like LinearCost(1/c)"),
+    "LinearCostRates(2.0)": ("p/P - c n/N", "(N - n)/N - c (P - p)/P, ranks like LinearCostRates(1/c)"),
+    "Correlation": ("(p N - n P)/√(P N (p + n)(P + N - p - n))", UNCHANGED),
+    "Entropy": ("π log₂ π + (1 - π) log₂ (1 - π), π = p/(p + n)",
+                "the same with π = (N - n)/(N - n + P - p): the purity of the uncovered examples"),
+    "LikelihoodRatio": ("2 (p ln(p/e_p) + n ln(n/e_n)), e_p = (p + n) P/(P + N), e_n = (p + n) N/(P + N)",
+                        "the same for the uncovered examples: N - n and P - p against their expected "
+                        "shares of P + N - p - n"),
+    "FoilGain (vs. universal rule)": ("p (log₂ p/(p + n) - log₂ P/(P + N))", NOT_APPLICABLE),
+}
+
+
+def _inversion_kind(h) -> str:
+    """"inverted", "unchanged" (same ranking either way) or "n.a.", from the library."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        try:
+            Inverted(h)
+        except TypeError:
+            return NOT_APPLICABLE
+    return UNCHANGED if any("the same way inverted or not" in str(w.message) for w in caught) else "inverted"
+
+
+def _inverted(h):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return Inverted(h)
+
 
 def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
@@ -154,6 +212,27 @@ def plot_heuristic_isometrics(normalized: bool) -> None:
 
 def _isometrics_file(name: str, kind: str) -> str:
     return f"isometrics_{_slug(name)}_{kind}.png"
+
+
+def _inverted_file(name: str, kind: str) -> str:
+    return f"inverted_{_slug(name)}_{kind}.png"
+
+
+def _invertible():
+    return [(name, h) for name, h, _ in HEURISTICS if _inversion_kind(h) == "inverted"]
+
+
+def plot_inverted_isometrics(normalized: bool) -> None:
+    kind = "roc" if normalized else "raw"
+    invertible = _invertible()
+    for name, h in invertible:
+        fig, ax = plt.subplots(figsize=(5, 5))
+        space = CoverageSpace(ax=ax, normalized=normalized, title=f"Inverted({name})")
+        _inverted(h).plot_isometrics(space=space, levels=8)
+        fig.tight_layout()
+        fig.savefig(os.path.join(PLOTS_DIR, _inverted_file(name, kind)), dpi=110, bbox_inches="tight")
+        plt.close(fig)
+    print(f"Saved {len(invertible)} inverted isometrics plots ({kind}) to {PLOTS_DIR}")
 
 
 def build_example_rule():
@@ -250,6 +329,30 @@ def plot_precision_family_comparison(normalized: bool, out_name: str) -> None:
     print(f"Saved {out_path}")
 
 
+def _anchor(title: str) -> str:
+    """GitHub's anchor for a heading."""
+    return "#" + re.sub(r"[^a-z0-9 _-]", "", title.lower()).replace(" ", "-")
+
+
+def _formula_table() -> str:
+    rows = ["| heuristic | h(p, n) | inverted: h(N - n, P - p) |\n|---|---|---|\n"]
+    for name, h, _ in HEURISTICS:
+        regular, inverted = FORMULAS[name]
+        kind = _inversion_kind(h)
+        expected = inverted if inverted in (UNCHANGED, NOT_APPLICABLE) else "inverted"
+        if kind != expected:
+            raise AssertionError(f"{name}: the table says {expected!r}, the library {kind!r}")
+        cell = inverted if kind != "inverted" else f"[{inverted}]({_anchor(f'Inverted {name}')})"
+        rows.append(f"| {name} | {regular} | {cell} |\n")
+    return "".join(rows) + "\n"
+
+
+def _side_by_side(left: str, right: str, alt: str) -> str:
+    plots = os.path.basename(PLOTS_DIR)
+    return (f'<img src="{plots}/{left}" alt="{alt}" width="49%"> '
+            f'<img src="{plots}/{right}" alt="Inverted({alt})" width="49%">\n\n')
+
+
 def _pair(left: str, right: str, alt: str) -> str:
     plots = os.path.basename(PLOTS_DIR)
     return (f'<img src="{plots}/{left}" alt="{alt}, coverage space" width="49%"> '
@@ -285,6 +388,17 @@ def write_report() -> None:
         f"Learning, 2010) -- is tested in the heuristic comparison demo: see the "
         f"[full results]({comparison}).\n\n",
         f"Run: `python {script}` (no data or extras needed beyond matplotlib).\n\n",
+        "## The heuristics at a glance\n\n",
+        "`p`/`n`: covered positives/negatives, `P`/`N`: all positives/negatives; "
+        "`m`, `c`, `g`, `β`: the parameters in the heuristic's name. The inverted "
+        "heuristic `Inverted(h)` (Stecher, Janssen & Fürnkranz, 2014) evaluates `h` on "
+        "what a rule leaves out, with the classes exchanged: h(N - n, P - p), the "
+        "excluded negatives counted as positives and the excluded positives as negatives. "
+        "*unchanged*: the inverted heuristic ranks every rule the same way (in a search, it "
+        "only restricts the heuristic to the examples of the rule being refined); *n.a.*: it "
+        "can't be inverted (FOIL's gain needs the parent rule's statistics as well). The "
+        "links lead to the inverted isometrics.\n\n",
+        _formula_table(),
         "## Isometrics per heuristic\n\n",
         "Left: coverage space (counts), right: ROC space (rates). `p`/`n`: covered "
         "positives/negatives, `P`/`N`: all positives/negatives. `LengthPenalized` is "
@@ -310,7 +424,29 @@ def write_report() -> None:
         "realistic size a shift of one or two examples is invisible, so this plot uses a "
         f"small space (P = {PRECISION_FAMILY_N_POS}, N = {PRECISION_FAMILY_N_NEG}).\n\n",
         _pair("precision_family_raw.png", "precision_family_roc.png", "Precision family"),
+        "## Inverted heuristics\n\n",
+        "A top-down search starts with the universal rule in the upper right corner of "
+        "coverage space, (N, P), and moves towards the origin. A regular heuristic judges "
+        "a rule from the origin: Precision's isometrics all go through it. The inverted "
+        "heuristic judges it from the corner the search starts from: inverted Precision's "
+        "isometrics all go through (N, P), and it prefers the rule whose excluded examples "
+        "are the purest in negatives -- the refinement that removes negatives and keeps "
+        "positives. In a search, the corner is the rule being refined: a refinement "
+        "of a rule covering P̂ positives and N̂ negatives scores h(N̂ - n, P̂ - p), and the "
+        "plots show the first refinement, from the universal rule. "
+        "Stecher, Janssen & Fürnkranz (2014) refine a rule by an inverted "
+        "heuristic and choose the rule on the refinement path by a regular one "
+        "(`SingleRuleLearner(Inverted(Precision()), selection=Laplace())`); the "
+        f"[heuristic comparison]({comparison}#m-estimates-for-refinement-and-for-selection) tests "
+        "this.\n\n",
+        "Left: the regular heuristic, right: the inverted one, both in coverage space "
+        "(counts); ROC space only rescales the axes. Only the heuristics where inversion "
+        f"changes the ranking (see [the table]({_anchor('The heuristics at a glance')})).\n\n",
     ]
+    for name, _ in _invertible():
+        regular, inverted = FORMULAS[name]
+        lines.append(f"### Inverted {name}\n\nh = {regular} becomes {inverted}.\n\n")
+        lines.append(_side_by_side(_isometrics_file(name, "raw"), _inverted_file(name, "raw"), name))
     with open(REPORT_PATH, "w", encoding="utf-8") as f:
         f.writelines(lines)
     print(f"Report -> {REPORT_PATH}")
@@ -326,6 +462,7 @@ def main():
     plot_refinement_with_isometrics(normalized=True, out_name="refinement_roc.png")
     plot_precision_family_comparison(normalized=False, out_name="precision_family_raw.png")
     plot_precision_family_comparison(normalized=True, out_name="precision_family_roc.png")
+    plot_inverted_isometrics(normalized=False)
     write_report()
 
 

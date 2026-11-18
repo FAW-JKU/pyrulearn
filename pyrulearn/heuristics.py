@@ -239,9 +239,17 @@ class RuleHeuristic(ABC):
     A search must therefore compare `batch_score` values only with other
     `batch_score` values, never with a `score` -- otherwise a child with
     exactly its parent's stats could come out one bit "better".
+
+    `relative_to_parent` -- whether a search scores a refinement relative
+    to the rule it refines: `score`/`batch_score` then take that rule's
+    statistics as an optional second argument (`parent`), and without it
+    score relative to the universal rule. Only `Inverted` (and a wrapper
+    around one) is; unlike a `GainHeuristic` it has a score of its own,
+    the one relative to the universal rule.
     """
 
     needs_data: bool = True
+    relative_to_parent: bool = False
 
     @abstractmethod
     def score(self, stats: RuleStats) -> Score:
@@ -1071,11 +1079,17 @@ class LengthPenalized(RuleHeuristic):
         self.base = base
         self.penalty = penalty
 
-    def score(self, stats: RuleStats) -> float:
-        return self.base.score(stats) - self.penalty * stats.length
+    @property
+    def relative_to_parent(self) -> bool:
+        return self.base.relative_to_parent
 
-    def batch_score(self, stats: RuleStats) -> np.ndarray:
-        return self.base.batch_score(stats) - self.penalty * _counts(stats)[4]
+    def score(self, stats: RuleStats, *parent: RuleStats) -> float:
+        parent = parent if self.relative_to_parent else ()
+        return self.base.score(stats, *parent) - self.penalty * stats.length
+
+    def batch_score(self, stats: RuleStats, *parent: RuleStats) -> np.ndarray:
+        parent = parent if self.relative_to_parent else ()
+        return self.base.batch_score(stats, *parent) - self.penalty * _counts(stats)[4]
 
     def best_head(self, covered, totals, length: Any = 0, parent_covered=None) -> Tuple[Any, Any]:
         score, head = self.base.best_head(covered, totals, length, parent_covered)
@@ -1411,8 +1425,172 @@ class LEF(RuleHeuristic):
     def __init__(self, *heuristics: RuleHeuristic):
         self.heuristics = heuristics
 
-    def score(self, stats: RuleStats) -> Tuple[float, ...]:
-        return tuple(h.score(stats) for h in self.heuristics)
+    @property
+    def relative_to_parent(self) -> bool:
+        return any(h.relative_to_parent for h in self.heuristics)
 
-    def batch_score(self, stats: RuleStats) -> Tuple[np.ndarray, ...]:
-        return tuple(h.batch_score(stats) for h in self.heuristics)
+    def score(self, stats: RuleStats, *parent: RuleStats) -> Tuple[float, ...]:
+        return tuple(h.score(stats, *parent) if h.relative_to_parent else h.score(stats) for h in self.heuristics)
+
+    def batch_score(self, stats: RuleStats, *parent: RuleStats) -> Tuple[np.ndarray, ...]:
+        return tuple(h.batch_score(stats, *parent) if h.relative_to_parent else h.batch_score(stats)
+                     for h in self.heuristics)
+
+
+def _within(stats: RuleStats, parent: Optional[RuleStats]) -> RuleStats:
+    """`stats` of a refinement counted among its parent's examples only:
+    the parent's covered positives and negatives as the scope. `stats`
+    itself without a parent (relative to the universal rule)."""
+    if parent is None:
+        return stats
+    return RuleStats(tp=stats.tp, fp=stats.fp, fn=parent.tp - stats.tp, tn=parent.fp - stats.fp,
+                     length=stats.length)
+
+
+def _inverted_stats(stats: RuleStats) -> RuleStats:
+    """`stats` seen from the upper right corner of the coverage space: the
+    examples the rule *excludes*, with the classes exchanged -- its
+    uncovered negatives (`tn`) as the covered positives, its uncovered
+    positives (`fn`) as the covered negatives, and so on. Swapping twice
+    gives back `stats`."""
+    return RuleStats(tp=stats.tn, fp=stats.fn, fn=stats.fp, tn=stats.tp, length=stats.length)
+
+
+def _projection_bound(heuristic: RuleHeuristic) -> bool:
+    """Whether `heuristic`'s bound is the score at the ``(tp, 0)``
+    projection (`RuleHeuristic.bound`), directly or through a wrapper --
+    the bound `Inverted` can carry over."""
+    if isinstance(heuristic, (Inverted, LengthPenalized)):
+        return _projection_bound(heuristic.base)
+    return type(heuristic).bound is RuleHeuristic.bound and type(heuristic).batch_bound is RuleHeuristic.batch_bound
+
+
+def _ranks_like(a: RuleHeuristic, b: RuleHeuristic, n_pos: int = 20, n_neg: int = 30) -> bool:
+    """Whether `a` and `b` order every point of a coverage space with
+    `n_pos` positives and `n_neg` negatives the same way (equal scores
+    included) -- e.g. a heuristic and its inversion, for a heuristic that
+    is symmetric in that sense. False for lexicographic (tuple) scores,
+    which this doesn't compare."""
+    tp, fp = np.meshgrid(np.arange(n_pos + 1.0), np.arange(n_neg + 1.0))
+    tp, fp = tp.ravel(), fp.ravel()
+    stats = RuleStats(tp=tp, fp=fp, fn=n_pos - tp, tn=n_neg - fp)
+    sa, sb = a.batch_score(stats), b.batch_score(stats)
+    if isinstance(sa, tuple) or isinstance(sb, tuple):
+        return False
+    sa, sb = np.round(np.asarray(sa, dtype=float), 9), np.round(np.asarray(sb, dtype=float), 9)
+    return bool(np.array_equal(np.sign(sa[:, None] - sa[None, :]), np.sign(sb[:, None] - sb[None, :])))
+
+
+class Inverted(RuleHeuristic):
+    """An inverted heuristic (Stecher, Janssen & Fürnkranz): `base`
+    evaluated from the upper right corner of the coverage space of the
+    rule being refined instead of from the origin. A refinement of a
+    rule (the parent) covering ``P^`` positives and ``N^`` negatives
+    scores ``h'(p, n) = h(N^ - n, P^ - p)``: the negatives the refinement
+    excludes take the place of the covered positives, the positives it
+    excludes that of the covered negatives, both counted among the
+    parent's examples. For `Precision`, say, that is the share of
+    negatives among the examples the new condition excludes. A top-down
+    search starts at the universal rule, where ``P^ = P`` and ``N^ = N``;
+    there (and in `score(stats)` without a parent, as for an isometrics
+    plot) the statistics ``(tp, fp, fn, tn)`` become ``(tn, fn, fp, tp)``.
+    The examples outside the parent's coverage play no part, so a
+    parameter such as `MEstimate`'s `m` is weighed against the parent's
+    examples, not against the whole data, and its prior is the parent's
+    class distribution. Meant for *refining* a rule: the rule a search
+    returns is judged by an ordinary heuristic, its `selection` (see
+    `pyrulearn.learners.seco.SingleRuleLearner`), which `BeamSearch`
+    requires.
+
+    `relative_to_parent` is True: a search passes the parent's statistics
+    to `score`/`batch_score` (the second argument, `parent`), and compares
+    the refinements of a rule with each other and with the rule itself,
+    which, relative to itself, excludes nothing. In a beam of several
+    rules, refinements of different parents are compared, each scored
+    relative to its own parent.
+
+    Any heuristic of the statistics can be inverted, `LEF` and
+    `LengthPenalized` included; `Inverted(Inverted(h))` scores as `h` on
+    the parent's examples (exactly as `h` without a parent). A
+    `GainHeuristic`, which needs its parent's statistics in another way,
+    can't be inverted. A heuristic that ranks every rule the same way
+    inverted or not (`Accuracy`, `WRAcc`, `Correlation`, `ChiSquare`,
+    `YoudenJ`: symmetric in the two classes and in covered/uncovered)
+    only changes to the same heuristic on the parent's examples, and the
+    constructor warns. A class-neutral heuristic (`Entropy`) has an
+    inverted two-class score (the purity of the *excluded* examples), but
+    its score of the whole class distribution has no inverted form: a
+    search for a rule of any class with it raises a ValueError.
+
+    The bound is the default one, the score at the ``(tp, 0)`` projection
+    without a parent: for a `base` that rises with `tp` and falls with
+    `fp`, so does the inverted heuristic (keeping every positive and
+    dropping every negative is still the best a refinement can do). A
+    `base` with a bound of its own (`LikelihoodRatio`) has none here --
+    run the search with ``optimistic_pruning=False``. A search bounds by
+    its selection, so this bound is only one of a search without one.
+    """
+
+    relative_to_parent = True
+
+    def __init__(self, base: RuleHeuristic):
+        import warnings
+        if isinstance(base, GainHeuristic):
+            raise TypeError(f"Inverted needs a heuristic of the statistics alone, got the gain heuristic "
+                            f"{type(base).__name__}")
+        if not isinstance(base, RuleHeuristic):
+            raise TypeError(f"Inverted needs a RuleHeuristic, got {type(base).__name__}")
+        self.base = base
+        if _ranks_like(base, self):
+            warnings.warn(f"{base!r} ranks rules the same way inverted or not: Inverted({base!r}) only scores "
+                          f"{base!r} on the parent rule's examples", stacklevel=2)
+
+    @property
+    def needs_data(self) -> bool:
+        return self.base.needs_data
+
+    def score(self, stats: RuleStats, parent: Optional[RuleStats] = None) -> Score:
+        return self.base.score(_inverted_stats(_within(stats, parent)))
+
+    def batch_score(self, stats: RuleStats, parent: Optional[RuleStats] = None) -> Any:
+        return self.base.batch_score(_inverted_stats(_within(stats, parent)))
+
+    def head_scores(self, covered, totals, length: Any = 0, parent_covered=None) -> np.ndarray:
+        """Each head's score relative to the parent rule, which covers
+        `parent_covered` of each class: the parent's examples are the
+        scope (`totals`) of the inversion."""
+        self._check_head()
+        scope = totals if parent_covered is None else parent_covered
+        return np.asarray(self.batch_score(head_stats(covered, scope, length)))
+
+    def _check_bound(self) -> None:
+        if not _projection_bound(self.base):
+            raise ValueError(f"{self!r} has no optimistic bound ({self.base!r} has a bound of its own, which "
+                             f"doesn't carry over); search with optimistic_pruning=False")
+
+    def bound(self, stats: RuleStats) -> Score:
+        self._check_bound()
+        return super().bound(stats)
+
+    def _check_head(self) -> None:
+        base = self.base
+        while isinstance(base, (Inverted, LengthPenalized)):
+            base = base.base
+        if isinstance(base, ClassNeutral):
+            raise ValueError(f"{self!r} has no inverted score of a class distribution: search for a rule of a "
+                             f"fixed class, or use a heuristic of one class against the rest")
+
+    def best_head(self, covered, totals, length: Any = 0, parent_covered=None) -> Tuple[Any, Any]:
+        self._check_head()
+        return super().best_head(covered, totals, length, parent_covered)
+
+    def head_bound(self, covered, totals, length: Any = 0) -> Any:
+        self._check_head()
+        return super().head_bound(covered, totals, length)
+
+    def batch_bound(self, stats: RuleStats) -> Any:
+        self._check_bound()
+        return super().batch_bound(stats)
+
+    def __repr__(self) -> str:
+        return f"Inverted({self.base!r})"
