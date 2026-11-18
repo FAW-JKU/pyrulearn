@@ -1155,8 +1155,14 @@ Next:
   keys stay as they were). Open:
   - *Check* that a few SeCo comparison demos, re-run from scratch, give
     identical results.
-  - *Check against the paper* that Stecher et al.'s inverted m-estimate
-    uses the parent's class distribution as its prior, as `Inverted` does.
+  - *Checked* (done): Stecher et al. evaluate refinements relative to the
+    parent rule, as `Inverted` does. Stecher's bachelor thesis (TU
+    Darmstadt, 2014, Sec. 3.2) says that P and N "depend on the
+    predecessor of the rule" (nested coverage spaces), and its worked
+    example (weather, inverted precision) only adds up with the parent's
+    `P̂`, `N̂`. Their inverted m-estimate has the prior `P̂/(P̂+N̂)`,
+    though, where the inversion gives `N̂/(P̂+N̂)` (which `Inverted`
+    uses); the paper (Section 5.2) points this out.
   - *Hill climbing's stop.* With a selection, the walk still stops at the
     refinement heuristic's local maximum (`stop_at_local_optimum`); for an
     inverted heuristic, walking on toward consistency
