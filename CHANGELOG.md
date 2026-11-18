@@ -18,9 +18,13 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   `BranchAndBoundSearch` and branching (`branch_similarity`) don't.
   Without a selection, every learner behaves as before.
 - `Inverted(h)`: an inverted heuristic (Stecher, Janssen & Fürnkranz),
-  ``h(N - n, P - p)`` -- `h` evaluated from the upper right corner of the
-  coverage space, on the examples a rule excludes, with the classes
-  exchanged. Meant for refining, with an ordinary heuristic as the
+  ``h(N̂ - n, P̂ - p)`` -- `h` evaluated from the upper right corner of the
+  coverage space of the rule being refined (`P̂`, `N̂`: its covered
+  positives and negatives), on the examples a refinement excludes from
+  it, with the classes exchanged. The searches pass each refinement's
+  parent to a heuristic with `relative_to_parent`; a selection and
+  `BranchAndBoundSearch` can't be one, and `BeamSearch` needs a selection
+  with one. Meant for refining, with an ordinary heuristic as the
   selection, e.g. ``SingleRuleLearner(Inverted(Precision()),
   selection=Laplace())``. Warns for a heuristic that ranks rules the same
   way inverted (`Accuracy`, `WRAcc`, `Correlation`, ...). A gain

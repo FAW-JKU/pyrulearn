@@ -665,6 +665,21 @@ class Objective(ABC):
     def consistent(self, stats) -> bool:
         return False
 
+    @property
+    def relative_to_parent(self) -> bool:
+        """Whether a refinement is scored relative to its parent (see
+        `pyrulearn.heuristics.RuleHeuristic.relative_to_parent`): its
+        score then takes the parent's statistics."""
+        return bool(getattr(getattr(self, "heuristic", None), "relative_to_parent", False))
+
+    def parents(self, stats: Sequence[Any], index: np.ndarray) -> Any:
+        """The statistics of the parent of each refinement in a batch,
+        `stats[index[i]]` for the i-th -- for `batch_score` relative to
+        the parents."""
+        def column(name):
+            return np.asarray([float(getattr(st, name)) for st in stats])[index]
+        return RuleStats(tp=column("tp"), fp=column("fp"), fn=column("fn"), tn=column("tn"))
+
     def restat(self, batch) -> Any:
         """`batch` -- statistics from another objective of the same kind,
         the refinement's -- as this objective's own: unchanged for one
@@ -700,7 +715,7 @@ class HeuristicObjective(Objective):
         return features, RuleStats(tp=tps, fp=fps, fn=fns, tn=tns, length=stats.length + 1), same, dead
 
     def batch_score(self, batch, parent=None):
-        if parent is not None and isinstance(self.heuristic, GainHeuristic):
+        if parent is not None and (isinstance(self.heuristic, GainHeuristic) or self.heuristic.relative_to_parent):
             return self.heuristic.batch_score(batch, parent)
         return self.heuristic.batch_score(batch)
 
@@ -708,7 +723,7 @@ class HeuristicObjective(Objective):
         return self.heuristic.score(stats)
 
     def score_one(self, stats, parent=None) -> Score:
-        if parent is not None and isinstance(self.heuristic, GainHeuristic):
+        if parent is not None and (isinstance(self.heuristic, GainHeuristic) or self.heuristic.relative_to_parent):
             return batch_score_one(self.heuristic, stats, parent)
         return batch_score_one(self.heuristic, stats)
 
@@ -772,6 +787,9 @@ def selection_objective(objective: Objective, selection: Optional[Union[RuleHeur
     if isinstance(heuristic, GainHeuristic):
         raise ValueError(f"a selection compares rules from different parents and can't be the gain heuristic "
                          f"{type(heuristic).__name__}")
+    if sel.relative_to_parent:
+        raise ValueError(f"a selection compares rules from different parents and can't score them relative to "
+                         f"their parents, as {heuristic!r} does")
     if not any(isinstance(objective, kind) and isinstance(sel, kind) for kind in (HeuristicObjective, HeadObjective)):
         raise ValueError(f"a selection needs a heuristic of the same kind as the search's ({objective!r}); "
                          f"got {sel!r}")
@@ -922,6 +940,7 @@ class HeadObjective(Objective):
     def __init__(self, heuristic: RuleHeuristic):
         self.heuristic = heuristic
         self._gain = isinstance(heuristic, GainHeuristic)
+        self._relative = heuristic.relative_to_parent
 
     @property
     def supports_bound(self) -> bool:
@@ -960,8 +979,9 @@ class HeadObjective(Objective):
             head = np.full(covered.shape[1:], int(parent.head), dtype=np.int64)
             score = self.heuristic.head_scores(covered, self.totals, length, parent.covered)[int(parent.head)]
         else:
-            score, head = self.heuristic.best_head(covered, self.totals, length,
-                                                   parent.covered if self._gain else None)
+            score, head = self.heuristic.best_head(
+                covered, self.totals, length,
+                parent.covered if (self._gain or self._relative) and parent is not None else None)
         pick = lambda a: np.take_along_axis(a, np.asarray(head)[None, ...], axis=0)[0]   # noqa: E731
         tp = pick(covered)
         n_covered = covered.sum(axis=0)
@@ -994,6 +1014,8 @@ class HeadObjective(Objective):
         return np.asarray(batch.score, dtype=float)
 
     def score_one(self, stats: HeadStats, parent=None) -> Score:
+        if parent is not None and self._relative:   # rescored relative to `parent`
+            return float(self._stats(stats.covered, stats.count, stats.length, parent).score)
         return float(stats.score)
 
     def batch_bound(self, batch: HeadStats):
@@ -1183,6 +1205,10 @@ class BeamSearch(RuleSearch):
         # objective itself without a separate one
         sel = selection_objective(objective, selection, data, target_class, example_mask)
         separate = sel is not None
+        relative = objective.relative_to_parent
+        if relative and not separate:
+            raise ValueError(f"BeamSearch with {heuristic!r}, which scores a rule relative to its parent, needs a "
+                             f"selection: the rules of different rounds have no common score to pick the best by")
         if not separate:
             sel = objective
 
@@ -1330,9 +1356,12 @@ class BeamSearch(RuleSearch):
                 np.concatenate([p[j] for p in parts]) for j in range(4)
             )
             c_stats = objective.concat(batches)
-            scores = objective.batch_score(c_stats)
-            for i in np.flatnonzero(c_same).tolist():     # changes nothing: exactly its parent's score
-                set_score(scores, i, refinable[int(c_parent[i])][5])
+            if relative:   # each child relative to its own parent; one that changes nothing excludes nothing
+                scores = objective.batch_score(c_stats, objective.parents([e[3] for e in refinable], c_parent))
+            else:
+                scores = objective.batch_score(c_stats)
+                for i in np.flatnonzero(c_same).tolist():     # changes nothing: exactly its parent's score
+                    set_score(scores, i, refinable[int(c_parent[i])][5])
             # ties broken toward the shorter (more general) rule -- otherwise
             # an arbitrary, sort-order-dependent longer duplicate could win a
             # beam slot over an equally-good shorter one; equal keys stay in
@@ -1528,13 +1557,19 @@ class HillClimbing(RuleSearch):
             )
 
     def _child_scores(self, objective: Objective, children: Any, parent_stats: Any) -> Any:
+        if objective.relative_to_parent:
+            return objective.batch_score(children, parent_stats)
         return objective.batch_score(children)
 
     def _improvement_threshold(self, objective: Objective, parent_stats: Any) -> Score:
         # the best child must strictly beat this to be worth moving to:
         # the current rule's own score (a local maximum of the objective),
         # computed the way the children's are -- a child with the parent's
-        # exact stats must tie, not win by a rounding difference
+        # exact stats must tie, not win by a rounding difference. Scored
+        # relative to its parent, the rule's own score is relative to
+        # itself: that of a refinement excluding nothing.
+        if objective.relative_to_parent:
+            return objective.score_one(parent_stats, parent_stats)
         return objective.score_one(parent_stats)
 
     def _improves(self, value: Score, threshold: Score) -> bool:
@@ -1547,7 +1582,7 @@ class HillClimbing(RuleSearch):
         # best returnable rule so far (`best_stats` -- None before any
         # exists), no child down this lineage will either. Subsumes the
         # old fp == 0 floor.
-        if best_stats is None:
+        if best_stats is None or objective.relative_to_parent:   # no common scale with the best rule
             return False
         return objective.bound(stats) <= objective.score(best_stats)
 
@@ -1976,6 +2011,9 @@ class BranchAndBoundSearch(RuleSearch):
             raise ValueError(f"BranchAndBoundSearch needs an objective scoring each rule on its own, got "
                              f"{getattr(objective, 'heuristic', objective)!r} (a gain is only meaningful "
                              "against its parent, so it has no bound)")
+        if objective.relative_to_parent:
+            raise ValueError(f"BranchAndBoundSearch compares rules of different parents and can't score them "
+                             f"relative to their parents, as {objective.heuristic!r} does")
         if len(initial_candidates) != 1:
             raise ValueError("BranchAndBoundSearch needs exactly one initial candidate")
         _check_criteria(objective, filtering, stopping)

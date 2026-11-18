@@ -31,7 +31,8 @@ Janssen & Fürnkranz (ECML PKDD 2014): one m-estimate chooses the
 conditions (refinement), another one the rule on the refinement path
 (selection, `SingleRuleLearner(MEstimate(m_r), selection=MEstimate(m_s))`),
 for every pair of m values in `MATRIX_M`; and the same with the inverted
-m-estimate for refinement (`Inverted(MEstimate(m_r))`). The results are
+m-estimate for refinement (`Inverted(MEstimate(m_r))`, relative to the rule
+being refined). The results are
 two m x m matrices, drawn as heatmaps on one color scale.
 
 Differences from the paper: numeric attributes are discretized by
@@ -382,13 +383,12 @@ def _matrix_section(results, plots_dir: str, matrix_plot_paths) -> list:
         "MEstimate(m_r), selection=MEstimate(m_s))` -- for every pair of m in "
         f"{{{', '.join(_m_text(m) for m in MATRIX_M)}}}; the diagonal (m_r = m_s) is the "
         "plain m-estimate. The second matrix refines by the inverted m-estimate instead, "
-        "`Inverted(MEstimate(m_r))`, h(N - n, P - p), after Stecher, Janssen & Fürnkranz "
-        "(ECML PKDD 2014): it judges a refinement from the universal rule, where the "
-        "search starts, rather than from the empty rule, and prefers the refinement whose "
-        "excluded examples are the purest in negatives (see the "
-        "[isometrics](heuristic_isometrics_report.md#inverted-heuristics)). `P` and `N` are "
-        "the examples left in the current covering step, and the selection is always the "
-        "regular m-estimate.\n\n",
+        "`Inverted(MEstimate(m_r))`, h(N̂ - n, P̂ - p), after Stecher, Janssen & Fürnkranz "
+        "(ECML PKDD 2014): it judges a refinement from the rule it refines (covering P̂ "
+        "positives and N̂ negatives) rather than from the empty rule, and prefers the "
+        "refinement whose excluded examples are the purest in negatives (see the "
+        "[isometrics](heuristic_isometrics_report.md#inverted-heuristics)). The selection "
+        "is always the regular m-estimate.\n\n",
         "Rows: m for refinement, columns: m for selection; means across every dataset and "
         "fold. Both heatmaps of a figure share one color scale.\n\n",
         f"![m for refinement vs. m for selection, accuracy]({plots_dir}/{os.path.basename(accuracy_plot)})\n\n",

@@ -1171,14 +1171,17 @@ Heuristics that read past `tp`/`fp`/`fn`/`tn`, or compose others:
   scores a refinement by how much `base`'s own score improved relative to its
   parent.
 - `Inverted(base)` -- the inverted heuristic of Stecher, Janssen & Fürnkranz,
-  `base(N - n, P - p)`: `base` evaluated from the upper right corner of the
-  coverage space, where a top-down search starts, i.e. on the examples a
-  rule excludes, with the classes exchanged. Meant for refining a rule, with
-  a regular heuristic choosing the rule on the refinement path:
-  `SingleRuleLearner(Inverted(Precision()), selection=Laplace())` (the
-  `selection` defaults to the heuristic itself). It warns for a heuristic
-  that ranks rules the same way inverted (`Accuracy`, `WRAcc`,
-  `Correlation`, ...), and a gain heuristic can't be inverted.
+  `base(N̂ - n, P̂ - p)`: `base` evaluated from the upper right corner of the
+  coverage space of the rule being refined (its parent, covering `P̂`
+  positives and `N̂` negatives), i.e. on the examples a refinement excludes
+  from its parent, with the classes exchanged. A search passes each
+  refinement's parent (`relative_to_parent`); without one, as in an
+  isometrics plot, the parent is the universal rule. Meant for refining a
+  rule, with a regular heuristic choosing the rule on the refinement path:
+  `SingleRuleLearner(Inverted(Precision()), selection=Laplace())`
+  (`BeamSearch` requires the `selection`). It warns for a heuristic that
+  ranks rules the same way inverted (`Accuracy`, `WRAcc`, `Correlation`,
+  ...), and a gain heuristic can't be inverted.
 
 A `GainHeuristic`'s `score(stats, parent_stats)` takes the parent rule's
 `RuleStats` as a *mandatory second argument*, not an optional field read off
@@ -2980,12 +2983,6 @@ Development plans, with the reasons behind them, are in
   `pyrulearn.learners.seco`/`pyrulearn.learners.pylord`); `Pypper`'s
   residual IREP\* re-growth pass is the one piece still missing from its
   optimization phase (`ReplaceReviseOptimization` itself is already done).
-
-- **Parent-relative inverted heuristics** (Stecher, Janssen & Fürnkranz):
-  `Inverted(h)` evaluates a rule from the corner of the current coverage
-  space; the variant relative to the parent rule's own coverage point
-  compares a refinement with its parent, like a gain heuristic, and would
-  fit in next to `DeltaGain`.
 
 - **Representation and analysis extensions.** Rule bodies beyond pure
   conjunctions (e.g. general CNF/DNF rules); native readers for sparse

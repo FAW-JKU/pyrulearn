@@ -1148,16 +1148,15 @@ Next:
   refinement, `filtering` and the best rule to the selection; hill
   climbing returns the best rule on its walk, and for a rule of any class
   the selection chooses the head; `BranchAndBoundSearch` and branching
-  have none), and `Inverted(h)` with the data's `N`, `P`. Without a
+  have none), and `Inverted(h)` relative to the parent rule (`N̂`, `P̂`;
+  see `relative_to_parent`; `BeamSearch` needs a selection with it, a
+  selection and `BranchAndBoundSearch` can't be one). Without a
   selection nothing changes (`selection` is a class attribute, so cache
   keys stay as they were). Open:
   - *Check* that a few SeCo comparison demos, re-run from scratch, give
     identical results.
-  - *Parent-relative variant* of `Inverted`: relative to the parent
-    rule's coverage (`N̂`, `P̂`; check which one Stecher et al. use) it
-    compares a child with its parent, like `FoilGain`, so it fits
-    `GainHeuristic` / `GainAscentHillClimbing` but not a beam. For a
-    linear heuristic the two coincide.
+  - *Check against the paper* that Stecher et al.'s inverted m-estimate
+    uses the parent's class distribution as its prior, as `Inverted` does.
   - *Hill climbing's stop.* With a selection, the walk still stops at the
     refinement heuristic's local maximum (`stop_at_local_optimum`); for an
     inverted heuristic, walking on toward consistency
@@ -1170,11 +1169,20 @@ Next:
     regular ones; `heuristic_comparison` has two m x m matrices of the
     m-estimate, m for refinement x m for selection, regular and inverted
     refinement (m in 0.1 ... 32; heatmaps of accuracy and rule length).
-    Quick runs (36 datasets, 3-fold, Laplace selection) found the inverted
-    m-estimate hardly reacting to m below a few hundred: it counts the
-    examples a rule excludes, early on almost the whole data. So a
-    relative m (a fraction of `P + N`) or the parent-relative variant
-    may be needed for the inverted side.
+    With the inversion relative to the whole data (the first version),
+    the inverted m-estimate hardly reacted to m up to 32 and reached its
+    best (83.27%, selection m = 4, about 12 conditions per rule) only at
+    m in the thousands: m was weighed against every example a rule
+    excludes, not those its last condition excludes. Hence the inversion
+    relative to the parent rule. With it (full run, 10-fold), the
+    inverted m-estimate is the better refinement heuristic: best 84.20%
+    (refinement m = 16, selection m = 4) vs. 83.82% for the regular one
+    (m = 16 for both), better than the regular one in almost every
+    cell, and much less sensitive to a selection m that is too large
+    (82.3% vs. 78.0% at selection m = 32). Rules are longer (5-9
+    conditions vs. 2-6), shrinking as the refinement m grows; the
+    number of rules is set by the selection m alone. Open: m beyond 32
+    for refinement (16 and 32 are about equal).
   - *Paper.* Algorithm 1's `FindRules` with the refinements of a round
     collected first, then `R` updated (filtering, `h_s`) and `Q` (stopping),
     then `FilterRules(Q, R, h_r, h_s)`; and the subsection on inverted

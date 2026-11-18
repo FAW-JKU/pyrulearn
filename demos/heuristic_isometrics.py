@@ -23,7 +23,9 @@ ROC space:
    the total.
 4. Inverted heuristics (`Inverted(h)`, h(N-n, P-p)): `h` evaluated
    from the upper right corner of coverage space, on the examples a rule
-   excludes, with the classes exchanged. A summary table at the top gives
+   excludes, with the classes exchanged. In a search the corner is the
+   rule being refined; the plots show the first refinement, from the
+   universal rule. A summary table at the top gives
    every heuristic's formula, regular and inverted; the section at the
    end shows the regular and the inverted isometrics side by side for
    every heuristic where inversion changes the ranking.
@@ -178,7 +180,7 @@ def _inversion_kind(h) -> str:
             Inverted(h)
         except TypeError:
             return NOT_APPLICABLE
-    return UNCHANGED if any("changes nothing" in str(w.message) for w in caught) else "inverted"
+    return UNCHANGED if any("the same way inverted or not" in str(w.message) for w in caught) else "inverted"
 
 
 def _inverted(h):
@@ -392,7 +394,8 @@ def write_report() -> None:
         "heuristic `Inverted(h)` (Stecher, Janssen & Fürnkranz, 2014) evaluates `h` on "
         "what a rule leaves out, with the classes exchanged: h(N - n, P - p), the "
         "excluded negatives counted as positives and the excluded positives as negatives. "
-        "*unchanged*: the inverted heuristic ranks every rule the same way; *n.a.*: it "
+        "*unchanged*: the inverted heuristic ranks every rule the same way (in a search, it "
+        "only restricts the heuristic to the examples of the rule being refined); *n.a.*: it "
         "can't be inverted (FOIL's gain needs the parent rule's statistics as well). The "
         "links lead to the inverted isometrics.\n\n",
         _formula_table(),
@@ -428,7 +431,10 @@ def write_report() -> None:
         "heuristic judges it from the corner the search starts from: inverted Precision's "
         "isometrics all go through (N, P), and it prefers the rule whose excluded examples "
         "are the purest in negatives -- the refinement that removes negatives and keeps "
-        "positives. Stecher, Janssen & Fürnkranz (2014) refine a rule by an inverted "
+        "positives. In a search, the corner is the rule being refined: a refinement "
+        "of a rule covering P̂ positives and N̂ negatives scores h(N̂ - n, P̂ - p), and the "
+        "plots show the first refinement, from the universal rule. "
+        "Stecher, Janssen & Fürnkranz (2014) refine a rule by an inverted "
         "heuristic and choose the rule on the refinement path by a regular one "
         "(`SingleRuleLearner(Inverted(Precision()), selection=Laplace())`); the "
         f"[heuristic comparison]({comparison}#m-estimates-for-refinement-and-for-selection) tests "

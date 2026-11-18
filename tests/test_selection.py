@@ -56,6 +56,43 @@ def test_inverted_precision_is_the_share_of_negatives_among_the_excluded_example
     assert Inverted(Precision()).score(RuleStats(tp=5, fp=0, fn=5, tn=10)) == pytest.approx(10 / 15)
 
 
+def test_inverted_is_relative_to_the_parent_rule():
+    # the parent covers 8 positives and 6 negatives (of P = 12, N = 17); the refinement keeps 6 and 2:
+    # it excludes 2 positives and 4 negatives of the parent's
+    parent = RuleStats(tp=8, fp=6, fn=4, tn=11, length=1)
+    child = RuleStats(tp=6, fp=2, fn=6, tn=15, length=2)
+    assert Inverted(Precision()).relative_to_parent
+    assert Inverted(Precision()).score(child, parent) == pytest.approx(4 / 6)
+    # the m-estimate's m is weighed against these, its prior the parent's (inverted) class distribution
+    assert Inverted(MEstimate(m=2)).score(child, parent) == pytest.approx((4 + 2 * 6 / 14) / (6 + 2))
+    # without a parent, or with the universal rule's, relative to the whole data
+    universal = RuleStats(tp=12, fp=17, fn=0, tn=0)
+    assert Inverted(Precision()).score(child) == pytest.approx(15 / 21)
+    assert Inverted(Precision()).score(child, universal) == pytest.approx(15 / 21)
+    # batch_score agrees, one parent per refinement
+    batch = RuleStats(tp=np.array([6.0, 8.0]), fp=np.array([2.0, 0.0]), fn=np.array([6.0, 4.0]),
+                      tn=np.array([15.0, 17.0]), length=2)
+    parents = RuleStats(tp=np.array([8.0, 12.0]), fp=np.array([6.0, 17.0]), fn=np.array([4.0, 0.0]),
+                        tn=np.array([11.0, 0.0]))
+    np.testing.assert_allclose(Inverted(Precision()).batch_score(batch, parents), [4 / 6, 17 / 21])
+
+
+def test_a_refinement_excluding_nothing_scores_the_prior():
+    parent = RuleStats(tp=8, fp=6, fn=4, tn=11, length=1)
+    assert Inverted(MEstimate(m=2)).score(parent, parent) == pytest.approx(6 / 14)
+
+
+@pytest.mark.parametrize("wrapper", [lambda h: LengthPenalized(h, 0.1), lambda h: LEF(h, MinimalLength())])
+def test_a_wrapper_passes_the_parent_on(wrapper):
+    parent = RuleStats(tp=8, fp=6, fn=4, tn=11, length=1)
+    child = RuleStats(tp=6, fp=2, fn=6, tn=15, length=2)
+    wrapped = wrapper(Inverted(Precision()))
+    assert wrapped.relative_to_parent and not wrapper(Precision()).relative_to_parent
+    assert wrapped.score(child, parent) == wrapper(Precision()).score(RuleStats(tp=4, fp=2, fn=2, tn=6, length=2))
+    # a wrapper of a heuristic that isn't relative ignores a parent
+    assert wrapper(Precision()).score(child, parent) == wrapper(Precision()).score(child)
+
+
 @pytest.mark.parametrize("heuristic", [
     Precision(), Laplace(), MEstimate(m=3), FBeta(), GHeuristic(g=2), Recall(), CoveredPositives(), Entropy(),
     LikelihoodRatio(), LinearCost(0.3), Correlation(), LengthPenalized(Precision(), 0.1),
@@ -79,7 +116,7 @@ def test_inverting_twice_gives_back_a_lexicographic_heuristic():
 @pytest.mark.parametrize("heuristic", [Accuracy(), WRAcc(), Correlation(), ChiSquare(), YoudenJ(), LinearCost(),
                                        MinimalLength()])
 def test_a_symmetric_heuristic_warns_and_ranks_as_before(heuristic):
-    with pytest.warns(UserWarning, match="changes nothing"):
+    with pytest.warns(UserWarning, match="parent rule.s examples"):
         inverted = Inverted(heuristic)
     a, b = np.asarray(heuristic.batch_score(_grid())), np.asarray(inverted.batch_score(_grid()))
     assert np.array_equal(np.sign(a[:, None] - a[None, :]).round(9), np.sign(b[:, None] - b[None, :]).round(9))
@@ -107,7 +144,7 @@ def test_a_class_neutral_heuristic_inverts_its_two_class_score():
 @pytest.mark.parametrize("heuristic", [Entropy(), LengthPenalized(Entropy(), 0.1)])
 def test_a_class_neutral_heuristic_has_no_inverted_class_distribution_score(heuristic):
     with pytest.raises(ValueError, match="class distribution"):
-        _fit(SingleRuleLearner(Inverted(heuristic)), HeadPerRefinement(), _three_classes())
+        _fit(SingleRuleLearner(Inverted(heuristic), selection=Laplace()), HeadPerRefinement(), _three_classes())
 
 
 def test_a_gain_heuristic_cannot_be_inverted():
@@ -195,12 +232,58 @@ def test_a_beam_selects_at_least_as_good_a_rule_by_the_selection(beam_width):
     # without optimistic pruning both searches explore the same rules: the beam follows the refinement
     data = _noisy()
     search = BeamSearch(beam_width=beam_width, optimistic_pruning=False)
-    refine = Inverted(Precision())
+    refine = Precision()
     plain = _search(search, data, refine)
     selected = _search(search, data, refine, Laplace())
     assert _score(Laplace(), selected, data) >= _score(Laplace(), plain, data)
     # and optimistic pruning by the selection's bound doesn't change the result
     assert _search(BeamSearch(beam_width=beam_width), data, refine, Laplace()) == selected
+    inverted = Inverted(Precision())
+    assert _search(BeamSearch(beam_width=beam_width), data, inverted, Laplace()) ==         _search(search, data, inverted, Laplace())
+
+
+def test_a_beam_refining_relative_to_the_parent_needs_a_selection():
+    with pytest.raises(ValueError, match="needs a selection"):
+        _search(BeamSearch(), _noisy(), Inverted(Precision()))
+
+
+@pytest.mark.parametrize("search", [BeamSearch(), BranchAndBoundSearch(max_conditions=2)])
+def test_a_selection_or_an_exhaustive_search_cannot_be_relative_to_the_parent(search):
+    with pytest.raises(ValueError, match="relative to"):
+        _search(search, _noisy(), Laplace() if isinstance(search, BeamSearch) else Inverted(Precision()),
+                Inverted(Precision()) if isinstance(search, BeamSearch) else None)
+
+
+@pytest.mark.parametrize("heuristic", [Precision(), MEstimate(m=2)])
+def test_a_beam_of_one_follows_the_hill_climbing_walk(heuristic):
+    # both refine each rule by the condition best relative to it, and select by the same heuristic
+    data = _noisy()
+    refine = Inverted(heuristic)
+    beam = _search(BeamSearch(beam_width=1, optimistic_pruning=False), data, refine, Laplace())
+    walk = _search(HillClimbing(stop_at_local_optimum=False, optimistic_pruning=False), data, refine, Laplace())
+    assert beam == walk
+
+
+def test_each_step_of_the_walk_takes_the_condition_best_relative_to_the_rule():
+    from pyrulearn.learners.seco import HeuristicObjective, live_open_children, handle_for, parent_closure,         materialize_child
+    data = _noisy()
+    refine = Inverted(MEstimate(m=2))
+    end = _search(HillClimbing(stop_at_local_optimum=False), data, refine)
+    objective = HeuristicObjective(refine)
+    objective.begin(data, "pos", None)
+    rule, mask = EmptyRuleAllFeatures().initial_candidates(data, "pos", None)[0]
+    for k in range(end.length()):
+        handle = handle_for(data, rule, None)
+        stats = objective.rule_stats(data, "pos", rule, handle)
+        features, batch, _, _ = objective.children(data, "pos", mask, handle, stats)
+        scores = np.asarray(refine.batch_score(batch, stats))
+        prefix = end.conditions[:k + 1]
+        taken = [i for i, f in enumerate(features.tolist())
+                 if (built := materialize_child(data, data.spec, rule, parent_closure(data.spec, rule), mask, f,
+                                                handle)) is not None and set(built[0].conditions) == set(prefix)]
+        assert taken and scores[taken[0]] == pytest.approx(scores.max())
+        rule, mask = materialize_child(data, data.spec, rule, parent_closure(data.spec, rule), mask,
+                                       int(features[taken[0]]), handle)[:2]
 
 
 def test_gain_ascent_with_a_selection():
