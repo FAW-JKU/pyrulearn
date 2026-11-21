@@ -155,14 +155,23 @@ def _concurrency_note() -> str:
             "as a second sequential run (per-learner ratios and rankings alike); time ratios between "
             "learners are reproducible to about +-10% either way.")
 
-# Full run: every small/medium (<=10,000 rows) binary dataset in the
-# catalog -- 44 of them as of this writing (25 small + 19 medium; see
-# Catalog.default().summary()). `--datasets` overrides this, e.g.
-# '--datasets small,medium' (83, binary and multi-class both --
-# exercises Witt:RIPPER's multi-class dispatch) or '--datasets all'
-# (100 -- includes >10,000-row datasets, an overnight-on-a-strong-
-# machine run, not a quick one); `--full` is shorthand for this exact spec.
-FULL_DATASETS_SPEC = "binary,small,medium"
+# Full run: the 44 small/medium (<=10,000 rows) binary datasets the
+# catalog had when this comparison was set up (25 small + 19 medium),
+# named explicitly: the catalog has since gained more binary ones (the
+# deep-rule-network demo's artificial NNF datasets and car-binary), which
+# "binary,small,medium" would now pull in too, changing the comparison.
+# `--datasets` overrides this, e.g. '--datasets small,medium' (binary and
+# multi-class both -- exercises Witt:RIPPER's multi-class dispatch) or
+# '--datasets all' (includes >10,000-row datasets, an overnight-on-a-
+# strong-machine run, not a quick one); `--full` is shorthand for this list.
+FULL_DATASETS_SPEC = (
+    "SPECT,Titanic,banknote-authentication,blood-transfusion-service-center,breast-cancer,"
+    "breast-w,churn,climate-model-simulation-crashes,colic,compas-two-years,credit-approval,"
+    "credit-g,cylinder-bands,diabetes,dresses-sales,heart-c,heart-h,heart-statlog,heloc,"
+    "hepatitis,ilpd,ionosphere,kc1,kc2,kr-vs-kp,mofn-3-7-10,molecular-biology_promoters,"
+    "monks-problems-1,monks-problems-2,monks-problems-3,mushroom,ozone-level-8hr,pc1,pc3,pc4,"
+    "phoneme,qsar-biodeg,sick,sonar,spambase,tic-tac-toe,vote,wdbc,wilt"
+)
 
 # Quick run (the no-args default): 10 hand-picked small datasets, 3-fold
 # instead of N_FOLDS -- a sanity check that runs in well under a minute
@@ -185,7 +194,7 @@ def _build_description(datasets, n_folds: int, prelim_verdict: str, quick: bool)
     mode_note = (
         f"**Quick run** ({dataset_count} datasets, a fast sanity check, not a "
         f"statistically rigorous comparison -- default with no arguments). For the "
-        f"full comparison ({FULL_DATASETS_SPEC!r}, 44 datasets, {N_FOLDS}-fold): "
+        f"full comparison (44 binary datasets, {N_FOLDS}-fold): "
         f"`python demos/ripper_comparison.py --full` (or an explicit "
         f"`--datasets`); a sample from that run is committed at "
         f"`{os.path.basename(REPORT_PATH)}` (plus its plots) in this directory.\n\n"
@@ -217,10 +226,24 @@ timeout or an exception is recorded as a failure, not fatal to the run.
 
 A fold that times out fails the whole cross-validation of that learner on that dataset (`run_cv`'s `stop_on_timeout`): its remaining folds are not run, and all its folds count as failures, so no mean rests on just the folds that finished.
 
-Measures: test accuracy, rule count, total condition count, fit time
-(seconds, JVM startup included for Weka:JRip). Witt:RIPPER auto-dispatches
-one-vs-rest for multi-class (see the module docstring); every other
-learner handles multi-class natively.{_concurrency_note()}
+All three implementations of RIPPER learn their rules for the same class
+on a binary dataset, the minority class, leaving the majority class to the
+default rule: Weka:JRip and Pypper by their least-frequent-first ordering,
+Witt:RIPPER by its `pos_class` default. And all three search the same
+conditions: Weka:JRip and Witt:RIPPER test every Boolean column for both
+values, so they get the features without their explicit negations
+(`native_negation=True`) and provide those themselves by their `= False`
+tests, while Pypper and Slipper, which only test a feature for being true,
+get the negations as features.
+
+Measures: test accuracy, rule count, total condition count, fit time, and,
+for the external implementations, the run time of the external algorithm
+itself (`Provenance.run_time`: Weka's own "Time taken to build model",
+wittgenstein's `fit`); the rest of their fit time is preparation --
+converting the data, writing and reading files, starting the JVM, importing
+the rules. Witt:RIPPER auto-dispatches one-vs-rest for multi-class (see the
+module docstring); every other learner handles multi-class
+natively.{_concurrency_note()}
 """
 
 
@@ -235,8 +258,8 @@ class WittRIPPER(_WittRIPPERBase):
 
 def build_learners():
     return [
-        WekaJRip(jar=WEKA_JAR, java=WEKA_JAVA),
-        WittRIPPER(random_state=RANDOM_STATE),
+        WekaJRip(jar=WEKA_JAR, java=WEKA_JAVA, native_negation=True),
+        WittRIPPER(random_state=RANDOM_STATE, native_negation=True),
         Pypper(random_state=RANDOM_STATE),
         Slipper(random_state=RANDOM_STATE),
     ]
@@ -245,6 +268,54 @@ def build_learners():
 LEARNER_ORDER = ["Weka:JRip", "Witt:RIPPER", "Pypper", "Slipper"]
 COLORS = dict(zip(LEARNER_ORDER, ["tab:blue", "tab:orange", "tab:green", "tab:red"]))
 MARKERS = dict(zip(LEARNER_ORDER, ["o", "s", "^", "D"]))
+
+
+def measure_run_time(model, test_rep) -> dict:
+    """`run_cv`'s `measure_fn`: the external algorithm's own run time
+    (`Provenance.run_time`), `NaN` for a native learner, whose whole fit
+    time is the algorithm's."""
+    rt = getattr(model.provenance, "run_time", None) if model.provenance is not None else None
+    return {"run_time": np.nan if rt is None else float(rt)}
+
+
+#: the learner the run times are reported relative to
+TIME_REFERENCE = "Pypper"
+
+
+def run_time_section(results) -> str:
+    """The run times relative to `TIME_REFERENCE`: per learner, the mean
+    fit time, run time and preparation time in seconds, and each of them
+    relative to the reference's fit time (geometric mean over the datasets
+    of the per-dataset means). A native learner's run time is its fit
+    time, its preparation time zero."""
+    per = results.groupby(["dataset", "learner"])[["fit_time", "run_time"]].mean()
+    per["run_time"] = per["run_time"].fillna(per["fit_time"])
+    per["prep_time"] = (per["fit_time"] - per["run_time"]).clip(lower=0.0)
+    ref = per.xs(TIME_REFERENCE, level="learner")["fit_time"]
+
+    def geo(values) -> float:
+        values = values.dropna()
+        return float(np.exp(np.log(values.clip(lower=1e-6)).mean())) if len(values) else float("nan")
+
+    out = [f"## Run time relative to {TIME_REFERENCE}\n\n",
+           f"Seconds per fit (mean over datasets and folds), and relative to {TIME_REFERENCE}'s fit "
+           "time (geometric mean over the datasets): the fit time, the run time of the algorithm "
+           "itself, and the preparation time (fit time minus run time -- converting the data, "
+           "files, the JVM's start, importing the rules; zero for a native learner).\n\n",
+           "| learner | fit (s) | run (s) | preparation (s) | fit ×ref | run ×ref | preparation ×ref |\n",
+           "|---|--:|--:|--:|--:|--:|--:|\n"]
+    for learner in LEARNER_ORDER:
+        if learner not in per.index.get_level_values("learner"):
+            continue
+        sub = per.xs(learner, level="learner")
+        rel = sub.div(ref, axis=0)
+        native = (sub["prep_time"] == 0).all()
+        prep_rel = "--" if native else f"{geo(rel['prep_time']):.3f}"
+        out.append(f"| {learner} | {sub['fit_time'].mean():.3f} | {sub['run_time'].mean():.3f} | "
+                   f"{sub['prep_time'].mean():.3f} | {geo(rel['fit_time']):.3f} | "
+                   f"{geo(rel['run_time']):.3f} | {prep_rel} |\n")
+    out.append("\n")
+    return "".join(out)
 
 
 def select_datasets(spec: str):
@@ -316,9 +387,11 @@ def write_report(results, datasets, n_folds: int, prelim_results, prelim_verdict
                 "split evenly (`pyrulearn.experiments.stats.win_counts`); `mean rank` -- average "
                 "accuracy rank across datasets, failures tied for last (`stats.mean_rank`).\n\n")
 
+    lines.append(run_time_section(results))
+
     lines.append("## Per-dataset results, per learner (mean across folds)\n\n")
     lines.append(render_results_table(
-        results, ["accuracy", "n_rules", "n_conditions", "conds_per_rule", "fit_time"],
+        results, ["accuracy", "n_rules", "n_conditions", "conds_per_rule", "fit_time", "run_time"],
         group_by=["dataset", "learner"], include_overall=False))  # ditto -- see "Summary by
     # learner" above instead for a meaningful per-learner overall
     lines.append("\n")
@@ -424,7 +497,7 @@ def main(datasets_spec: Optional[str] = None) -> None:
     datasets = select_datasets(spec)
     results = run_cv(build_learners(), datasets, n_folds=n_folds, fit_timeout=FIT_TIMEOUT,
                      discretizer=TreeDiscretizer(max_intervals=MAX_INTERVALS), random_state=RANDOM_STATE, cache_dir=CACHE_DIR,
-                     n_jobs=_n_jobs())
+                     n_jobs=_n_jobs(), measure_fn=measure_run_time)
     write_report(results, datasets, n_folds, prelim_results, prelim_verdict,
                 report_path, accuracy_plot_path, fit_time_plot_path, cd_plot_path, quick)
     write_plots(results, accuracy_plot_path, fit_time_plot_path, cd_plot_path)
@@ -435,7 +508,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--full", action="store_true",
-                        help=f"run the full comparison ({FULL_DATASETS_SPEC!r}, 44 datasets, "
+                        help=f"run the full comparison (44 binary datasets, "
                              f"{N_FOLDS}-fold) instead of the quick default -- shorthand for "
                              f"--datasets {FULL_DATASETS_SPEC!r}")
     parser.add_argument("--datasets", default=None,

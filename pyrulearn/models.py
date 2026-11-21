@@ -116,18 +116,29 @@ class Provenance:
     built the rules, only which ones are kept, which dataspec they're
     bound to, or how they're packaged -- narrowing/rebasing/repackaging
     a model doesn't make a new claim about who built it.
+
+    `run_time` -- for a model fitted by an `ExternalRuleLearner`, the
+    seconds the external algorithm itself took, summed over its calls
+    (`ExternalRuleLearner.fit`): the rest of the fit is preparation --
+    converting the data, writing and reading files, starting a JVM,
+    importing the rules. `None` for a native learner (the whole fit is
+    the algorithm) and for an importer called directly. Not part of
+    equality: two fits that built the same model are the same model.
     """
 
-    __slots__ = ("learner", "params", "source")
+    __slots__ = ("learner", "params", "source", "run_time")
 
-    def __init__(self, learner: str, params: Dict[str, Any], source: Optional[str] = None):
+    def __init__(self, learner: str, params: Dict[str, Any], source: Optional[str] = None,
+                 run_time: Optional[float] = None):
         self.learner = learner
         self.params = dict(params)
         self.source = source
+        self.run_time = run_time
 
     def __repr__(self) -> str:
         src = f", source={self.source!r}" if self.source is not None else ""
-        return f"Provenance(learner={self.learner!r}, params={self.params!r}{src})"
+        rt = f", run_time={self.run_time:.3g}" if self.run_time is not None else ""
+        return f"Provenance(learner={self.learner!r}, params={self.params!r}{src}{rt})"
 
     def __eq__(self, other: object) -> bool:
         return (isinstance(other, Provenance) and self.learner == other.learner

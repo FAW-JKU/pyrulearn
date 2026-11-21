@@ -31,6 +31,9 @@ customise, or set it to `None` to disable just that one.
 
 from __future__ import annotations
 
+import contextvars
+import functools
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
 
@@ -244,9 +247,45 @@ class RuleLearner(ABC):
         return self.fit(data, model=self._default_model(data))
 
 
+#: the run time of the external algorithm within the current (outermost)
+#: `ExternalRuleLearner.fit` -- a one-element list it sums into, `None`
+#: outside a fit. A context variable rather than an attribute, since a
+#: decomposition may fit copies of the learner (`_WittgensteinLearner`).
+_EXTERNAL_RUN_TIME: contextvars.ContextVar = contextvars.ContextVar("pyrulearn_external_run_time",
+                                                                    default=None)
+
+
+def _timed_fit_external(fit_external: Callable) -> Callable:
+    """Wraps a `fit_external`: adds the seconds it took to the current
+    fit's run time -- or, if the call set `self._reported_run_time`, that
+    instead (an external tool that reports its own training time, such as
+    Weka, whose wall time also includes starting the JVM)."""
+    @functools.wraps(fit_external)
+    def timed(self, *args, **kwargs):
+        self._reported_run_time = None
+        t0 = time.perf_counter()
+        out = fit_external(self, *args, **kwargs)
+        elapsed = time.perf_counter() - t0
+        reported, self._reported_run_time = self._reported_run_time, None
+        acc = _EXTERNAL_RUN_TIME.get()
+        if acc is not None:
+            acc[0] += elapsed if reported is None else reported
+        return out
+    timed._pyrulearn_timed = True
+    return timed
+
+
 class ExternalRuleLearner(RuleLearner):
     """Runs an external algorithm against data, then hands the fitted
     model to an `ObjectRuleImporter` (`IMPORTER` class attribute).
+
+    `fit` records how long the external algorithm itself ran, as
+    `Provenance.run_time` of the returned model: the time of every
+    `fit_external` call (each subclass's `fit_external` is timed
+    automatically), or the training time the tool reports itself, if it
+    does (`_reported_run_time`, set by `fit_external`; Weka). The rest of
+    the fit time -- converting the data, files, a JVM's start, importing
+    the rules -- is preparation.
 
     On the `model=` switcher: `_fit_native` (prepare -> `fit_external` ->
     import -> adapt to `NATIVE_MODEL`) is the sole native producer; mix in
@@ -266,10 +305,27 @@ class ExternalRuleLearner(RuleLearner):
     NATIVE_MODEL: type
     NATIVE_REPRESENTATIONS = (HorizontalBitmapRepresentation,)
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        fe = cls.__dict__.get("fit_external")
+        if fe is not None and not getattr(fe, "__isabstractmethod__", False) \
+                and not getattr(fe, "_pyrulearn_timed", False):
+            cls.fit_external = _timed_fit_external(fe)
+
     def fit(self, data: DataRepresentation, model: Optional[type] = None, **model_kwargs) -> RuleModel:
         data = self.ensure_representation(data, None, purpose="the external tool's input matrix",
                                           announce=False)
-        return super().fit(data, model, **model_kwargs)
+        if _EXTERNAL_RUN_TIME.get() is not None:  # a nested fit: the outermost one records
+            return super().fit(data, model, **model_kwargs)
+        token = _EXTERNAL_RUN_TIME.set([0.0])
+        try:
+            result = super().fit(data, model, **model_kwargs)
+            run_time = _EXTERNAL_RUN_TIME.get()[0]
+        finally:
+            _EXTERNAL_RUN_TIME.reset(token)
+        if result.provenance is not None:
+            result.provenance.run_time = run_time
+        return result
 
     def prepare(self, data: DataRepresentation) -> Any:
         """(1a) Convert `data` into the algorithm's native input format.

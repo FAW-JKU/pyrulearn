@@ -369,7 +369,16 @@ class _WittgensteinLearner(DecomposingLearner, ExternalRuleLearner):
 
     `fit(data)` -> a `pyrulearn.models.ConceptModel` for `pos_class`
     (`neg_class` -- or the sole other label -- as the fallback);
-    wittgenstein is binary, so `data.y` must have ≤ 2 labels.
+    wittgenstein is binary, so `data.y` must have ≤ 2 labels. Without a
+    `pos_class`, the rules are learned for the label other than
+    `neg_class`, if given, else for the minority class -- as Ripper does
+    itself, leaving the majority class to the default rule.
+
+    `native_negation=True` hands wittgenstein only the features that are
+    not negations of others (`DataRepresentation.without_negations`): it
+    tests a Boolean column for both values anyway, so its ``= False``
+    conditions provide exactly the negations -- the same conditions as
+    with them, without evaluating each one twice. Default `False`.
     `fit(data, model=ConceptModel, label="a")` sets the target
     explicitly. `fit(data, model=ConceptSet | ConceptCascade |
     PairwiseModel)` decomposes: each binary sub-fit relabels the rest to
@@ -379,10 +388,23 @@ class _WittgensteinLearner(DecomposingLearner, ExternalRuleLearner):
     NATIVE_MODEL = ConceptModel
     _LIB_CLS: str  # "IREP" | "RIPPER"
 
-    def __init__(self, pos_class: Any = None, neg_class: Optional[Any] = None, **params):
+    def __init__(self, pos_class: Any = None, neg_class: Optional[Any] = None,
+                 native_negation: bool = False, **params):
         self.pos_class = pos_class
         self.neg_class = neg_class
+        self.native_negation = native_negation
         self.params = params
+
+    def _import(self, data):
+        """`ExternalRuleLearner._import`, but with `native_negation=True`
+        wittgenstein sees only the features that are not negations of
+        others: it tests a Boolean column for both values anyway, and its
+        ``= False`` conditions land on the paired negation features of
+        `data.spec` again on import (by name -- the surviving features
+        keep theirs)."""
+        sub = data.without_negations() if self.native_negation else data
+        fitted = self.fit_external(self.prepare(sub), sub.y, feature_names=sub.spec.feature_names)
+        return self.IMPORTER().import_model(fitted, data.spec, data=data)
 
     def fit_external(self, X, y, feature_names=None):
         import wittgenstein as lw
@@ -391,12 +413,15 @@ class _WittgensteinLearner(DecomposingLearner, ExternalRuleLearner):
             raise ValueError(f"{type(self).__name__} needs labels (y) to fit")
         pos = self.pos_class
         if pos is None:
-            others = list(np.unique(y))
-            if len(others) != 2:
+            labels, counts = np.unique(y, return_counts=True)
+            if len(labels) != 2:
                 raise ValueError(
                     f"{type(self).__name__} needs pos_class (or fit(model=ConceptModel, label=...))"
                 )
-            pos = others[0] if self.neg_class is None else next(c for c in others if c != self.neg_class)
+            if self.neg_class is not None:
+                pos = next(c for c in labels if c != self.neg_class)
+            else:  # as Ripper itself: rules for the minority class (ties: the first label)
+                pos = labels[int(np.argmin(counts))]
         _check_binary_target(y, type(self).__name__)
         model = getattr(lw, self._LIB_CLS)(**self.params)
         model.fit(X, y=y, pos_class=pos, feature_names=feature_names)

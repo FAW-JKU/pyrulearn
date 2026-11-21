@@ -346,7 +346,7 @@ _PLACEHOLDER_FALSE = {"false", "f", "0", "no", "n"}
 
 
 def _placeholder_rule_from_conditions(conditions: Sequence[Tuple[str, str, str]], target: str,
-                                      dataspec: DataSpec) -> Rule:
+                                      dataspec: DataSpec, column_map: Optional[Sequence[int]] = None) -> Rule:
     """`_rule_from_conditions`'s counterpart for a `fit()` round-trip,
     where the ARFF was written with safe placeholder attribute names
     (`f0`, `f1`, ...) for `dataspec`'s already-Boolean columns -- so each
@@ -354,7 +354,9 @@ def _placeholder_rule_from_conditions(conditions: Sequence[Tuple[str, str, str]]
     **by position** (`Rule.remap` is by-name, so it can't do this). A
     ``= True`` test is a positive literal on that feature, ``= False`` a
     negative one (which `Rule.from_pos_neg` lands on the paired negation
-    feature); ``!=`` flips.
+    feature); ``!=`` flips. With `column_map`, placeholder ``f{i}`` is
+    `dataspec` feature ``column_map[i]`` instead (the columns Weka saw
+    were a subset of `dataspec`'s -- `native_negation=True`).
     """
     pos: List[int] = []
     neg: List[int] = []
@@ -364,6 +366,8 @@ def _placeholder_rule_from_conditions(conditions: Sequence[Tuple[str, str, str]]
                 f"placeholder_features=True expects f0/f1/... attribute names, got {attr!r}"
             )
         idx = int(attr[1:])
+        if column_map is not None:
+            idx = int(column_map[idx])
         v = str(value).strip().lower()
         if v in _PLACEHOLDER_TRUE:
             truthy = True
@@ -410,7 +414,11 @@ def _rule_builder_for(importer: Any):
     if getattr(importer, "placeholder_features", False):
         if importer.dataspec is None:
             raise ValueError("placeholder_features=True requires an explicit dataspec=")
-        return _placeholder_rule_from_conditions
+        column_map = getattr(importer, "column_map", None)
+        if column_map is None:
+            return _placeholder_rule_from_conditions
+        return lambda conditions, target, dataspec: _placeholder_rule_from_conditions(
+            conditions, target, dataspec, column_map=column_map)
     return _rule_from_conditions
 
 
@@ -454,8 +462,12 @@ class JRipImporter(StringRuleImporter):
 
     SOURCE = "weka.classifiers.rules.JRip"
 
-    def __init__(self, dataspec: Optional[DataSpec] = None, placeholder_features: bool = False):
+    def __init__(self, dataspec: Optional[DataSpec] = None, placeholder_features: bool = False,
+                 column_map: Optional[Sequence[int]] = None):
         self.dataspec = dataspec
+        #: with `placeholder_features`: the `dataspec` feature each
+        #: placeholder column ``f{i}`` is (`None`: feature ``i`` itself)
+        self.column_map = column_map
         #: when True, `source`'s attributes are `f0/f1/...` placeholders
         #: (written by a `fit()` round-trip) that bind to `dataspec`'s
         #: columns by position -- see `_placeholder_rule_from_conditions`.
@@ -563,8 +575,12 @@ class PARTImporter(StringRuleImporter):
 
     SOURCE = "weka.classifiers.rules.PART"
 
-    def __init__(self, dataspec: Optional[DataSpec] = None, placeholder_features: bool = False):
+    def __init__(self, dataspec: Optional[DataSpec] = None, placeholder_features: bool = False,
+                 column_map: Optional[Sequence[int]] = None):
         self.dataspec = dataspec
+        #: with `placeholder_features`: the `dataspec` feature each
+        #: placeholder column ``f{i}`` is (`None`: feature ``i`` itself)
+        self.column_map = column_map
         self.placeholder_features = placeholder_features
 
     def infer_dataspec(self, source: str) -> DataSpec:
@@ -701,8 +717,12 @@ class J48Importer(StringRuleImporter):
 
     SOURCE = "weka.classifiers.trees.J48"
 
-    def __init__(self, dataspec: Optional[DataSpec] = None, placeholder_features: bool = False):
+    def __init__(self, dataspec: Optional[DataSpec] = None, placeholder_features: bool = False,
+                 column_map: Optional[Sequence[int]] = None):
         self.dataspec = dataspec
+        #: with `placeholder_features`: the `dataspec` feature each
+        #: placeholder column ``f{i}`` is (`None`: feature ``i`` itself)
+        self.column_map = column_map
         self.placeholder_features = placeholder_features
 
     def infer_dataspec(self, source: str) -> DataSpec:
@@ -866,6 +886,14 @@ def run_weka(
     return result.stdout
 
 
+def weka_build_time(text: str) -> Optional[float]:
+    """The seconds Weka reports for building its model ("Time taken to
+    build model: 0.05 seconds") in its printed output, or `None` if it
+    doesn't report one."""
+    m = re.search(r"Time taken to build model:\s*([\d.]+)\s*seconds", text)
+    return float(m.group(1)) if m else None
+
+
 class _WekaRuleLearner(RelabelingExternalLearner):
     """Shared base: write the training data to ARFF, run a Weka rule/tree
     classifier as a subprocess, read its printed rules back through the
@@ -878,25 +906,45 @@ class _WekaRuleLearner(RelabelingExternalLearner):
     the JVM (else ``$WEKA_JAR`` / ``$WEKA_JAVA``); ``**weka_options`` are
     passed through as classifier CLI flags (JRip's ``-F``/``-N``/``-O``,
     J48/PART's ``-C``/``-M``, ...).
+
+    `native_negation=True` hands Weka only the features that are not
+    negations of others (`DataRepresentation.without_negations`): Weka
+    tests a Boolean column both for ``True`` and for ``False`` anyway, so
+    its own ``= False`` tests provide exactly the negations (and land on
+    the paired negation features again on import) -- the same conditions
+    as with them, but without evaluating each one twice. Default `False`:
+    every column as it is.
     """
 
     WEKA_CLASS: str
     IMPORTER: type
 
     def __init__(self, *, jar: Optional[str] = None, java: Optional[str] = None,
-                 timeout: Optional[float] = None, **weka_options: Any):
+                 timeout: Optional[float] = None, native_negation: bool = False, **weka_options: Any):
         self.jar = jar
         self.java = java
         self.timeout = timeout
+        self.native_negation = native_negation
         self.weka_options = weka_options
 
     def fit_external(self, X, y, feature_names=None):
-        return run_weka(self.WEKA_CLASS, X, y, jar=self.jar, java=self.java,
+        text = run_weka(self.WEKA_CLASS, X, y, jar=self.jar, java=self.java,
                         timeout=self.timeout, options=self.weka_options)
+        # the run time is Weka's own "Time taken to build model" (10 ms
+        # resolution), not the subprocess's wall time, which also includes
+        # starting the JVM, reading the ARFF file and printing the model
+        self._reported_run_time = weka_build_time(text)
+        return text
 
     def _import(self, data):
-        text = self.fit_external(data.X, data.y, feature_names=data.spec.feature_names)
-        return self.IMPORTER(dataspec=data.spec, placeholder_features=True).parse(text, data=data)
+        if self.native_negation:
+            _, keep = data.spec.without_negations()
+            sub = data.without_negations()
+        else:
+            keep, sub = None, data
+        text = self.fit_external(sub.X, sub.y, feature_names=sub.spec.feature_names)
+        return self.IMPORTER(dataspec=data.spec, placeholder_features=True,
+                             column_map=keep).parse(text, data=data)
 
 
 class WekaJRip(_WekaRuleLearner):

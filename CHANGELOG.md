@@ -3,6 +3,35 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
+## Unreleased
+
+### Added
+
+- `Provenance.run_time`: a model fitted by an `ExternalRuleLearner`
+  records how long the external algorithm itself ran -- the time of its
+  `fit_external` calls (timed automatically, summed over a
+  decomposition), or the training time the tool reports itself (Weka's
+  "Time taken to build model"); the rest of the fit time is preparation
+  (data conversion, files, the JVM's start, importing the rules). `None`
+  for native learners.
+- `native_negation=True` for `WekaJRip`/`WekaPART`/`WekaJ48` and
+  `WittIREP`/`WittRIPPER`: the external tool gets only the features that
+  are not negations, and provides them itself by testing a column for
+  `False`; the resulting conditions land on the negation features again.
+  `demos/native_negation_check.py` compares it with handing over the
+  negation features.
+
+### Changed
+
+- `WittIREP`/`WittRIPPER` without a `pos_class` learn their rules for the
+  minority class of a binary target (as Ripper does), not for the label
+  that sorts first, which was the majority class on most datasets.
+- `ripper_comparison` demo: the same class and the same conditions for all
+  implementations of RIPPER (Witt:RIPPER's new default, `native_negation`
+  for Weka:JRip and Witt:RIPPER); the run time of the external algorithms
+  separately from their preparation, both relative to Pypper; the 44
+  datasets named explicitly, as the catalog has gained more binary ones.
+
 ## 0.7.0 (2026-11-18)
 
 Inverted Heuristics: separate heuristics for refining a rule and for

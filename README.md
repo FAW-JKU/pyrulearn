@@ -2118,13 +2118,16 @@ rules = importer.import_model(model, ds, feature_names=["age", "income", "score"
 ```
 
 `pyrulearn.interfaces.wittgenstein.WittIREP`/`WittRIPPER` are the same
-idea, wrapping `wittgenstein.IREP`/`wittgenstein.RIPPER`. `pos_class` is
-required (pyrulearn never guesses which class is "positive"); `neg_class`
-is optional and, if omitted, auto-resolved from `data.y` when
+idea, wrapping `wittgenstein.IREP`/`wittgenstein.RIPPER`. Without a
+`pos_class`, on a binary target, the rules are learned for the minority
+class (or for the label other than `neg_class`, if that is given) -- as
+Ripper itself does, leaving the majority class to the default rule.
+`neg_class` is optional and, if omitted, auto-resolved from `data.y` when
 there's exactly one other label besides `pos_class` -- with more than
 one other label present (real multi-class, which wittgenstein itself
-doesn't support natively), `default_prediction` is left `None` unless
-`neg_class` is given explicitly:
+doesn't support natively), `pos_class` is required, and
+`default_prediction` is left `None` unless `neg_class` is given
+explicitly:
 
 ```python
 from pyrulearn.interfaces.wittgenstein import WittIREP, WittRIPPER
@@ -2142,11 +2145,29 @@ for learner in learners:
 | Package | Learner classes | Rules imported | What is handed over | Feature names |
 |---|---|---|---|---|
 | scikit-learn | `SKLDecisionTree`, `SKLRandomForest` | directly | `data.X` as-is: the Boolean feature matrix, in memory | not needed to fit; the importer binds the thresholds back to the `DataSpec` |
-| wittgenstein | `WittIREP`, `WittRIPPER` | directly | `data.X` and the labels, in memory; binary only, so `pos_class` is required | the `DataSpec`'s own feature names |
+| wittgenstein | `WittIREP`, `WittRIPPER` | directly | `data.X` and the labels, in memory; binary only (`pos_class` defaults to the minority class) | the `DataSpec`'s own feature names |
 | imodels | `IModBayesianRuleList`, `IModBayesianRuleSet`, `IModRuleFit` | directly | `data.X` as a 0/1 integer matrix, in memory (a Boolean dtype breaks BRL; RuleFit gets floats); BRS and RuleFit refuse anything that isn't 0/1; binary only | the `DataSpec`'s own feature names |
 | Weka | `WekaJRip`, `WekaPART`, `WekaJ48` | by parsing text | an ARFF file in a temporary directory: every feature a `{False,True}` nominal attribute, plus a `class` column; run as `java -cp weka.jar <classifier> -t train.arff -no-cv` | placeholders `f0..fN` |
 | LORD | `JavaLORD` | by parsing text | a CSV in a temporary directory (`data_train_01.csv`, plus the same rows as the test file LORD insists on): 0/1 columns with the class as the last column; run as `java -cp <classpath> run.LordRun` | placeholders `f0..fN` |
 | pyarc | `PArcCBA` | directly | transactions (via `TransactionDB.from_DataFrame`) holding only each row's True features plus the class; False cells are dropped, which matches this library's own item semantics | placeholders `f0..fN` |
+
+Weka and wittgenstein test every Boolean column for both values, so with
+a `DataSpec` that has negation features they see every condition twice --
+as the negation feature, and as its partner tested for `False` -- which
+costs time and, for JRip, changes the description lengths its stopping
+and optimization rely on. With `native_negation=True`, `WekaJRip`/
+`WekaPART`/`WekaJ48` and `WittIREP`/`WittRIPPER` get only the features
+that are not negations (`DataRepresentation.without_negations`); their
+own `= False` conditions provide the negations, and land on the negation
+features again on import. `demos/native_negation_check.py` compares the
+two settings, and a native learner with and without the negation
+features.
+
+Every model an external learner fits records how long the external
+algorithm itself ran, as `model.provenance.run_time` (seconds, summed over
+the calls of a decomposition): the time of the library call, or, for
+Weka, its own "Time taken to build model", which leaves out the JVM's
+start and the file exchange. The rest of the fit time is preparation.
 
 Rules are imported either directly from the fitted model object (an
 `ObjectRuleImporter`) or by parsing text the tool printed or wrote (a
