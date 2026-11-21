@@ -74,6 +74,7 @@ below, plus the `experiments`, `wittgenstein` and `imodels` extras.
 
 from __future__ import annotations
 
+import copy
 import os
 from typing import Optional
 
@@ -91,7 +92,7 @@ from pyrulearn.interfaces.weka import WekaJRip
 from pyrulearn.interfaces.wittgenstein import WittRIPPER as _WittRIPPERBase
 from pyrulearn.learners.boosting import Slipper
 from pyrulearn.learners.seco import Pypper
-from pyrulearn.models import ConceptModel, ConceptSet
+from pyrulearn.models import ConceptCascade, ConceptModel, ConceptSet
 
 # $WEKA_JAR / $WEKA_JAVA win; else this machine's Windows install, else `java` on the PATH
 _WIN_JAVA = r"C:\Program Files\Weka-3-8-7\jre\jre-25.0.2-full\bin\java.exe"
@@ -236,6 +237,15 @@ values, so they get the features without their explicit negations
 tests, while Pypper and Slipper, which only test a feature for being true,
 get the negations as features.
 
+Three variants show what these choices change: Weka:JRip (negation
+features), handed the negation features too -- the same conditions, but
+each twice, which changes the description lengths that decide when Ripper
+stops and how it optimizes -- and Witt:RIPPER (majority) and Pypper
+(majority), learning their rules for the majority class instead, the
+minority class left to the default rule (Witt:RIPPER's former default on
+most datasets: it used to pick the label that sorts first). Weka:JRip has
+no such option: it always orders the classes by increasing frequency.
+
 Measures: test accuracy, rule count, total condition count, fit time, and,
 for the external implementations, the run time of the external algorithm
 itself (`Provenance.run_time`: Weka's own "Time taken to build model",
@@ -256,18 +266,68 @@ class WittRIPPER(_WittRIPPERBase):
         return ConceptModel if len(np.unique(np.asarray(data.y))) <= 2 else ConceptSet
 
 
+class WittRIPPERMajority(WittRIPPER):
+    """Witt:RIPPER learning its rules for the majority class of a binary
+    target, leaving the minority class to the default rule -- the class
+    `WittRIPPER` used to pick by default on most datasets (the label that
+    sorts first)."""
+
+    @property
+    def display_name(self) -> str:
+        return "Witt:RIPPER (majority)"
+
+    def _import(self, data):
+        if self.pos_class is not None:
+            return super()._import(data)
+        labels, counts = np.unique(np.asarray(data.y), return_counts=True)
+        learner = copy.copy(self)
+        learner.pos_class = labels[int(np.argmax(counts))]
+        return _WittRIPPERBase._import(learner, data)
+
+
+class PypperMajority(Pypper):
+    """Pypper peeling the classes from the most frequent one -- on a binary
+    target, rules for the majority class, the minority class left to the
+    default rule."""
+
+    @property
+    def display_name(self) -> str:
+        return "Pypper (majority)"
+
+    def fit(self, data, model=None, **model_kwargs):
+        if model is None:
+            return super().fit(data, model=ConceptCascade, order="most_frequent")
+        return super().fit(data, model, **model_kwargs)
+
+
+class WekaJRipNegations(WekaJRip):
+    """Weka:JRip handed the negation features too (`native_negation=False`):
+    every condition twice, once as a negation feature and once as its
+    partner tested for `False` -- the same conditions, but more of them for
+    Ripper's description lengths to count."""
+
+    @property
+    def display_name(self) -> str:
+        return "Weka:JRip (negation features)"
+
+
 def build_learners():
     return [
         WekaJRip(jar=WEKA_JAR, java=WEKA_JAVA, native_negation=True),
+        WekaJRipNegations(jar=WEKA_JAR, java=WEKA_JAVA, native_negation=False),
         WittRIPPER(random_state=RANDOM_STATE, native_negation=True),
+        WittRIPPERMajority(random_state=RANDOM_STATE, native_negation=True),
         Pypper(random_state=RANDOM_STATE),
+        PypperMajority(random_state=RANDOM_STATE),
         Slipper(random_state=RANDOM_STATE),
     ]
 
 
-LEARNER_ORDER = ["Weka:JRip", "Witt:RIPPER", "Pypper", "Slipper"]
-COLORS = dict(zip(LEARNER_ORDER, ["tab:blue", "tab:orange", "tab:green", "tab:red"]))
-MARKERS = dict(zip(LEARNER_ORDER, ["o", "s", "^", "D"]))
+LEARNER_ORDER = ["Weka:JRip", "Weka:JRip (negation features)", "Witt:RIPPER", "Witt:RIPPER (majority)",
+                 "Pypper", "Pypper (majority)", "Slipper"]
+COLORS = dict(zip(LEARNER_ORDER, ["tab:blue", "tab:cyan", "tab:orange", "tab:brown", "tab:green", "tab:olive",
+                                  "tab:red"]))
+MARKERS = dict(zip(LEARNER_ORDER, ["o", "o", "s", "s", "^", "^", "D"]))
 
 
 def measure_run_time(model, test_rep) -> dict:

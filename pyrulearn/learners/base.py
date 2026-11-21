@@ -253,6 +253,10 @@ class RuleLearner(ABC):
 #: decomposition may fit copies of the learner (`_WittgensteinLearner`).
 _EXTERNAL_RUN_TIME: contextvars.ContextVar = contextvars.ContextVar("pyrulearn_external_run_time",
                                                                     default=None)
+#: True while a timed `fit_external` runs -- a `fit_external` it calls in
+#: turn (a subclass delegating to its parent's) is not timed again
+_IN_FIT_EXTERNAL: contextvars.ContextVar = contextvars.ContextVar("pyrulearn_in_fit_external",
+                                                                  default=False)
 
 
 def _timed_fit_external(fit_external: Callable) -> Callable:
@@ -262,10 +266,16 @@ def _timed_fit_external(fit_external: Callable) -> Callable:
     Weka, whose wall time also includes starting the JVM)."""
     @functools.wraps(fit_external)
     def timed(self, *args, **kwargs):
+        if _IN_FIT_EXTERNAL.get():
+            return fit_external(self, *args, **kwargs)
         self._reported_run_time = None
+        token = _IN_FIT_EXTERNAL.set(True)
         t0 = time.perf_counter()
-        out = fit_external(self, *args, **kwargs)
-        elapsed = time.perf_counter() - t0
+        try:
+            out = fit_external(self, *args, **kwargs)
+        finally:
+            elapsed = time.perf_counter() - t0
+            _IN_FIT_EXTERNAL.reset(token)
         reported, self._reported_run_time = self._reported_run_time, None
         acc = _EXTERNAL_RUN_TIME.get()
         if acc is not None:
