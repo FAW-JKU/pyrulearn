@@ -38,7 +38,7 @@ import numpy as np
 
 from ..combiners import RuleCombiner, TopKMeanCombiner
 from ..data import HorizontalBitmapRepresentation
-from ..heuristics import FoilGain, GainHeuristic, GeneralizedMEstimate, RuleStats
+from ..heuristics import FoilGain, GeneralizedMEstimate, RuleHeuristic, RuleStats
 from ..models import ConceptModel, ConceptSet, MajorityClass, annotate_default_rule, annotate_rules
 from ..rule import Rule
 from .base import DEFAULT_MAX_AUTO_CONVERT_CELLS, NativeRuleLearner, produces
@@ -60,7 +60,7 @@ class _CPARParameters:
         k: int,
         max_length: Optional[int],
         max_rounds: int,
-        heuristic: Optional[GainHeuristic],
+        heuristic: Optional[RuleHeuristic],
         covering: Optional[CoveringStrategy],
         combiner: Optional[RuleCombiner],
     ) -> None:
@@ -68,10 +68,10 @@ class _CPARParameters:
             raise ValueError(f"gain_similarity must be in (0, 1], got {gain_similarity}")
         if not min_gain > 0:
             raise ValueError(f"min_gain must be positive (a condition changing nothing gains 0), got {min_gain}")
-        if heuristic is not None and not isinstance(heuristic, GainHeuristic):
+        if heuristic is not None and not heuristic.relative_to_parent:
             raise ValueError(
-                f"CPAR needs a GainHeuristic (scored against the rule before the new condition), got "
-                f"{type(heuristic).__name__} -- wrap a plain heuristic as DeltaGain({type(heuristic).__name__}())"
+                f"CPAR needs a gain over the rule before the new condition, got {heuristic!r} -- e.g. "
+                f"Relative(Gain({heuristic!r}))"
             )
         reweighting = getattr(covering, "reweighting", None)
         if reweighting is not None and reweighting.assigns_rule_weights:
@@ -88,7 +88,7 @@ class _CPARParameters:
         self.covering = covering
         self.combiner = combiner
 
-    def _heuristic(self) -> GainHeuristic:
+    def _heuristic(self) -> RuleHeuristic:
         return self.heuristic if self.heuristic is not None else FoilGain()
 
     def _covering(self) -> CoveringStrategy:
@@ -161,10 +161,10 @@ class CPAR(_CPARParameters, SeCo):
     framework with these building blocks -- nothing CPAR-specific is left
     in this class but the choice of them:
 
-    - heuristic: `heuristic` (default `FoilGain()`), a `GainHeuristic`,
-      since `min_gain` and `gain_similarity` are thresholds on an
-      improvement over the rule before the condition; `DeltaGain(h)`
-      makes one from any plain heuristic `h`;
+    - heuristic: `heuristic` (default `FoilGain()`), a gain over the rule
+      before the condition (relative to the parent rule), since
+      `min_gain` and `gain_similarity` are thresholds on that improvement;
+      `Relative(Gain(h))` makes one from any heuristic `h`;
     - search: `GainAscentHillClimbing(max_conditions=max_length,
       min_gain=min_gain, branch_similarity=gain_similarity)` -- step 1;
       its `search_all` yields every lineage's rule, and `SeCo`'s covering
@@ -197,7 +197,7 @@ class CPAR(_CPARParameters, SeCo):
         k: int = 5,
         max_length: Optional[int] = None,
         max_rounds: int = 1000,
-        heuristic: Optional[GainHeuristic] = None,
+        heuristic: Optional[RuleHeuristic] = None,
         covering: Optional[CoveringStrategy] = None,
         combiner: Optional[RuleCombiner] = None,
         target_class: Any = None,
@@ -251,7 +251,7 @@ class DenseCPAR(_CPARParameters, NativeRuleLearner):
         k: int = 5,
         max_length: Optional[int] = None,
         max_rounds: int = 1000,
-        heuristic: Optional[GainHeuristic] = None,
+        heuristic: Optional[RuleHeuristic] = None,
         covering: Optional[CoveringStrategy] = None,
         combiner: Optional[RuleCombiner] = None,
         max_auto_convert_cells: int = DEFAULT_MAX_AUTO_CONVERT_CELLS,

@@ -68,7 +68,7 @@ def test_branch_and_bound_is_the_same_on_every_representation():
 def test_branch_and_bound_refuses_a_gain_heuristic_and_bad_k():
     data = _data()
     initial = EmptyRuleAllFeatures().initial_candidates(data, "pos")
-    with pytest.raises(ValueError, match="gain"):
+    with pytest.raises(ValueError, match="relative to"):
         BranchAndBoundSearch().search(data, "pos", FoilGain(), initial)
     with pytest.raises(ValueError):
         BranchAndBoundSearch(k=0)

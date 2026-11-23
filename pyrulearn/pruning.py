@@ -52,7 +52,7 @@ from typing import Any, Callable, List, Optional, Tuple
 
 import numpy as np
 
-from .heuristics import GainHeuristic, RuleHeuristic, RuleStats
+from .heuristics import RuleHeuristic, RuleStats
 from .data import DataRepresentation
 from .rule import Rule
 
@@ -239,8 +239,10 @@ class ThresholdPrePruning(PrePruningCriterion):
     def may_accept_refinements(self, rule, stats, data, target_class, example_mask, bound) -> bool:
         # only a rejection of the low scores ("<", "<=") is decided by an
         # upper bound: a refinement passes CN2's test only if the bound
-        # on its likelihood ratio reaches the critical value
-        if not self.polarity or self.operator not in ("<", "<=") or isinstance(self.heuristic, GainHeuristic):
+        # on its likelihood ratio reaches the critical value. A heuristic
+        # relative to the parent rule has its bound relative to the rule
+        # itself, not on the scale this criterion compares on.
+        if not self.polarity or self.operator not in ("<", "<=") or self.heuristic.relative_to_parent:
             return True
         best = bound(self.heuristic)
         if best is None:

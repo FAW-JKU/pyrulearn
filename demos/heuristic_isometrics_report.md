@@ -19,7 +19,7 @@ Run: `python demos/heuristic_isometrics.py` (no data or extras needed beyond mat
 
 ## The heuristics at a glance
 
-`p`/`n`: covered positives/negatives, `P`/`N`: all positives/negatives; `m`, `c`, `g`, `β`: the parameters in the heuristic's name. The inverted heuristic `Inverted(h)` (Stecher, Janssen & Fürnkranz, 2014) evaluates `h` on what a rule leaves out, with the classes exchanged: h(N - n, P - p), the excluded negatives counted as positives and the excluded positives as negatives. *unchanged*: the inverted heuristic ranks every rule the same way (in a search, it only restricts the heuristic to the examples of the rule being refined); *n.a.*: it can't be inverted (FOIL's gain needs the parent rule's statistics as well). The links lead to the inverted isometrics.
+`p`/`n`: covered positives/negatives, `P`/`N`: all positives/negatives; `m`, `c`, `g`, `β`: the parameters in the heuristic's name. The inverted heuristic `Inverted(h)` (Stecher, Janssen & Fürnkranz, 2014) evaluates `h` on what a rule leaves out, with the classes exchanged: h(N - n, P - p), the excluded negatives counted as positives and the excluded positives as negatives. *unchanged*: the inverted heuristic ranks every rule the same way (relative to the parent rule, inverting it only restricts it to the examples of the rule being refined, as `Relative` does). The links lead to the inverted isometrics.
 
 | heuristic | h(p, n) | inverted: h(N - n, P - p) |
 |---|---|---|
@@ -42,7 +42,7 @@ Run: `python demos/heuristic_isometrics.py` (no data or extras needed beyond mat
 | Correlation | (p N - n P)/√(P N (p + n)(P + N - p - n)) | unchanged |
 | Entropy | π log₂ π + (1 - π) log₂ (1 - π), π = p/(p + n) | [the same with π = (N - n)/(N - n + P - p): the purity of the uncovered examples](#inverted-entropy) |
 | LikelihoodRatio | 2 (p ln(p/e_p) + n ln(n/e_n)), e_p = (p + n) P/(P + N), e_n = (p + n) N/(P + N) | [the same for the uncovered examples: N - n and P - p against their expected shares of P + N - p - n](#inverted-likelihoodratio) |
-| FoilGain (vs. universal rule) | p (log₂ p/(p + n) - log₂ P/(P + N)) | n.a. |
+| FoilGain (vs. universal rule) | p (log₂ p/(p + n) - log₂ P/(P + N)) | [(N - n)(log₂ (N - n)/(N - n + P - p) - log₂ N/(P + N))](#inverted-foilgain-vs-universal-rule) |
 
 ## Isometrics per heuristic
 
@@ -164,7 +164,7 @@ CN2's significance statistic: how far the covered class distribution is from the
 
 ### FoilGain (vs. universal rule)
 
-FOIL's information gain, here always relative to the universal rule (a gain heuristic needs a parent rule): p * (log2 precision - log2 P/(P+N)).
+FOIL's information gain, here relative to the universal rule (in a search, it is relative to the parent rule): p * (log2 precision - log2 P/(P+N)).
 
 <img src="heuristic_isometrics_plots/isometrics_foilgain_vs_universal_rule_raw.png" alt="FoilGain (vs. universal rule), coverage space" width="49%"> <img src="heuristic_isometrics_plots/isometrics_foilgain_vs_universal_rule_roc.png" alt="FoilGain (vs. universal rule), ROC space" width="49%">
 
@@ -182,7 +182,7 @@ Precision, Laplace and the m-estimate all have isometrics that are lines through
 
 ## Inverted heuristics
 
-A top-down search starts with the universal rule in the upper right corner of coverage space, (N, P), and moves towards the origin. A regular heuristic judges a rule from the origin: Precision's isometrics all go through it. The inverted heuristic judges it from the corner the search starts from: inverted Precision's isometrics all go through (N, P), and it prefers the rule whose excluded examples are the purest in negatives -- the refinement that removes negatives and keeps positives. In a search, the corner is the rule being refined: a refinement of a rule covering P̂ positives and N̂ negatives scores h(N̂ - n, P̂ - p), and the plots show the first refinement, from the universal rule. Stecher, Janssen & Fürnkranz (2014) refine a rule by an inverted heuristic and choose the rule on the refinement path by a regular one (`SingleRuleLearner(Inverted(Precision()), selection=Laplace())`); the [heuristic comparison](heuristic_comparison_report.md#m-estimates-for-refinement-and-for-selection) tests this.
+A top-down search starts with the universal rule in the upper right corner of coverage space, (N, P), and moves towards the origin. A regular heuristic judges a rule from the origin: Precision's isometrics all go through it. The inverted heuristic judges it from the corner the search starts from: inverted Precision's isometrics all go through (N, P), and it prefers the rule whose excluded examples are the purest in negatives -- the refinement that removes negatives and keeps positives. Relative to the parent rule (`Relative(Inverted(h))`), the corner is the rule being refined: a refinement of a rule covering P̂ positives and N̂ negatives scores h(N̂ - n, P̂ - p), and the plots show the first refinement, from the universal rule. Stecher, Janssen & Fürnkranz (2014) refine a rule by such a relative inverted heuristic and choose the rule on the refinement path by a regular one (`SingleRuleLearner(Relative(Inverted(Precision())), selection=Laplace())`); the [heuristic comparison](heuristic_comparison_report.md#m-estimates-for-refinement-and-for-selection) tests this.
 
 Left: the regular heuristic, right: the inverted one, both in coverage space (counts); ROC space only rescales the axes. Only the heuristics where inversion changes the ranking (see [the table](#the-heuristics-at-a-glance)).
 
@@ -269,4 +269,10 @@ h = π log₂ π + (1 - π) log₂ (1 - π), π = p/(p + n) becomes the same wit
 h = 2 (p ln(p/e_p) + n ln(n/e_n)), e_p = (p + n) P/(P + N), e_n = (p + n) N/(P + N) becomes the same for the uncovered examples: N - n and P - p against their expected shares of P + N - p - n.
 
 <img src="heuristic_isometrics_plots/isometrics_likelihoodratio_raw.png" alt="LikelihoodRatio" width="49%"> <img src="heuristic_isometrics_plots/inverted_likelihoodratio_raw.png" alt="Inverted(LikelihoodRatio)" width="49%">
+
+### Inverted FoilGain (vs. universal rule)
+
+h = p (log₂ p/(p + n) - log₂ P/(P + N)) becomes (N - n)(log₂ (N - n)/(N - n + P - p) - log₂ N/(P + N)).
+
+<img src="heuristic_isometrics_plots/isometrics_foilgain_vs_universal_rule_raw.png" alt="FoilGain (vs. universal rule)" width="49%"> <img src="heuristic_isometrics_plots/inverted_foilgain_vs_universal_rule_raw.png" alt="Inverted(FoilGain (vs. universal rule))" width="49%">
 

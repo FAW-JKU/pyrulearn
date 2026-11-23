@@ -11,22 +11,30 @@ as such -- it's heuristic-search context -- which is why it lives on
 `RuleStats`, not as part of `Rule` itself: a bare `Rule` has no inherent
 notion of "its own refinement history", only a search process does.
 
-`GainHeuristic` is a separate category from plain `RuleHeuristic`: its
-`score` takes a *second* mandatory argument, the parent rule's own
-`RuleStats` (the rule's stats *before* its last refinement) -- unlike
-every other heuristic here, a gain heuristic's score is only meaningful
-as an improvement relative to that specific parent, not on a shared
-absolute scale comparable across different parents/search rounds. That
-used to be modeled as an optional `RuleStats.parent` field read
-implicitly inside `score`; it's a mandatory second parameter instead
-now, so a caller (a search algorithm, `plot_isometrics`, ...) is forced
-to know which category of heuristic it's holding and supply the parent
-explicitly -- calling `FoilGain().score(stats)` with one argument now
-raises `TypeError` immediately rather than a heuristic-specific
-"parent wasn't set" check. See `GainHeuristic`'s own docstring for why
-this can't just be handled uniformly by the caller regardless of
-category (e.g. `BeamSearch`'s "how does the overall-best-seen rule get
-updated" logic genuinely differs between the two).
+**Absolute and relative heuristics.** A heuristic scores a rule within a
+*frame*, a coverage space: by default the whole data (`n_pos`, `n_neg`),
+in which every rule is compared with the universal rule. A heuristic
+that is `relative_to_parent` takes the rule a refinement was made from
+(its parent) as the frame instead: the parent's covered examples are the
+whole data, its class distribution the prior, and so the parent is the
+universal rule of the frame. Such a heuristic takes the parent's
+statistics as an optional second argument of `score`/`batch_score`;
+without it, it scores in the whole data, like an absolute heuristic.
+`Relative(h)` makes any heuristic relative (adaptive `WRAcc`, a local
+`MEstimate`); `FoilGain` is relative by definition. Scores relative to
+different parents have no common scale: a search compares them only
+among the refinements of one rule, and picks the rule it returns by a
+separate, absolute `selection` (or, by default, the last rule it
+reached, `LastRule`).
+
+Three wrappers build heuristics from others: `Relative(h)` (the frame),
+`Inverted(h)` (judge a rule by the examples it excludes, after Stecher,
+Janssen & Fürnkranz; their inverted heuristics are
+`Relative(Inverted(h))`), and `WeightedGain(weight, base)` (``weight(r)
+* (base(r) - base(r0))``, the gain over the universal rule ``r0`` of
+the frame -- over the parent inside `Relative`). `WRAcc` and `FoilGain`
+are fast shortcuts for two weighted gains; `Gain(h)` is the unweighted
+one.
 
 Used to rank/select candidate rules or refinements during search --
 `Rule.order_by_precision`'s greedy criterion is one hardcoded instance
@@ -92,10 +100,10 @@ Fürnkranz & Flach's terminology the isometrics of the first two are
   isometrics) and `LikelihoodRatio` (isometrics that bow away from the
   origin, since -- unlike the pencil group -- it depends on absolute
   covered counts, not just their ratio) belong to neither group above.
-  `FoilGain`, with a fixed parent (see `plot_isometrics`'s `parent=`),
-  isn't even a single smooth curve -- its `tp *` factor can make a
-  low-tp, low-precision point score the same as a higher-tp, higher-
-  precision one, producing a visibly non-convex, "hooked" isometric.
+  `FoilGain` (with a fixed parent, see `plot_isometrics`'s `parent=`)
+  has a straight zero isometric through the origin and the parent, and
+  curves on either side of it: its `tp *` factor makes a low-tp point
+  score near 0 whatever its precision.
 """
 
 from __future__ import annotations
@@ -212,11 +220,6 @@ class RuleHeuristic(ABC):
     scores via `>`/`sorted(key=...)` (as every heuristic consumer in this
     codebase does) don't need to care which shape they got.
 
-    See `GainHeuristic` for the one category that *isn't* a drop-in
-    match for this base's single-argument `score` -- code that wants to
-    call an arbitrary `RuleHeuristic` generically (as `score_rule` and
-    `plot_isometrics` below do) needs to check for it explicitly.
-
     `needs_data` -- whether scoring a rule requires a
     `DataRepresentation` to count coverage against. `True` for almost
     every heuristic; `False` only for the purely structural ones
@@ -241,11 +244,11 @@ class RuleHeuristic(ABC):
     exactly its parent's stats could come out one bit "better".
 
     `relative_to_parent` -- whether a search scores a refinement relative
-    to the rule it refines: `score`/`batch_score` then take that rule's
-    statistics as an optional second argument (`parent`), and without it
-    score relative to the universal rule. Only `Inverted` (and a wrapper
-    around one) is; unlike a `GainHeuristic` it has a score of its own,
-    the one relative to the universal rule.
+    to the rule it refines (see the module docstring): `score`/
+    `batch_score` then take that rule's statistics as an optional second
+    argument (`parent`), and without it score in the whole data, relative
+    to the universal rule. `Relative`, `FoilGain`, and every wrapper
+    around a relative heuristic are.
     """
 
     needs_data: bool = True
@@ -298,7 +301,9 @@ class RuleHeuristic(ABC):
     def head_scores(self, covered, totals, length: Any = 0, parent_covered=None) -> np.ndarray:
         """The score of each possible head: ``k`` scores for ``k`` covered
         counts (``k x m`` for ``k x m``), each class against the rest of
-        the scope (`totals`). `parent_covered` is for `GainHeuristic`."""
+        the scope (`totals`). `parent_covered` (the parent's covered
+        counts, ``k``) is the frame of a relative heuristic, which
+        overrides this."""
         return np.asarray(self.batch_score(head_stats(covered, totals, length)))
 
     def best_head(self, covered, totals, length: Any = 0, parent_covered=None) -> Tuple[Any, Any]:
@@ -339,36 +344,20 @@ class RuleHeuristic(ABC):
                 parts.append(f"{pname}={value!r}")
         return f"{name}({', '.join(parts)})" if parts else name
 
-    def __repr__(self) -> str:
-        """The class name plus every constructor argument that differs
-        from its default -- ``Laplace``, ``MEstimate(m=5)``,
-        ``LEF(CoveredPositives, MinimalLength)`` -- what a printed model's
-        conflict-resolution line names."""
-        import inspect
-        name = type(self).__name__
-        try:
-            params = inspect.signature(type(self).__init__).parameters
-        except (TypeError, ValueError):
-            return name
-        parts = []
-        for pname, param in params.items():
-            if pname == "self" or not hasattr(self, pname):
-                continue
-            value = getattr(self, pname)
-            if param.kind is param.VAR_POSITIONAL:
-                parts.extend(repr(v) for v in value)
-            elif param.default is param.empty or value != param.default:
-                parts.append(f"{pname}={value!r}")
-        return f"{name}({', '.join(parts)})" if parts else name
-
-    def score_rule(self, rule: Rule, data: DataRepresentation, positive_class: Optional[Any] = None) -> Score:
+    def score_rule(
+        self, rule: Rule, data: DataRepresentation, positive_class: Optional[Any] = None,
+        parent_rule: Optional[Rule] = None,
+    ) -> Score:
         """Convenience: `RuleStats.from_rule(...)` then `score(...)` in
         one call, so a `RuleHeuristic` can be used directly as a
         rule-level ranking key without the caller building stats by
-        hand each time. `GainHeuristic` overrides this with its own
-        `parent_rule=`-taking version -- this one only works for a
-        plain `RuleHeuristic`."""
-        return self.score(RuleStats.from_rule(rule, data, positive_class))
+        hand each time. `parent_rule` is the frame of a relative
+        heuristic (ignored by an absolute one); without it, a relative
+        heuristic scores relative to the universal rule."""
+        stats = RuleStats.from_rule(rule, data, positive_class)
+        if parent_rule is not None and self.relative_to_parent:
+            return self.score(stats, RuleStats.from_rule(parent_rule, data, positive_class))
+        return self.score(stats)
 
     def plot_isometrics(
         self,
@@ -383,9 +372,8 @@ class RuleHeuristic(ABC):
         """Plot this heuristic's isometrics -- curves (or, `filled=True`,
         bands) of constant `score(...)` -- over a
         `pyrulearn.evaluation.CoverageSpace`. Inherited as-is by every
-        concrete `RuleHeuristic` -- including a `GainHeuristic`, whose
-        two-argument `score` this method calls correctly via `parent=`
-        below (see its own paragraph).
+        concrete `RuleHeuristic`, relative ones included (see `parent=`
+        below).
 
         `space` is built fresh (a dataset-agnostic, default-sized
         `CoverageSpace`) if omitted; pass one explicitly -- e.g. from
@@ -404,11 +392,11 @@ class RuleHeuristic(ABC):
         space's own dimensions. `stats.length` still has no meaningful
         value here (`LengthPenalized` will just ignore it, defaulting to
         0). `parent=` (a `RuleStats`, fixed across every grid point) is
-        required if `self` is a `GainHeuristic` -- e.g. `FoilGain` --
-        and ignored otherwise; pass `RuleStats.universal(space.n_pos,
-        space.n_neg)` for the standard "gain over the universal rule"
-        reading (the same choice a gain heuristic needs to make when
-        there's no specific prior refinement to compare against).
+        the frame of a relative heuristic -- e.g. `FoilGain` -- and
+        ignored by an absolute one; without it, a relative heuristic is
+        drawn relative to the universal rule. Points outside the
+        parent's coverage (more positives or negatives than it covers)
+        are no refinements of it, and their scores mean nothing.
 
         Isometric value labels (`ax.clabel`) are skipped when
         `space.show_labels` is `False` (the default for a dataset-agnostic
@@ -429,9 +417,7 @@ class RuleHeuristic(ABC):
 
         def score_at(neg: float, pos: float) -> float:
             stats = RuleStats(tp=pos, fp=neg, fn=space.n_pos - pos, tn=space.n_neg - neg)
-            if isinstance(self, GainHeuristic):
-                if parent is None:
-                    raise ValueError(f"{type(self).__name__}.plot_isometrics needs parent= (a GainHeuristic has no meaningful score without one)")
+            if parent is not None and self.relative_to_parent:
                 return self.score(stats, parent)
             return self.score(stats)
 
@@ -503,78 +489,73 @@ class RuleHeuristic(ABC):
         return self.plot_isometric_through_point(stats.fp, stats.tp, space=space, mark_point=mark_point, **kwargs)
 
 
-class GainHeuristic(RuleHeuristic):
-    """Heuristics whose score is only meaningful as an *improvement*
-    relative to one specific parent rule -- not, like every other
-    heuristic in this module, on a shared absolute scale comparable
-    across different parents or different points in a search. `FoilGain`
-    is the only current example: its score is a function of *both* a
-    rule's own stats and its immediate parent's, and two gain scores
-    computed against two different parents simply aren't answering the
-    same question, however close the numbers might land.
+class Relative(RuleHeuristic):
+    """`base` relative to the parent rule: a refinement is scored among
+    the parent's covered examples only -- they are the whole data (the
+    frame), their class distribution is the prior, and so the parent is
+    the universal rule. `Relative(WRAcc())` is weighted relative accuracy
+    with the parent's precision as the prior ("adaptive" WRA),
+    `Relative(MEstimate(m))` an m-estimate whose `m` is weighed against
+    the parent's examples. For a heuristic that doesn't depend on the
+    frame (`Precision`, `Laplace`) it changes nothing.
 
-    That's why `score` takes `parent_stats` as a second, mandatory
-    argument here rather than reading an optional `RuleStats.parent`
-    field implicitly (the earlier design) -- a caller must know it's
-    holding a `GainHeuristic` and supply the parent explicitly;
-    `isinstance(heuristic, GainHeuristic)` is the intended way to find
-    out.
+    Scores relative to different parents have no common scale: a search
+    compares them among the refinements of one rule, and the rule on the
+    refinement path it returns is picked by an absolute `selection`, or
+    by default the last one it reached (`LastRule`). Without a parent
+    (`score(stats)`, e.g. for an isometrics plot or `sort_rules`) the
+    frame is the whole data, and `Relative(h)` scores as `h`.
 
-    A search algorithm that can have more than one candidate in flight
-    at once (`BeamSearch`, at any `beam_width` -- see its own docstring)
-    can never safely rank a `GainHeuristic`'s scores against each other,
-    since different candidates' scores may be deltas against different
-    parents. Rather than carve out a special case for it there,
-    `GainHeuristic` support lives entirely in `pyrulearn.learners.seco.
-    GainAscentHillClimbing`, whose single-lineage structure (only ever
-    one current rule, hence only ever one parent) makes every comparison
-    it performs automatically valid, with no bookkeeping needed to keep
-    it that way. `DeltaGain` wraps a plain `RuleHeuristic` into a
-    `GainHeuristic` (its score minus its parent's); it predates
-    `pyrulearn.learners.seco.HillClimbing` ranking a plain heuristic directly and
-    is now redundant there, but still valid -- kept for the parametrized
-    "any heuristic, gain-shaped" pattern and for explicitness.
-    """
+    `Relative` is idempotent: `Relative(h)` scores `base` *without* a
+    parent, so a relative `base` (`FoilGain`, another `Relative`) is
+    relative to the universal rule of the frame -- the parent again.
+    Stecher, Janssen & Fürnkranz's inverted heuristics are
+    `Relative(Inverted(h))` (`Inverted(Relative(h))` is the same).
 
-    @abstractmethod
-    def score(self, stats: RuleStats, parent_stats: RuleStats) -> Score:
-        raise NotImplementedError
+    The bound (`bound`/`head_bound`) is relative to the rule itself: the
+    best score any refinement of the rule can reach relative to it, by
+    `base`'s own bound -- what a single lineage can prune by (a
+    hill-climbing step that can't improve on the rule), not a bound
+    against the rules of other parents."""
 
-    def batch_score(self, stats: RuleStats, parent_stats: RuleStats) -> Any:
-        """`score` for every element of `stats`' arrays against the one
-        `parent_stats` (plain numbers) -- see `RuleHeuristic.batch_score`."""
-        return _loop(lambda s: self.score(s, parent_stats), stats)
+    relative_to_parent = True
+
+    def __init__(self, base: RuleHeuristic):
+        if not isinstance(base, RuleHeuristic):
+            raise TypeError(f"Relative needs a RuleHeuristic, got {type(base).__name__}")
+        self.base = base
+
+    @property
+    def needs_data(self) -> bool:
+        return self.base.needs_data
+
+    def score(self, stats: RuleStats, parent: Optional[RuleStats] = None) -> Score:
+        return self.base.score(_within(stats, parent))
+
+    def batch_score(self, stats: RuleStats, parent: Optional[RuleStats] = None) -> Any:
+        return self.base.batch_score(_within(stats, parent))
+
+    def bound(self, stats: RuleStats) -> Score:
+        return self.base.bound(_within(stats, stats))
+
+    def batch_bound(self, stats: RuleStats) -> Any:
+        return self.base.batch_bound(_within(stats, stats))
 
     def head_scores(self, covered, totals, length: Any = 0, parent_covered=None) -> np.ndarray:
-        """Each head's gain over the parent's statistics *for the same
-        head* (`parent_covered`, ``k``) -- one `batch_score` per head, so
-        that every gain heuristic gets it. With no parent (a search's
-        root) every head gains 0."""
-        covered = np.asarray(covered, dtype=float)
-        if parent_covered is None:
-            return np.zeros_like(covered)
-        stats = head_stats(covered, totals, length)
-        parent = head_stats(parent_covered, totals)
-        rows = []
-        for c in range(covered.shape[0]):
-            child = RuleStats(tp=stats.tp[c], fp=stats.fp[c], fn=stats.fn[c], tn=stats.tn[c], length=length)
-            own = RuleStats(tp=float(parent.tp[c]), fp=float(parent.fp[c]), fn=float(parent.fn[c]),
-                            tn=float(parent.tn[c]))
-            rows.append(np.asarray(self.batch_score(child, own), dtype=float))
-        return np.stack(rows)
+        """Each head's score with the parent's covered examples of each
+        class (`parent_covered`) as the frame."""
+        scope = totals if parent_covered is None else parent_covered
+        return self.base.head_scores(covered, scope, length)
 
-    def score_rule(
-        self, rule: Rule, data: DataRepresentation,
-        positive_class: Optional[Any] = None, parent_rule: Optional[Rule] = None,
-    ) -> Score:
-        """Same convenience as `RuleHeuristic.score_rule`, extended with
-        the mandatory `parent_rule` this category needs -- computes both
-        rules' stats and calls the two-argument `score`."""
-        if parent_rule is None:
-            raise ValueError(f"{type(self).__name__}.score_rule needs parent_rule")
-        stats = RuleStats.from_rule(rule, data, positive_class)
-        parent_stats = RuleStats.from_rule(parent_rule, data, positive_class)
-        return self.score(stats, parent_stats)
+    def best_head(self, covered, totals, length: Any = 0, parent_covered=None) -> Tuple[Any, Any]:
+        scope = totals if parent_covered is None else parent_covered
+        return self.base.best_head(covered, scope, length)
+
+    def head_bound(self, covered, totals, length: Any = 0) -> Any:
+        return self.base.head_bound(covered, covered, length)
+
+    def __repr__(self) -> str:
+        return f"Relative({self.base!r})"
 
 
 class MajorityHead:
@@ -641,6 +622,27 @@ class Precision(MajorityHead, RuleHeuristic):
     def batch_score(self, stats: RuleStats) -> np.ndarray:
         tp, fp, _, _, _ = _counts(stats)
         return _div(tp, tp + fp)
+
+
+class InformationContent(MajorityHead, RuleHeuristic):
+    """h = log2(tp / (tp+fp)) -- Quinlan's information content of a rule,
+    ``I = -log2(precision)``, the bits needed to signal that a covered
+    example is positive; negated, as `CoveredNegatives` is, to keep this
+    module's higher-is-better convention. It ranks rules exactly as
+    `Precision` does (same isometrics); its use is as the base of a gain:
+    `FoilGain` is ``Relative(WeightedGain(CoveredPositives(),
+    InformationContent()))``. ``-inf`` for a rule covering no positive
+    (precision 0: infinitely many bits)."""
+
+    def score(self, stats: RuleStats) -> float:
+        total = stats.tp + stats.fp
+        return math.log2(stats.tp / total) if stats.tp > 0 else -math.inf
+
+    def batch_score(self, stats: RuleStats) -> np.ndarray:
+        tp, fp, _, _, _ = _counts(stats)
+        out = np.full(tp.shape, -np.inf)
+        np.log2(_div(tp, tp + fp), out=out, where=tp > 0)
+        return out
 
 
 class Recall(RuleHeuristic):
@@ -816,6 +818,12 @@ class MEstimate(RuleHeuristic):
     Isometrics: a pencil pivoting at `(-m*(1-p0), -m*p0)` -- see
     `GeneralizedMEstimate` for freeing that pivot from the dataset's
     own prior.
+
+    Minus the constant p0, it is a weighted precision gain over the
+    universal rule: ``h - p0 = (tp+fp)/(tp+fp+m) * (precision - p0)``, so
+    it ranks rules as ``WeightedGain(w, Precision())`` with that weight
+    ``w``. `Relative(MEstimate(m))` is the same gain over the parent
+    rule, with `m` weighed against the parent's examples.
     """
 
     def __init__(self, m: float):
@@ -890,7 +898,12 @@ class WRAcc(RuleHeuristic):
     precision family, `WRAcc` can only ever prefer points on coverage
     space's convex hull. These lines are parallel to the diagonal, and on
     a fixed dataset `WRAcc` ranks rules exactly as `YoudenJ` (it is
-    ``n_pos * n_neg / total**2`` times tpr - fpr)."""
+    ``n_pos * n_neg / total**2`` times tpr - fpr).
+
+    A fast shortcut for ``WeightedGain(Support(), Precision())`` -- the
+    coverage-weighted precision gain over the universal rule, whose
+    precision is the prior -- with the same scores. `Relative(WRAcc())`
+    takes the gain over the parent rule instead ("adaptive" WRA)."""
 
     def score(self, stats: RuleStats) -> float:
         total = stats.n_pos + stats.n_neg
@@ -1131,6 +1144,34 @@ class MinimalLength(RuleHeuristic):
         return -_counts(stats)[4]
 
 
+class LastRule(RuleHeuristic):
+    """h = length -- a *selection* heuristic: of the rules on a top-down
+    refinement path, the last one is the longest, so selecting by length
+    returns the rule a search ended at (as Foil does). The default
+    selection of a search whose heuristic is relative to the parent rule
+    (`RuleHeuristic.relative_to_parent`), whose scores along the path have
+    no common scale to pick the best rule by. Among rules of the same
+    length (a beam's), the search's own ranking decides. Its bound is
+    ``+inf``: a refinement is always longer, so it never prunes."""
+
+    needs_data = False
+
+    def score(self, stats: RuleStats) -> float:
+        return stats.length
+
+    def batch_score(self, stats: RuleStats) -> np.ndarray:
+        return _counts(stats)[4].copy()
+
+    def bound(self, stats: RuleStats) -> float:
+        return math.inf
+
+    def batch_bound(self, stats: RuleStats) -> np.ndarray:
+        return np.full(_counts(stats)[4].shape, np.inf)
+
+    def head_bound(self, covered, totals, length: Any = 0) -> Any:
+        return np.full(np.asarray(covered).shape[1:], np.inf)
+
+
 class Correlation(RuleHeuristic):
     """FOSSIL's search heuristic (Fürnkranz, 1994): the four-field
     (Matthews/phi) correlation coefficient between "rule covers this
@@ -1332,70 +1373,161 @@ class LikelihoodRatio(RuleHeuristic):
         return np.maximum.reduce([at(tp, 0.0 * fp), at(tp, fp), at(one, fp)])
 
 
-class FoilGain(GainHeuristic):
-    """FOIL's information gain (Quinlan, 1990): rewards a refinement by
-    how much it increases the (log) probability that a covered example
-    is positive, weighted by how many positives survive the refinement
-    -- ``tp * (log2(tp/(tp+fp)) - log2(tp0/(tp0+fp0)))``, where
-    ``tp0``/``fp0`` are the *pre-refinement* rule's `parent_stats.tp`/
-    `parent_stats.fp` (see `GainHeuristic` for why that's a separate,
-    mandatory argument to `score` rather than an optional field read off
-    `stats` itself -- see `RuleHeuristic.plot_isometrics`'s `parent=`
-    argument to make this plottable anyway, e.g. against
-    `RuleStats.universal(...)`). With a fixed parent, isometrics are
-    neither a pencil nor parallel lines, nor even always a single
-    connected curve like `Correlation`/`LikelihoodRatio` -- the `tp *`
-    factor can make a low-tp, low-precision point score the same as a
-    higher-tp, higher-precision one, producing a visibly non-convex,
-    "hooked" isometric near the tp axis.
-    """
+class WeightedGain(RuleHeuristic):
+    """``h(r) = weight(r) * (base(r) - base(r0))``: how much a rule
+    improves `base` over the universal rule ``r0`` of the frame, weighted
+    by `weight` (no weight: 1, `Gain`). In the whole data ``r0`` is the
+    universal rule, so the gain is over the root of a top-down search;
+    inside `Relative` the frame is the parent's covered examples, whose
+    universal rule is the parent, so the gain is over the parent.
 
-    def score(self, stats: RuleStats, parent_stats: RuleStats) -> float:
-        if stats.tp == 0 or parent_stats.tp == 0:
-            return 0.0
-        return stats.tp * (
-            math.log2(stats.tp / (stats.tp + stats.fp))
-            - math.log2(parent_stats.tp / (parent_stats.tp + parent_stats.fp))
-        )
+    `WRAcc` is ``WeightedGain(Support(), Precision())`` and Foil's gain
+    ``Relative(WeightedGain(CoveredPositives(), InformationContent()))``
+    (`FoilGain`); both have fast shortcuts with the same scores. With
+    ``Support()`` raised to a power ``a`` it is Klösgen's family of
+    quality functions; the m-estimate ranks as one, too (see `MEstimate`).
 
-    def batch_score(self, stats: RuleStats, parent_stats: RuleStats) -> np.ndarray:
-        tp, fp, _, _, _ = _counts(stats)
-        ptp, pfp, _, _, _ = _counts(parent_stats)
-        with np.errstate(divide="ignore", invalid="ignore"):
-            gain = tp * (np.log2(tp / (tp + fp)) - np.log2(ptp / (ptp + pfp)))
-        return np.where((tp == 0) | (ptp == 0), 0.0, gain)
+    A zero weight scores 0 whatever `base` is -- also where `base` is
+    infinite (`InformationContent` of a rule covering no positive), as the
+    limit ``p * log2(p/(p+n)) -> 0`` of Foil's gain is. A rule that
+    doesn't change `base` (``base(r) == base(r0)``, infinities included)
+    gains 0. `weight` and `base` must be absolute heuristics of single
+    scores (wrap the `WeightedGain` in `Relative`, not its parts; a `LEF`
+    can't be subtracted).
 
+    The bound is the default ``(tp, 0)`` projection: sound for the gains
+    above (keeping every positive and dropping every negative maximizes
+    both the weight and the improvement), but not for any weight and
+    base -- set ``optimistic_pruning=False`` for one where it isn't."""
 
-class DeltaGain(GainHeuristic):
-    """Turns any ordinary `RuleHeuristic` into a `GainHeuristic`: scores
-    a refinement by how much `base`'s own score improved relative to
-    its parent, ``base.score(stats) - base.score(parent_stats)``. This
-    doesn't give `base` a shared absolute scale across different
-    parents -- nothing could, that's the whole reason `GainHeuristic`
-    exists as its own category -- but it does make "is this refinement
-    an improvement at all" (a positive delta) well-defined for *any*
-    heuristic this way. `pyrulearn.learners.seco.HillClimbing` now ranks a plain
-    `RuleHeuristic` directly (its single lineage makes the same-parent
-    comparison sound without the wrapper), so `DeltaGain(Laplace())` and
-    plain `Laplace` behave identically there -- the wrapper is redundant
-    for that use, kept for explicitness and for anywhere a `GainHeuristic`
-    is specifically expected (`pyrulearn.learners.seco.GainAscentHillClimbing`).
-
-    `base` must return a plain float, not a `LEF`'s tuple -- subtracting
-    two tuples isn't defined, and `LEF`'s own tie-breaking semantics
-    wouldn't carry a clear meaning under subtraction anyway.
-    """
-
-    def __init__(self, base: RuleHeuristic):
+    def __init__(self, weight: Optional[RuleHeuristic], base: RuleHeuristic):
+        for part, name in ((weight, "weight"), (base, "base")):
+            if part is None and name == "weight":
+                continue
+            if not isinstance(part, RuleHeuristic):
+                raise TypeError(f"WeightedGain's {name} must be a RuleHeuristic, got {type(part).__name__}")
+            if part.relative_to_parent:
+                raise TypeError(f"WeightedGain's {name} must be absolute, got {part!r}: wrap the WeightedGain "
+                                f"in Relative instead")
+            if isinstance(part, LEF):
+                raise TypeError(f"WeightedGain's {name} must score a single value, got the LEF {part!r}")
+        self.weight = weight
         self.base = base
 
-    def score(self, stats: RuleStats, parent_stats: RuleStats) -> float:
-        return self.base.score(stats) - self.base.score(parent_stats)
+    @staticmethod
+    def _root(stats: RuleStats) -> RuleStats:
+        return RuleStats(tp=stats.tp + stats.fn, fp=stats.fp + stats.tn, fn=stats.fn * 0, tn=stats.tn * 0)
 
-    def batch_score(self, stats: RuleStats, parent_stats: RuleStats) -> np.ndarray:
-        # the parent through batch_score too, so a child with its parent's
-        # exact stats gains exactly 0
-        return self.base.batch_score(stats) - self.base.batch_score(parent_stats)
+    def score(self, stats: RuleStats) -> float:
+        w = 1.0 if self.weight is None else self.weight.score(stats)
+        if w == 0:
+            return 0.0
+        b, b0 = self.base.score(stats), self.base.score(self._root(stats))
+        return 0.0 if b == b0 else w * (b - b0)
+
+    def batch_score(self, stats: RuleStats) -> np.ndarray:
+        b = np.asarray(self.base.batch_score(stats), dtype=float)
+        b0 = np.asarray(self.base.batch_score(self._root(stats)), dtype=float)
+        w = np.ones_like(b) if self.weight is None else np.asarray(self.weight.batch_score(stats), dtype=float)
+        with np.errstate(invalid="ignore"):
+            diff = np.where(b == b0, 0.0, b - b0)
+            return np.where(w == 0, 0.0, w * diff)
+
+    def __repr__(self) -> str:
+        return f"WeightedGain({self.weight!r}, {self.base!r})"
+
+
+class Gain(WeightedGain):
+    """``h(r) = base(r) - base(r0)``: the unweighted `WeightedGain`, the
+    improvement of `base` over the universal rule of the frame.
+    `Relative(Gain(h))` is the improvement over the parent rule, `h` of
+    the refinement minus `h` of the parent, both in the parent's frame.
+    It ranks the refinements of one rule exactly as `Relative(h)` does
+    (the parent's score is the same for all of them); it differs only
+    where refinements of different parents are compared, as in a beam:
+    by improvement, not by level."""
+
+    def __init__(self, base: RuleHeuristic):
+        super().__init__(None, base)
+
+    def __repr__(self) -> str:
+        return f"Gain({self.base!r})"
+
+
+class FoilGain(RuleHeuristic):
+    """Foil's information gain (Quinlan, 1990): ``tp * (log2(tp/(tp+fp))
+    - log2(tp'/(tp'+fp')))``, the bits of information content a
+    refinement saves per covered positive, over its parent rule (``tp'``,
+    ``fp'``), times the positives it still covers. Relative to the parent
+    rule by definition: a fast shortcut for
+    ``Relative(WeightedGain(CoveredPositives(), InformationContent()))``,
+    with the same scores (`Relative(FoilGain())` is `FoilGain()`).
+    Without a parent (an isometrics plot, `sort_rules`), the gain is over
+    the universal rule of the whole data, ``log2(n_pos/(n_pos+n_neg))``.
+
+    A rule covering no positive gains 0 (the limit of ``p * log2(...)``),
+    as much as one that doesn't improve on its parent; one below its
+    parent's precision gains less than 0, and the more positives it
+    covers, the less. Isometrics (with a fixed parent): the zero isometric
+    is the line through the origin and the parent, with curves on either
+    side -- the ``tp *`` factor makes a low-tp point score near 0 whatever
+    its precision.
+
+    Its bound is relative to the rule itself: the gain of the ``(tp, 0)``
+    projection over the rule, ``-tp * log2(tp/(tp+fp))`` -- what
+    `pyrulearn.learners.seco.GainAscentHillClimbing` stops by."""
+
+    relative_to_parent = True
+
+    @staticmethod
+    def _prior(stats: RuleStats, parent: Optional[RuleStats]):
+        if parent is None:
+            return stats.tp + stats.fn, (stats.tp + stats.fn) + (stats.fp + stats.tn)
+        return parent.tp, parent.tp + parent.fp
+
+    def score(self, stats: RuleStats, parent: Optional[RuleStats] = None) -> float:
+        ptp, ptotal = self._prior(stats, parent)
+        if stats.tp == 0 or ptp == 0:
+            return 0.0
+        return stats.tp * (math.log2(stats.tp / (stats.tp + stats.fp)) - math.log2(ptp / ptotal))
+
+    def batch_score(self, stats: RuleStats, parent: Optional[RuleStats] = None) -> np.ndarray:
+        tp, fp, fn, tn, _ = _counts(stats)
+        if parent is None:
+            ptp, ptotal = tp + fn, (tp + fn) + (fp + tn)
+        else:
+            ptp, pfp, _, _, _ = _counts(parent)
+            ptotal = ptp + pfp
+        with np.errstate(divide="ignore", invalid="ignore"):
+            gain = tp * (np.log2(tp / (tp + fp)) - np.log2(ptp / ptotal))
+        return np.where((tp == 0) | (ptp == 0), 0.0, gain)
+
+    def bound(self, stats: RuleStats) -> float:
+        return self.score(_optimistic(stats), stats)
+
+    def batch_bound(self, stats: RuleStats) -> np.ndarray:
+        return self.batch_score(_optimistic(stats), stats)
+
+    def head_scores(self, covered, totals, length: Any = 0, parent_covered=None) -> np.ndarray:
+        """Each head's gain over the parent's statistics for the same head
+        (`parent_covered`, ``k``); without a parent, over the class's share
+        of the scope (`totals`)."""
+        covered = np.asarray(covered, dtype=float)
+        stats = head_stats(covered, totals, length)
+        if parent_covered is None:
+            return np.asarray(self.batch_score(stats))
+        parent = head_stats(parent_covered, totals)
+        rows = []
+        for c in range(covered.shape[0]):
+            child = RuleStats(tp=stats.tp[c], fp=stats.fp[c], fn=stats.fn[c], tn=stats.tn[c], length=length)
+            own = RuleStats(tp=float(parent.tp[c]), fp=float(parent.fp[c]), fn=float(parent.fn[c]),
+                            tn=float(parent.tn[c]))
+            rows.append(np.asarray(self.batch_score(child, own), dtype=float))
+        return np.stack(rows)
+
+    def head_bound(self, covered, totals, length: Any = 0) -> Any:
+        covered = np.asarray(covered, dtype=float)
+        return _best_of_heads(self.batch_bound(head_stats(covered, totals, length)), covered)[0]
 
 
 class LEF(RuleHeuristic):
@@ -1463,7 +1595,7 @@ def _projection_bound(heuristic: RuleHeuristic) -> bool:
     """Whether `heuristic`'s bound is the score at the ``(tp, 0)``
     projection (`RuleHeuristic.bound`), directly or through a wrapper --
     the bound `Inverted` can carry over."""
-    if isinstance(heuristic, (Inverted, LengthPenalized)):
+    if isinstance(heuristic, (Inverted, LengthPenalized, Relative)):
         return _projection_bound(heuristic.base)
     return type(heuristic).bound is RuleHeuristic.bound and type(heuristic).batch_bound is RuleHeuristic.batch_bound
 
@@ -1485,86 +1617,78 @@ def _ranks_like(a: RuleHeuristic, b: RuleHeuristic, n_pos: int = 20, n_neg: int 
 
 
 class Inverted(RuleHeuristic):
-    """An inverted heuristic (Stecher, Janssen & Fürnkranz): `base`
-    evaluated from the upper right corner of the coverage space of the
-    rule being refined instead of from the origin. A refinement of a
-    rule (the parent) covering ``P^`` positives and ``N^`` negatives
-    scores ``h'(p, n) = h(N^ - n, P^ - p)``: the negatives the refinement
-    excludes take the place of the covered positives, the positives it
-    excludes that of the covered negatives, both counted among the
-    parent's examples. For `Precision`, say, that is the share of
-    negatives among the examples the new condition excludes. A top-down
-    search starts at the universal rule, where ``P^ = P`` and ``N^ = N``;
-    there (and in `score(stats)` without a parent, as for an isometrics
-    plot) the statistics ``(tp, fp, fn, tn)`` become ``(tn, fn, fp, tp)``.
-    The examples outside the parent's coverage play no part, so a
-    parameter such as `MEstimate`'s `m` is weighed against the parent's
-    examples, not against the whole data, and its prior is the parent's
-    class distribution. Meant for *refining* a rule: the rule a search
-    returns is judged by an ordinary heuristic, its `selection` (see
-    `pyrulearn.learners.seco.SingleRuleLearner`), which `BeamSearch`
-    requires.
+    """`base` evaluated from the upper right corner of the coverage space
+    instead of from the origin: a rule is judged by the examples it
+    *excludes*, with the classes exchanged -- ``h'(p, n) = h(N - n, P -
+    p)``, the negatives it excludes taking the place of the covered
+    positives, the positives it excludes that of the covered negatives.
+    The statistics ``(tp, fp, fn, tn)`` become ``(tn, fn, fp, tp)``.
+    `Inverted(Precision())`, say, is the share of negatives among the
+    excluded examples, the negative predictive value; its isometrics are
+    a pencil of lines through the upper right corner ``(N, P)``.
 
-    `relative_to_parent` is True: a search passes the parent's statistics
-    to `score`/`batch_score` (the second argument, `parent`), and compares
-    the refinements of a rule with each other and with the rule itself,
-    which, relative to itself, excludes nothing. In a beam of several
-    rules, refinements of different parents are compared, each scored
-    relative to its own parent.
+    On its own, an inverted heuristic is absolute, like any other: the
+    corner is that of the whole data. Stecher, Janssen & Fürnkranz's
+    inverted heuristics judge a refinement by what *it* excludes from its
+    parent rule, so the corner moves with the search: they are
+    `Relative(Inverted(h))`, ``h(N' - n, P' - p)`` among the parent's
+    ``P'`` positives and ``N'`` negatives. An inverted relative heuristic
+    is relative too, and inverts within the parent's frame:
+    `Inverted(Relative(h))` is `Relative(Inverted(h))`, and
+    `Inverted(FoilGain())` the inverted Foil gain (Mooney's CNF learner).
 
     Any heuristic of the statistics can be inverted, `LEF` and
-    `LengthPenalized` included; `Inverted(Inverted(h))` scores as `h` on
-    the parent's examples (exactly as `h` without a parent). A
-    `GainHeuristic`, which needs its parent's statistics in another way,
-    can't be inverted. A heuristic that ranks every rule the same way
-    inverted or not (`Accuracy`, `WRAcc`, `Correlation`, `ChiSquare`,
-    `YoudenJ`: symmetric in the two classes and in covered/uncovered)
-    only changes to the same heuristic on the parent's examples, and the
-    constructor warns. A class-neutral heuristic (`Entropy`) has an
-    inverted two-class score (the purity of the *excluded* examples), but
-    its score of the whole class distribution has no inverted form: a
-    search for a rule of any class with it raises a ValueError.
+    `LengthPenalized` included; `Inverted(Inverted(h))` scores as `h`. A
+    heuristic that ranks every rule the same way inverted or not
+    (`Accuracy`, `WRAcc`, `Correlation`, `ChiSquare`, `YoudenJ`: symmetric
+    in the two classes and in covered/uncovered) isn't changed by it, and
+    the constructor warns (relative, it is just `Relative(h)`). A
+    class-neutral heuristic (`Entropy`) has an inverted two-class score
+    (the purity of the *excluded* examples), but its score of the whole
+    class distribution has no inverted form: a search for a rule of any
+    class with it raises a ValueError.
 
-    The bound is the default one, the score at the ``(tp, 0)`` projection
-    without a parent: for a `base` that rises with `tp` and falls with
-    `fp`, so does the inverted heuristic (keeping every positive and
-    dropping every negative is still the best a refinement can do). A
-    `base` with a bound of its own (`LikelihoodRatio`) has none here --
-    run the search with ``optimistic_pruning=False``. A search bounds by
-    its selection, so this bound is only one of a search without one.
+    The bound is the default one, the score at the ``(tp, 0)`` projection:
+    for a `base` that rises with `tp` and falls with `fp`, so does the
+    inverted heuristic (keeping every positive and dropping every negative
+    is still the best a refinement can do). A `base` with a bound of its
+    own (`LikelihoodRatio`) has none here -- run the search with
+    ``optimistic_pruning=False``.
     """
-
-    relative_to_parent = True
 
     def __init__(self, base: RuleHeuristic):
         import warnings
-        if isinstance(base, GainHeuristic):
-            raise TypeError(f"Inverted needs a heuristic of the statistics alone, got the gain heuristic "
-                            f"{type(base).__name__}")
         if not isinstance(base, RuleHeuristic):
             raise TypeError(f"Inverted needs a RuleHeuristic, got {type(base).__name__}")
         self.base = base
-        if _ranks_like(base, self):
-            warnings.warn(f"{base!r} ranks rules the same way inverted or not: Inverted({base!r}) only scores "
-                          f"{base!r} on the parent rule's examples", stacklevel=2)
+        if not base.relative_to_parent and _ranks_like(base, self):
+            warnings.warn(f"{base!r} ranks rules the same way inverted or not: Inverted({base!r}) scores as "
+                          f"{base!r}", stacklevel=2)
+
+    @property
+    def relative_to_parent(self) -> bool:
+        return self.base.relative_to_parent
 
     @property
     def needs_data(self) -> bool:
         return self.base.needs_data
 
+    def _frame(self, stats: RuleStats, parent: Optional[RuleStats]) -> RuleStats:
+        return _within(stats, parent) if self.relative_to_parent else stats
+
     def score(self, stats: RuleStats, parent: Optional[RuleStats] = None) -> Score:
-        return self.base.score(_inverted_stats(_within(stats, parent)))
+        return self.base.score(_inverted_stats(self._frame(stats, parent)))
 
     def batch_score(self, stats: RuleStats, parent: Optional[RuleStats] = None) -> Any:
-        return self.base.batch_score(_inverted_stats(_within(stats, parent)))
+        return self.base.batch_score(_inverted_stats(self._frame(stats, parent)))
 
     def head_scores(self, covered, totals, length: Any = 0, parent_covered=None) -> np.ndarray:
-        """Each head's score relative to the parent rule, which covers
-        `parent_covered` of each class: the parent's examples are the
-        scope (`totals`) of the inversion."""
+        """Each head's inverted score, against the class totals of the
+        scope (`totals`) -- for a relative `base`, of the parent rule
+        (`parent_covered`)."""
         self._check_head()
-        scope = totals if parent_covered is None else parent_covered
-        return np.asarray(self.batch_score(head_stats(covered, scope, length)))
+        scope = parent_covered if parent_covered is not None and self.relative_to_parent else totals
+        return np.asarray(self.base.batch_score(_inverted_stats(head_stats(covered, scope, length))))
 
     def _check_bound(self) -> None:
         if not _projection_bound(self.base):
@@ -1573,11 +1697,19 @@ class Inverted(RuleHeuristic):
 
     def bound(self, stats: RuleStats) -> Score:
         self._check_bound()
+        if self.relative_to_parent:   # relative to the rule itself, as `Relative`'s
+            return self.score(_optimistic(stats), stats)
         return super().bound(stats)
+
+    def batch_bound(self, stats: RuleStats) -> Any:
+        self._check_bound()
+        if self.relative_to_parent:
+            return self.batch_score(_optimistic(stats), stats)
+        return super().batch_bound(stats)
 
     def _check_head(self) -> None:
         base = self.base
-        while isinstance(base, (Inverted, LengthPenalized)):
+        while isinstance(base, (Inverted, LengthPenalized, Relative)):
             base = base.base
         if isinstance(base, ClassNeutral):
             raise ValueError(f"{self!r} has no inverted score of a class distribution: search for a rule of a "
@@ -1589,11 +1721,10 @@ class Inverted(RuleHeuristic):
 
     def head_bound(self, covered, totals, length: Any = 0) -> Any:
         self._check_head()
+        if self.relative_to_parent:
+            covered = np.asarray(covered, dtype=float)
+            return _best_of_heads(self.batch_score(_optimistic(head_stats(covered, covered, length))), covered)[0]
         return super().head_bound(covered, totals, length)
-
-    def batch_bound(self, stats: RuleStats) -> Any:
-        self._check_bound()
-        return super().batch_bound(stats)
 
     def __repr__(self) -> str:
         return f"Inverted({self.base!r})"

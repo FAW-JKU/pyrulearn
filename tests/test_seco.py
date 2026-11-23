@@ -11,8 +11,8 @@ from pyrulearn.models import (
 from pyrulearn.combiners import HeuristicMaxCombiner, ListCombiner, MicroVoteCombiner
 from pyrulearn.rule import Rule
 from pyrulearn.heuristics import (
-    Accuracy, Correlation, CoveredNegatives, CoveredPositives, DeltaGain, FoilGain,
-    Laplace, LEF, LikelihoodRatio, MinimalLength, RuleStats, UncoveredPositives,
+    Accuracy, Correlation, CoveredNegatives, CoveredPositives, FoilGain, Gain,
+    Laplace, LEF, LikelihoodRatio, MinimalLength, Relative, RuleStats, UncoveredPositives,
 )
 from pyrulearn.learners import NativeRuleLearner
 from pyrulearn.pruning import (
@@ -156,7 +156,9 @@ def _either_dataset(n=400, seed=0):
     (BeamSearch(beam_width=3), Accuracy()),
     (HillClimbing(), Accuracy()),
     (GainAscentHillClimbing(), FoilGain()),
-    (GainAscentHillClimbing(), DeltaGain(Laplace())),
+    (GainAscentHillClimbing(), Relative(Gain(Laplace()))),
+    (HillClimbing(), FoilGain()),
+    (BeamSearch(beam_width=3), FoilGain()),
 ])
 def test_searches_find_the_perfect_conjunction(search, heuristic):
     rep, ds = _conjunction_dataset()
@@ -196,14 +198,14 @@ def test_hill_climbing_returns_none_when_the_walk_cant_start_and_a_gate_is_set()
     assert HillClimbing().search(rep, "pos", Accuracy(), initial, stopping=gate) is None
 
 
-def test_hill_climbers_take_their_own_kind_of_heuristic():
+def test_hill_climbers_take_any_heuristic():
     rep, ds = _conjunction_dataset()
     initial = [(Rule([], target="pos", dataspec=ds), frozenset(range(3)))]
-    HillClimbing().search(rep, "pos", Accuracy(), initial)  # no raise
-    with pytest.raises(ValueError, match="GainAscentHillClimbing"):
-        HillClimbing().search(rep, "pos", FoilGain(), initial)
-    with pytest.raises(ValueError, match="GainHeuristic"):
-        GainAscentHillClimbing().search(rep, "pos", Accuracy(), initial)
+    # Foil gain climbs the same way in both: while the gain over the current rule is positive
+    assert HillClimbing().search(rep, "pos", FoilGain(), initial) == \
+        GainAscentHillClimbing().search(rep, "pos", FoilGain(), initial)
+    assert GainAscentHillClimbing().search(rep, "pos", Accuracy(), initial) == \
+        HillClimbing().search(rep, "pos", Accuracy(), initial)
 
 
 def test_hill_climbing_rejects_more_than_one_initial_candidate():
