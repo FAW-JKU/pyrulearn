@@ -3,11 +3,11 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
-## 0.7.1 (2026-11-23)
+## 0.7.1 (2026-11-24)
 
-Absolute and relative heuristics: a heuristic is relative to the parent
-rule or not, independently of being inverted, and gains are built from
-other heuristics.
+Relative Heuristics: a heuristic is relative to the parent rule or not,
+independently of being inverted, and gains are built from other
+heuristics.
 
 ### Added
 
@@ -27,7 +27,8 @@ other heuristics.
   and another for selection, absolute and relative, regular and inverted
   (the matrices of `heuristic_comparison`, which keeps one row as a
   reference); the same frames for other heuristics; beam search with
-  relative heuristics; weighted gains.
+  relative heuristics; weighted gains with Klösgen's weights, with
+  paired comparisons (wins/losses, Wilcoxon signed-rank test).
 
 - `Provenance.run_time`: a model fitted by an `ExternalRuleLearner`
   records how long the external algorithm itself ran -- the time of its
