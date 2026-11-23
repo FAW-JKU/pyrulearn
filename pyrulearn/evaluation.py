@@ -94,7 +94,7 @@ def format_mean_count(value: float) -> str:
     return "n/a" if value != value else f"{value:.1f}"
 
 if TYPE_CHECKING:
-    from .heuristics import GainHeuristic, RuleHeuristic
+    from .heuristics import RuleHeuristic
 
 
 def _sortkey(c: Any):
@@ -141,10 +141,9 @@ class RuleStats:
 
     `length` (rule size, e.g. `Rule.length()`) defaults to unused --
     only heuristics that specifically want it read past `tp`/`fp`/`fn`/
-    `tn`. A gain-style heuristic's *parent* stats (the rule before its
-    last refinement) aren't part of this bundle -- see `GainHeuristic`,
-    which takes them as a separate, mandatory argument to `score`
-    instead.
+    `tn`. A heuristic relative to the parent rule takes the parent's
+    stats (the rule before its last refinement) as a separate, optional
+    argument to `score` instead (`RuleHeuristic.relative_to_parent`).
     """
     tp: Union[int, float]
     fp: Union[int, float]
@@ -202,8 +201,8 @@ class RuleStats:
         `RuleModel.coverage_space` and `Rule.order_by_precision`
         already use.
 
-        A gain-style heuristic needing a *parent* rule's stats too (see
-        `GainHeuristic`) just calls this again on the parent rule, under
+        A heuristic relative to the parent rule, needing the parent's
+        stats too, just calls this again on the parent rule, under
         the same `example_mask` -- nothing here is cached or reused
         across calls, so that's always a clean, fresh recount, not
         something this method needs to do on a caller's behalf.
@@ -261,11 +260,12 @@ def _rule_score_fn(
     - a `RuleHeuristic` -- ``heuristic.score_rule(rule, data, positive_class=rule.target)``,
       computed *fresh* against `data` rather than from cached stats;
       needs `data` unless the heuristic's `needs_data` is `False` (only
-      `MinimalLength`, scored from the rule alone). Must be a plain
-      heuristic -- a `GainHeuristic` has no score without a parent rule.
+      `MinimalLength`, scored from the rule alone). A heuristic relative
+      to the parent rule (`FoilGain`) scores each rule relative to the
+      universal rule.
     - a plain callable  -- used as the key directly
 
-    `RuleHeuristic`/`GainHeuristic`/`Laplace` are imported here, locally,
+    `RuleHeuristic`/`Laplace` are imported here, locally,
     rather than at module level -- `pyrulearn.heuristics` imports from
     this module (for `RuleStats`), so a module-level import here would be
     a load-order cycle; by the time this function is actually *called*,
@@ -273,17 +273,12 @@ def _rule_score_fn(
     manifests here.
     """
     from .combiners import _heuristic_score
-    from .heuristics import GainHeuristic, Laplace, RuleHeuristic
+    from .heuristics import Laplace, RuleHeuristic
 
     if by is None:
         laplace = Laplace()
         return lambda r: _heuristic_score(r, laplace)
     if isinstance(by, RuleHeuristic):
-        if isinstance(by, GainHeuristic):
-            raise ValueError(
-                f"cannot sort rules by {type(by).__name__}: a GainHeuristic scores a "
-                "refinement against a parent rule, not a rule on its own"
-            )
         if not by.needs_data:
             return lambda r: by.score(RuleStats(tp=0, fp=0, fn=0, tn=0, length=r.length()))
         if data is None:

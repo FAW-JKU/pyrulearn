@@ -88,7 +88,13 @@ def test_a_gain_is_taken_over_the_parent_for_the_same_head():
         expected = FoilGain().score(RuleStats(tp=covered[c, 0], fp=covered[other, 0], fn=0, tn=0),
                                     RuleStats(tp=parent[c], fp=parent[other], fn=0, tn=0))
         assert scores[c, 0] == pytest.approx(expected)
-    assert (FoilGain().head_scores(covered, totals) == 0).all()     # no parent: nothing gained
+    # no parent: the gain over the universal rule, the class's share of the scope
+    unparented = FoilGain().head_scores(covered, totals)
+    for c, other in ((0, 1), (1, 0)):
+        expected = covered[c, 0] * (np.log2(covered[c, 0] / covered.sum()) - np.log2(totals[c] / totals.sum()))
+        assert unparented[c, 0] == pytest.approx(expected)
+    # the universal rule itself gains nothing for any head
+    assert np.allclose(FoilGain().head_scores(totals[:, None], totals), 0.0)
 
 
 def test_wrappers_and_lexicographic_scores():

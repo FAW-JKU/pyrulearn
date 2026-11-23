@@ -5,7 +5,29 @@ is in early development (alpha): until 1.0, minor versions may change the API.
 
 ## Unreleased
 
+Absolute and relative heuristics: a heuristic is relative to the parent
+rule or not, independently of being inverted, and gains are built from
+other heuristics.
+
 ### Added
+
+- `Relative(h)`: `h` among the examples of the rule being refined, its
+  class distribution as the prior (the parent is the universal rule of
+  the frame) -- e.g. `Relative(WRAcc())`, WRA with the parent's precision
+  as the prior. Idempotent.
+- `WeightedGain(weight, base)`: `weight(r) * (base(r) - base(r0))`, the
+  gain over the universal rule of the frame (over the parent inside
+  `Relative`); `Gain(base)` is the unweighted one. `WRAcc` and `FoilGain`
+  are fast shortcuts for two of them.
+- `InformationContent`: `log2(precision)`, Quinlan's information content,
+  negated; the base of Foil's gain.
+- `LastRule`: a selection heuristic picking the last rule of a refinement
+  path; the default selection of a search with a relative heuristic.
+- `refinement_heuristics` demo: the m-estimate with one m for refinement
+  and another for selection, absolute and relative, regular and inverted
+  (the matrices of `heuristic_comparison`, which keeps one row as a
+  reference); the same frames for other heuristics; beam search with
+  relative heuristics; weighted gains.
 
 - `Provenance.run_time`: a model fitted by an `ExternalRuleLearner`
   records how long the external algorithm itself ran -- the time of its
@@ -23,6 +45,24 @@ is in early development (alpha): until 1.0, minor versions may change the API.
 
 ### Changed
 
+- `Inverted(h)` is the inversion alone, `h(N - n, P - p)` in the whole
+  data; Stecher, Janssen & Fürnkranz's inverted heuristic (0.7.0's
+  `Inverted`) is `Relative(Inverted(h))`. An inverted relative heuristic
+  inverts within the parent's frame (`Inverted(FoilGain())`).
+- `GainHeuristic` and `DeltaGain` are gone: a gain is a heuristic relative
+  to the parent rule (`relative_to_parent`), taking the parent's
+  statistics as an optional argument -- `FoilGain` without one is the gain
+  over the universal rule; `Relative(Gain(h))` replaces `DeltaGain(h)`.
+  `sort_rules`, `plot_isometrics` and stopping criteria score a relative
+  heuristic relative to the universal rule.
+- The searches take any heuristic: `HillClimbing` and `BeamSearch` also a
+  gain such as `FoilGain`, `GainAscentHillClimbing` also a heuristic that
+  isn't one. Without a selection, a search with a relative heuristic
+  returns the last rule it reached (`LastRule`); a beam then follows only
+  refinements that improve on their parent. For a rule of any class, a
+  relative heuristic keeps the head chosen at the first refinement (as a
+  gain did). `CPAR` needs a relative heuristic. Every existing learner
+  learns the same models as before (and its cache keys are unchanged).
 - `WittIREP`/`WittRIPPER` without a `pos_class` learn their rules for the
   minority class of a binary target (as Ripper does), not for the label
   that sorts first, which was the majority class on most datasets.

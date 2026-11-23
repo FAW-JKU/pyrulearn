@@ -7,18 +7,17 @@ composable building blocks (see Fürnkranz's SeCo survey for the general
 shape this follows):
 
 1. **search for a single rule** -- `RuleSearch`. `BeamSearch` (any
-   `RuleHeuristic` except `GainHeuristic`, `beam_width` at least 1) is
-   the general-purpose default; `HillClimbing` is its single-lineage
-   greedy special case (`beam_width` 1 plus "stop at a local maximum of
-   the heuristic"); `GainAscentHillClimbing` is a further subclass, the
-   only search that can run a `GainHeuristic` (e.g. `FoilGain`) -- a
-   gain score is only meaningful against its own immediate parent, and a
-   single lineage is the one place "only one parent, ever" holds (see
-   `BeamSearch`'s docstring for why it can't rank gain scores safely at
-   any beam width).
+   `RuleHeuristic`, `beam_width` at least 1) is the general-purpose
+   default; `HillClimbing` is its single-lineage greedy special case
+   (`beam_width` 1 plus "stop at a local maximum of the heuristic");
+   `GainAscentHillClimbing` is a further subclass for gains such as
+   `FoilGain` (a minimum gain, CPAR's branching). A heuristic relative to
+   the parent rule (`RuleHeuristic.relative_to_parent`) is scored, in
+   every search, relative to each refinement's own parent; the rule
+   returned is picked by an absolute `selection`, by default the last
+   one reached (`LastRule`).
 2. **a search heuristic** -- already existed before this module:
-   `pyrulearn.heuristics.RuleHeuristic`/`RuleStats`/`GainHeuristic`/
-   `DeltaGain`, reused as-is. `BeamSearch`/`HillClimbing`/
+   `pyrulearn.heuristics.RuleHeuristic`/`RuleStats`, reused as-is. `BeamSearch`/`HillClimbing`/
    `GainAscentHillClimbing`'s own
    `filtering=`/`stopping=` criteria (`pyrulearn.pruning.
    PrePruningCriterion` and friends) live in their own module too,
@@ -112,8 +111,8 @@ from ..models import (
     annotate_default_rule, annotate_rules,
 )
 from ..heuristics import (
-    Correlation, CoveredNegatives, CoveredPositives, FoilGain, GainHeuristic,
-    Laplace, LEF, LikelihoodRatio, MinimalLength, Precision, RuleHeuristic, RuleStats, Score,
+    Correlation, CoveredNegatives, CoveredPositives, FoilGain,
+    Laplace, LastRule, LEF, LikelihoodRatio, MinimalLength, Precision, RuleHeuristic, RuleStats, Score,
 )
 from .base import DecomposingLearner, NativeRuleLearner, produces
 from ..combiners import ListCombiner, MicroVoteCombiner
@@ -703,9 +702,7 @@ class HeuristicObjective(Objective):
     def __init__(self, heuristic: RuleHeuristic):
         self.heuristic = heuristic
 
-    @property
-    def supports_bound(self) -> bool:
-        return not isinstance(self.heuristic, GainHeuristic)
+    supports_bound = True
 
     def rule_stats(self, data, target_class, rule, handle) -> RuleStats:
         return stats_from_handle(data, target_class, rule, handle)
@@ -715,7 +712,7 @@ class HeuristicObjective(Objective):
         return features, RuleStats(tp=tps, fp=fps, fn=fns, tn=tns, length=stats.length + 1), same, dead
 
     def batch_score(self, batch, parent=None):
-        if parent is not None and (isinstance(self.heuristic, GainHeuristic) or self.heuristic.relative_to_parent):
+        if parent is not None and self.heuristic.relative_to_parent:
             return self.heuristic.batch_score(batch, parent)
         return self.heuristic.batch_score(batch)
 
@@ -723,7 +720,7 @@ class HeuristicObjective(Objective):
         return self.heuristic.score(stats)
 
     def score_one(self, stats, parent=None) -> Score:
-        if parent is not None and (isinstance(self.heuristic, GainHeuristic) or self.heuristic.relative_to_parent):
+        if parent is not None and self.heuristic.relative_to_parent:
             return batch_score_one(self.heuristic, stats, parent)
         return batch_score_one(self.heuristic, stats)
 
@@ -779,14 +776,15 @@ def selection_objective(objective: Objective, selection: Optional[Union[RuleHeur
     same kind as the search's own `objective` -- for a fixed class or for
     a rule of any class -- started (`begin`) on the same data. A
     selection compares rules reached from different parents, so it can't
-    be a gain heuristic."""
+    be relative to the parent. Without a `selection`, an objective
+    relative to the parent rule selects the last rule (`LastRule`): its
+    scores along a refinement path have no common scale."""
     if selection is None:
-        return None
+        if not objective.relative_to_parent:
+            return None
+        selection = HeadObjective(LastRule()) if isinstance(objective, HeadObjective) else LastRule()
     sel = as_objective(selection)
     heuristic = getattr(sel, "heuristic", None)
-    if isinstance(heuristic, GainHeuristic):
-        raise ValueError(f"a selection compares rules from different parents and can't be the gain heuristic "
-                         f"{type(heuristic).__name__}")
     if sel.relative_to_parent:
         raise ValueError(f"a selection compares rules from different parents and can't score them relative to "
                          f"their parents, as {heuristic!r} does")
@@ -929,22 +927,20 @@ class HeadObjective(Objective):
     per class (weighted by the scope), so every data representation works.
     The statistics are `HeadStats`, the best head's `RuleStats`, so
     `filtering`/`stopping` criteria apply to the head the rule would get.
-    A gain heuristic gains over the parent's statistics for the same
-    head, which makes heads comparable only at the first refinement,
-    where all of them start from the scope: there the head is chosen, and
-    then it stays. A rule is dead once it covers no example in scope, and
+    A heuristic relative to the parent rule (a gain such as `FoilGain`)
+    scores each head against the parent's statistics for the same head,
+    which makes heads comparable only at the first refinement, where all
+    of them start from the scope: there the head is chosen, and then it
+    stays. A rule is dead once it covers no example in scope, and
     consistent once all it covers are of its head's class."""
 
     supports_criteria = True
 
     def __init__(self, heuristic: RuleHeuristic):
         self.heuristic = heuristic
-        self._gain = isinstance(heuristic, GainHeuristic)
         self._relative = heuristic.relative_to_parent
 
-    @property
-    def supports_bound(self) -> bool:
-        return not self._gain
+    supports_bound = True
 
     def begin(self, data, target_class, example_mask) -> None:
         if data.y is None:
@@ -967,12 +963,9 @@ class HeadObjective(Objective):
         return self._stats(batch.covered, batch.count, batch.length, None)
 
     def _stats(self, covered: np.ndarray, count: Any, length: Any, parent: Optional[HeadStats]) -> HeadStats:
-        if self._gain and parent is None:   # a root has no parent to gain over: the covered majority
-            head = covered.argmax(axis=0)
-            score = np.zeros(covered.shape[1:])
-        elif self._gain and np.ndim(parent.length) == 0 and parent.length > 0:
-            # a gain is over the parent *for the same head*: comparing heads
-            # is fair only from the root, where every head starts from its
+        if self._relative and parent is not None and np.ndim(parent.length) == 0 and parent.length > 0:
+            # relative to the parent *for the same head*: comparing heads is
+            # fair only from the root, where every head starts from its
             # prior -- further down, a rare head the parent covers at a low
             # precision would show a large gain from a handful of examples.
             # So the head chosen at the first refinement stays.
@@ -981,7 +974,7 @@ class HeadObjective(Objective):
         else:
             score, head = self.heuristic.best_head(
                 covered, self.totals, length,
-                parent.covered if (self._gain or self._relative) and parent is not None else None)
+                parent.covered if self._relative and parent is not None else None)
         pick = lambda a: np.take_along_axis(a, np.asarray(head)[None, ...], axis=0)[0]   # noqa: E731
         tp = pick(covered)
         n_covered = covered.sum(axis=0)
@@ -1123,21 +1116,17 @@ class BeamSearch(RuleSearch):
 
     `beam_width=1` is close to `HillClimbing` over an ordinary
     `RuleHeuristic` (`HillClimbing` adds a local-maximum stop and drops
-    the running-best bookkeeping a single lineage doesn't need) -- but a
-    `GainHeuristic` (e.g. `FoilGain`) can't be used here at all, at any
-    `beam_width`: its score is only meaningful relative to its *own*
-    parent, and as soon as more than one candidate is ever in flight
-    (which `beam_width=1` doesn't prevent -- multiple children from the
-    same round's single parent are still compared against each other,
-    which is fine, but so is comparing scores computed against
-    *different* parents the moment `initial_candidates` has more than
-    one entry, or a future beam_width>1 round pools children from
-    multiple beam members) there's no shared scale left to rank them
-    on. Rather than carve out a narrow, guarded exception for the one
-    case that happens to be safe, `GainHeuristic` support lives
-    entirely in `GainAscentHillClimbing` instead, whose single lineage
-    makes "only one parent, ever" a standing invariant rather than
-    something that needs policing here.
+    the running-best bookkeeping a single lineage doesn't need).
+
+    A heuristic relative to the parent rule (`Relative`, `FoilGain`,
+    Stecher et al.'s `Relative(Inverted(h))`) scores each child relative
+    to its own parent, and the beam ranks the children of all its members
+    by these scores together -- refinements of different parents, whose
+    scores have no common scale (a large improvement over a bad parent
+    can outrank a small one over a very good parent). The rule returned
+    is picked by a `selection`, which must be absolute; without one, it
+    is the last rule reached (`LastRule`): the deepest round's best
+    eligible candidate by the beam's own ranking.
 
     `filtering` never changes the beam itself -- every round's beam is
     selected purely by `heuristic`, regardless of `filtering`, and a
@@ -1206,9 +1195,11 @@ class BeamSearch(RuleSearch):
         sel = selection_objective(objective, selection, data, target_class, example_mask)
         separate = sel is not None
         relative = objective.relative_to_parent
-        if relative and not separate:
-            raise ValueError(f"BeamSearch with {heuristic!r}, which scores a rule relative to its parent, needs a "
-                             f"selection: the rules of different rounds have no common score to pick the best by")
+        # the last rule (a relative objective's default): the beam follows
+        # only refinements that improve on their parent -- for a gain, a
+        # positive gain -- so the last round is where improvement ended, and
+        # among its equally long candidates the beam's own ranking decides
+        last_rule = isinstance(getattr(sel, "heuristic", None), LastRule)
         if not separate:
             sel = objective
 
@@ -1367,13 +1358,17 @@ class BeamSearch(RuleSearch):
             # beam slot over an equally-good shorter one; equal keys stay in
             # arrival order (stable)
             order = rank_best_first(scores, c_length).tolist()
+            if last_rule:   # only improvements on the parent's own score, relative to itself
+                own = objective.parents([e[3] for e in refinable], c_parent)
+                bars = objective.batch_score(own, own)
+                order = [i for i in order if score_at(scores, i) > score_at(bars, i)]
             # the selection's scores of the same children, and its order
             if separate:
                 c_sel = sel.restat(c_stats)
                 sel_scores = sel.batch_score(c_sel)
                 for i in np.flatnonzero(c_same).tolist():
                     set_score(sel_scores, i, refinable[int(c_parent[i])][6])
-                sel_order = rank_best_first(sel_scores, c_length).tolist()
+                sel_order = order if last_rule else rank_best_first(sel_scores, c_length).tolist()
             else:
                 c_sel, sel_scores, sel_order = c_stats, scores, order
 
@@ -1480,8 +1475,11 @@ class HillClimbing(RuleSearch):
     highest-scoring, since the walk only ever moves to a strictly better
     one). The same-scale parent/child comparison the local-maximum stop
     makes is valid precisely because one lineage means both are always
-    scored the same way. A `GainHeuristic` needs `GainAscentHillClimbing`
-    instead (this class rejects one).
+    scored the same way. A heuristic relative to the parent rule is
+    scored relative to the current rule (whose own score, relative to
+    itself, is the bar a child must beat); without a `selection`, the
+    walk's endpoint is returned (`LastRule`) -- for this class, it is
+    that anyway.
 
     `optimistic_pruning` (default `True`) is exactly `BeamSearch`'s bound
     of the same name, restated for a single lineage: the best any
@@ -1549,13 +1547,6 @@ class HillClimbing(RuleSearch):
     #    `search` is shared single-lineage machinery. The base versions
     #    below are the plain-heuristic behaviour. --------------------------
 
-    def _reject_heuristic(self, objective: Objective) -> None:
-        if isinstance(getattr(objective, "heuristic", None), GainHeuristic):
-            raise ValueError(
-                f"{type(self).__name__} needs a plain RuleHeuristic, got "
-                f"{type(objective.heuristic).__name__} -- use GainAscentHillClimbing for a GainHeuristic"
-            )
-
     def _child_scores(self, objective: Objective, children: Any, parent_stats: Any) -> Any:
         if objective.relative_to_parent:
             return objective.batch_score(children, parent_stats)
@@ -1605,10 +1596,11 @@ class HillClimbing(RuleSearch):
                 "it only ever tracks a single lineage"
             )
         objective = as_objective(heuristic)
-        self._reject_heuristic(objective)
         _check_criteria(objective, filtering, stopping)
         objective.begin(data, target_class, example_mask)
         sel = selection_objective(objective, selection, data, target_class, example_mask)
+        if isinstance(getattr(sel, "heuristic", None), LastRule):
+            sel = None   # the last rule is the walk's endpoint: what it returns without a selection
         dataspec = data.spec
 
         def is_eligible(rule: Rule, stats: RuleStats) -> bool:
@@ -1742,7 +1734,6 @@ class HillClimbing(RuleSearch):
         if len(initial_candidates) != 1:
             raise ValueError(f"{type(self).__name__}.search_all needs exactly one initial candidate")
         objective = as_objective(heuristic)
-        self._reject_heuristic(objective)
         _check_criteria(objective, filtering, stopping)
         objective.begin(data, target_class, example_mask)
         return self._branching_walk(data, target_class, objective, initial_candidates[0],
@@ -1830,32 +1821,21 @@ class HillClimbing(RuleSearch):
 
 
 class GainAscentHillClimbing(HillClimbing):
-    """`HillClimbing` for a `GainHeuristic` (e.g. `FoilGain`). Where the
-    base class ascends a *global* per-rule objective and stops at its
-    local maximum, this follows the *local gradient*: each child is
-    scored by `heuristic.score(child_stats, current_stats)` -- a gain
-    relative to the current rule, not an absolute score -- and the walk
-    stops once the best available gain is non-positive. 0 is the only
-    shared reference a gain has (two gains against different parents
-    aren't the same question), but it's always a meaningful one: a
-    refinement that doesn't beat its own parent is never worth taking.
+    """`HillClimbing` for a gain such as `FoilGain`, scored relative to
+    the current rule (any heuristic works; a relative one -- see
+    `pyrulearn.heuristics.Relative` -- is the point). The walk moves to
+    the best refinement while it improves on the current rule's own score
+    in its own frame -- for a gain, while the gain is positive -- and,
+    without a `selection`, returns the rule it ended at (`LastRule`):
+    gains over different parents have no common scale to pick the best
+    rule of the path by.
 
-    This is the only search that can run a `GainHeuristic` at all --
-    `BeamSearch` can hold several candidates in flight scored against
-    different parents, with no shared scale to rank them (see its
-    docstring); the base `HillClimbing` rejects a `GainHeuristic`
-    outright. Because a gain has no cross-round scale, "the last rule the
-    walk reached" is the only well-defined answer -- there's no
-    "best ever seen" to track (see `GainHeuristic`'s own docstring).
-
-    `optimistic_pruning` (default `True`) is the base-class bound
-    rephrased for a gain: the best any refinement of a `(tp, fp)` rule
-    could cover is `(tp, 0)`, so if the gain *there* (against the current
-    rule) is already non-positive, no real child improves on it -- stop
-    without enumerating children. Subsumes the old `fp == 0` floor (a
-    pure rule's `(tp, 0)` projection is itself, gain 0). A gain's
-    reference is always the immediate parent, so unlike the base class
-    this needs no "best returnable so far" to bound against.
+    `optimistic_pruning` (default `True`) bounds the walk the same way:
+    the best any refinement of a `(tp, fp)` rule could cover is `(tp, 0)`,
+    so if *that* doesn't improve on the current rule (for `FoilGain`, a
+    gain of at most 0), no real child does -- stop without enumerating
+    children. Subsumes the old `fp == 0` floor (a pure rule's `(tp, 0)`
+    projection is itself).
 
     `stop_at_local_optimum=False` (inherited) turns this into RIPPER's
     grow phase: keep adding the max-`FoilGain` condition -- even past the
@@ -1863,9 +1843,10 @@ class GainAscentHillClimbing(HillClimbing):
     and a `stopping` criterion still bound it). Only useful feeding a
     `ReducedErrorPruning` post-processor; see `HillClimbing`'s docstring.
 
-    `min_gain` (default none) raises the bar from "any positive gain" to
-    "a gain of at least `min_gain`" (CPAR's 0.7). It must be positive: a
-    condition that changes nothing gains exactly 0.
+    `min_gain` (default none) raises the bar from "any improvement" to
+    "an improvement of at least `min_gain`" (CPAR's 0.7 for `FoilGain`).
+    It must be positive: a condition that changes nothing improves by
+    exactly 0.
 
     `branch_similarity` (default none) makes the search yield several
     rules (`search_all`; `search` still returns the best-gain lineage's
@@ -1893,24 +1874,13 @@ class GainAscentHillClimbing(HillClimbing):
         self.branch_similarity = branch_similarity
 
     def _improves(self, value: Score, threshold: Score) -> bool:
-        return value > threshold if self.min_gain is None else value >= self.min_gain
-
-    def _reject_heuristic(self, objective: Objective) -> None:
-        heuristic = getattr(objective, "heuristic", objective)
-        if not isinstance(heuristic, GainHeuristic):
-            raise ValueError(
-                f"GainAscentHillClimbing needs a GainHeuristic (e.g. FoilGain), got "
-                f"{type(heuristic).__name__} -- use HillClimbing for a plain RuleHeuristic"
-            )
-
-    def _child_scores(self, objective: Objective, children: Any, parent_stats: Any) -> Any:
-        return objective.batch_score(children, parent_stats)
-
-    def _improvement_threshold(self, objective: Objective, parent_stats: Any) -> Score:
-        return 0.0  # a gain's own shared reference point
+        return value > threshold if self.min_gain is None else value - threshold >= self.min_gain
 
     def _optimistic_stop(self, objective: Objective, stats: Any, best_stats: Any) -> bool:
-        return not self._improves(objective.heuristic.score(_optimistic_stats(stats), stats), 0.0)
+        # the (tp, 0) projection, scored like the children: relative to the
+        # current rule
+        return not self._improves(objective.score_one(_optimistic_stats(stats), stats),
+                                  self._improvement_threshold(objective, stats))
 
 
 def _no_selection(search: RuleSearch, selection) -> None:
@@ -1953,8 +1923,8 @@ class BranchAndBoundSearch(RuleSearch):
     as no node left can. The bound is only admissible for a heuristic that
     rewards covering more positives and fewer negatives (`Laplace`,
     `WRAcc`, `Precision`, `Accuracy`, ...; not e.g. `Entropy`); the
-    heuristic must also score each rule on its own -- a `GainHeuristic`
-    is refused.
+    heuristic must also score each rule on its own -- one relative to the
+    parent rule is refused.
 
     As in OPUS, a condition is removed from the whole subtree below a
     node (not just from its own branch) once it can't help there: when
@@ -2009,8 +1979,7 @@ class BranchAndBoundSearch(RuleSearch):
         objective = as_objective(heuristic)
         if not objective.supports_bound:
             raise ValueError(f"BranchAndBoundSearch needs an objective scoring each rule on its own, got "
-                             f"{getattr(objective, 'heuristic', objective)!r} (a gain is only meaningful "
-                             "against its parent, so it has no bound)")
+                             f"{getattr(objective, 'heuristic', objective)!r}, which has no bound")
         if objective.relative_to_parent:
             raise ValueError(f"BranchAndBoundSearch compares rules of different parents and can't score them "
                              f"relative to their parents, as {objective.heuristic!r} does")
@@ -2410,10 +2379,7 @@ class HeadPerRule(HeadSelection):
             if not found:
                 continue
             stats = RuleStats.from_rule(found[0], data, c, example_mask=remaining)
-            if isinstance(heuristic, GainHeuristic):
-                score = heuristic.score(stats, RuleStats.universal(stats.n_pos, stats.n_neg))
-            else:
-                score = heuristic.score(stats)
+            score = heuristic.score(stats)   # a relative heuristic: relative to the universal rule
             if best_score is None or score > best_score:
                 best, best_score = found[0], score
         return [] if best is None else [best]
@@ -3942,9 +3908,9 @@ class PFoil(SeCo):
 
     Two choices define PFoil here:
     - **search + heuristic**: `GainAscentHillClimbing` + `FoilGain` --
-      `FoilGain` is a `GainHeuristic`, so `GainAscentHillClimbing` is the
-      only valid search for it (see its docstring, and `BeamSearch`'s,
-      for why gain scores can't be ranked across candidates in flight).
+      climb while the gain over the current rule is positive, and return
+      the rule the walk ends at (gains over different parents have no
+      common scale; see `GainAscentHillClimbing`).
     - **stopping criterion**: `EncodingLengthRestriction`, as
       `stopping=` -- stop extending a clause once it costs more bits to
       write down than to list the positives it covers. Its default
@@ -3972,7 +3938,7 @@ class PFoil(SeCo):
     def __init__(
         self,
         target_class: Any = None,
-        heuristic: Optional[GainHeuristic] = None,
+        heuristic: Optional[RuleHeuristic] = None,
         mdl_stopping: bool = True,
         search: Optional[RuleSearch] = None,
         preparation: Optional[SingleRulePreparation] = None,
@@ -4018,8 +3984,8 @@ class PFossil(SeCo):
     top-down hill-climbing loop -- add the one condition that most
     improves correlation, repeat, stop when nothing improves it -- and
     that's what `PFossil` now does: `HillClimbing` over `Correlation()`
-    directly (`HillClimbing` ranks any plain `RuleHeuristic`; no
-    `DeltaGain` wrapping needed). `HillClimbing`'s local-optimum stop --
+    directly (`HillClimbing` ranks any `RuleHeuristic`).
+    `HillClimbing`'s local-optimum stop --
     move on only to a child that beats the current rule's own
     correlation -- *is* "stop when correlation would no longer
     increase", so the search halts at the nearest correlation maximum,

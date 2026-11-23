@@ -1071,9 +1071,9 @@ uses), a `RuleHeuristic` scores fresh against `data` (unless
 `RuleStats.from_rule(rule, data, positive_class=None, example_mask=None)`
 computes `tp`/`fp`/`fn`/`tn` from a rule's actual coverage
 (`positive_class` defaulting to `rule.target`) and `length` from
-`rule.length()`. A gain-style heuristic needing a *parent* rule's stats
-too (see `GainHeuristic`, below) just calls this a second time on the
-parent rule -- there's no dedicated parameter for it here.
+`rule.length()`. A heuristic relative to the parent rule needing the
+parent's stats too (see `Relative`, below) just calls this a second time
+on the parent rule -- there's no dedicated parameter for it here.
 
 Built in (all in `pyrulearn.heuristics`). The four confusion-matrix quadrant
 counts ("covered/uncovered" x "positives/negatives"); the sign follows whether
@@ -1165,35 +1165,60 @@ Heuristics that read past `tp`/`fp`/`fn`/`tn`, or compose others:
 - `LEF` -- Michalski's Lexicographic Evaluation Functional (AQ): an ordered
   list of heuristics, where the first one decides unless it ties. It is itself
   a `RuleHeuristic`, so it works anywhere one is expected.
-- `FoilGain` -- Quinlan's information gain, `tp * (log2(tp/(tp+fp)) -
-  log2(parent.tp/(parent.tp+parent.fp)))`, the one built-in `GainHeuristic`.
-- `DeltaGain(base)` -- turns any ordinary heuristic into a `GainHeuristic`:
-  scores a refinement by how much `base`'s own score improved relative to its
-  parent.
-- `Inverted(base)` -- the inverted heuristic of Stecher, Janssen & Fürnkranz,
-  `base(N̂ - n, P̂ - p)`: `base` evaluated from the upper right corner of the
-  coverage space of the rule being refined (its parent, covering `P̂`
-  positives and `N̂` negatives), i.e. on the examples a refinement excludes
-  from its parent, with the classes exchanged. A search passes each
-  refinement's parent (`relative_to_parent`); without one, as in an
-  isometrics plot, the parent is the universal rule. Meant for refining a
-  rule, with a regular heuristic choosing the rule on the refinement path:
-  `SingleRuleLearner(Inverted(Precision()), selection=Laplace())`
-  (`BeamSearch` requires the `selection`). It warns for a heuristic that
-  ranks rules the same way inverted (`Accuracy`, `WRAcc`, `Correlation`,
-  ...), and a gain heuristic can't be inverted.
+- `InformationContent` -- `log2(tp/(tp+fp))`, Quinlan's information
+  content `-log2(precision)`, negated like `CoveredNegatives`. Ranks rules
+  as `Precision` does; the base of Foil's gain.
+- `LastRule` -- `length`: a *selection* heuristic that picks the last rule
+  of a top-down refinement path (as Foil does); the default selection of a
+  search with a heuristic relative to the parent rule.
 
-A `GainHeuristic`'s `score(stats, parent_stats)` takes the parent rule's
-`RuleStats` as a *mandatory second argument*, not an optional field read off
-`stats`: a gain score is only meaningful relative to one specific parent, not
-on a shared scale comparable across different parents/search steps, so a
-caller needs to know it's holding a `GainHeuristic` (`isinstance(heuristic,
-GainHeuristic)`) and supply the parent explicitly; calling
-`FoilGain().score(stats)` with one argument raises `TypeError`.
+**Absolute and relative heuristics.** A heuristic scores a rule within a
+*frame*: by default the whole data, where every rule is compared with the
+universal rule. A heuristic *relative to the parent rule*
+(`relative_to_parent`) takes the parent's covered examples as the frame
+instead -- the parent's class distribution is the prior, and the parent
+is the universal rule of the frame. It takes the parent's `RuleStats` as
+an optional second argument of `score`/`batch_score` (a search passes
+each refinement's parent); without one, it scores in the whole data, like
+an absolute heuristic. Scores relative to different parents have no common
+scale: a search picks the rule it returns by an absolute `selection`, by
+default the last rule it reached (`LastRule`). Wrappers build heuristics
+from others:
+
+- `Relative(base)` -- `base` among the parent's examples: `Relative(WRAcc())`
+  is WRA with the parent's precision as the prior ("adaptive" WRA),
+  `Relative(MEstimate(m))` an m-estimate whose `m` is weighed against the
+  parent's examples. Idempotent; changes nothing for a heuristic that
+  doesn't depend on the frame (`Precision`, `Laplace`).
+- `Inverted(base)` -- `base(N - n, P - p)`: a rule judged by the examples
+  it *excludes*, with the classes exchanged, from the upper right corner of
+  the coverage space (`Inverted(Precision())` is the negative predictive
+  value). The inverted heuristics of Stecher, Janssen & Fürnkranz judge a
+  refinement by what it excludes from its parent: `Relative(Inverted(h))`,
+  `base(N̂ - n, P̂ - p)` among the parent's `P̂` positives and `N̂`
+  negatives -- meant for refining a rule, with a regular heuristic
+  choosing the rule on the refinement path:
+  `SingleRuleLearner(Relative(Inverted(Precision())), selection=Laplace())`.
+  An inverted relative heuristic is relative and inverts within the
+  parent's frame (`Inverted(FoilGain())`, the inverted Foil gain). It warns
+  for a heuristic that ranks rules the same way inverted (`Accuracy`,
+  `WRAcc`, `Correlation`, ...).
+- `WeightedGain(weight, base)` -- `weight(r) * (base(r) - base(r0))`, the
+  gain of `base` over the universal rule `r0` of the frame, weighted by
+  `weight`: over the root in the whole data, over the parent inside
+  `Relative`. `WRAcc` is `WeightedGain(Support(), Precision())`, Foil's
+  gain `Relative(WeightedGain(CoveredPositives(), InformationContent()))`;
+  the m-estimate ranks as one too. A zero weight gains 0. `Gain(base)` is
+  the unweighted one: `Relative(Gain(h))` scores a refinement by how much
+  `h` improved over its parent.
+- `FoilGain` -- Quinlan's information gain, `tp * (log2(tp/(tp+fp)) -
+  log2(parent.tp/(parent.tp+parent.fp)))`: relative to the parent rule, a
+  fast shortcut for the weighted gain above (without a parent, the gain
+  over the universal rule).
+
 `RuleStats.universal(n_pos, n_neg)`/`RuleStats.empty(n_pos, n_neg)` give the
 "covers everyone"/"covers no one" degenerate stats directly from a dataset's
-totals, without needing an actual `Rule` on hand -- the natural parent when
-there's no specific prior refinement to compare against, e.g. for
+totals, without needing an actual `Rule` on hand -- e.g. for
 `RuleHeuristic.plot_isometrics`'s `parent=` argument, below.
 
 How heuristics differ geometrically -- whether their isometrics (curves of
@@ -1369,12 +1394,10 @@ visually distinct from another's (or from an overlaid rule's own
 refinement-path color) when layering several on the same space --
 `cmap` and the shading are dropped automatically when `colors` is given,
 since matplotlib rejects both together. `parent=` fixes the parent `RuleStats` passed to
-a `GainHeuristic`'s `score` across every grid point -- the same value
-throughout, not one per point -- which is what makes a gain-style
-heuristic like `FoilGain` plottable at all here (it otherwise raises
-without one); `RuleStats.universal(space.n_pos,
-space.n_neg)` is the natural choice, reading the result as "gain over
-the rule that covers everyone." Plotting several heuristics' isometrics
+a relative heuristic's `score` across every grid point -- the same value
+throughout, not one per point -- e.g. to draw `FoilGain`'s isometrics for
+a given parent; without it, a relative heuristic is drawn relative to the
+universal rule. Plotting several heuristics' isometrics
 side by side makes their families concrete -- `Precision`/`Laplace` fan
 out from the origin, `WRAcc` is parallel lines, `Correlation` bows into
 hyperbolic curves -- and, empirically, that `Entropy`'s isometrics are
@@ -1458,11 +1481,11 @@ and only does one-vs-rest. Exchanging a component works the same for
 both:
 
 ```python
-from pyrulearn.heuristics import DeltaGain, Laplace
+from pyrulearn.heuristics import Gain, Laplace, Relative
 from pyrulearn.learners.cpar import CPAR, DenseCPAR
 from pyrulearn.learners.seco import AdditiveReweighting, PositiveWeightBelow, WeightedCovering
 
-CPAR(heuristic=DeltaGain(Laplace()), min_gain=0.01)          # grow by Laplace improvement
+CPAR(heuristic=Relative(Gain(Laplace())), min_gain=0.01)    # grow by Laplace improvement
 DenseCPAR(covering=WeightedCovering(AdditiveReweighting(), PositiveWeightBelow(0.05),
                                     max_rounds=None))       # CN2-SD's additive reweighting
 ```
@@ -1719,8 +1742,8 @@ usable with any rule set: `TopKMeanCombiner(heuristic, k)`. `CPAR` is a
 `SeCo` configuration (see *Separate-and-conquer*: the search is
 `GainAscentHillClimbing(min_gain, branch_similarity=gain_similarity)`),
 and each part is a constructor argument: `heuristic=` (a
-`GainHeuristic`, default `FoilGain()`; `DeltaGain(h)` turns any heuristic
-into one), `covering=` (default
+gain over the rule before the condition, default `FoilGain()`;
+`Relative(Gain(h))` makes one from any heuristic), `covering=` (default
 `WeightedCovering(MultiplicativeReweighting(decay),
 PositiveWeightBelow(min_total_weight))`) and `combiner=`. Like every
 SeCo learner it also decomposes the classes differently on request
@@ -2939,9 +2962,14 @@ report and plots are checked in next to the script:
   classes on many-class data; and JRip and J48 on raw numeric data vs.
   discretized.
 - `heuristic_comparison` -- rule learning heuristics inside one plain
-  separate-and-conquer learner, after Janssen & Fürnkranz (2010), and the
-  m-estimate with one m for refinement and another for selection, regular
-  and inverted (Stecher, Janssen & Fürnkranz, 2014).
+  separate-and-conquer learner, after Janssen & Fürnkranz (2010), with
+  the inverted m-estimate for refinement (Stecher, Janssen & Fürnkranz,
+  2014) as a reference.
+- `refinement_heuristics` -- how to judge the refinements of a rule, in
+  the same learner: one m-estimate for refinement and another for
+  selection, absolute and relative, regular and inverted; the same frames
+  for the other heuristics; beam search with relative heuristics; and
+  weighted gains (WRA, Foil gain, Klösgen's), absolute and relative.
 - `seco_learners_comparison` -- CN2, PFoil, PFossil, Pypper and PyLORD
   against JRip and the Java LORD.
 - `representations` -- fit time of the four data representations over

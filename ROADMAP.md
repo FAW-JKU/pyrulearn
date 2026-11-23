@@ -1189,6 +1189,15 @@ Next:
     conditions vs. 2-6), shrinking as the refinement m grows; the
     number of rules is set by the selection m alone. Open: m beyond 32
     for refinement (16 and 32 are about equal).
+  - *Absolute vs. relative* (done): inversion and relativization are
+    separate operations, `Inverted(h)` and `Relative(h)`; Stecher et al.'s
+    heuristics are `Relative(Inverted(h))`, and gains are relative
+    heuristics (`FoilGain`, `Relative(Gain(h))`, `WeightedGain`). The
+    `refinement_heuristics` demo compares the four frames (the absolute
+    inversion is the "first version" above). Open: whether the head of a
+    rule of any class should stay fixed for every relative heuristic (it
+    does now, as it did for gains), and a relative bound for pruning
+    across parents in a beam.
   - *Paper.* Algorithm 1's `FindRules` with the refinements of a round
     collected first, then `R` updated (filtering, `h_s`) and `Q` (stopping),
     then `FilterRules(Q, R, h_r, h_s)`; and the subsection on inverted

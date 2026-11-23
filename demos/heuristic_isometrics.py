@@ -23,22 +23,19 @@ ROC space:
    the total.
 4. Inverted heuristics (`Inverted(h)`, h(N-n, P-p)): `h` evaluated
    from the upper right corner of coverage space, on the examples a rule
-   excludes, with the classes exchanged. In a search the corner is the
-   rule being refined; the plots show the first refinement, from the
-   universal rule. A summary table at the top gives
+   excludes, with the classes exchanged. Relative to the parent rule
+   (`Relative(Inverted(h))`, Stecher et al.'s inverted heuristics) the
+   corner is the rule being refined; the plots show the first
+   refinement, from the universal rule. A summary table at the top gives
    every heuristic's formula, regular and inverted; the section at the
    end shows the regular and the inverted isometrics side by side for
    every heuristic where inversion changes the ranking.
 
 `LengthPenalized` (needs `stats.length`, which defaults to 0 here --
 indistinguishable from its wrapped heuristic on this kind of plot) is
-left out of the heuristic grid for that reason. `FoilGain` (a
-`GainHeuristic`) normally needs a parent `RuleStats` too (meaningless
-for a bare grid point) -- made plottable here via `plot_isometrics`'s
-`parent=` argument, fixed to
-`RuleStats.universal(space.n_pos, space.n_neg)` (the "no rule yet"
-baseline) for every point in the grid, so the plotted quantity is "gain
-over the universal rule" throughout. The main grid's `MEstimate`/
+left out of the heuristic grid for that reason. `FoilGain` is relative
+to the parent rule; without one (as for a bare grid point) it is the
+gain over the universal rule, the plotted quantity throughout. The main grid's `MEstimate`/
 `GHeuristic` instances use `m=20`/`g=30` (not smaller, more typical
 values) since, unlike `Laplace`'s fixed pivot shift, their pivot- and
 slope-changing effects are already visible even at the default space
@@ -64,7 +61,6 @@ from pyrulearn.heuristics import (
     Entropy,
     FBeta,
     FoilGain,
-    GainHeuristic,
     GeneralizedMEstimate,
     GHeuristic,
     Inverted,
@@ -76,7 +72,6 @@ from pyrulearn.heuristics import (
     CoveredNegatives,
     Precision,
     Recall,
-    RuleStats,
     Support,
     WRAcc,
     YoudenJ,
@@ -136,13 +131,13 @@ HEURISTICS = [
      "CN2's significance statistic: how far the covered class distribution is from "
      "the prior. Grows with coverage, in both directions away from the diagonal."),
     ("FoilGain (vs. universal rule)", FoilGain(),
-     "FOIL's information gain, here always relative to the universal rule (a gain "
-     "heuristic needs a parent rule): p * (log2 precision - log2 P/(P+N))."),
+     "FOIL's information gain, here relative to the universal rule (in a search, it is "
+     "relative to the parent rule): p * (log2 precision - log2 P/(P+N))."),
 ]
 
 # formulas for the summary table: name -> (h(p, n), h(N - n, P - p)).
 # "unchanged": the inverted heuristic ranks every rule the same way
-# (`Inverted` warns); "n.a.": it can't be inverted (a gain heuristic).
+# (`Inverted` warns); "n.a.": it can't be inverted.
 # Both are checked against the library in `_formula_table`.
 UNCHANGED, NOT_APPLICABLE = "unchanged", "n.a."
 FORMULAS = {
@@ -168,7 +163,8 @@ FORMULAS = {
     "LikelihoodRatio": ("2 (p ln(p/e_p) + n ln(n/e_n)), e_p = (p + n) P/(P + N), e_n = (p + n) N/(P + N)",
                         "the same for the uncovered examples: N - n and P - p against their expected "
                         "shares of P + N - p - n"),
-    "FoilGain (vs. universal rule)": ("p (log₂ p/(p + n) - log₂ P/(P + N))", NOT_APPLICABLE),
+    "FoilGain (vs. universal rule)": ("p (log₂ p/(p + n) - log₂ P/(P + N))",
+                                      "(N - n)(log₂ (N - n)/(N - n + P - p) - log₂ N/(P + N))"),
 }
 
 
@@ -198,11 +194,8 @@ def plot_heuristic_isometrics(normalized: bool) -> None:
     for name, h, _ in HEURISTICS:
         fig, ax = plt.subplots(figsize=(5, 5))
         space = CoverageSpace(ax=ax, normalized=normalized, title=name)
-        # a GainHeuristic like FoilGain needs a parent RuleStats -- fix
-        # it to the universal rule (the "no rule yet" baseline) so it
-        # becomes plottable at all
-        extra = {"parent": RuleStats.universal(space.n_pos, space.n_neg)} if isinstance(h, GainHeuristic) else {}
-        h.plot_isometrics(space=space, levels=8, **extra)
+        # a relative heuristic like FoilGain: relative to the universal rule
+        h.plot_isometrics(space=space, levels=8)
         fig.tight_layout()
         out_path = os.path.join(PLOTS_DIR, _isometrics_file(name, kind))
         fig.savefig(out_path, dpi=110, bbox_inches="tight")
@@ -394,10 +387,9 @@ def write_report() -> None:
         "heuristic `Inverted(h)` (Stecher, Janssen & Fürnkranz, 2014) evaluates `h` on "
         "what a rule leaves out, with the classes exchanged: h(N - n, P - p), the "
         "excluded negatives counted as positives and the excluded positives as negatives. "
-        "*unchanged*: the inverted heuristic ranks every rule the same way (in a search, it "
-        "only restricts the heuristic to the examples of the rule being refined); *n.a.*: it "
-        "can't be inverted (FOIL's gain needs the parent rule's statistics as well). The "
-        "links lead to the inverted isometrics.\n\n",
+        "*unchanged*: the inverted heuristic ranks every rule the same way (relative to the "
+        "parent rule, inverting it only restricts it to the examples of the rule being "
+        "refined, as `Relative` does). The links lead to the inverted isometrics.\n\n",
         _formula_table(),
         "## Isometrics per heuristic\n\n",
         "Left: coverage space (counts), right: ROC space (rates). `p`/`n`: covered "
@@ -431,12 +423,13 @@ def write_report() -> None:
         "heuristic judges it from the corner the search starts from: inverted Precision's "
         "isometrics all go through (N, P), and it prefers the rule whose excluded examples "
         "are the purest in negatives -- the refinement that removes negatives and keeps "
-        "positives. In a search, the corner is the rule being refined: a refinement "
-        "of a rule covering P̂ positives and N̂ negatives scores h(N̂ - n, P̂ - p), and the "
-        "plots show the first refinement, from the universal rule. "
-        "Stecher, Janssen & Fürnkranz (2014) refine a rule by an inverted "
-        "heuristic and choose the rule on the refinement path by a regular one "
-        "(`SingleRuleLearner(Inverted(Precision()), selection=Laplace())`); the "
+        "positives. Relative to the parent rule (`Relative(Inverted(h))`), the corner is "
+        "the rule being refined: a refinement of a rule covering P̂ positives and N̂ "
+        "negatives scores h(N̂ - n, P̂ - p), and the plots show the first refinement, from "
+        "the universal rule. Stecher, Janssen & Fürnkranz (2014) refine a rule by such a "
+        "relative inverted heuristic and choose the rule on the refinement path by a "
+        "regular one (`SingleRuleLearner(Relative(Inverted(Precision())), "
+        "selection=Laplace())`); the "
         f"[heuristic comparison]({comparison}#m-estimates-for-refinement-and-for-selection) tests "
         "this.\n\n",
         "Left: the regular heuristic, right: the inverted one, both in coverage space "

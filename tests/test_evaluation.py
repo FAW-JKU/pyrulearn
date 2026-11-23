@@ -469,15 +469,10 @@ def test_plot_isometrics_filled_skips_clabel():
     assert len(space.ax.texts) == n_texts_before
 
 
-def test_plot_isometrics_raises_for_foil_gain_without_parent():
-    # FoilGain (a GainHeuristic) needs a parent RuleStats to score
-    # anything -- without a fixed parent= supplied, plot_isometrics has
-    # nothing to pass as the second argument to score(), so this must fail
-    try:
-        FoilGain().plot_isometrics(space=CoverageSpace(n_pos=10, n_neg=10), levels=3)
-        assert False, "expected ValueError"
-    except ValueError:
-        pass
+def test_plot_isometrics_of_foil_gain_without_parent():
+    # without a parent, FoilGain is the gain over the universal rule
+    space = FoilGain().plot_isometrics(space=CoverageSpace(n_pos=10, n_neg=10), levels=3)
+    assert space is not None
 
 
 def test_plot_isometrics_with_parent_makes_foil_gain_plottable():

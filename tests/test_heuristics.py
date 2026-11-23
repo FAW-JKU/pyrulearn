@@ -16,12 +16,13 @@ from pyrulearn.heuristics import (
     CoverageDifference,
     Entropy,
     FBeta,
-    DeltaGain,
     FoilGain,
-    GainHeuristic,
+    Gain,
     GeneralizedMEstimate,
     GHeuristic,
+    InformationContent,
     Laplace,
+    LastRule,
     LEF,
     LengthPenalized,
     MinimalLength,
@@ -35,9 +36,11 @@ from pyrulearn.heuristics import (
     UncoveredPositives,
     Precision,
     Recall,
+    Relative,
     RuleHeuristic,
     RuleStats,
     Support,
+    WeightedGain,
     WRAcc,
     YoudenJ,
 )
@@ -447,22 +450,90 @@ def test_foil_gain():
     assert FoilGain().score(child, RuleStats(tp=0, fp=0, fn=10, tn=10)) == 0.0
 
 
-def test_foil_gain_raises_without_parent():
+def test_foil_gain_without_parent_is_the_gain_over_the_universal_rule():
     stats = RuleStats(tp=6, fp=1, fn=4, tn=9)
-    try:
-        FoilGain().score(stats)
-        assert False, "expected TypeError"
-    except TypeError:
-        pass
+    universal = RuleStats(tp=10, fp=10, fn=0, tn=0)
+    assert FoilGain().score(stats) == pytest.approx(FoilGain().score(stats, universal))
+    assert FoilGain().score(stats) == pytest.approx(6 * (math.log2(6 / 7) - math.log2(10 / 20)))
 
 
-def test_foil_gain_is_a_gain_heuristic():
-    assert isinstance(FoilGain(), GainHeuristic)
+def test_foil_gain_is_relative_to_the_parent():
+    assert FoilGain().relative_to_parent
     assert isinstance(FoilGain(), RuleHeuristic)
-    assert not isinstance(Laplace(), GainHeuristic)
+    assert not Laplace().relative_to_parent
 
 
-def test_gain_heuristic_score_rule_needs_parent_rule():
+def test_foil_gain_is_the_relative_weighted_gain_of_information_content():
+    composed = Relative(WeightedGain(CoveredPositives(), InformationContent()))
+    parent = RuleStats(tp=8, fp=6, fn=4, tn=11)
+    for tp in range(9):
+        for fp in range(7):
+            child = RuleStats(tp=tp, fp=fp, fn=12 - tp, tn=17 - fp)
+            assert FoilGain().score(child, parent) == pytest.approx(composed.score(child, parent), abs=1e-12)
+            assert FoilGain().score(child) == pytest.approx(composed.score(child), abs=1e-12)
+    # Relative is idempotent
+    child = RuleStats(tp=5, fp=1, fn=7, tn=16)
+    assert Relative(FoilGain()).score(child, parent) == pytest.approx(FoilGain().score(child, parent))
+
+
+def test_wracc_is_the_weighted_precision_gain_over_the_universal_rule():
+    composed = WeightedGain(Support(), Precision())
+    for tp in range(13):
+        for fp in range(18):
+            stats = RuleStats(tp=tp, fp=fp, fn=12 - tp, tn=17 - fp)
+            assert WRAcc().score(stats) == pytest.approx(composed.score(stats), abs=1e-12)
+
+
+def test_the_m_estimate_ranks_as_a_weighted_precision_gain():
+    m = 4.0
+    for tp in range(13):
+        for fp in range(18):
+            stats = RuleStats(tp=tp, fp=fp, fn=12 - tp, tn=17 - fp)
+            covered = tp + fp
+            gain = covered / (covered + m) * (Precision().score(stats) - 12 / 29)
+            assert MEstimate(m=m).score(stats) - 12 / 29 == pytest.approx(gain, abs=1e-12)
+
+
+def test_information_content():
+    assert InformationContent().score(RuleStats(tp=2, fp=6, fn=0, tn=0)) == pytest.approx(-2.0)
+    assert InformationContent().score(RuleStats(tp=0, fp=6, fn=0, tn=0)) == -math.inf
+    assert InformationContent().score(RuleStats(tp=4, fp=0, fn=0, tn=0)) == 0.0
+
+
+def test_a_zero_weight_gains_nothing():
+    # a rule covering no positive: weight 0, information content -inf
+    gain = WeightedGain(CoveredPositives(), InformationContent())
+    assert gain.score(RuleStats(tp=0, fp=5, fn=10, tn=5)) == 0.0
+    batch = RuleStats(tp=np.array([0.0, 3.0]), fp=np.array([5.0, 0.0]), fn=np.array([10.0, 7.0]),
+                      tn=np.array([5.0, 10.0]))
+    got = _no_warnings(lambda: gain.batch_score(batch))
+    np.testing.assert_allclose(got, [0.0, 3.0])
+
+
+def test_weighted_gain_needs_absolute_single_valued_parts():
+    with pytest.raises(TypeError, match="Relative"):
+        WeightedGain(CoveredPositives(), Relative(Precision()))
+    with pytest.raises(TypeError, match="LEF"):
+        Gain(LEF(Precision(), MinimalLength()))
+
+
+def test_relative_gain_ranks_the_refinements_of_a_rule_as_relative():
+    parent = RuleStats(tp=8, fp=6, fn=4, tn=11)
+    children = [RuleStats(tp=tp, fp=fp, fn=12 - tp, tn=17 - fp) for tp in range(9) for fp in range(7)]
+    for h in (Laplace(), WRAcc(), MEstimate(m=3)):
+        a = np.array([Relative(Gain(h)).score(c, parent) for c in children])
+        b = np.array([Relative(h).score(c, parent) for c in children])
+        np.testing.assert_allclose(a - b, (a - b)[0], atol=1e-12)   # a constant difference: the parent's score
+        assert Relative(Gain(h)).score(parent, parent) == 0.0
+
+
+def test_last_rule_selects_the_longest_rule():
+    assert LastRule().score(RuleStats(tp=1, fp=1, fn=0, tn=0, length=3)) == 3
+    assert LastRule().bound(RuleStats(tp=1, fp=1, fn=0, tn=0, length=3)) == math.inf
+    assert not LastRule().needs_data
+
+
+def test_score_rule_with_a_parent_rule():
     rep, ds = _two_feature_data()
 
     parent_rule = Rule.from_pos_neg(pos=[1], target="pos", dataspec=ds)  # b=True
@@ -475,23 +546,20 @@ def test_gain_heuristic_score_rule_needs_parent_rule():
     gain = FoilGain().score_rule(child_rule, rep, parent_rule=parent_rule)
     assert gain == FoilGain().score(stats, parent_stats)
     assert gain > 0  # the refinement increased precision (0.571 -> 1.0)
-
-    try:
-        FoilGain().score_rule(child_rule, rep)
-        assert False, "expected ValueError without parent_rule"
-    except ValueError:
-        pass
+    # without a parent rule: over the universal rule
+    assert FoilGain().score_rule(child_rule, rep) == FoilGain().score(stats)
+    # an absolute heuristic ignores the parent rule
+    assert Laplace().score_rule(child_rule, rep, parent_rule=parent_rule) == Laplace().score(stats)
 
 
-def test_delta_gain_is_the_wrapped_heuristics_own_difference():
+def test_gain_is_the_heuristics_own_difference():
     stats = RuleStats(tp=6, fp=1, fn=4, tn=9)
     parent_stats = RuleStats(tp=10, fp=10, fn=0, tn=0)
-    dg = DeltaGain(Laplace())
+    # Laplace doesn't depend on the frame: the improvement over the parent
     expected = Laplace().score(stats) - Laplace().score(parent_stats)
-    assert dg.score(stats, parent_stats) == expected
-    assert isinstance(dg, GainHeuristic)
+    assert Relative(Gain(Laplace())).score(stats, parent_stats) == pytest.approx(expected)
     stats = RuleStats(tp=4, fp=2, fn=6, tn=8)
-    assert DeltaGain(Accuracy()).score(stats, stats) == 0.0
+    assert Relative(Gain(Accuracy())).score(stats, stats) == 0.0
 
 
 # -- batch_score vs. score ---------------------------------------------
@@ -540,7 +608,8 @@ def test_batch_score_agrees_with_score(h):
         np.testing.assert_allclose(got, want, rtol=1e-12, atol=1e-12)
 
 
-@pytest.mark.parametrize("h", [H.FoilGain(), H.DeltaGain(H.Laplace()), H.DeltaGain(H.Entropy())],
+@pytest.mark.parametrize("h", [H.FoilGain(), H.Relative(H.Gain(H.Laplace())), H.Relative(H.Gain(H.Entropy())),
+                               H.Relative(H.WRAcc()), H.Relative(H.MEstimate(m=2.0))],
                          ids=lambda h: repr(h))
 def test_gain_batch_score_agrees_with_score(h):
     batch, single = _grid()
