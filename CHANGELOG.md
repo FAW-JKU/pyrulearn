@@ -3,7 +3,7 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
-## Unreleased
+## 0.7.1 (2026-11-23)
 
 Absolute and relative heuristics: a heuristic is relative to the parent
 rule or not, independently of being inverted, and gains are built from
