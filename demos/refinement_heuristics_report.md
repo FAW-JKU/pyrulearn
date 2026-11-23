@@ -341,18 +341,24 @@ Beam width 1 vs. 5, the m-estimate selecting (m_s in {4, 8, 16}). A beam ranks t
 
 ## Weighted gains
 
-`WeightedGain(weight, base)`: ``weight(r) * (base(r) - base(r0))``, the gain over the universal rule ``r0`` of the frame -- over the root (absolute) or over the parent (relative). `p + n` and precision is WRA, `p` and information content Foil gain, `sqrt(p + n)` and precision Klösgen's quality function. Best selection (m_s in {4, 8, 16}).
+`WeightedGain(weight, base)`: ``weight(r) * (base(r) - base(r0))``, the gain over the universal rule ``r0`` of the frame -- over the root (absolute) or over the parent (relative). The weights are Klösgen's family ``c^a``, with ``c`` the covered examples (`p + n`) or positives (`p`); the base is linear (precision) or logarithmic (information content). `p + n` and precision is WRA, `p` and information content Foil gain, `sqrt(p + n)` and precision Klösgen's quality function, weight 1 ranks as the base itself. Best selection (m_s in {4, 8, 16}).
 
 | weight | base | absolute | relative |
 |---|---|--:|--:|
 | 1 | precision | 80.26% (41.7) | 80.26% (41.7) |
 | 1 | information content | 80.26% (41.7) | 80.26% (41.7) |
+| sqrt(p) | precision | 83.71% (66.3) | 83.34% (47.0) |
+| sqrt(p) | information content | 84.00% (94.9) | 83.92% (52.5) |
 | p | precision | 83.88% (94.8) | 84.16% (60.3) |
 | p | information content | 83.26% (201.9) | 84.04% (49.7) |
-| p + n | precision | 83.23% (247.7) | 84.24% (55.8) |
-| p + n | information content | 82.30% (418.0) | 84.24% (85.8) |
+| p^2 | precision | 83.33% (210.1) | 84.25% (61.8) |
+| p^2 | information content | 83.00% (261.0) | 83.91% (67.1) |
 | sqrt(p + n) | precision | 83.87% (105.1) | 83.80% (51.6) |
 | sqrt(p + n) | information content | 83.42% (310.7) | 83.84% (62.2) |
+| p + n | precision | 83.23% (247.7) | 84.24% (55.8) |
+| p + n | information content | 82.30% (418.0) | 84.24% (85.8) |
+| (p + n)^2 | precision | 82.03% (450.6) | 83.82% (60.8) |
+| (p + n)^2 | information content | 81.91% (476.9) | 83.51% (125.7) |
 
 ## Ranks
 
