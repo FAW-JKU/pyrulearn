@@ -3661,6 +3661,15 @@ class CN2(_ClassCountLaplace, SeCo):
     blocks as defaults, while still accepting every one of them as an
     override.
 
+    Which CN2:
+    - ``CN2().fit(data)`` -- Clark & Boswell's (1991) unordered CN2:
+      one-vs-rest (`ConceptSet`), the Laplace estimate, and micro
+      distribution voting between the classes.
+    - ``CN2(heuristic=Entropy(), filtering=LikelihoodRatioTest()).fit(
+      data, model=DecisionList)`` -- Clark & Niblett's (1989) original:
+      a decision list, entropy over the whole class distribution, and the
+      significance test over all classes (see "Ordered CN2" below).
+
     Two choices define CN2 here:
     - **search heuristic**: `Laplace` -- Clark & Boswell's replacement
       for original CN2's entropy-based one, with their number of classes

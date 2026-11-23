@@ -888,7 +888,9 @@ class WRAcc(RuleHeuristic):
     """Weighted relative accuracy: coverage-weighted improvement over
     the prior positive rate. Isometrics: parallel lines -- unlike the
     precision family, `WRAcc` can only ever prefer points on coverage
-    space's convex hull."""
+    space's convex hull. These lines are parallel to the diagonal, and on
+    a fixed dataset `WRAcc` ranks rules exactly as `YoudenJ` (it is
+    ``n_pos * n_neg / total**2`` times tpr - fpr)."""
 
     def score(self, stats: RuleStats) -> float:
         total = stats.n_pos + stats.n_neg
@@ -909,16 +911,17 @@ class WRAcc(RuleHeuristic):
 
 class YoudenJ(RuleHeuristic):
     """Youden's J statistic (Youden, 1950): h = tpr - fpr = tp/n_pos -
-    fp/n_neg -- an alternative to `WRAcc` that trades off *rates* rather
-    than raw coverage-weighted counts: where `WRAcc` weights by
-    `covered/total` (so a rule's score shrinks as its raw coverage
-    shrinks, regardless of class balance), this normalizes tp and fp
-    separately by their own class totals, making it the natural
-    quantity in ROC space -- the vertical distance above the
-    random-guess diagonal when the rule is plotted as (FPR, TPR); also
-    known as informedness. Still linear in (tp, fp) for a fixed dataset
-    (n_pos/n_neg are constants), so its isometrics are parallel lines
-    too, just a different slope than `WRAcc`'s.
+    fp/n_neg, also known as informedness (Powers, 2007) -- the natural
+    quantity in ROC space, the vertical distance above the random-guess
+    diagonal when the rule is plotted as (FPR, TPR); the relative cost
+    measure with cost 1/2 (`LinearCostRates(cost_ratio=1.0)`).
+
+    On a fixed dataset it ranks rules exactly as `WRAcc`, which is
+    ``n_pos * n_neg / total**2`` times J: both have the same isometrics,
+    parallel lines of slope n_pos/n_neg in coverage space, i.e., parallel
+    to the diagonal. Only the scale differs, which matters only where
+    scores from different data are compared or combined (e.g., the rules
+    of later covering rounds, whose class totals have shrunk).
     """
 
     def score(self, stats: RuleStats) -> float:
