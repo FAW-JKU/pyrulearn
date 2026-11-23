@@ -37,9 +37,11 @@ Stecher, Janssen & Fürnkranz's inverted heuristics combine both,
    common scale: beam width 1 vs. 5, levels (`Relative(h)`) vs.
    improvements (`Relative(Gain(h))`).
 5. **Weighted gains** -- ``weight(r) * (base(r) - base(r0))``, the gain
-   over the universal rule of the frame (`WeightedGain`), for several
-   weights and bases, absolute and relative: WRA and Foil gain are two
-   of them.
+   over the universal rule of the frame (`WeightedGain`), with Klösgen's
+   weights ``c^a`` (``c`` the covered examples or positives, ``a`` in 0,
+   0.5, 1, 2) and a linear (precision) or logarithmic (information
+   content) base, absolute and relative: WRA and Foil gain are two of
+   them.
 
 Run: `python demos/refinement_heuristics.py` with no arguments is the
 **quick** default (`heuristic_comparison`'s quick datasets, 3-fold,
@@ -272,7 +274,15 @@ def build_beam_learners(selects) -> List[SeCo]:
 
 #: section 5: weights and bases of `WeightedGain`
 def _weights() -> Dict[str, Optional[RuleHeuristic]]:
-    return {"1": None, "p": CoveredPositives(), "p + n": Coverage(), "sqrt(p + n)": Power(Support(), 0.5)}
+    """Klösgen's family of weights, ``c^a`` for a coverage ``c`` -- of
+    the covered examples (``p + n``) or of the covered positives (``p``)
+    -- and ``a`` in 0.5, 1, 2; ``a = 0`` is no weight. Within one frame, a
+    rescaled coverage (`Support` for `Coverage`) ranks alike."""
+    return {
+        "1": None,
+        "sqrt(p)": Power(CoveredPositives(), 0.5), "p": CoveredPositives(), "p^2": Power(CoveredPositives(), 2.0),
+        "sqrt(p + n)": Power(Support(), 0.5), "p + n": Coverage(), "(p + n)^2": Power(Coverage(), 2.0),
+    }
 
 
 def _bases() -> Dict[str, RuleHeuristic]:
@@ -502,8 +512,11 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
         "## Weighted gains\n\n",
         "`WeightedGain(weight, base)`: ``weight(r) * (base(r) - base(r0))``, the gain over the "
         "universal rule ``r0`` of the frame -- over the root (absolute) or over the parent "
-        "(relative). `p + n` and precision is WRA, `p` and information content Foil gain, "
-        "`sqrt(p + n)` and precision Klösgen's quality function. Best selection (m_s in "
+        "(relative). The weights are Klösgen's family ``c^a``, with ``c`` the covered examples "
+        "(`p + n`) or positives (`p`); the base is linear (precision) or logarithmic "
+        "(information content). `p + n` and precision is WRA, `p` and information content "
+        "Foil gain, `sqrt(p + n)` and precision Klösgen's quality function, weight 1 ranks as "
+        "the base itself. Best selection (m_s in "
         f"{{{', '.join(_m(m) for m in beam_selects)}}}).\n\n",
         "| weight | base | absolute | relative |\n|---|---|--:|--:|\n",
     ]
