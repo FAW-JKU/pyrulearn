@@ -321,9 +321,11 @@ MATRIX_TITLES = (("absolute", "Regular m-estimate"), ("relative inverted", "Inve
 
 
 def _means(results) -> pd.DataFrame:
-    means = results.groupby("learner")[["accuracy", "n_rules", "n_conditions"]].mean(numeric_only=True)
-    means["conds_per_rule"] = means["n_conditions"] / means["n_rules"]
-    return means
+    """Means across every dataset and fold; conditions per rule as in
+    `heuristic_comparison`, the mean of each fold's ratio."""
+    results = results.assign(conds_per_rule=results["n_conditions"] / results["n_rules"])
+    return results.groupby("learner")[["accuracy", "n_rules", "n_conditions", "conds_per_rule"]].mean(
+        numeric_only=True)
 
 
 def _matrix(means, kind: str, measure: str, ms) -> pd.DataFrame:
