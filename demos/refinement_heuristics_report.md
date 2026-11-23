@@ -360,6 +360,21 @@ Beam width 1 vs. 5, the m-estimate selecting (m_s in {4, 8, 16}). A beam ranks t
 | (p + n)^2 | precision | 82.03% (450.6) | 83.82% (60.8) |
 | (p + n)^2 | information content | 81.91% (476.9) | 83.51% (125.7) |
 
+### Paired comparisons
+
+Each gain with its best selection (as above); per dataset the mean accuracy across folds; wins/losses of the second over the first, the mean difference, and the two-sided Wilcoxon signed-rank test across datasets (not corrected for the 8 tests).
+
+| comparison | first | second | datasets | wins/losses | difference | p |
+|---|---|---|--:|--:|--:|--:|
+| WRA vs. a weaker weight | refine gain of precision weighted by p + n, select m=4 | refine gain of precision weighted by sqrt(p + n), select m=4 | 36 | 20/12 | +0.63 | 0.217 |
+| WRA vs. weight p | refine gain of precision weighted by p + n, select m=4 | refine gain of precision weighted by p, select m=8 | 36 | 21/13 | +0.65 | 0.130 |
+| WRA vs. relative WRA | refine gain of precision weighted by p + n, select m=4 | refine Relative(gain of precision weighted by p + n), select m=8 | 36 | 25/10 | +1.01 | 0.023 |
+| relative WRA vs. weight p^2 | refine Relative(gain of precision weighted by p + n), select m=8 | refine Relative(gain of precision weighted by p^2), select m=8 | 36 | 16/18 | +0.01 | 0.713 |
+| Foil gain vs. weight p + n | refine Relative(gain of information content weighted by p), select m=8 | refine Relative(gain of information content weighted by p + n), select m=4 | 36 | 13/21 | +0.20 | 0.898 |
+| Foil gain vs. relative WRA | refine Relative(gain of information content weighted by p), select m=8 | refine Relative(gain of precision weighted by p + n), select m=8 | 36 | 18/11 | +0.20 | 0.239 |
+| absolute Foil gain vs. weight sqrt(p) | refine gain of information content weighted by p, select m=4 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 23/11 | +0.73 | 0.026 |
+| absolute vs. relative Foil gain | refine gain of information content weighted by p, select m=4 | refine Relative(gain of information content weighted by p), select m=8 | 36 | 22/10 | +0.78 | 0.096 |
+
 ## Ranks
 
 Win counts and mean accuracy ranks across datasets among the best selection of each frame of section 2 and of the m-estimate.
