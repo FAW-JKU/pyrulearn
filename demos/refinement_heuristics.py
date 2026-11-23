@@ -294,6 +294,34 @@ def gain_label(frame: str, weight: str, base: str, m_select) -> str:
     return f"refine {'Relative(' + gain + ')' if frame == 'relative' else gain}, select m={_m(m_select)}"
 
 
+#: section 5's paired comparisons: (frame, weight, base) of two gains, named
+GAIN_PAIRS = (
+    (("absolute", "p + n", "precision"), ("absolute", "sqrt(p + n)", "precision"), "WRA vs. a weaker weight"),
+    (("absolute", "p + n", "precision"), ("absolute", "p", "precision"), "WRA vs. weight p"),
+    (("absolute", "p + n", "precision"), ("relative", "p + n", "precision"), "WRA vs. relative WRA"),
+    (("relative", "p + n", "precision"), ("relative", "p^2", "precision"), "relative WRA vs. weight p^2"),
+    (("relative", "p", "information content"), ("relative", "p + n", "information content"),
+     "Foil gain vs. weight p + n"),
+    (("relative", "p", "information content"), ("relative", "p + n", "precision"), "Foil gain vs. relative WRA"),
+    (("absolute", "p", "information content"), ("absolute", "sqrt(p)", "information content"),
+     "absolute Foil gain vs. weight sqrt(p)"),
+    (("absolute", "p", "information content"), ("relative", "p", "information content"),
+     "absolute vs. relative Foil gain"),
+)
+
+
+def _paired(results, a: str, b: str):
+    """Wins and losses of `b` over `a` across datasets (mean accuracy per
+    dataset), and the two-sided Wilcoxon signed-rank test's p-value."""
+    from scipy.stats import wilcoxon
+    means = results[results["learner"].isin([a, b])].groupby(["dataset", "learner"])["accuracy"].mean().unstack()
+    means = means.dropna()
+    diff = means[b] - means[a]
+    wins, losses = int((diff > 1e-12).sum()), int((diff < -1e-12).sum())
+    p_value = wilcoxon(means[b], means[a]).pvalue if wins + losses > 0 else 1.0
+    return len(means), wins, losses, float(diff.mean()), p_value
+
+
 def build_gain_learners(selects) -> List[SeCo]:
     learners = []
     for weight_name, weight in _weights().items():
@@ -528,6 +556,27 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
                     means, [gain_label(frame, weight, base, s) for s in beam_selects])
                 cells.append("n/a" if best is None else f"{format_accuracy(acc)} ({format_mean_count(conds)})")
             lines.append(f"| {weight} | {base} | " + " | ".join(cells) + " |\n")
+    lines.append("\n")
+
+    # significance of the weighted gains' differences
+    lines += [
+        "### Paired comparisons\n\n",
+        "Each gain with its best selection (as above); per dataset the mean accuracy across "
+        "folds; wins/losses of the second over the first, the mean difference, and the "
+        "two-sided Wilcoxon signed-rank test across datasets (not corrected for the "
+        f"{len(GAIN_PAIRS)} tests).\n\n",
+        "| comparison | first | second | datasets | wins/losses | difference | p |\n"
+        "|---|---|---|--:|--:|--:|--:|\n",
+    ]
+    for first, second, name in GAIN_PAIRS:
+        labels = []
+        for frame, weight, base in (first, second):
+            labels.append(_best_over_selection(means, [gain_label(frame, weight, base, s) for s in beam_selects])[2])
+        if None in labels:
+            continue
+        n, wins, losses, diff, p_value = _paired(results, labels[0], labels[1])
+        lines.append(f"| {name} | {labels[0]} | {labels[1]} | {n} | {wins}/{losses} | "
+                     f"{100 * diff:+.2f} | {p_value:.3f} |\n")
     lines.append("\n")
 
     # ranks over the best variants
