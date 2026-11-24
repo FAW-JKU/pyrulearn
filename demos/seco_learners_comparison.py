@@ -26,7 +26,7 @@ handling several classes -- see `LEARNER_NOTES`):
                   grown from seed examples.
 - **PFoil**    -- `PFoil`: FOIL's greedy gain-ascent search with FOIL
                   gain and Quinlan's (1990) encoding-length restriction.
-                  **PFoil (m-estimate)**, **PFoil (correlation)**: the
+                  **PFoil (m-estimate, m=8/16/32)**, **PFoil (correlation)**: the
                   same search without the restriction, a selection
                   heuristic picking the rule of the path, and covering
                   stopping once a rule covers no more positive than
@@ -182,13 +182,13 @@ def foil_selected(selection, random_state: int = RANDOM_STATE) -> SeCo:
                 random_state=random_state)
 
 
-#: the m-estimate of `foil_selected`: the best selection for Foil gain in
-#: `refinement_heuristics` (m_s in {4, 8, 16})
-FOIL_SELECT_M = 8
+#: the m-estimates of `foil_selected`: 8, the best selection for Foil gain in
+#: `refinement_heuristics` (m_s in {4, 8, 16}), and two larger ones
+FOIL_SELECT_MS = (8, 16, 32)
 
 #: the learners configured here: name -> (learner, constructor arguments, fit arguments)
 VARIANTS = {
-    "PFoil (m-estimate)": (foil_selected, {"selection": MEstimate(m=FOIL_SELECT_M)}, {}),
+    **{f"PFoil (m-estimate, m={m})": (foil_selected, {"selection": MEstimate(m=m)}, {}) for m in FOIL_SELECT_MS},
     "PFoil (correlation)": (foil_selected, {"selection": Correlation()}, {}),
     # only the heuristic differs from PFossil: correlation in the coverage space of the parent
     "PFossil (relative)": (PFossil, {"heuristic": Relative(Correlation())}, {}),
@@ -228,7 +228,7 @@ def build_learners():
         Variant("CN2"), Variant("CN2 (beam 1)"), Variant("CN2 (ordered)"), Variant("CN2 (ordered, beam 1)"),
         AQR(random_state=RANDOM_STATE),
         PFoil(random_state=RANDOM_STATE),
-        Variant("PFoil (m-estimate)"), Variant("PFoil (correlation)"),
+        *[Variant(f"PFoil (m-estimate, m={m})") for m in FOIL_SELECT_MS], Variant("PFoil (correlation)"),
         PFossil(random_state=RANDOM_STATE), Variant("PFossil (relative)"),
         Pypper(random_state=RANDOM_STATE),
         Variant("Opus(Laplace)"), Variant("Opus(WRAcc)"),
@@ -259,9 +259,10 @@ LEARNER_NOTES = {
     "PFoil": "FOIL: greedy search that adds the condition with the highest FOIL gain; "
              "Quinlan's encoding-length restriction stops rules that cost more bits "
              "than the examples they explain. Rules for every class.",
-    "PFoil (m-estimate)": "FOIL's search, but without the encoding-length restriction: the rule of the "
-                          f"search path with the highest m-estimate (m = {FOIL_SELECT_M}) is returned; "
-                          "covering stops once a rule covers no more positive than negative examples.",
+    **{f"PFoil (m-estimate, m={m})": "FOIL's search, but without the encoding-length restriction: the rule "
+                                     f"of the search path with the highest m-estimate (m = {m}) is returned; "
+                                     "covering stops once a rule covers no more positive than negative "
+                                     "examples." for m in FOIL_SELECT_MS},
     "PFoil (correlation)": "The same with correlation selecting the rule.",
     "PFossil": "FOSSIL: hill climbing on the correlation between rule and class; rules "
                "below a correlation of 0.3 are dropped. Rules for every class.",
@@ -495,7 +496,9 @@ EXTERNAL = {"Weka:JRip": "Pypper", "JavaLORD": "PyLORD"}
 COLORS = {"CN2": "#1f77b4", "CN2 (beam 1)": "#aec7e8",
           "CN2 (ordered)": "#ff7f0e", "CN2 (ordered, beam 1)": "#ffbb78",
           "Opus(Laplace)": "#2ca02c", "Opus(WRAcc)": "#98df8a",
-          "AQR": "#d62728", "PFoil": "#9467bd", "PFoil (m-estimate)": "#c5b0d5", "PFoil (correlation)": "#7b4173",
+          "AQR": "#d62728", "PFoil": "#9467bd",
+          "PFoil (m-estimate, m=8)": "#c5b0d5", "PFoil (m-estimate, m=16)": "#a55194",
+          "PFoil (m-estimate, m=32)": "#ce6dbd", "PFoil (correlation)": "#7b4173",
           "PFossil": "#8c564b", "PFossil (relative)": "#c49c94", "Pypper": "#e377c2", "PyLORD": "#bcbd22"}
 #: for a learner not in `COLORS`
 SPARE_COLORS = ["#17becf", "#9edae5", "#ff9896", "#c5b0d5"]
