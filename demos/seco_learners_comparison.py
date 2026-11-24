@@ -26,8 +26,15 @@ handling several classes -- see `LEARNER_NOTES`):
                   grown from seed examples.
 - **PFoil**    -- `PFoil`: FOIL's greedy gain-ascent search with FOIL
                   gain and Quinlan's (1990) encoding-length restriction.
+                  **PFoil (m-estimate, m=8/16/32)**, **PFoil (correlation)**: the
+                  same search without the restriction, a selection
+                  heuristic picking the rule of the path, and covering
+                  stopping once a rule covers no more positive than
+                  negative examples (`foil_selected`).
 - **PFossil**  -- `PFossil`: FOSSIL (Fürnkranz 1994), hill climbing on
                   correlation with a 0.3 correlation cutoff.
+                  **PFossil (relative)**: the same with the correlation
+                  in the coverage space of the rule that is refined.
 - **Pypper**   -- `Pypper`: pyrulearn's RIPPER (IREP* grow/prune plus
                   `ReplaceReviseOptimization`).
 - **Opus(Laplace)** -- `pyrulearn.learners.opus.Opus` (after Webb 1995):
@@ -77,15 +84,17 @@ from pyrulearn.experiments.report import (
 )
 from pyrulearn.experiments.runner import run_cv
 from pyrulearn.experiments.stats import critical_difference_diagram, mean_rank, win_counts
-from pyrulearn.heuristics import Entropy, WRAcc
+from pyrulearn.heuristics import Correlation, CoverageDifference, Entropy, FoilGain, MEstimate, Relative, WRAcc
 from pyrulearn.interfaces.lord import JavaLORD
 from pyrulearn.interfaces.weka import WekaJRip
 from pyrulearn.learners import NativeRuleLearner
 from pyrulearn.learners.opus import Opus
 from pyrulearn.learners.pylord import PyLORD
-from pyrulearn.learners.seco import AQR, CN2, PFoil, PFossil, Pypper
+from pyrulearn.learners.seco import (
+    AQR, CN2, GainAscentHillClimbing, PFoil, PFossil, Pypper, SeCo, SingleRuleLearner,
+)
 from pyrulearn.models import DecisionList
-from pyrulearn.pruning import LikelihoodRatioTest
+from pyrulearn.pruning import LikelihoodRatioTest, ThresholdPrePruning
 
 # $WEKA_JAR / $WEKA_JAVA win; else this machine's Windows install, else `java` on the PATH
 _WIN_JAVA = r"C:\Program Files\Weka-3-8-7\jre\jre-25.0.2-full\bin\java.exe"
@@ -161,8 +170,28 @@ def lord_available() -> bool:
 # 5 and both without a limit timed out (300s) on breast-cancer
 OPUS_MAX_CONDITIONS = 3
 
+def foil_selected(selection, random_state: int = RANDOM_STATE) -> SeCo:
+    """`PFoil`'s search -- climb while the Foil gain is positive -- with a
+    selection heuristic that picks the rule of the path to return, in
+    place of the encoding-length restriction; covering stops once a rule
+    covers no more positive than negative examples, as in the heuristic
+    comparisons (`heuristic_comparison`, `refinement_heuristics`)."""
+    single_rule_learner = SingleRuleLearner(heuristic=FoilGain(), search=GainAscentHillClimbing(),
+                                            selection=selection)
+    return SeCo(single_rule_learner, stop_covering=ThresholdPrePruning(CoverageDifference(), 0, operator="<="),
+                random_state=random_state)
+
+
+#: the m-estimates of `foil_selected`: 8, the best selection for Foil gain in
+#: `refinement_heuristics` (m_s in {4, 8, 16}), and two larger ones
+FOIL_SELECT_MS = (8, 16, 32)
+
 #: the learners configured here: name -> (learner, constructor arguments, fit arguments)
 VARIANTS = {
+    **{f"PFoil (m-estimate, m={m})": (foil_selected, {"selection": MEstimate(m=m)}, {}) for m in FOIL_SELECT_MS},
+    "PFoil (correlation)": (foil_selected, {"selection": Correlation()}, {}),
+    # only the heuristic differs from PFossil: correlation in the coverage space of the parent
+    "PFossil (relative)": (PFossil, {"heuristic": Relative(Correlation())}, {}),
     "CN2": (CN2, {}, {}),
     "CN2 (beam 1)": (CN2, {"beam_width": 1}, {}),
     "CN2 (ordered)": (CN2, {"heuristic": Entropy(), "filtering": LikelihoodRatioTest()}, {"model": DecisionList}),
@@ -199,7 +228,8 @@ def build_learners():
         Variant("CN2"), Variant("CN2 (beam 1)"), Variant("CN2 (ordered)"), Variant("CN2 (ordered, beam 1)"),
         AQR(random_state=RANDOM_STATE),
         PFoil(random_state=RANDOM_STATE),
-        PFossil(random_state=RANDOM_STATE),
+        *[Variant(f"PFoil (m-estimate, m={m})") for m in FOIL_SELECT_MS], Variant("PFoil (correlation)"),
+        PFossil(random_state=RANDOM_STATE), Variant("PFossil (relative)"),
         Pypper(random_state=RANDOM_STATE),
         Variant("Opus(Laplace)"), Variant("Opus(WRAcc)"),
         PyLORD(random_state=RANDOM_STATE),
@@ -229,8 +259,16 @@ LEARNER_NOTES = {
     "PFoil": "FOIL: greedy search that adds the condition with the highest FOIL gain; "
              "Quinlan's encoding-length restriction stops rules that cost more bits "
              "than the examples they explain. Rules for every class.",
+    **{f"PFoil (m-estimate, m={m})": "FOIL's search, but without the encoding-length restriction: the rule "
+                                     f"of the search path with the highest m-estimate (m = {m}) is returned; "
+                                     "covering stops once a rule covers no more positive than negative "
+                                     "examples." for m in FOIL_SELECT_MS},
+    "PFoil (correlation)": "The same with correlation selecting the rule.",
     "PFossil": "FOSSIL: hill climbing on the correlation between rule and class; rules "
                "below a correlation of 0.3 are dropped. Rules for every class.",
+    "PFossil (relative)": "The same, but hill climbing on the correlation in the coverage space of the "
+                          "rule that is refined (`Relative(Correlation())`), returning the rule the climb "
+                          "ends at; the 0.3 cutoff still applies to the absolute correlation.",
     "Pypper": "pyrulearn's RIPPER: grow on two thirds of the data, prune on the rest "
               "(IREP*), then optimize the rule set (replace/revise). Rules for the "
               "classes from least to most frequent, the most frequent one as default.",
@@ -458,7 +496,10 @@ EXTERNAL = {"Weka:JRip": "Pypper", "JavaLORD": "PyLORD"}
 COLORS = {"CN2": "#1f77b4", "CN2 (beam 1)": "#aec7e8",
           "CN2 (ordered)": "#ff7f0e", "CN2 (ordered, beam 1)": "#ffbb78",
           "Opus(Laplace)": "#2ca02c", "Opus(WRAcc)": "#98df8a",
-          "AQR": "#d62728", "PFoil": "#9467bd", "PFossil": "#8c564b", "Pypper": "#e377c2", "PyLORD": "#bcbd22"}
+          "AQR": "#d62728", "PFoil": "#9467bd",
+          "PFoil (m-estimate, m=8)": "#c5b0d5", "PFoil (m-estimate, m=16)": "#a55194",
+          "PFoil (m-estimate, m=32)": "#ce6dbd", "PFoil (correlation)": "#7b4173",
+          "PFossil": "#8c564b", "PFossil (relative)": "#c49c94", "Pypper": "#e377c2", "PyLORD": "#bcbd22"}
 #: for a learner not in `COLORS`
 SPARE_COLORS = ["#17becf", "#9edae5", "#ff9896", "#c5b0d5"]
 #: and one marker per learner, so no two share both
