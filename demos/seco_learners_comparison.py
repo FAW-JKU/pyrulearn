@@ -84,7 +84,7 @@ from pyrulearn.experiments.report import (
 )
 from pyrulearn.experiments.runner import run_cv
 from pyrulearn.experiments.stats import critical_difference_diagram, mean_rank, win_counts
-from pyrulearn.heuristics import Correlation, CoverageDifference, Entropy, FoilGain, MEstimate, Relative, WRAcc
+from pyrulearn.heuristics import Correlation, CoverageDifference, Entropy, FoilGain, MEstimate, Adaptive, WRAcc
 from pyrulearn.interfaces.lord import JavaLORD
 from pyrulearn.interfaces.weka import WekaJRip
 from pyrulearn.learners import NativeRuleLearner
@@ -191,7 +191,7 @@ VARIANTS = {
     **{f"PFoil (m-estimate, m={m})": (foil_selected, {"selection": MEstimate(m=m)}, {}) for m in FOIL_SELECT_MS},
     "PFoil (correlation)": (foil_selected, {"selection": Correlation()}, {}),
     # only the heuristic differs from PFossil: correlation in the coverage space of the parent
-    "PFossil (relative)": (PFossil, {"heuristic": Relative(Correlation())}, {}),
+    "PFossil (relative)": (PFossil, {"heuristic": Adaptive(Correlation())}, {}),
     "CN2": (CN2, {}, {}),
     "CN2 (beam 1)": (CN2, {"beam_width": 1}, {}),
     "CN2 (ordered)": (CN2, {"heuristic": Entropy(), "filtering": LikelihoodRatioTest()}, {"model": DecisionList}),

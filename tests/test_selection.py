@@ -1,6 +1,6 @@
-"""Inverted and relative heuristics and separate refinement / selection
-heuristics: `pyrulearn.heuristics.Inverted` and `Relative` (Stecher et
-al.'s inverted heuristics are `Relative(Inverted(h))`), and `selection=`
+"""Inverted and adaptive heuristics and separate refinement / selection
+heuristics: `pyrulearn.heuristics.Inverted` and `Adaptive` (Stecher et
+al.'s inverted heuristics are `Adaptive(Inverted(h))`), and `selection=`
 in the searches and `SingleRuleLearner` (the heuristic refines, the
 selection picks the rule that is returned)."""
 
@@ -14,7 +14,7 @@ from pyrulearn.data import DataSpec, HorizontalBitmapRepresentation
 from pyrulearn.heuristics import (
     LEF, Accuracy, ChiSquare, Correlation, CoveredPositives, Entropy, FBeta, FoilGain, GHeuristic, InformationContent,
     Inverted, Laplace, LastRule, LengthPenalized, LikelihoodRatio, LinearCost, MEstimate, MinimalLength, Precision,
-    Recall, Relative, RuleStats, WeightedGain, WRAcc, YoudenJ,
+    Recall, Adaptive, Relative, RuleStats, WeightedGain, WRAcc, YoudenJ,
 )
 from pyrulearn.learners.seco import (
     BeamSearch, BranchAndBoundSearch, EmptyRuleAllFeatures, GainAscentHillClimbing, HeadPerRefinement, HillClimbing,
@@ -37,7 +37,7 @@ def _quiet(heuristic):
 def _stecher(heuristic):
     """Stecher, Janssen and Fuernkranz's inverted heuristic: inverted
     within the parent rule's coverage."""
-    return Relative(_quiet(heuristic))
+    return Adaptive(_quiet(heuristic))
 
 
 def _noisy(n=400, d=8, seed=3):
@@ -63,7 +63,7 @@ def test_inverted_precision_is_the_share_of_negatives_among_the_excluded_example
     assert Inverted(Precision()).score(RuleStats(tp=5, fp=0, fn=5, tn=10)) == pytest.approx(10 / 15)
 
 
-def test_inverted_alone_is_absolute():
+def test_inverted_alone_is_static():
     parent = RuleStats(tp=8, fp=6, fn=4, tn=11, length=1)
     child = RuleStats(tp=6, fp=2, fn=6, tn=15, length=2)
     assert not Inverted(Precision()).relative_to_parent
@@ -71,7 +71,7 @@ def test_inverted_alone_is_absolute():
     assert Inverted(Precision()).score(child, parent) == Inverted(Precision()).score(child) == pytest.approx(15 / 21)
 
 
-@pytest.mark.parametrize("stecher", [lambda h: Relative(Inverted(h)), lambda h: Inverted(Relative(h))])
+@pytest.mark.parametrize("stecher", [lambda h: Adaptive(Inverted(h)), lambda h: Inverted(Adaptive(h))])
 def test_relative_inverted_is_relative_to_the_parent_rule(stecher):
     # the parent covers 8 positives and 6 negatives (of P = 12, N = 17); the refinement keeps 6 and 2:
     # it excludes 2 positives and 4 negatives of the parent's
@@ -98,12 +98,21 @@ def test_relative_is_the_heuristic_on_the_parents_examples():
     child = RuleStats(tp=6, fp=2, fn=6, tn=15, length=2)
     within = RuleStats(tp=6, fp=2, fn=2, tn=4, length=2)
     for h in (WRAcc(), MEstimate(m=2), Precision(), Correlation()):
-        assert Relative(h).score(child, parent) == pytest.approx(h.score(within))
-        assert Relative(h).score(child) == pytest.approx(h.score(child))
+        assert Adaptive(h).score(child, parent) == pytest.approx(h.score(within))
+        assert Adaptive(h).score(child) == pytest.approx(h.score(child))
         # idempotent
-        assert Relative(Relative(h)).score(child, parent) == pytest.approx(Relative(h).score(child, parent))
+        assert Adaptive(Adaptive(h)).score(child, parent) == pytest.approx(Adaptive(h).score(child, parent))
     # adaptive WRA is a coverage-weighted precision gain over the parent
-    assert Relative(WRAcc()).score(child, parent) == pytest.approx(8 / 14 * (6 / 8 - 8 / 14))
+    assert Adaptive(WRAcc()).score(child, parent) == pytest.approx(8 / 14 * (6 / 8 - 8 / 14))
+
+
+def test_relative_is_a_deprecated_alias_of_adaptive():
+    parent = RuleStats(tp=8, fp=6, fn=4, tn=11, length=1)
+    child = RuleStats(tp=6, fp=2, fn=6, tn=15, length=2)
+    with pytest.warns(DeprecationWarning, match="Adaptive"):
+        old = Relative(WRAcc())
+    assert isinstance(old, Adaptive)
+    assert old.score(child, parent) == pytest.approx(Adaptive(WRAcc()).score(child, parent))
 
 
 def test_a_refinement_excluding_nothing_scores_the_prior():
@@ -118,7 +127,7 @@ def test_a_wrapper_passes_the_parent_on(wrapper):
     wrapped = wrapper(_stecher(Precision()))
     assert wrapped.relative_to_parent and not wrapper(Precision()).relative_to_parent
     assert wrapped.score(child, parent) == wrapper(Precision()).score(RuleStats(tp=4, fp=2, fn=2, tn=6, length=2))
-    # a wrapper of a heuristic that isn't relative ignores a parent
+    # a wrapper of a heuristic that isn't adaptive ignores a parent
     assert wrapper(Precision()).score(child, parent) == wrapper(Precision()).score(child)
 
 
@@ -177,10 +186,10 @@ def test_a_class_neutral_heuristic_has_no_inverted_class_distribution_score(heur
 
 
 def test_an_inverted_relative_heuristic_inverts_within_the_parents_frame():
-    # the inverted Foil gain (Mooney's CNF learner): relative, like FoilGain
+    # the inverted Foil gain (Mooney's CNF learner): adaptive, like FoilGain
     inverted = Inverted(FoilGain())
     assert inverted.relative_to_parent
-    composed = Relative(Inverted(WeightedGain(CoveredPositives(), InformationContent())))
+    composed = Adaptive(Inverted(WeightedGain(CoveredPositives(), InformationContent())))
     parent = RuleStats(tp=8, fp=6, fn=4, tn=11, length=1)
     for tp in range(9):
         for fp in range(7):
@@ -305,7 +314,8 @@ def test_a_beam_of_one_follows_the_hill_climbing_walk(heuristic):
 
 
 def test_each_step_of_the_walk_takes_the_condition_best_relative_to_the_rule():
-    from pyrulearn.learners.seco import HeuristicObjective, live_open_children, handle_for, parent_closure,         materialize_child
+    from pyrulearn.learners.seco import materialize_child, parent_closure
+    from pyrulearn.objectives import HeuristicObjective, handle_for, live_open_children
     data = _noisy()
     refine = _stecher(MEstimate(m=2))
     end = _search(HillClimbing(stop_at_local_optimum=False), data, refine)

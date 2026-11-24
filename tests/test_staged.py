@@ -5,7 +5,7 @@ boosters (`Slipper`, `ENDER`, `Boomer`)."""
 import numpy as np
 import pytest
 
-from pyrulearn.learners.adaboost import AdaBoost
+from pyrulearn.learners.boosting import AdaBoost
 from pyrulearn.learners.bagging import Bagging
 from pyrulearn.learners.boosting import ENDER, Boomer, Slipper
 from pyrulearn.learners.multiclass import OneVsRest

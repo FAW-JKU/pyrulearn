@@ -206,7 +206,7 @@ class DataRepresentation(ABC):
         `feature_indices`: the counts of `handle` refined by each feature,
         and whether that refinement drops no covered row with a nonzero
         weight. What every rule search counts a node's children with
-        (`pyrulearn.learners.seco.count_open_children`); each
+        (`pyrulearn.objectives.count_open_children`); each
         representation batches it as its storage allows."""
         raise NotImplementedError
 
@@ -509,7 +509,7 @@ class HorizontalBitmapRepresentation(DataRepresentation):
         multiply, the way `pyrulearn.learners.boosting.DenseENDER`'s `_grow`
         scores every candidate feature at once (``(t * c).T @ Xf``)
         instead of counting one at a time. What
-        `pyrulearn.learners.seco.count_open_children` -- and so every
+        `pyrulearn.objectives.count_open_children` -- and so every
         rule search -- counts with on this representation.
 
         Works on the covered rows of the open columns only (uncovered

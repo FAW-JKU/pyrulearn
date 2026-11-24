@@ -6,7 +6,7 @@ from pyrulearn.combiners import TopKMeanCombiner
 from pyrulearn.data.discretization import TreeDiscretizer
 from pyrulearn.data import HorizontalBitmapRepresentation, DataSpec, NListRepresentation, SparseDataRepresentation
 from pyrulearn.data.io import binarize, build_dataspec
-from pyrulearn.heuristics import CoveredPositives, Gain, GeneralizedMEstimate, Laplace, Relative
+from pyrulearn.heuristics import CoveredPositives, Gain, GeneralizedMEstimate, Laplace, Adaptive
 from pyrulearn.learners.cpar import CPAR, DenseCPAR
 from pyrulearn.learners.seco import (
     AdaBoostReweighting, AdditiveReweighting, PositiveWeightBelow, RemovalCovering, WeightedCovering,
@@ -119,7 +119,7 @@ def test_cpar_rejects_bad_arguments(cls):
     with pytest.raises(ValueError):
         cls(gain_similarity=0.0)
     with pytest.raises(ValueError, match="gain over the rule"):
-        cls(heuristic=Laplace())                       # not a gain: wrap it in Relative(Gain(...))
+        cls(heuristic=Laplace())                       # not a gain: wrap it in Adaptive(Gain(...))
     with pytest.raises(ValueError, match="rule weights"):
         cls(covering=WeightedCovering(AdaBoostReweighting()))
     one = HorizontalBitmapRepresentation(DataSpec(["a"]), np.ones((3, 1), bool), np.array(["x"] * 3))
@@ -160,7 +160,7 @@ def test_cpar_and_dense_cpar_learn_the_same_model(make):
 
 
 @pytest.mark.parametrize("params", [
-    dict(heuristic=Relative(Gain(Laplace())), min_gain=0.01),
+    dict(heuristic=Adaptive(Gain(Laplace())), min_gain=0.01),
     dict(covering=WeightedCovering(AdditiveReweighting(), PositiveWeightBelow(0.2), max_rounds=None)),
     dict(covering=RemovalCovering()),
     dict(combiner=TopKMeanCombiner(Laplace(), k=2)),

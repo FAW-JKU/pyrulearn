@@ -97,6 +97,7 @@ from .heuristics import (
     MEstimate,
     Precision,
     Recall,
+    Adaptive,
     Relative,
     RuleHeuristic,
     RuleStats,
@@ -160,7 +161,7 @@ __all__ = [
     "WRAcc", "YoudenJ",
     "Accuracy", "CoverageDifference", "Support", "Coverage",
     "LinearCost", "LinearCostRates", "LengthPenalized", "MinimalLength", "LastRule", "InformationContent", "FoilGain", "Gain", "WeightedGain", "Correlation", "Entropy", "LikelihoodRatio", "ChiSquare",
-    "LEF", "Inverted", "Relative",
+    "LEF", "Inverted", "Adaptive", "Relative",
 ]
 __version__ = "0.7.1"
 

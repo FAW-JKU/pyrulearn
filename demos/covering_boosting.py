@@ -94,9 +94,9 @@ from pyrulearn.experiments.report import (
 from pyrulearn.experiments.runner import run_cv
 from pyrulearn.experiments.stats import mean_rank
 from pyrulearn.heuristics import Laplace, MEstimate, WRAcc
-from pyrulearn.learners.boosting import Boomer, ENDER, ExponentialLoss, Newton, Slipper
+from pyrulearn.learners.boosting import LRI, Boomer, ENDER, Newton, Slipper
 from pyrulearn.learners.cpar import CPAR
-from pyrulearn.learners.lri import LRI
+from pyrulearn.objectives.losses import ExponentialLoss
 from pyrulearn.learners.seco import (
     AdditiveReweighting, BeamSearch, CoveredAtLeast, LRIReweighting,
     MultiplicativeReweighting, RemovalCovering, Rounds, SeCo, SingleRuleLearner,

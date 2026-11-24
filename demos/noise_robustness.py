@@ -40,10 +40,10 @@ from pyrulearn.experiments.catalog import Catalog
 from pyrulearn.experiments.report import format_accuracy, format_mean_count, render_results_table, \
     render_setup_section
 from pyrulearn.experiments.runner import run_cv
-from pyrulearn.learners.adaboost import AdaBoost
 from pyrulearn.learners.bagging import Bagging
 from pyrulearn.learners.base import NativeRuleLearner
-from pyrulearn.learners.boosting import ENDER, Boomer, ExponentialLoss, Slipper
+from pyrulearn.learners.boosting import ENDER, AdaBoost, Boomer, Slipper
+from pyrulearn.objectives.losses import ExponentialLoss
 from pyrulearn.learners.multiclass import OneVsRest
 from pyrulearn.learners.pylord import PyLORD
 from pyrulearn.learners.seco import CN2, PFoil, PFossil, Pypper

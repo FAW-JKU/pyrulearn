@@ -163,7 +163,7 @@ def test_unit_weights_learn_the_same_decision_list():
 
 
 def test_a_gain_heuristic_chooses_the_head_once():
-    from pyrulearn.learners.seco import HeadObjective, handle_for
+    from pyrulearn.objectives import HeadObjective, handle_for
     from pyrulearn.rule import Rule
     rep, _ = _three_classes()
     objective = HeadObjective(FoilGain())

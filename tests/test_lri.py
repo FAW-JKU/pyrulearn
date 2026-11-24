@@ -3,7 +3,8 @@ import pytest
 
 from pyrulearn.data import HorizontalBitmapRepresentation, DataSpec
 from pyrulearn.data import NListRepresentation, SparseDataRepresentation
-from pyrulearn.learners.lri import LRI, DenseLRI, LRIError
+from pyrulearn.learners.boosting import LRI, DenseLRI
+from pyrulearn.objectives.losses import LRIError
 from pyrulearn.learners.seco import (
     BeamSearch, CoveringState, EmptyRuleAllFeatures, HillClimbing, LRIReweighting,
 )
@@ -189,7 +190,7 @@ def test_lri_error_is_the_weighted_error_with_the_papers_adaptive_k():
     y = np.array(["p", "p", "n", "n", "n"])
     data = HorizontalBitmapRepresentation(DataSpec(["a", "b", "c"]), X, y)
     obj = LRIError()
-    from pyrulearn.learners.seco import handle_for
+    from pyrulearn.objectives import handle_for
     rule = EmptyRuleAllFeatures().initial_candidates(data, "p")[0][0]
     handle = handle_for(data, rule, None)
     root = obj.rule_stats(data, "p", rule, handle)

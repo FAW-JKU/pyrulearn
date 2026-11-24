@@ -21,24 +21,46 @@ single-label). `ORB` (optimal rule boosting, Boley et al., SDM 2021)
 boosts rules that maximize the XGBoost-style gain (`XGBGain`, an
 `Objective`), found by any rule search -- by default branch and bound,
 the optimal rule; `DenseORB` is its dense-matrix specialization.
+
+The losses (`BoostingLoss`, `MarginLoss` and their subclasses) and
+`XGBGain` live in `pyrulearn.objectives.losses` and are re-exported
+here.
+
+`LRI` (Lightweight Rule Induction, Weiss & Indurkhya, ICML 2000) and its
+dense-matrix specialization `DenseLRI` reweight the examples by the
+cumulative errors of the rules so far, like boosting, but learn
+unweighted DNF rules that vote (see `LRI`). `AdaBoost` (SAMME) boosts
+whole models of any rule learner instead of single rules, and its
+members vote with weights (see `AdaBoost`). Both used to have modules of
+their own, `pyrulearn.learners.lri` and `pyrulearn.learners.adaboost`,
+which still re-export them.
 """
 
 from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass
+from typing import Any, Dict, FrozenSet, List, Optional, Sequence, Set, Tuple, Union
 
 import numpy as np
 
-from ..data import HorizontalBitmapRepresentation
-from ..heuristics import SlipperZ
-from ..models import LinearRuleModel, annotate_rules
+from ..data import DataRepresentation, HorizontalBitmapRepresentation
+from ..heuristics import RuleHeuristic, RuleStats, SlipperZ
+from ..models import (
+    ConceptModel, EnsembleModel, LinearRuleModel, MajorityClass, RuleModel, annotate_default_rule, annotate_rules,
+)
+from ..objectives import count_open_children, stats_from_handle
+from ..objectives.losses import (  # noqa: F401  (moved there; re-exported for compatibility)
+    BoostingLoss, ExponentialLoss, LogisticLoss, LogisticMarginLoss, LRIError, MarginLoss, SigmoidLoss,
+    SquaredMarginLoss, XGBGain,
+)
 from ..rule import Rule, WeightedRule
 from .base import DEFAULT_MAX_AUTO_CONVERT_CELLS, NativeRuleLearner, produces
 from .seco import (
-    AdaBoostReweighting, BeamSearch, CoveringState, EmptyRuleAllFeatures, GrowPruneSplit,
-    HillClimbing, RuleSearch, ValueSumObjective, materialize_child, parent_closure,
+    AdaBoostReweighting, BeamSearch, CoveringState, EmptyRuleAllFeatures, FeatureSubset, GrowPruneSplit,
+    HillClimbing, LRIReweighting, Reweighting, RuleSearch, SearchSpaceInit, SingleRuleLearner,
+    WeightedCovering, materialize_child, parent_closure,
 )
 
 
@@ -216,140 +238,6 @@ def _objective(w: np.ndarray, covered: np.ndarray, positive: np.ndarray) -> floa
 
 
 # ================================================================ ENDER ===
-
-class BoostingLoss(ABC):
-    """A loss for `ENDER`. The model keeps one score per class and example,
-    ``F`` (``n x K``); a rule votes for one class ``k`` by adding its
-    weight ``alpha`` to that class's scores on the rows it covers.
-
-    - `values` -- the per-example loss (times the example weights ``d``);
-      `value` its total;
-    - `derivatives` -- per example and class, the first and second
-      derivative of the loss with respect to such a vote at ``alpha = 0``,
-      times ``d``;
-    - `response` -- a rule's weight from the sums of those derivatives
-      over the rows it covers (default: the Newton step ``-g / h``).
-
-    ``Y`` is the one-hot class matrix."""
-
-    #: whether the loss handles more than two classes
-    multiclass: bool = True
-    #: whether its second derivative is usable for Newton steps (convex)
-    convex: bool = True
-    #: whether `response` is a Newton step, improvable by iterating
-    #: (the default rule is fitted by iterating it)
-    iterative_response: bool = True
-
-    @abstractmethod
-    def values(self, F: np.ndarray, Y: np.ndarray, d: np.ndarray) -> np.ndarray:
-        raise NotImplementedError
-
-    def value(self, F: np.ndarray, Y: np.ndarray, d: np.ndarray) -> float:
-        return float(self.values(F, Y, d).sum())
-
-    @abstractmethod
-    def derivatives(self, F: np.ndarray, Y: np.ndarray, d: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        raise NotImplementedError
-
-    def response(self, g: float, h: float) -> float:
-        return -g / h if h > 0 else 0.0
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}()"
-
-
-def _softmax(F: np.ndarray) -> np.ndarray:
-    e = np.exp(F - F.max(axis=1, keepdims=True))
-    return e / e.sum(axis=1, keepdims=True)
-
-
-class LogisticLoss(BoostingLoss):
-    """The multinomial negative log-likelihood, ``log sum_k exp(F_k) -
-    F_y`` (MLRules; for two classes the logit loss). A vote for class
-    ``k``: first derivative ``p_k - [y = k]``, second ``p_k (1 - p_k)``,
-    with ``p`` the softmax of the scores. The rule weight is a Newton
-    step (the paper's Eq. 15)."""
-
-    def values(self, F, Y, d):
-        m = F.max(axis=1)
-        lse = m + np.log(np.exp(F - m[:, None]).sum(axis=1))
-        return d * (lse - (F * Y).sum(axis=1))
-
-    def derivatives(self, F, Y, d):
-        P = _softmax(F)
-        return d[:, None] * (P - Y), d[:, None] * P * (1.0 - P)
-
-
-def _binary_margin(F: np.ndarray, Y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """``y`` (``+1`` for the second class) and ``f = F_1 - F_0``."""
-    return np.where(Y[:, 1] > 0, 1.0, -1.0), F[:, 1] - F[:, 0]
-
-
-class ExponentialLoss(BoostingLoss):
-    """AdaBoost's exponential loss ``exp(-y f)`` for two classes, with
-    ``f = F_1 - F_0`` and ``y = +1`` for the second class, ``-1`` for the
-    first. A vote for a class moves ``f`` towards it; with ``w = exp(-y
-    f)``, the first derivative is ``-w`` on that class's examples and
-    ``+w`` on the others, the second ``w``. The rule weight is the exact
-    minimizer ``1/2 ln((W+ + eps) / (W- + eps))`` (the paper's Eq. 14; ``W+``
-    / ``W-`` the weights of the covered examples of the voted / the other
-    class), smoothed as in Slipper (`eps`: half an example's average
-    weight) so that a pure rule doesn't get an infinite weight."""
-
-    multiclass = False
-    iterative_response = False
-
-    def __init__(self):
-        self.eps = 0.5
-
-    def values(self, F, Y, d):
-        y, f = _binary_margin(F, Y)
-        return d * np.exp(-y * f)
-
-    def derivatives(self, F, Y, d):
-        y, f = _binary_margin(F, Y)
-        w = d * np.exp(-y * f)
-        self.eps = 0.5 * float(w.mean())
-        return np.stack([y * w, -y * w], axis=1), np.stack([w, w], axis=1)
-
-    def response(self, g, h):
-        w_pos, w_neg = (h - g) / 2.0, (h + g) / 2.0            # g = W- - W+, h = W+ + W-
-        return 0.5 * math.log((max(w_pos, 0.0) + self.eps) / (max(w_neg, 0.0) + self.eps))
-
-
-class SigmoidLoss(BoostingLoss):
-    """The sigmoid loss ``1 / (1 + exp(y f))`` for two classes (``f`` as in
-    `ExponentialLoss`): a smooth approximation of the 0-1 loss, bounded,
-    and so less sensitive to outliers, but not convex -- so no Newton
-    steps: a rule's weight is the constant step `beta` (default 0.2; the
-    paper uses the same value as `ConstantStep`'s), and the Newton
-    criterion is refused."""
-
-    multiclass = False
-    convex = False
-    iterative_response = False
-
-    def __init__(self, beta: float = 0.2):
-        if beta <= 0:
-            raise ValueError(f"beta must be positive, got {beta}")
-        self.beta = beta
-
-    def __repr__(self) -> str:
-        return f"SigmoidLoss(beta={self.beta!r})"
-
-    def values(self, F, Y, d):
-        y, f = _binary_margin(F, Y)
-        return d / (1.0 + np.exp(y * f))
-
-    def derivatives(self, F, Y, d):
-        y, f = _binary_margin(F, Y)
-        L = 1.0 / (1.0 + np.exp(y * f))
-        slope = d * L * (1.0 - L)                                # -dL/d(y f)
-        curvature = d * L * (1.0 - L) * (1.0 - 2.0 * L)
-        return np.stack([y * slope, -y * slope], axis=1), np.stack([curvature, curvature], axis=1)
-
-    def response(self, g, h):
-        return self.beta
 
 
 class ImpurityCriterion(ABC):
@@ -918,109 +806,6 @@ class DenseBoomer(DenseENDER):
 
 # ================================================== optimal rule boosting ===
 
-class XGBGain(ValueSumObjective):
-    """Optimal rule boosting's objective (Boley et al. 2021) as an
-    `Objective`: the XGBoost-style gain of a rule that covers the rows
-    ``Q``,
-
-        (sum_{i in Q} g_i)**2 / (reg + sum_{i in Q} h_i)
-
-    for one boosting round's per-row loss derivatives ``g``/``h`` (row
-    weights already multiplied in). It is the loss reduction of the
-    rule's best weight ``w = -sum g / (reg + sum h)`` under the
-    second-order approximation of the loss.
-
-    `sign` picks which rules count: ``None`` (default) both directions --
-    the objective is symmetric, and the weight's sign decides the class
-    afterwards (realkd's search); ``+1`` only rules that raise the scores
-    (``sum g < 0``, for the class the scores favor), ``-1`` only rules that
-    lower them. The empty rule scores ``-inf``: it isn't a rule this
-    search looks for (a boosting learner's intercept is a separate step),
-    so a greedy search always takes a first condition.
-
-    Bounds, for any subset of a rule's covered rows (what a refinement can
-    cover): from the sums, ``max(G+**2, G-**2) / reg`` -- ``G+``/``G-`` the
-    sums of the positive/negative ``g`` -- infinite for ``reg = 0``; and,
-    from the covered rows themselves (`exact_bound`), the paper's bound:
-    the best prefix or suffix of the covered rows sorted by ``g/h``."""
-
-    def __init__(self, g: np.ndarray, h: np.ndarray, reg: float = 1.0, sign: Optional[int] = None):
-        if sign not in (None, 1, -1):
-            raise ValueError(f"sign must be None, 1 or -1, got {sign!r}")
-        self.g = np.asarray(g, dtype=float)
-        self.h = np.asarray(h, dtype=float)
-        self.reg = float(reg)
-        self.sign = sign
-        with np.errstate(divide="ignore", invalid="ignore"):
-            ratio = np.where(self.h > 0, self.g / self.h, np.sign(self.g) * np.inf)
-        order = np.argsort(-ratio, kind="stable")              # rows by g/h, descending
-        self._rank = np.empty(len(self.g), dtype=np.int64)
-        self._rank[order] = np.arange(len(self.g))
-
-    def columns(self) -> np.ndarray:
-        return np.column_stack([self.g, self.h, np.maximum(self.g, 0.0), np.minimum(self.g, 0.0)])
-
-    def _gain(self, G, H):
-        if self.sign == 1:
-            G = np.minimum(G, 0.0)
-        elif self.sign == -1:
-            G = np.maximum(G, 0.0)
-        with np.errstate(divide="ignore", invalid="ignore"):
-            return G ** 2 / (self.reg + H)
-
-    def score_sums(self, sums: np.ndarray, length: Any) -> np.ndarray:
-        gain = np.asarray(self._gain(sums[0], sums[1]), dtype=float)
-        return np.where(np.asarray(length) == 0, -np.inf, gain)
-
-    def bound_sums(self, sums: np.ndarray) -> np.ndarray:
-        g_pos, g_neg = sums[2], sums[3]
-        top = (np.maximum(g_pos ** 2, g_neg ** 2) if self.sign is None
-               else g_neg ** 2 if self.sign == 1 else g_pos ** 2)
-        with np.errstate(divide="ignore", invalid="ignore"):
-            return np.where(top == 0, 0.0, top / self.reg)
-
-    def exact_bound(self, data, handle) -> float:
-        idx = np.flatnonzero(data.cover_rows(handle))
-        if idx.size == 0:
-            return 0.0
-        idx = idx[np.argsort(self._rank[idx], kind="stable")]
-        gq, hq = self.g[idx], self.h[idx]
-        best = -math.inf
-        if self.sign in (None, -1):                            # largest g/h first: sum g > 0
-            best = max(best, float(np.max(self._gain(np.cumsum(gq), np.cumsum(hq)))))
-        if self.sign in (None, 1):                             # smallest g/h first: sum g < 0
-            best = max(best, float(np.max(self._gain(np.cumsum(gq[::-1]), np.cumsum(hq[::-1])))))
-        return best
-
-
-class MarginLoss(ABC):
-    """A loss for `ORB`/`DenseORB`: binary labels ``y = +-1`` and one score
-    ``s`` per example, as in `realkd`. `derivatives` gives the per-example
-    first and second derivatives ``g``/``h`` with respect to ``s`` --
-    what `XGBGain` scores rules with."""
-
-    @abstractmethod
-    def derivatives(self, y: np.ndarray, s: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        raise NotImplementedError
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}()"
-
-
-class LogisticMarginLoss(MarginLoss):
-    """``log(1 + exp(-y s))`` -- realkd's ``"logistic"`` loss."""
-
-    def derivatives(self, y, s):
-        sig = 1.0 / (1.0 + np.exp(y * s))                       # sigmoid(-y s)
-        return -y * sig, sig * (1.0 - sig)
-
-
-class SquaredMarginLoss(MarginLoss):
-    """``(y - s)**2`` -- realkd's ``"squared"`` loss."""
-
-    def derivatives(self, y, s):
-        return 2.0 * (s - y), np.full_like(s, 2.0)
-
 
 class _ORBBase(NativeRuleLearner):
     """The boosting loop shared by `ORB` and `DenseORB`: everything but how
@@ -1295,3 +1080,384 @@ class DenseORB(_ORBBase):
             if rest and np.array_equal(np.all(X[:, rest], axis=1), cov):
                 kept = rest
         return tuple(sorted(kept))
+
+
+# ---------------------------------------------------------------- LRI ----
+
+
+class DenseLRI(NativeRuleLearner):
+    """Lightweight Rule Induction (Weiss & Indurkhya 2000), specialized for
+    speed: its term search is hand-written on a dense float copy of the
+    data matrix. `LRI` is the same algorithm built from the rule-search
+    components, on every data representation.
+
+    For each class `c` (every class, including both classes of a binary
+    problem), `n_rules` DNF rules for `c` against the rest:
+
+    1. Grow a conjunctive term by greedily adding the condition with the
+       lowest weighted error ``err1 = FP + k * FN`` among the conditions
+       that keep at least one true positive. ``k`` starts at 1 for each
+       condition and is doubled while the cheapest condition overall
+       would leave no true positive -- so a condition is always added
+       while the term still covers negatives. The term stops at
+       `max_length` conditions or when it covers no negative.
+    2. Add the term to the rule. If the rule has fewer than `max_terms`
+       terms and some positive is still uncovered, remove the cases the
+       term covers and grow the next term on the rest.
+    3. Count, for every training case, whether the finished rule errs on
+       it (covers a negative, or leaves a positive uncovered), and
+       reweight: ``1 + e**3`` with ``e`` the cumulative errors
+       (`LRIReweighting`; halved once one exceeds 32).
+
+    After `freeze_features_after` rules of a class, only the features its
+    rules have used so far remain candidates (the paper's speed-up, 50 in
+    its experiments; ``None`` never freezes). Rules found again are kept:
+    they add votes, as in the paper.
+
+    The model is an `EnsembleModel` of the DNF rules (`ConceptModel`s
+    without a default, so each votes only where it fires): the class
+    with the most satisfied rules wins; ties, and rows no rule fires on,
+    go to the more frequent training class.
+
+    Two readings of the paper to note. Its Table 2 grows a term "until
+    FN = 0"; adding a condition can never lower FN, while a term covering
+    no negative (FP = 0) can't improve any more, so the term stops at
+    FP = 0 here. And "if no added condition adds a true positive, the
+    cost of a false negative error is doubled" is read as above. Numeric
+    attributes come already binarized (`pyrulearn.data.io.build_dataspec`)
+    instead of being thresholded during the search; the data's row
+    weights multiply with the error weights.
+    """
+
+    def __init__(
+        self,
+        n_rules: int = 50,
+        max_terms: int = 4,
+        max_length: int = 5,
+        freeze_features_after: Optional[int] = 50,
+        power: float = 3.0,
+        max_errors: Optional[int] = 32,
+    ):
+        if n_rules < 1 or max_terms < 1 or max_length < 1:
+            raise ValueError("n_rules, max_terms and max_length must be at least 1")
+        self.n_rules = n_rules
+        self.max_terms = max_terms
+        self.max_length = max_length
+        self.freeze_features_after = freeze_features_after
+        self.power = power
+        self.max_errors = max_errors
+
+    def _default_model(self, data: Any) -> type:
+        return EnsembleModel
+
+    @produces(EnsembleModel)
+    def _fit_native(self, data: Any, **kw) -> EnsembleModel:
+        if data.y is None:
+            raise ValueError("LRI needs data.y")
+        y = np.asarray(data.y)
+        classes = [c.item() if isinstance(c, np.generic) else c for c in np.unique(y)]
+        if len(classes) < 2:
+            raise ValueError("LRI needs at least two classes")
+        X = np.asarray(data.X, dtype=bool)
+        Xf = X.astype(float)
+        base_w = np.ones(len(y)) if data.weights is None else data.weights.astype(float)
+        members: List[ConceptModel] = []
+        for c in classes:
+            for terms in self._rules_for(X, Xf, y == c, base_w):
+                rules = [Rule(list(t), target=c, dataspec=data.spec) for t in terms]
+                members.append(ConceptModel(annotate_rules(rules, data), label=c))
+        model = EnsembleModel(members, default_prediction=MajorityClass(data))
+        return annotate_default_rule(model, data)
+
+    # -- one class ----------------------------------------------------------
+
+    def _rules_for(self, X: np.ndarray, Xf: np.ndarray, positive: np.ndarray,
+                   base_w: np.ndarray) -> List[List[Tuple[int, ...]]]:
+        """`n_rules` DNF rules (each a list of terms) for `positive` vs. the rest."""
+        n, n_features = X.shape
+        state = CoveringState(base_w.copy(), positive)
+        reweighting = LRIReweighting(power=self.power, max_errors=self.max_errors)
+        allowed: Set[int] = set(range(n_features))
+        used: Set[int] = set()
+        rules: List[List[Tuple[int, ...]]] = []
+        for r in range(self.n_rules):
+            if self.freeze_features_after is not None and r == self.freeze_features_after and used:
+                allowed = set(used)
+            terms, covered = self._grow_rule(X, Xf, positive, state.scope, allowed)
+            if not terms:
+                break
+            rules.append(terms)
+            used.update(f for t in terms for f in t)
+            state.record(covered)
+            state.scope = base_w * reweighting.weights(state, covered)
+        return rules
+
+    def _grow_rule(self, X: np.ndarray, Xf: np.ndarray, positive: np.ndarray, w: np.ndarray,
+                   allowed: Set[int]) -> Tuple[List[Tuple[int, ...]], np.ndarray]:
+        """One DNF rule: its terms, and the rows it covers."""
+        remaining = np.ones(len(w), dtype=bool)
+        covered = np.zeros(len(w), dtype=bool)
+        terms: List[Tuple[int, ...]] = []
+        while len(terms) < self.max_terms:
+            term, term_cov = self._grow_term(X, Xf, positive, w * remaining, allowed)
+            if not term:
+                break
+            terms.append(term)
+            covered |= term_cov
+            if not np.any(positive & ~covered & (w > 0)):
+                break                       # FN = 0: every positive covered
+            remaining &= ~term_cov
+        return terms, covered
+
+    def _grow_term(self, X: np.ndarray, Xf: np.ndarray, positive: np.ndarray, w: np.ndarray,
+                   allowed: Set[int]) -> Tuple[Tuple[int, ...], np.ndarray]:
+        """One conjunctive term grown on the weights `w` (zero for removed
+        cases), and the rows (of all) it covers."""
+        wp, wn = w * positive, w * ~positive
+        n_pos = float(wp.sum())
+        cov = np.ones(len(w), dtype=bool)
+        body: List[int] = []
+        candidates = np.array(sorted(allowed), dtype=np.int64)
+        if n_pos <= 0 or candidates.size == 0:
+            return (), cov & False
+        fp = float(wn.sum())
+        while len(body) < self.max_length and fp > 0:
+            # weighted TP/FP of the term with each candidate condition added
+            tp_c = (wp * cov) @ Xf[:, candidates]
+            fp_c = (wn * cov) @ Xf[:, candidates]
+            fn_c = n_pos - tp_c
+            live = tp_c > 0
+            if body:
+                live &= ~np.isin(candidates, body)
+            if not live.any():
+                break
+            dead = ~live
+            if body:
+                dead &= ~np.isin(candidates, body)
+            k = 1.0
+            while True:
+                err = fp_c + k * fn_c
+                best_live = float(err[live].min())
+                if not dead.any() or float(err[dead].min()) >= best_live:
+                    break
+                k *= 2.0               # the cheapest condition would drop every true positive
+            j = int(np.flatnonzero(live & (err == best_live))[0])
+            f = int(candidates[j])
+            body.append(f)
+            cov = cov & X[:, f]
+            fp = float(fp_c[j])
+        return tuple(body), cov
+
+
+# ======================================================= modular LRI ========
+
+
+class LRI(NativeRuleLearner):
+    """Lightweight Rule Induction (Weiss & Indurkhya 2000), built from the
+    rule-search components: see `DenseLRI` for the algorithm in detail --
+    the same learner, specialized for speed on a dense matrix, with its
+    own term search.
+
+    For each class `c` (every class, including both classes of a binary
+    problem), `n_rules` DNF rules for `c` against the rest, one after
+    another on the whole training data:
+
+    1. A **term** is what a `SingleRuleLearner` finds: `search` (default
+       ``HillClimbing(max_conditions=5, stop_at_local_optimum=False)`` --
+       add the best condition each step, even a worsening one, until the
+       term covers no negative or has 5 conditions) over the objective
+       `heuristic` (default `LRIError`: the weighted ``FP + k * FN`` with
+       the paper's adaptive `k`), on the cases with their current weights.
+       Any search works; `max_conditions` of the search is the term
+       length.
+    2. A **rule** has up to `max_terms` terms: after each, the cases it
+       covers are removed and the next term is grown on the rest, until
+       every positive is covered.
+    3. After each rule the cases are reweighted by `reweighting` (default
+       `LRIReweighting(power=3, max_errors=32)`: ``1 + e**3``, `e` the
+       number of rules so far that err on a case) through a
+       `WeightedCovering` of `n_rules` rounds.
+
+    After `freeze_features_after` rules of a class, only the features its
+    rules have used so far stay open (a `FeatureSubset`; ``None`` never
+    freezes). Rules found again are kept: they add votes.
+
+    The model is an `EnsembleModel` of the DNF rules (`ConceptModel`s
+    without a default, so each votes only where it fires): the class with
+    the most satisfied rules wins; ties, and rows no rule fires on, go to
+    the more frequent training class.
+
+    Runs on every data representation, the search walking cover handles
+    with constraint propagation -- a condition the term already implies is
+    never added. `DenseLRI` doesn't propagate constraints: with negation or
+    threshold features it can append a redundant condition where this
+    learner takes the next best real one (and without such features both
+    learn identical models). The data's row weights multiply with the
+    error weights.
+    """
+
+    def __init__(
+        self,
+        n_rules: int = 50,
+        max_terms: int = 4,
+        search: Optional[RuleSearch] = None,
+        heuristic: Optional[Union[RuleHeuristic, Objective]] = None,
+        reweighting: Optional[Reweighting] = None,
+        freeze_features_after: Optional[int] = 50,
+    ):
+        if n_rules < 1 or max_terms < 1:
+            raise ValueError("n_rules and max_terms must be at least 1")
+        if search is not None and not isinstance(search, RuleSearch):
+            raise ValueError(f"search must be a RuleSearch, got {search!r}")
+        self.n_rules = n_rules
+        self.max_terms = max_terms
+        self.search = search if search is not None else HillClimbing(max_conditions=5, stop_at_local_optimum=False)
+        self.heuristic = heuristic if heuristic is not None else LRIError()
+        self.reweighting = reweighting if reweighting is not None else LRIReweighting()
+        self.freeze_features_after = freeze_features_after
+
+    def _default_model(self, data: Any) -> type:
+        return EnsembleModel
+
+    @produces(EnsembleModel)
+    def _fit_native(self, data: Any, **kw) -> EnsembleModel:
+        if data.y is None:
+            raise ValueError("LRI needs data.y")
+        y = np.asarray(data.y)
+        classes = [c.item() if isinstance(c, np.generic) else c for c in np.unique(y)]
+        if len(classes) < 2:
+            raise ValueError("LRI needs at least two classes")
+        term_learner = SingleRuleLearner(self.heuristic, search=self.search)
+        members: List[ConceptModel] = []
+        for c in classes:
+            for terms in self._rules_for(data, c, term_learner):
+                members.append(ConceptModel(annotate_rules(terms, data), label=c))
+        model = EnsembleModel(members, default_prediction=MajorityClass(data))
+        return annotate_default_rule(model, data)
+
+    def _rules_for(self, data: Any, c: Any, term_learner: SingleRuleLearner) -> List[List[Rule]]:
+        """`n_rules` DNF rules (each a list of term rules) for `c` vs. the rest."""
+        positive = np.asarray(data.y) == c
+        covering = WeightedCovering(self.reweighting, stop=[], max_rounds=self.n_rules)
+        state = covering.start(data, positive)
+        space = None
+        used: Set[int] = set()
+        rules: List[List[Rule]] = []
+        while not covering.exhausted(state):
+            if (self.freeze_features_after is not None and state.round == self.freeze_features_after and used):
+                space = FeatureSubset(sorted(used))
+            terms, covered = self._grow_rule(data, c, positive, state.scope, term_learner, space)
+            if not terms:
+                break
+            rules.append(terms)
+            used.update(lit.feature for t in terms for lit in t.conditions)
+            covering.update(state, covered)
+        return rules
+
+    def _grow_rule(self, data: Any, c: Any, positive: np.ndarray, scope: np.ndarray,
+                   term_learner: SingleRuleLearner, space: Optional[SearchSpaceInit]) -> Tuple[List[Rule], np.ndarray]:
+        """One DNF rule: its terms, and the rows it covers."""
+        weights = data.scope_weights(scope)
+        remaining = np.ones(len(positive), dtype=bool)
+        covered = np.zeros(len(positive), dtype=bool)
+        terms: List[Rule] = []
+        while len(terms) < self.max_terms:
+            term = term_learner.learn_one_rule(data, c, scope * remaining, space_init=space)
+            if term is None or term.length() == 0:
+                break
+            terms.append(term)
+            term_cov = np.asarray(data.coverage(term), dtype=bool)
+            covered |= term_cov
+            if not np.any(positive & ~covered & (weights > 0)):
+                break                       # every positive covered
+            remaining &= ~term_cov
+        return terms, covered
+
+
+# ----------------------------------------------------------- AdaBoost ----
+
+
+class AdaBoost(NativeRuleLearner):
+    """Up to `n_estimators` members, each `base_learner.fit` on the
+    reweighted training data, as whatever model the base learner builds
+    (e.g. `OneVsRest(Pypper())` for concept sets), combined into an
+    `EnsembleModel` weighted by SAMME. A member's training error counts at
+    least half an example, so that a member without errors doesn't get an
+    unbounded weight.
+
+    Two members end SAMME's boosting: one no better than random guessing
+    (its weight would not be positive) and one without training errors
+    (the weights would not change, and the next member would be the
+    same). With `early_stopping` (the default), boosting stops there:
+    the first is left out, unless it is the only member, and the second
+    is kept. Without it, the weights are reset to those of a bootstrap
+    sample (drawn from `random_state`) and boosting goes on -- the first
+    member left out, the second kept -- until there are `n_estimators`
+    members (or ``2 * n_estimators`` rounds have been tried).
+
+    With `abstain` (the default), a member doesn't vote where its rules
+    don't cover an example (`EnsembleModel`'s `abstain`), which suits
+    members with rules for every class (one-vs-rest concept sets):
+    boosting moves the weight onto few examples, so that a later member's
+    default would decide most of the rest, with the full weight of the
+    member. Only the vote changes: a member's training error still counts
+    its default."""
+
+    def __init__(self, base_learner: NativeRuleLearner, n_estimators: int = 10,
+                 early_stopping: bool = True, random_state: Optional[int] = 0, abstain: bool = True):
+        if n_estimators < 1:
+            raise ValueError(f"n_estimators must be at least 1, got {n_estimators}")
+        self.base_learner = base_learner
+        self.n_estimators = n_estimators
+        self.early_stopping = early_stopping
+        self.random_state = random_state
+        self.abstain = abstain
+
+    def _default_model(self, data: DataRepresentation) -> type:
+        return EnsembleModel
+
+    @produces(EnsembleModel)
+    def _fit_native(self, data: DataRepresentation, **kw) -> EnsembleModel:
+        if data.y is None:
+            raise ValueError("AdaBoost needs data.y")
+        y = np.asarray(data.y)
+        n, k = data.n_samples, len(np.unique(y))
+        base = np.ones(n) if data.weights is None else np.asarray(data.weights, dtype=float)
+        w = base * (n / base.sum())
+        rng = np.random.default_rng(self.random_state)
+        members: List[RuleModel] = []
+        weights: List[float] = []
+        for _ in range(self.n_estimators if self.early_stopping else 2 * self.n_estimators):
+            if len(members) == self.n_estimators:
+                break
+            member = self.base_learner.fit(data.with_weights(w))
+            wrong = np.asarray(member.predict(data)) != y
+            err = float(w[wrong].sum() / w.sum())
+            guessing = err >= 1.0 - 1.0 / k - 1e-12   # no better than random guessing (up to rounding)
+            if not guessing:
+                members.append(member)
+                weights.append(samme_weight(max(err, 0.5 / n), k))
+            if guessing or err == 0.0:
+                if self.early_stopping:
+                    if not members:
+                        members.append(member)
+                        weights.append(1.0)
+                    break
+                draws = np.bincount(rng.integers(0, n, size=n), minlength=n)
+                w = draws * base
+                w = w * (n / w.sum())
+                continue
+            w = w * np.exp(weights[-1] * wrong)
+            w = w * (n / w.sum())
+        if not members:   # every round no better than guessing
+            members, weights = [member], [1.0]
+        model = EnsembleModel(members, default_prediction=MajorityClass(data), member_weights=weights,
+                              abstain=self.abstain)
+        return annotate_default_rule(model, data)
+
+
+def samme_weight(err: float, n_classes: int, eps: float = 1e-10) -> float:
+    """SAMME's member weight ``log((1 - err) / err) + log(K - 1)``, with
+    `err` kept at least `eps` (a member without training errors)."""
+    err = max(err, eps)
+    return float(np.log((1.0 - err) / err) + np.log(n_classes - 1))
