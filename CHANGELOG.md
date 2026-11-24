@@ -13,6 +13,19 @@ is in early development (alpha): until 1.0, minor versions may change the API.
   cached experiment results stay valid. `RuleHeuristic.relative_to_parent`
   keeps its name, as it says what it means: scored relative to the
   parent rule.
+- New package `pyrulearn.objectives`, matching the paper's section on
+  objectives: `Objective`, `HeuristicObjective`, `ValueSumObjective`,
+  `HeadObjective` and the helpers that compute the statistics of rules
+  and refinements moved there from `pyrulearn.learners.seco`;
+  `pyrulearn.objectives.losses` holds the losses of the boosting learners
+  (`BoostingLoss`, `MarginLoss` and their subclasses), `XGBGain` and
+  `LRIError`, which moved there from `pyrulearn.learners.boosting` and
+  `pyrulearn.learners.lri`. `pyrulearn.heuristics` is unchanged.
+- `LRI`, `DenseLRI` and `AdaBoost` moved into
+  `pyrulearn.learners.boosting`, next to the other learners that
+  reweight their examples.
+- All old import paths still work (the old modules re-export the moved
+  classes), and cached experiment results stay valid.
 
 ## 0.7.1 (2026-11-24)
 

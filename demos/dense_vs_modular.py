@@ -74,7 +74,7 @@ from pyrulearn.learners.boosting import (
     ENDER, ORB, Boomer, DenseBoomer, DenseENDER, DenseORB, ExponentialLoss, Newton,
 )
 from pyrulearn.learners.cpar import CPAR, DenseCPAR
-from pyrulearn.learners.lri import LRI, DenseLRI
+from pyrulearn.learners.boosting import LRI, DenseLRI
 from pyrulearn.learners.seco import BeamSearch, BranchAndBoundSearch, HillClimbing
 
 RANDOM_STATE = 0

@@ -273,6 +273,18 @@ def _stratified_folds(y: np.ndarray, n_folds: int, random_state: int):
 #: renaming a class doesn't invalidate the cached results of its learners
 _CACHE_CLASS_NAMES = {
     "pyrulearn.heuristics.Adaptive": "pyrulearn.heuristics.Relative",   # renamed after 0.7.1
+    # moved after 0.7.1: the objectives out of learners.seco, the losses out of learners.boosting and
+    # learners.lri, LRI and AdaBoost into learners.boosting
+    **{f"pyrulearn.objectives.{name}": f"pyrulearn.learners.seco.{name}"
+       for name in ("Objective", "HeuristicObjective", "ValueSumObjective", "HeadObjective", "ValueSums",
+                    "HeadStats")},
+    **{f"pyrulearn.objectives.losses.{name}": f"pyrulearn.learners.boosting.{name}"
+       for name in ("BoostingLoss", "LogisticLoss", "ExponentialLoss", "SigmoidLoss", "XGBGain", "MarginLoss",
+                    "LogisticMarginLoss", "SquaredMarginLoss")},
+    "pyrulearn.objectives.losses.LRIError": "pyrulearn.learners.lri.LRIError",
+    "pyrulearn.learners.boosting.LRI": "pyrulearn.learners.lri.LRI",
+    "pyrulearn.learners.boosting.DenseLRI": "pyrulearn.learners.lri.DenseLRI",
+    "pyrulearn.learners.boosting.AdaBoost": "pyrulearn.learners.adaboost.AdaBoost",
 }
 
 

@@ -314,7 +314,8 @@ def test_a_beam_of_one_follows_the_hill_climbing_walk(heuristic):
 
 
 def test_each_step_of_the_walk_takes_the_condition_best_relative_to_the_rule():
-    from pyrulearn.learners.seco import HeuristicObjective, live_open_children, handle_for, parent_closure,         materialize_child
+    from pyrulearn.learners.seco import materialize_child, parent_closure
+    from pyrulearn.objectives import HeuristicObjective, handle_for, live_open_children
     data = _noisy()
     refine = _stecher(MEstimate(m=2))
     end = _search(HillClimbing(stop_at_local_optimum=False), data, refine)

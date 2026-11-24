@@ -233,7 +233,8 @@ def test_ender_l2_regularization_shrinks_the_weights():
 
 from itertools import combinations  # noqa: E402
 
-from pyrulearn.learners.boosting import DenseORB, SquaredMarginLoss  # noqa: E402
+from pyrulearn.learners.boosting import DenseORB  # noqa: E402
+from pyrulearn.objectives.losses import SquaredMarginLoss  # noqa: E402
 
 
 def test_branch_and_bound_finds_the_best_conjunction():
@@ -280,7 +281,7 @@ def test_optimal_rule_boosting_rejects_bad_input():
 
 def _best_gain_brute_force(X, g, h, reg, sign=None, max_len=3):
     """The best XGBoost gain over every conjunction of up to `max_len` features."""
-    from pyrulearn.learners.boosting import XGBGain
+    from pyrulearn.objectives.losses import XGBGain
     objective = XGBGain(g, h, reg=reg, sign=sign)
     best = -math.inf
     for size in range(1, max_len + 1):
@@ -295,7 +296,7 @@ def _best_gain_brute_force(X, g, h, reg, sign=None, max_len=3):
 @pytest.mark.parametrize("reg", [1.0, 0.0])
 @pytest.mark.parametrize("sign", [None, 1, -1])
 def test_orb_branch_and_bound_finds_the_best_gain(reg, sign):
-    from pyrulearn.learners.boosting import XGBGain
+    from pyrulearn.objectives.losses import XGBGain
     from pyrulearn.learners.seco import BranchAndBoundSearch, EmptyRuleAllFeatures
     data = _data(n=200)
     X = data.X
@@ -414,3 +415,20 @@ def test_boomer_and_dense_boomer_learn_the_same_model():
     assert str(Boomer(n_rules=40).fit(data)) == str(DenseBoomer(n_rules=40).fit(data))
     assert DenseBoomer().NATIVE_REPRESENTATIONS == (HorizontalBitmapRepresentation,)
     assert Boomer().NATIVE_REPRESENTATIONS is None
+
+
+def test_moved_classes_are_still_importable_from_their_old_modules():
+    # the objectives moved out of learners.seco, the losses out of learners.boosting, and LRI and
+    # AdaBoost into learners.boosting; the old modules re-export them
+    import pyrulearn.objectives as objectives
+    import pyrulearn.objectives.losses as losses
+    from pyrulearn.learners import adaboost, boosting, lri, seco
+
+    for name in ("Objective", "HeuristicObjective", "ValueSumObjective", "HeadObjective", "handle_for",
+                 "live_open_children", "stats_from_handle"):
+        assert getattr(seco, name) is getattr(objectives, name)
+    for name in ("BoostingLoss", "LogisticLoss", "ExponentialLoss", "SigmoidLoss", "MarginLoss",
+                 "LogisticMarginLoss", "SquaredMarginLoss", "XGBGain"):
+        assert getattr(boosting, name) is getattr(losses, name)
+    assert lri.LRI is boosting.LRI and lri.DenseLRI is boosting.DenseLRI and lri.LRIError is losses.LRIError
+    assert adaboost.AdaBoost is boosting.AdaBoost and adaboost.samme_weight is boosting.samme_weight

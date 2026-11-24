@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from pyrulearn.data import HorizontalBitmapRepresentation
-from pyrulearn.learners.adaboost import AdaBoost, samme_weight
+from pyrulearn.learners.boosting import AdaBoost, samme_weight
 from pyrulearn.learners.base import NativeRuleLearner
 from pyrulearn.learners.multiclass import OneVsRest
 from pyrulearn.learners.seco import PFoil, Pypper

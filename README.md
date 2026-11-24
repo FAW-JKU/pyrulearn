@@ -134,7 +134,7 @@ already-fitted external model (or its text output) into a `RuleModel`.
 | **BOOMER** (single-label) | `boosting.Boomer` | `ENDER` with BOOMER's settings: logistic loss, L2-regularized Newton steps (λ = 1), shrinkage 0.3, up to 1000 rules; predicts like the original on binary data (see *Interfaced*); multi-label BOOMER is not done. `boosting.DenseBoomer`: the faster dense-matrix version, same models | Rapp et al. 2020 |
 | **Optimal rule boosting** | `boosting.ORB`, `boosting.DenseORB` | gradient boosting of rules that each maximize the XGBoost-style gain `(Σg)² / (λ + Σh)` (the `XGBGain` objective), found by any rule search -- a beam search by default, exactly by branch-and-bound with the paper's prefix/suffix bound; `DenseORB` is the dense-matrix specialization; both cross-checked rule-for-rule against `realkd` | Boley, Teshuva, Le Bodic & Webb 2021 |
 | **ENDER** / MLRules | `boosting.ENDER` | boosting of rules by forward stagewise loss minimization: each rule, grown greedily on a subsample to minimize an impurity derived from the loss (constant-step, gradient descent, gradient boosting, simultaneous minimization, or MLRules' Newton criterion), votes for one class with a shrunk weight computed on all rows; pluggable loss (`LogisticLoss`, default, multiclass; `ExponentialLoss`; `SigmoidLoss`) and impurity criterion (`ImpurityCriterion`); a `LinearRuleModel`; runs on every data representation. `boosting.DenseENDER`: the faster dense-matrix version, same models | Dembczyński, Kotłowski & Słowiński 2008, 2010 |
-| **LRI** | `lri.LRI` | Lightweight Rule Induction: the same number of unweighted DNF rules per class, each grown term by term minimizing the weighted error `FP + k·FN` without pruning, with cases reweighted by the rules' cumulative errors (`LRIReweighting`); the class with the most satisfied rules wins | Weiss & Indurkhya 2000 |
+| **LRI** | `boosting.LRI` | Lightweight Rule Induction: the same number of unweighted DNF rules per class, each grown term by term minimizing the weighted error `FP + k·FN` without pruning, with cases reweighted by the rules' cumulative errors (`LRIReweighting`); the class with the most satisfied rules wins | Weiss & Indurkhya 2000 |
 | **LORD** (simplified, `PyLORD`) | `pylord.PyLORD` | locally optimal rules, built from the `SeCo` building blocks but not a covering loop: every training example seeds a rule search. A simplified reimplementation, not the reference one (see *Interfaced* for that) | Huynh, Fürnkranz & Beck 2023 |
 | **OPUS** | `opus.Opus`, `opus.OpusTopK` | optimal rules by exhaustive branch-and-bound search (`seco.BranchAndBoundSearch`): `Opus` covers with the best rule by the heuristic in every step (a `SeCo` configuration); `OpusTopK` finds the `k` best rules per class (k-optimal rule discovery in the manner of Magnum Opus) | Webb 1995 |
 | **Class association rule mining** | `associative.CARMiner` | Apriori-style CBA-RG; returns a compact, lazily materialized `PooledRuleSet` | Liu et al. 1998; Agrawal & Srikant 1994 |
@@ -144,7 +144,7 @@ already-fitted external model (or its text output) into a `RuleModel`.
 | **IDS** | `ids.IDS` | interpretable decision sets: submodular objective, `SmoothLocalSearch` or `GreedySelection` as `optimizer=`, optional coordinate-ascent tuning of the weights | Lakkaraju et al. 2016 |
 | **RuleFit** (distiller) | `rulefit.RuleFit` | a sparse (L1 / elastic-net) logistic regression over a rule pool's coverage, multinomial for multiclass; returns a `LinearRuleModel`. Only RuleFit's fitting step: candidates come from the pool, not from a tree ensemble | Friedman & Popescu 2008 |
 | **Bagging** | `bagging.Bagging` | members of any learner, each from a bootstrap sample (the drawn rows weighted by their numbers of draws); an `EnsembleModel` voting by any rule combiner over the members' deciding rules, members abstaining where their rules don't cover an example | Breiman 1996 |
-| **AdaBoost** (SAMME) | `adaboost.AdaBoost` | members of any learner, each from the examples reweighted by its predecessors' errors, voting with SAMME's weights; `early_stopping=False` restarts from a bootstrap sample where SAMME would stop | Freund & Schapire 1997; Zhu et al. 2009 |
+| **AdaBoost** (SAMME) | `boosting.AdaBoost` | members of any learner, each from the examples reweighted by its predecessors' errors, voting with SAMME's weights; `early_stopping=False` restarts from a bootstrap sample where SAMME would stop | Freund & Schapire 1997; Zhu et al. 2009 |
 | **Multiclass decomposition** | `multiclass.OneVsRest`, `OrderedOneVsRest`, `Pairwise` | one-vs-rest, ordered (peeling) and round-robin decomposition for any binary-capable learner | Fürnkranz 2002 |
 
 `CBA`, `CMAR`, `IDS` and `RuleFit` are *rule distillers*: each consumes any pool of
@@ -191,8 +191,9 @@ details.
 | `evaluation` | Measured statistics (`RuleStats`, `ConfusionMatrix`, `ModelStats`), `sort_rules`, `summarize`, and coverage-space plotting (`CoverageSpace`, `coverage_space_plot`, `coverage_space_auc`, `rule_refinement_plot`, `build_refinement_graph`). |
 | `experiments` | Shared infrastructure for demos and other cross-validation-style experiments: `experiments.catalog` (the catalog of benchmark datasets, see *Benchmark datasets*), `experiments.runner` (`run_cv`: per-fold encoding into `representation=` (default: the preference order's first entry, `VerticalBitmapRepresentation`), a per-fit timeout via `TimeoutRunner`, uniform measurement, fold caching), `experiments.stats` (optional `mean_rank`, `friedman_test`, `critical_difference_diagram`, never run automatically) and `experiments.report` (small Markdown-writing building blocks). Needs `pandas`/`scipy`/`matplotlib` (the `experiments` extra). |
 | `heuristics` | `RuleHeuristic`: pluggable rule-evaluation heuristics (`Precision`, `Laplace`, `MEstimate`, `WRAcc`, `FoilGain`, `Correlation`, `Entropy`, `LikelihoodRatio`, ...), the composable `LEF`, and `plot_isometrics` for drawing a heuristic into a `CoverageSpace`. |
+| `objectives` | `Objective`: what a rule search maximizes, with the statistics of a rule and of all its refinements on a data representation -- `HeuristicObjective` (a `RuleHeuristic` of the class counts), `ValueSumObjective` (per-example values, e.g. a loss's derivatives), `HeadObjective`. `objectives.losses` has the losses of the boosting learners (`BoostingLoss`, `MarginLoss`), `XGBGain` and `LRIError`. |
 | `interfaces` | Bringing external rule models in. `interfaces.base` has the shared `RuleImporter` machinery (`ObjectRuleImporter`, `StringRuleImporter`, the importer registry, `PatternStringImporter`); each external tool then has its own submodule, pairing an importer with a learner wrapper: `interfaces.sklearn` (decision trees, random forests, and `RuleSetClassifier`, which wraps any `RuleModel` as a scikit-learn estimator), `interfaces.wittgenstein` (IREP, RIPPER), `interfaces.imodels` (Bayesian rule lists and sets, RuleFit, Slipper), `interfaces.weka` (JRip, PART, J48), `interfaces.lord` (the reference LORD implementation), `interfaces.pyarc` (CBA), `interfaces.boomer` (BOOMER) and `interfaces.realkd` (optimal rule boosting). |
-| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `learners.lri` (`LRI`, `DenseLRI`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), `learners.deep` (`DeepLocalSearch`, `DeepGenetic`, `DeepSAT`, `DeepNeuroFuzzy`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
+| `learners` | Turning data into rules through one `fit(data, model=None) -> RuleModel`. `learners.base` has the shared `RuleLearner` classes, including the `DecomposingLearner` multiclass switcher. Native algorithms: `learners.seco` (the `SeCo` framework and `CN2`, `AQR`, `PFoil`, `PFossil`, `Pypper`), `learners.pylord` (`PyLORD`), `learners.associative` (`CARMiner`, the `RuleDistiller` mixin, and the `CBA` and `CMAR` classifiers built on it), `learners.ids` (`IDS`), `learners.rulefit` (`RuleFit`), `learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`, `LRI`, `DenseLRI`, `AdaBoost`), `learners.cpar` (`CPAR`, `DenseCPAR`), `learners.opus` (`Opus`, `OpusTopK`), `learners.deep` (`DeepLocalSearch`, `DeepGenetic`, `DeepSAT`, `DeepNeuroFuzzy`), and `learners.multiclass` (`OneVsRest`, `OrderedOneVsRest`, `Pairwise`). |
 | `models` | The `RuleModel` hierarchy, organised by how a prediction is resolved: `RuleSet` (`FlatRuleSet`, `ConceptModel`, `ConceptSet`, `DisjointRuleSet`, and the memory-compact `PooledRuleSet` that `CARMiner` returns), `RuleList` (`DecisionList`, `ConceptCascade`), `CompositeModel` (`EnsembleModel`, `PairwiseModel`, `DeepModel`) and `SingleRule`. Also the `default_prediction` policy, per-model `stats`, `Provenance`, `annotate_rules`, and the model-to-model converters. |
 | `pruning` | `PrePruningCriterion`: one per-candidate test (`ThresholdPrePruning`, `EncodingLengthRestriction`, ...) that a search can use as a filter, as a stopping trigger, or that the covering loop can use as its stop condition. |
 | `rule` | `Rule`: a conjunction of Boolean literals, with optional condition order, several output formats and constraint-aware consistency checks. No dependencies beyond numpy. |
@@ -1530,7 +1531,7 @@ heuristic says about it.
 
 **What a search maximizes: objectives.** A search never calls a
 heuristic directly; it talks to an `Objective`
-(`pyrulearn.learners.seco`), which owns everything about scoring:
+(`pyrulearn.objectives`), which owns everything about scoring:
 
 - the statistics of a rule, and of all open one-condition refinements of
   it at once, counted through the data representation's own primitives
@@ -1755,7 +1756,7 @@ from pyrulearn.learners.cpar import CPAR
 model = CPAR(k=5).fit(train_rep)
 ```
 
-**Lightweight Rule Induction (LRI).** `pyrulearn.learners.lri.LRI` (Weiss & Indurkhya 2000) learns, for every
+**Lightweight Rule Induction (LRI).** `pyrulearn.learners.boosting.LRI` (Weiss & Indurkhya 2000) learns, for every
 class, `n_rules` unweighted DNF rules, and predicts the class with the
 most satisfied rules. A DNF rule is a `ConceptModel` -- up to `max_terms`
 terms with the same head, firing where any term does -- and the model an
@@ -1785,7 +1786,7 @@ term still covers; on a few hundred rows `DenseLRI` is about twice as
 fast.
 
 ```python
-from pyrulearn.learners.lri import LRI
+from pyrulearn.learners.boosting import LRI
 from pyrulearn.learners.seco import BeamSearch
 
 model = LRI(n_rules=50, max_terms=4).fit(train_rep)
@@ -1975,7 +1976,7 @@ is negative. The rule's weight is computed on *all* rows and shrunk by
 `shrinkage` -- together with the subsampling the paper's alternative to
 pruning.
 
-- **Losses** (a pluggable `BoostingLoss`): `LogisticLoss` (the
+- **Losses** (a pluggable `BoostingLoss`, from `pyrulearn.objectives.losses`): `LogisticLoss` (the
   multinomial log-likelihood; any number of classes; weight: Newton
   step), `ExponentialLoss` (AdaBoost's, two classes; weight: the exact
   minimizer, smoothed as in Slipper), `SigmoidLoss` (a bounded, non-convex
@@ -2017,7 +2018,8 @@ dense float matrix: same parameters, same models, 1-8x faster on a
 *Native learning algorithms* for this pairing).
 
 ```python
-from pyrulearn.learners.boosting import ENDER, ConstantStep, ExponentialLoss
+from pyrulearn.learners.boosting import ENDER, ConstantStep
+from pyrulearn.objectives.losses import ExponentialLoss
 
 model = ENDER().fit(train_rep)                                   # CS-Log
 few = ENDER(n_rules=3, shrinkage=1.0, subsample=1.0, loss=ExponentialLoss(),

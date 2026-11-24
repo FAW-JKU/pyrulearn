@@ -21,10 +21,10 @@ group-by-shared-implementation convention as `pyrulearn.interfaces`:
 pool, and the `CBA` and `CMAR` classifiers built on it),
 `pyrulearn.learners.ids` (`IDS`), `pyrulearn.learners.rulefit`
 (`RuleFit`, a sparse linear model over a rule pool),
-`pyrulearn.learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`), `pyrulearn.learners.lri`
-(`LRI`, `DenseLRI`), `pyrulearn.learners.bagging` (`Bagging`, over any
-base learner), `pyrulearn.learners.adaboost` (`AdaBoost`, SAMME over any
-base learner), `pyrulearn.learners.cpar` (`CPAR`, `DenseCPAR`), `pyrulearn.learners.opus`
+`pyrulearn.learners.boosting` (`Slipper`, `ENDER`, `DenseENDER`, `Boomer`, `DenseBoomer`, `ORB`, `DenseORB`,
+`LRI`, `DenseLRI`, and `AdaBoost`, SAMME over any base learner),
+`pyrulearn.learners.bagging` (`Bagging`, over any base learner),
+`pyrulearn.learners.cpar` (`CPAR`, `DenseCPAR`), `pyrulearn.learners.opus`
 (`Opus`, `OpusTopK`), `pyrulearn.learners.deep` (`DeepLocalSearch`,
 `DeepGenetic`, `DeepSAT`, `DeepNeuroFuzzy`, learning `DeepModel`s), and
 `pyrulearn.learners.multiclass` (`OneVsRest`/`OrderedOneVsRest`/

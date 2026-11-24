@@ -7,7 +7,7 @@ ensemble of rules, compared by accuracy against the number of rules.
 Cross-validated through `pyrulearn.experiments.runner.run_cv` on the
 datasets of `demos/base_vs_composite.py`.
 
-- **Model weighting** -- `pyrulearn.learners.adaboost.AdaBoost` (SAMME,
+- **Model weighting** -- `pyrulearn.learners.boosting.AdaBoost` (SAMME,
   the multi-class AdaBoost) over concept sets, one concept description per
   class learned one-vs-rest (`OneVsRest`) by `Pypper`, `PFossil` or
   `PFoil`: each member is a whole rule set, learned from the examples
@@ -64,7 +64,7 @@ from pyrulearn.experiments.report import format_accuracy, format_mean_count, ren
     render_setup_section
 from pyrulearn.experiments.runner import run_cv
 from pyrulearn.experiments.stats import mean_rank
-from pyrulearn.learners.adaboost import AdaBoost
+from pyrulearn.learners.boosting import AdaBoost
 from pyrulearn.learners.base import NativeRuleLearner
 from pyrulearn.learners.boosting import ENDER, Boomer, Slipper
 from pyrulearn.learners.multiclass import OneVsRest

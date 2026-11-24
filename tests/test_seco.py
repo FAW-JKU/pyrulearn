@@ -33,24 +33,28 @@ from _negation_helpers import make_rule, neg_spec, neg_X
 
 @contextmanager
 def _counting_expansions():
-    """Counts node expansions (calls to seco.count_open_children, made
-    once per rule a search expands) while active -- used to directly
-    verify the tp==0 floor / optimistic-value pruning actually prevents
-    a search from expanding a rule at all, not just that it doesn't
-    change the final answer (which, for those conditions, it mathematically
-    can't -- see seco.py's PrePruningCriterion docstring)."""
+    """Counts node expansions (calls to `count_open_children`, made once
+    per rule a search expands, by the objectives in `pyrulearn.objectives`)
+    while active -- used to directly verify the tp==0 floor /
+    optimistic-value pruning actually prevents a search from expanding a
+    rule at all, not just that it doesn't change the final answer (which,
+    for those conditions, it mathematically can't -- see seco.py's
+    PrePruningCriterion docstring)."""
+    import pyrulearn.objectives as objectives
+    import pyrulearn.objectives.losses as losses
+
     count = [0]
-    original = seco.count_open_children
+    original = objectives.count_open_children
 
     def wrapper(*args, **kwargs):
         count[0] += 1
         return original(*args, **kwargs)
 
-    seco.count_open_children = wrapper
+    objectives.count_open_children = losses.count_open_children = wrapper
     try:
         yield count
     finally:
-        seco.count_open_children = original
+        objectives.count_open_children = losses.count_open_children = original
 
 
 def _conjunction_dataset():
