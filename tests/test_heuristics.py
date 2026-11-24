@@ -36,7 +36,7 @@ from pyrulearn.heuristics import (
     UncoveredPositives,
     Precision,
     Recall,
-    Relative,
+    Adaptive,
     RuleHeuristic,
     RuleStats,
     Support,
@@ -464,16 +464,16 @@ def test_foil_gain_is_relative_to_the_parent():
 
 
 def test_foil_gain_is_the_relative_weighted_gain_of_information_content():
-    composed = Relative(WeightedGain(CoveredPositives(), InformationContent()))
+    composed = Adaptive(WeightedGain(CoveredPositives(), InformationContent()))
     parent = RuleStats(tp=8, fp=6, fn=4, tn=11)
     for tp in range(9):
         for fp in range(7):
             child = RuleStats(tp=tp, fp=fp, fn=12 - tp, tn=17 - fp)
             assert FoilGain().score(child, parent) == pytest.approx(composed.score(child, parent), abs=1e-12)
             assert FoilGain().score(child) == pytest.approx(composed.score(child), abs=1e-12)
-    # Relative is idempotent
+    # Adaptive is idempotent
     child = RuleStats(tp=5, fp=1, fn=7, tn=16)
-    assert Relative(FoilGain()).score(child, parent) == pytest.approx(FoilGain().score(child, parent))
+    assert Adaptive(FoilGain()).score(child, parent) == pytest.approx(FoilGain().score(child, parent))
 
 
 def test_wracc_is_the_weighted_precision_gain_over_the_universal_rule():
@@ -510,9 +510,9 @@ def test_a_zero_weight_gains_nothing():
     np.testing.assert_allclose(got, [0.0, 3.0])
 
 
-def test_weighted_gain_needs_absolute_single_valued_parts():
-    with pytest.raises(TypeError, match="Relative"):
-        WeightedGain(CoveredPositives(), Relative(Precision()))
+def test_weighted_gain_needs_static_single_valued_parts():
+    with pytest.raises(TypeError, match="Adaptive"):
+        WeightedGain(CoveredPositives(), Adaptive(Precision()))
     with pytest.raises(TypeError, match="LEF"):
         Gain(LEF(Precision(), MinimalLength()))
 
@@ -521,10 +521,10 @@ def test_relative_gain_ranks_the_refinements_of_a_rule_as_relative():
     parent = RuleStats(tp=8, fp=6, fn=4, tn=11)
     children = [RuleStats(tp=tp, fp=fp, fn=12 - tp, tn=17 - fp) for tp in range(9) for fp in range(7)]
     for h in (Laplace(), WRAcc(), MEstimate(m=3)):
-        a = np.array([Relative(Gain(h)).score(c, parent) for c in children])
-        b = np.array([Relative(h).score(c, parent) for c in children])
+        a = np.array([Adaptive(Gain(h)).score(c, parent) for c in children])
+        b = np.array([Adaptive(h).score(c, parent) for c in children])
         np.testing.assert_allclose(a - b, (a - b)[0], atol=1e-12)   # a constant difference: the parent's score
-        assert Relative(Gain(h)).score(parent, parent) == 0.0
+        assert Adaptive(Gain(h)).score(parent, parent) == 0.0
 
 
 def test_last_rule_selects_the_longest_rule():
@@ -548,7 +548,7 @@ def test_score_rule_with_a_parent_rule():
     assert gain > 0  # the refinement increased precision (0.571 -> 1.0)
     # without a parent rule: over the universal rule
     assert FoilGain().score_rule(child_rule, rep) == FoilGain().score(stats)
-    # an absolute heuristic ignores the parent rule
+    # a static heuristic ignores the parent rule
     assert Laplace().score_rule(child_rule, rep, parent_rule=parent_rule) == Laplace().score(stats)
 
 
@@ -557,9 +557,9 @@ def test_gain_is_the_heuristics_own_difference():
     parent_stats = RuleStats(tp=10, fp=10, fn=0, tn=0)
     # Laplace doesn't depend on the frame: the improvement over the parent
     expected = Laplace().score(stats) - Laplace().score(parent_stats)
-    assert Relative(Gain(Laplace())).score(stats, parent_stats) == pytest.approx(expected)
+    assert Adaptive(Gain(Laplace())).score(stats, parent_stats) == pytest.approx(expected)
     stats = RuleStats(tp=4, fp=2, fn=6, tn=8)
-    assert Relative(Gain(Accuracy())).score(stats, stats) == 0.0
+    assert Adaptive(Gain(Accuracy())).score(stats, stats) == 0.0
 
 
 # -- batch_score vs. score ---------------------------------------------
@@ -608,8 +608,8 @@ def test_batch_score_agrees_with_score(h):
         np.testing.assert_allclose(got, want, rtol=1e-12, atol=1e-12)
 
 
-@pytest.mark.parametrize("h", [H.FoilGain(), H.Relative(H.Gain(H.Laplace())), H.Relative(H.Gain(H.Entropy())),
-                               H.Relative(H.WRAcc()), H.Relative(H.MEstimate(m=2.0))],
+@pytest.mark.parametrize("h", [H.FoilGain(), H.Adaptive(H.Gain(H.Laplace())), H.Adaptive(H.Gain(H.Entropy())),
+                               H.Adaptive(H.WRAcc()), H.Adaptive(H.MEstimate(m=2.0))],
                          ids=lambda h: repr(h))
 def test_gain_batch_score_agrees_with_score(h):
     batch, single = _grid()

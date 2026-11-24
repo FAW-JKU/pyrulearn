@@ -12,7 +12,7 @@ from pyrulearn.combiners import HeuristicMaxCombiner, ListCombiner, MicroVoteCom
 from pyrulearn.rule import Rule
 from pyrulearn.heuristics import (
     Accuracy, Correlation, CoveredNegatives, CoveredPositives, FoilGain, Gain,
-    Laplace, LEF, LikelihoodRatio, MinimalLength, Relative, RuleStats, UncoveredPositives,
+    Laplace, LEF, LikelihoodRatio, MinimalLength, Adaptive, RuleStats, UncoveredPositives,
 )
 from pyrulearn.learners import NativeRuleLearner
 from pyrulearn.pruning import (
@@ -156,7 +156,7 @@ def _either_dataset(n=400, seed=0):
     (BeamSearch(beam_width=3), Accuracy()),
     (HillClimbing(), Accuracy()),
     (GainAscentHillClimbing(), FoilGain()),
-    (GainAscentHillClimbing(), Relative(Gain(Laplace()))),
+    (GainAscentHillClimbing(), Adaptive(Gain(Laplace()))),
     (HillClimbing(), FoilGain()),
     (BeamSearch(beam_width=3), FoilGain()),
 ])

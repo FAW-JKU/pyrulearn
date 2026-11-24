@@ -14,7 +14,7 @@ shape this follows):
    `FoilGain` (a minimum gain, CPAR's branching). A heuristic relative to
    the parent rule (`RuleHeuristic.relative_to_parent`) is scored, in
    every search, relative to each refinement's own parent; the rule
-   returned is picked by an absolute `selection`, by default the last
+   returned is picked by a static `selection`, by default the last
    one reached (`LastRule`).
 2. **a search heuristic** -- already existed before this module:
    `pyrulearn.heuristics.RuleHeuristic`/`RuleStats`, reused as-is. `BeamSearch`/`HillClimbing`/
@@ -1118,13 +1118,13 @@ class BeamSearch(RuleSearch):
     `RuleHeuristic` (`HillClimbing` adds a local-maximum stop and drops
     the running-best bookkeeping a single lineage doesn't need).
 
-    A heuristic relative to the parent rule (`Relative`, `FoilGain`,
-    Stecher et al.'s `Relative(Inverted(h))`) scores each child relative
+    A heuristic relative to the parent rule (`Adaptive`, `FoilGain`,
+    Stecher et al.'s `Adaptive(Inverted(h))`) scores each child relative
     to its own parent, and the beam ranks the children of all its members
     by these scores together -- refinements of different parents, whose
     scores have no common scale (a large improvement over a bad parent
     can outrank a small one over a very good parent). The rule returned
-    is picked by a `selection`, which must be absolute; without one, it
+    is picked by a `selection`, which must be static; without one, it
     is the last rule reached (`LastRule`): the deepest round's best
     eligible candidate by the beam's own ranking.
 
@@ -1195,7 +1195,7 @@ class BeamSearch(RuleSearch):
         sel = selection_objective(objective, selection, data, target_class, example_mask)
         separate = sel is not None
         relative = objective.relative_to_parent
-        # the last rule (a relative objective's default): the beam follows
+        # the last rule (an adaptive objective's default): the beam follows
         # only refinements that improve on their parent -- for a gain, a
         # positive gain -- so the last round is where improvement ended, and
         # among its equally long candidates the beam's own ranking decides
@@ -1822,8 +1822,8 @@ class HillClimbing(RuleSearch):
 
 class GainAscentHillClimbing(HillClimbing):
     """`HillClimbing` for a gain such as `FoilGain`, scored relative to
-    the current rule (any heuristic works; a relative one -- see
-    `pyrulearn.heuristics.Relative` -- is the point). The walk moves to
+    the current rule (any heuristic works; an adaptive one -- see
+    `pyrulearn.heuristics.Adaptive` -- is the point). The walk moves to
     the best refinement while it improves on the current rule's own score
     in its own frame -- for a gain, while the gain is positive -- and,
     without a `selection`, returns the rule it ended at (`LastRule`):
@@ -2379,7 +2379,7 @@ class HeadPerRule(HeadSelection):
             if not found:
                 continue
             stats = RuleStats.from_rule(found[0], data, c, example_mask=remaining)
-            score = heuristic.score(stats)   # a relative heuristic: relative to the universal rule
+            score = heuristic.score(stats)   # an adaptive heuristic: relative to the universal rule
             if best_score is None or score > best_score:
                 best, best_score = found[0], score
         return [] if best is None else [best]

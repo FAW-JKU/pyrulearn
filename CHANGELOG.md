@@ -3,6 +3,17 @@
 All notable changes to pyrulearn are listed here, newest first. The project
 is in early development (alpha): until 1.0, minor versions may change the API.
 
+## Unreleased
+
+### Changed
+
+- Relative heuristics are now called adaptive heuristics, and absolute
+  ones static, as in the paper: `Relative(h)` is renamed to
+  `Adaptive(h)`. `Relative` remains as a deprecated alias that warns;
+  cached experiment results stay valid. `RuleHeuristic.relative_to_parent`
+  keeps its name, as it says what it means: scored relative to the
+  parent rule.
+
 ## 0.7.1 (2026-11-24)
 
 Relative Heuristics: a heuristic is relative to the parent rule or not,

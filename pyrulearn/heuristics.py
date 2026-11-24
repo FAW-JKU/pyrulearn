@@ -11,7 +11,7 @@ as such -- it's heuristic-search context -- which is why it lives on
 `RuleStats`, not as part of `Rule` itself: a bare `Rule` has no inherent
 notion of "its own refinement history", only a search process does.
 
-**Absolute and relative heuristics.** A heuristic scores a rule within a
+**Static and adaptive heuristics.** A heuristic scores a rule within a
 *frame*, a coverage space: by default the whole data (`n_pos`, `n_neg`),
 in which every rule is compared with the universal rule. A heuristic
 that is `relative_to_parent` takes the rule a refinement was made from
@@ -19,20 +19,21 @@ that is `relative_to_parent` takes the rule a refinement was made from
 whole data, its class distribution the prior, and so the parent is the
 universal rule of the frame. Such a heuristic takes the parent's
 statistics as an optional second argument of `score`/`batch_score`;
-without it, it scores in the whole data, like an absolute heuristic.
-`Relative(h)` makes any heuristic relative (adaptive `WRAcc`, a local
-`MEstimate`); `FoilGain` is relative by definition. Scores relative to
+without it, it scores in the whole data, like a static heuristic.
+`Adaptive(h)` makes any heuristic adaptive (adaptive WRA, a local
+`MEstimate`; up to 0.7.1, it was called `Relative`, which still works
+as a deprecated alias); `FoilGain` is adaptive by definition. Scores relative to
 different parents have no common scale: a search compares them only
 among the refinements of one rule, and picks the rule it returns by a
-separate, absolute `selection` (or, by default, the last rule it
+separate, static `selection` (or, by default, the last rule it
 reached, `LastRule`).
 
-Three wrappers build heuristics from others: `Relative(h)` (the frame),
+Three wrappers build heuristics from others: `Adaptive(h)` (the frame),
 `Inverted(h)` (judge a rule by the examples it excludes, after Stecher,
 Janssen & Fürnkranz; their inverted heuristics are
-`Relative(Inverted(h))`), and `WeightedGain(weight, base)` (``weight(r)
+`Adaptive(Inverted(h))`), and `WeightedGain(weight, base)` (``weight(r)
 * (base(r) - base(r0))``, the gain over the universal rule ``r0`` of
-the frame -- over the parent inside `Relative`). `WRAcc` and `FoilGain`
+the frame -- over the parent inside `Adaptive`). `WRAcc` and `FoilGain`
 are fast shortcuts for two weighted gains; `Gain(h)` is the unweighted
 one.
 
@@ -109,6 +110,7 @@ Fürnkranz & Flach's terminology the isometrics of the first two are
 from __future__ import annotations
 
 import math
+import warnings
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Tuple, Union
 
@@ -247,8 +249,8 @@ class RuleHeuristic(ABC):
     to the rule it refines (see the module docstring): `score`/
     `batch_score` then take that rule's statistics as an optional second
     argument (`parent`), and without it score in the whole data, relative
-    to the universal rule. `Relative`, `FoilGain`, and every wrapper
-    around a relative heuristic are.
+    to the universal rule. `Adaptive`, `FoilGain`, and every wrapper
+    around an adaptive heuristic are.
     """
 
     needs_data: bool = True
@@ -302,7 +304,7 @@ class RuleHeuristic(ABC):
         """The score of each possible head: ``k`` scores for ``k`` covered
         counts (``k x m`` for ``k x m``), each class against the rest of
         the scope (`totals`). `parent_covered` (the parent's covered
-        counts, ``k``) is the frame of a relative heuristic, which
+        counts, ``k``) is the frame of an adaptive heuristic, which
         overrides this."""
         return np.asarray(self.batch_score(head_stats(covered, totals, length)))
 
@@ -351,8 +353,8 @@ class RuleHeuristic(ABC):
         """Convenience: `RuleStats.from_rule(...)` then `score(...)` in
         one call, so a `RuleHeuristic` can be used directly as a
         rule-level ranking key without the caller building stats by
-        hand each time. `parent_rule` is the frame of a relative
-        heuristic (ignored by an absolute one); without it, a relative
+        hand each time. `parent_rule` is the frame of an adaptive
+        heuristic (ignored by a static one); without it, an adaptive
         heuristic scores relative to the universal rule."""
         stats = RuleStats.from_rule(rule, data, positive_class)
         if parent_rule is not None and self.relative_to_parent:
@@ -372,7 +374,7 @@ class RuleHeuristic(ABC):
         """Plot this heuristic's isometrics -- curves (or, `filled=True`,
         bands) of constant `score(...)` -- over a
         `pyrulearn.evaluation.CoverageSpace`. Inherited as-is by every
-        concrete `RuleHeuristic`, relative ones included (see `parent=`
+        concrete `RuleHeuristic`, adaptive ones included (see `parent=`
         below).
 
         `space` is built fresh (a dataset-agnostic, default-sized
@@ -392,8 +394,8 @@ class RuleHeuristic(ABC):
         space's own dimensions. `stats.length` still has no meaningful
         value here (`LengthPenalized` will just ignore it, defaulting to
         0). `parent=` (a `RuleStats`, fixed across every grid point) is
-        the frame of a relative heuristic -- e.g. `FoilGain` -- and
-        ignored by an absolute one; without it, a relative heuristic is
+        the frame of an adaptive heuristic -- e.g. `FoilGain` -- and
+        ignored by a static one; without it, an adaptive heuristic is
         drawn relative to the universal rule. Points outside the
         parent's coverage (more positives or negatives than it covers)
         are no refinements of it, and their scores mean nothing.
@@ -489,28 +491,30 @@ class RuleHeuristic(ABC):
         return self.plot_isometric_through_point(stats.fp, stats.tp, space=space, mark_point=mark_point, **kwargs)
 
 
-class Relative(RuleHeuristic):
+class Adaptive(RuleHeuristic):
     """`base` relative to the parent rule: a refinement is scored among
     the parent's covered examples only -- they are the whole data (the
     frame), their class distribution is the prior, and so the parent is
-    the universal rule. `Relative(WRAcc())` is weighted relative accuracy
-    with the parent's precision as the prior ("adaptive" WRA),
-    `Relative(MEstimate(m))` an m-estimate whose `m` is weighed against
+    the universal rule. The frame thus adapts to the search, whereas that
+    of the static `base` stays the whole data. `Adaptive(WRAcc())` is
+    weighted relative accuracy with the parent's precision as the prior
+    (adaptive WRA),
+    `Adaptive(MEstimate(m))` an m-estimate whose `m` is weighed against
     the parent's examples. For a heuristic that doesn't depend on the
     frame (`Precision`, `Laplace`) it changes nothing.
 
     Scores relative to different parents have no common scale: a search
     compares them among the refinements of one rule, and the rule on the
-    refinement path it returns is picked by an absolute `selection`, or
+    refinement path it returns is picked by a static `selection`, or
     by default the last one it reached (`LastRule`). Without a parent
     (`score(stats)`, e.g. for an isometrics plot or `sort_rules`) the
-    frame is the whole data, and `Relative(h)` scores as `h`.
+    frame is the whole data, and `Adaptive(h)` scores as `h`.
 
-    `Relative` is idempotent: `Relative(h)` scores `base` *without* a
-    parent, so a relative `base` (`FoilGain`, another `Relative`) is
+    `Adaptive` is idempotent: `Adaptive(h)` scores `base` *without* a
+    parent, so an adaptive `base` (`FoilGain`, another `Adaptive`) is
     relative to the universal rule of the frame -- the parent again.
     Stecher, Janssen & Fürnkranz's inverted heuristics are
-    `Relative(Inverted(h))` (`Inverted(Relative(h))` is the same).
+    `Adaptive(Inverted(h))` (`Inverted(Adaptive(h))` is the same).
 
     The bound (`bound`/`head_bound`) is relative to the rule itself: the
     best score any refinement of the rule can reach relative to it, by
@@ -522,7 +526,7 @@ class Relative(RuleHeuristic):
 
     def __init__(self, base: RuleHeuristic):
         if not isinstance(base, RuleHeuristic):
-            raise TypeError(f"Relative needs a RuleHeuristic, got {type(base).__name__}")
+            raise TypeError(f"Adaptive needs a RuleHeuristic, got {type(base).__name__}")
         self.base = base
 
     @property
@@ -555,7 +559,16 @@ class Relative(RuleHeuristic):
         return self.base.head_bound(covered, covered, length)
 
     def __repr__(self) -> str:
-        return f"Relative({self.base!r})"
+        return f"Adaptive({self.base!r})"
+
+
+class Relative(Adaptive):
+    """Deprecated alias of `Adaptive`, its name up to pyrulearn 0.7.1."""
+
+    def __init__(self, base: RuleHeuristic):
+        warnings.warn("Relative is deprecated and will be removed; use Adaptive, its new name",
+                      DeprecationWarning, stacklevel=2)
+        super().__init__(base)
 
 
 class MajorityHead:
@@ -630,7 +643,7 @@ class InformationContent(MajorityHead, RuleHeuristic):
     example is positive; negated, as `CoveredNegatives` is, to keep this
     module's higher-is-better convention. It ranks rules exactly as
     `Precision` does (same isometrics); its use is as the base of a gain:
-    `FoilGain` is ``Relative(WeightedGain(CoveredPositives(),
+    `FoilGain` is ``Adaptive(WeightedGain(CoveredPositives(),
     InformationContent()))``. ``-inf`` for a rule covering no positive
     (precision 0: infinitely many bits)."""
 
@@ -822,7 +835,7 @@ class MEstimate(RuleHeuristic):
     Minus the constant p0, it is a weighted precision gain over the
     universal rule: ``h - p0 = (tp+fp)/(tp+fp+m) * (precision - p0)``, so
     it ranks rules as ``WeightedGain(w, Precision())`` with that weight
-    ``w``. `Relative(MEstimate(m))` is the same gain over the parent
+    ``w``. `Adaptive(MEstimate(m))` is the same gain over the parent
     rule, with `m` weighed against the parent's examples.
     """
 
@@ -902,7 +915,7 @@ class WRAcc(RuleHeuristic):
 
     A fast shortcut for ``WeightedGain(Support(), Precision())`` -- the
     coverage-weighted precision gain over the universal rule, whose
-    precision is the prior -- with the same scores. `Relative(WRAcc())`
+    precision is the prior -- with the same scores. `Adaptive(WRAcc())`
     takes the gain over the parent rule instead ("adaptive" WRA)."""
 
     def score(self, stats: RuleStats) -> float:
@@ -1378,11 +1391,11 @@ class WeightedGain(RuleHeuristic):
     improves `base` over the universal rule ``r0`` of the frame, weighted
     by `weight` (no weight: 1, `Gain`). In the whole data ``r0`` is the
     universal rule, so the gain is over the root of a top-down search;
-    inside `Relative` the frame is the parent's covered examples, whose
+    inside `Adaptive` the frame is the parent's covered examples, whose
     universal rule is the parent, so the gain is over the parent.
 
     `WRAcc` is ``WeightedGain(Support(), Precision())`` and Foil's gain
-    ``Relative(WeightedGain(CoveredPositives(), InformationContent()))``
+    ``Adaptive(WeightedGain(CoveredPositives(), InformationContent()))``
     (`FoilGain`); both have fast shortcuts with the same scores. With
     ``Support()`` raised to a power ``a`` it is Klösgen's family of
     quality functions; the m-estimate ranks as one, too (see `MEstimate`).
@@ -1391,8 +1404,8 @@ class WeightedGain(RuleHeuristic):
     infinite (`InformationContent` of a rule covering no positive), as the
     limit ``p * log2(p/(p+n)) -> 0`` of Foil's gain is. A rule that
     doesn't change `base` (``base(r) == base(r0)``, infinities included)
-    gains 0. `weight` and `base` must be absolute heuristics of single
-    scores (wrap the `WeightedGain` in `Relative`, not its parts; a `LEF`
+    gains 0. `weight` and `base` must be static heuristics of single
+    scores (wrap the `WeightedGain` in `Adaptive`, not its parts; a `LEF`
     can't be subtracted).
 
     The bound is the default ``(tp, 0)`` projection: sound for the gains
@@ -1407,8 +1420,8 @@ class WeightedGain(RuleHeuristic):
             if not isinstance(part, RuleHeuristic):
                 raise TypeError(f"WeightedGain's {name} must be a RuleHeuristic, got {type(part).__name__}")
             if part.relative_to_parent:
-                raise TypeError(f"WeightedGain's {name} must be absolute, got {part!r}: wrap the WeightedGain "
-                                f"in Relative instead")
+                raise TypeError(f"WeightedGain's {name} must be static, got {part!r}: wrap the WeightedGain "
+                                f"in Adaptive instead")
             if isinstance(part, LEF):
                 raise TypeError(f"WeightedGain's {name} must score a single value, got the LEF {part!r}")
         self.weight = weight
@@ -1440,9 +1453,9 @@ class WeightedGain(RuleHeuristic):
 class Gain(WeightedGain):
     """``h(r) = base(r) - base(r0)``: the unweighted `WeightedGain`, the
     improvement of `base` over the universal rule of the frame.
-    `Relative(Gain(h))` is the improvement over the parent rule, `h` of
+    `Adaptive(Gain(h))` is the improvement over the parent rule, `h` of
     the refinement minus `h` of the parent, both in the parent's frame.
-    It ranks the refinements of one rule exactly as `Relative(h)` does
+    It ranks the refinements of one rule exactly as `Adaptive(h)` does
     (the parent's score is the same for all of them); it differs only
     where refinements of different parents are compared, as in a beam:
     by improvement, not by level."""
@@ -1458,10 +1471,10 @@ class FoilGain(RuleHeuristic):
     """Foil's information gain (Quinlan, 1990): ``tp * (log2(tp/(tp+fp))
     - log2(tp'/(tp'+fp')))``, the bits of information content a
     refinement saves per covered positive, over its parent rule (``tp'``,
-    ``fp'``), times the positives it still covers. Relative to the parent
+    ``fp'``), times the positives it still covers. Adaptive to the parent
     rule by definition: a fast shortcut for
-    ``Relative(WeightedGain(CoveredPositives(), InformationContent()))``,
-    with the same scores (`Relative(FoilGain())` is `FoilGain()`).
+    ``Adaptive(WeightedGain(CoveredPositives(), InformationContent()))``,
+    with the same scores (`Adaptive(FoilGain())` is `FoilGain()`).
     Without a parent (an isometrics plot, `sort_rules`), the gain is over
     the universal rule of the whole data, ``log2(n_pos/(n_pos+n_neg))``.
 
@@ -1595,7 +1608,7 @@ def _projection_bound(heuristic: RuleHeuristic) -> bool:
     """Whether `heuristic`'s bound is the score at the ``(tp, 0)``
     projection (`RuleHeuristic.bound`), directly or through a wrapper --
     the bound `Inverted` can carry over."""
-    if isinstance(heuristic, (Inverted, LengthPenalized, Relative)):
+    if isinstance(heuristic, (Inverted, LengthPenalized, Adaptive)):
         return _projection_bound(heuristic.base)
     return type(heuristic).bound is RuleHeuristic.bound and type(heuristic).batch_bound is RuleHeuristic.batch_bound
 
@@ -1627,14 +1640,14 @@ class Inverted(RuleHeuristic):
     excluded examples, the negative predictive value; its isometrics are
     a pencil of lines through the upper right corner ``(N, P)``.
 
-    On its own, an inverted heuristic is absolute, like any other: the
+    On its own, an inverted heuristic is static, like any other: the
     corner is that of the whole data. Stecher, Janssen & Fürnkranz's
     inverted heuristics judge a refinement by what *it* excludes from its
     parent rule, so the corner moves with the search: they are
-    `Relative(Inverted(h))`, ``h(N' - n, P' - p)`` among the parent's
-    ``P'`` positives and ``N'`` negatives. An inverted relative heuristic
-    is relative too, and inverts within the parent's frame:
-    `Inverted(Relative(h))` is `Relative(Inverted(h))`, and
+    `Adaptive(Inverted(h))`, ``h(N' - n, P' - p)`` among the parent's
+    ``P'`` positives and ``N'`` negatives. An inverted adaptive heuristic
+    is adaptive too, and inverts within the parent's frame:
+    `Inverted(Adaptive(h))` is `Adaptive(Inverted(h))`, and
     `Inverted(FoilGain())` the inverted Foil gain (Mooney's CNF learner).
 
     Any heuristic of the statistics can be inverted, `LEF` and
@@ -1642,7 +1655,7 @@ class Inverted(RuleHeuristic):
     heuristic that ranks every rule the same way inverted or not
     (`Accuracy`, `WRAcc`, `Correlation`, `ChiSquare`, `YoudenJ`: symmetric
     in the two classes and in covered/uncovered) isn't changed by it, and
-    the constructor warns (relative, it is just `Relative(h)`). A
+    the constructor warns (adaptive, it is just `Adaptive(h)`). A
     class-neutral heuristic (`Entropy`) has an inverted two-class score
     (the purity of the *excluded* examples), but its score of the whole
     class distribution has no inverted form: a search for a rule of any
@@ -1684,7 +1697,7 @@ class Inverted(RuleHeuristic):
 
     def head_scores(self, covered, totals, length: Any = 0, parent_covered=None) -> np.ndarray:
         """Each head's inverted score, against the class totals of the
-        scope (`totals`) -- for a relative `base`, of the parent rule
+        scope (`totals`) -- for an adaptive `base`, of the parent rule
         (`parent_covered`)."""
         self._check_head()
         scope = parent_covered if parent_covered is not None and self.relative_to_parent else totals
@@ -1697,7 +1710,7 @@ class Inverted(RuleHeuristic):
 
     def bound(self, stats: RuleStats) -> Score:
         self._check_bound()
-        if self.relative_to_parent:   # relative to the rule itself, as `Relative`'s
+        if self.relative_to_parent:   # relative to the rule itself, as `Adaptive`'s
             return self.score(_optimistic(stats), stats)
         return super().bound(stats)
 
@@ -1709,7 +1722,7 @@ class Inverted(RuleHeuristic):
 
     def _check_head(self) -> None:
         base = self.base
-        while isinstance(base, (Inverted, LengthPenalized, Relative)):
+        while isinstance(base, (Inverted, LengthPenalized, Adaptive)):
             base = base.base
         if isinstance(base, ClassNeutral):
             raise ValueError(f"{self!r} has no inverted score of a class distribution: search for a rule of a "

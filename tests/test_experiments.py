@@ -174,6 +174,20 @@ def test_cache_key_is_stable_for_learners_built_from_components():
     assert key(PFossil(random_state=0)) != key(PFossil(random_state=0), rep=HorizontalBitmapRepresentation)
 
 
+def test_cache_key_survives_the_renaming_of_relative_to_adaptive():
+    # caches written with `Relative(h)` (up to 0.7.1) stay valid for `Adaptive(h)`
+    from pyrulearn.data import NListRepresentation
+    from pyrulearn.experiments.runner import _cache_key
+    from pyrulearn.heuristics import Adaptive, Correlation, Relative
+
+    entry = _synthetic_entry("synth_a")
+    key = lambda h: _cache_key(entry, 3, 0, 0, PFossil(heuristic=h, random_state=0), NListRepresentation)  # noqa: E731
+    with pytest.warns(DeprecationWarning):
+        old = Relative(Correlation())
+    assert key(Adaptive(Correlation())) == key(old)
+    assert key(Adaptive(Correlation())) != key(Correlation())
+
+
 def _sleep_then_return(seconds: float) -> str:
     """Module-level (picklable by reference) -- see `TimeoutRunner`'s
     docstring on why that's required."""

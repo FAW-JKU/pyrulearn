@@ -269,6 +269,13 @@ def _stratified_folds(y: np.ndarray, n_folds: int, random_state: int):
         return list(splitter.split(np.zeros(len(y))))
 
 
+#: renamed classes, by the name they had when caches were written, so that
+#: renaming a class doesn't invalidate the cached results of its learners
+_CACHE_CLASS_NAMES = {
+    "pyrulearn.heuristics.Adaptive": "pyrulearn.heuristics.Relative",   # renamed after 0.7.1
+}
+
+
 def _stable_params(value, depth: int = 0):
     """`value` as JSON-ready data that is the same in every run: nested
     component objects (e.g. a SeCo learner's `SingleRuleLearner`) by class
@@ -283,7 +290,8 @@ def _stable_params(value, depth: int = 0):
         return sorted(items, key=repr) if isinstance(value, (set, frozenset)) else items
     if hasattr(value, "__dict__") and depth < 8:
         attrs = {k: v for k, v in vars(value).items() if not k.startswith("_")}
-        return {"__class__": f"{type(value).__module__}.{type(value).__qualname__}",
+        name = f"{type(value).__module__}.{type(value).__qualname__}"
+        return {"__class__": _CACHE_CLASS_NAMES.get(name, name),
                 **{k: _stable_params(v, depth + 1) for k, v in attrs.items()}}
     return f"{type(value).__module__}.{type(value).__qualname__}:{value!r}"
 

@@ -71,7 +71,7 @@ class _CPARParameters:
         if heuristic is not None and not heuristic.relative_to_parent:
             raise ValueError(
                 f"CPAR needs a gain over the rule before the new condition, got {heuristic!r} -- e.g. "
-                f"Relative(Gain({heuristic!r}))"
+                f"Adaptive(Gain({heuristic!r}))"
             )
         reweighting = getattr(covering, "reweighting", None)
         if reweighting is not None and reweighting.assigns_rule_weights:
@@ -164,7 +164,7 @@ class CPAR(_CPARParameters, SeCo):
     - heuristic: `heuristic` (default `FoilGain()`), a gain over the rule
       before the condition (relative to the parent rule), since
       `min_gain` and `gain_similarity` are thresholds on that improvement;
-      `Relative(Gain(h))` makes one from any heuristic `h`;
+      `Adaptive(Gain(h))` makes one from any heuristic `h`;
     - search: `GainAscentHillClimbing(max_conditions=max_length,
       min_gain=min_gain, branch_similarity=gain_similarity)` -- step 1;
       its `search_all` yields every lineage's rule, and `SeCo`'s covering

@@ -1072,7 +1072,7 @@ uses), a `RuleHeuristic` scores fresh against `data` (unless
 computes `tp`/`fp`/`fn`/`tn` from a rule's actual coverage
 (`positive_class` defaulting to `rule.target`) and `length` from
 `rule.length()`. A heuristic relative to the parent rule needing the
-parent's stats too (see `Relative`, below) just calls this a second time
+parent's stats too (see `Adaptive`, below) just calls this a second time
 on the parent rule -- there's no dedicated parameter for it here.
 
 Built in (all in `pyrulearn.heuristics`). The four confusion-matrix quadrant
@@ -1172,7 +1172,7 @@ Heuristics that read past `tp`/`fp`/`fn`/`tn`, or compose others:
   of a top-down refinement path (as Foil does); the default selection of a
   search with a heuristic relative to the parent rule.
 
-**Absolute and relative heuristics.** A heuristic scores a rule within a
+**Static and adaptive heuristics.** A heuristic scores a rule within a
 *frame*: by default the whole data, where every rule is compared with the
 universal rule. A heuristic *relative to the parent rule*
 (`relative_to_parent`) takes the parent's covered examples as the frame
@@ -1180,36 +1180,36 @@ instead -- the parent's class distribution is the prior, and the parent
 is the universal rule of the frame. It takes the parent's `RuleStats` as
 an optional second argument of `score`/`batch_score` (a search passes
 each refinement's parent); without one, it scores in the whole data, like
-an absolute heuristic. Scores relative to different parents have no common
-scale: a search picks the rule it returns by an absolute `selection`, by
+a static heuristic. Scores relative to different parents have no common
+scale: a search picks the rule it returns by a static `selection`, by
 default the last rule it reached (`LastRule`). Wrappers build heuristics
 from others:
 
-- `Relative(base)` -- `base` among the parent's examples: `Relative(WRAcc())`
+- `Adaptive(base)` -- `base` among the parent's examples: `Adaptive(WRAcc())`
   is WRA with the parent's precision as the prior ("adaptive" WRA),
-  `Relative(MEstimate(m))` an m-estimate whose `m` is weighed against the
+  `Adaptive(MEstimate(m))` an m-estimate whose `m` is weighed against the
   parent's examples. Idempotent; changes nothing for a heuristic that
   doesn't depend on the frame (`Precision`, `Laplace`).
 - `Inverted(base)` -- `base(N - n, P - p)`: a rule judged by the examples
   it *excludes*, with the classes exchanged, from the upper right corner of
   the coverage space (`Inverted(Precision())` is the negative predictive
   value). The inverted heuristics of Stecher, Janssen & Fürnkranz judge a
-  refinement by what it excludes from its parent: `Relative(Inverted(h))`,
+  refinement by what it excludes from its parent: `Adaptive(Inverted(h))`,
   `base(N̂ - n, P̂ - p)` among the parent's `P̂` positives and `N̂`
   negatives -- meant for refining a rule, with a regular heuristic
   choosing the rule on the refinement path:
-  `SingleRuleLearner(Relative(Inverted(Precision())), selection=Laplace())`.
-  An inverted relative heuristic is relative and inverts within the
+  `SingleRuleLearner(Adaptive(Inverted(Precision())), selection=Laplace())`.
+  An inverted adaptive heuristic is adaptive and inverts within the
   parent's frame (`Inverted(FoilGain())`, the inverted Foil gain). It warns
   for a heuristic that ranks rules the same way inverted (`Accuracy`,
   `WRAcc`, `Correlation`, ...).
 - `WeightedGain(weight, base)` -- `weight(r) * (base(r) - base(r0))`, the
   gain of `base` over the universal rule `r0` of the frame, weighted by
   `weight`: over the root in the whole data, over the parent inside
-  `Relative`. `WRAcc` is `WeightedGain(Support(), Precision())`, Foil's
-  gain `Relative(WeightedGain(CoveredPositives(), InformationContent()))`;
+  `Adaptive`. `WRAcc` is `WeightedGain(Support(), Precision())`, Foil's
+  gain `Adaptive(WeightedGain(CoveredPositives(), InformationContent()))`;
   the m-estimate ranks as one too. A zero weight gains 0. `Gain(base)` is
-  the unweighted one: `Relative(Gain(h))` scores a refinement by how much
+  the unweighted one: `Adaptive(Gain(h))` scores a refinement by how much
   `h` improved over its parent.
 - `FoilGain` -- Quinlan's information gain, `tp * (log2(tp/(tp+fp)) -
   log2(parent.tp/(parent.tp+parent.fp)))`: relative to the parent rule, a
@@ -1394,9 +1394,9 @@ visually distinct from another's (or from an overlaid rule's own
 refinement-path color) when layering several on the same space --
 `cmap` and the shading are dropped automatically when `colors` is given,
 since matplotlib rejects both together. `parent=` fixes the parent `RuleStats` passed to
-a relative heuristic's `score` across every grid point -- the same value
+an adaptive heuristic's `score` across every grid point -- the same value
 throughout, not one per point -- e.g. to draw `FoilGain`'s isometrics for
-a given parent; without it, a relative heuristic is drawn relative to the
+a given parent; without it, an adaptive heuristic is drawn relative to the
 universal rule. Plotting several heuristics' isometrics
 side by side makes their families concrete -- `Precision`/`Laplace` fan
 out from the origin, `WRAcc` is parallel lines, `Correlation` bows into
@@ -1481,11 +1481,11 @@ and only does one-vs-rest. Exchanging a component works the same for
 both:
 
 ```python
-from pyrulearn.heuristics import Gain, Laplace, Relative
+from pyrulearn.heuristics import Gain, Laplace, Adaptive
 from pyrulearn.learners.cpar import CPAR, DenseCPAR
 from pyrulearn.learners.seco import AdditiveReweighting, PositiveWeightBelow, WeightedCovering
 
-CPAR(heuristic=Relative(Gain(Laplace())), min_gain=0.01)    # grow by Laplace improvement
+CPAR(heuristic=Adaptive(Gain(Laplace())), min_gain=0.01)    # grow by Laplace improvement
 DenseCPAR(covering=WeightedCovering(AdditiveReweighting(), PositiveWeightBelow(0.05),
                                     max_rounds=None))       # CN2-SD's additive reweighting
 ```
@@ -1743,7 +1743,7 @@ usable with any rule set: `TopKMeanCombiner(heuristic, k)`. `CPAR` is a
 `GainAscentHillClimbing(min_gain, branch_similarity=gain_similarity)`),
 and each part is a constructor argument: `heuristic=` (a
 gain over the rule before the condition, default `FoilGain()`;
-`Relative(Gain(h))` makes one from any heuristic), `covering=` (default
+`Adaptive(Gain(h))` makes one from any heuristic), `covering=` (default
 `WeightedCovering(MultiplicativeReweighting(decay),
 PositiveWeightBelow(min_total_weight))`) and `combiner=`. Like every
 SeCo learner it also decomposes the classes differently on request
@@ -2967,9 +2967,9 @@ report and plots are checked in next to the script:
   2014) as a reference.
 - `refinement_heuristics` -- how to judge the refinements of a rule, in
   the same learner: one m-estimate for refinement and another for
-  selection, absolute and relative, regular and inverted; the same frames
-  for the other heuristics; beam search with relative heuristics; and
-  weighted gains (WRA, Foil gain, Klösgen's), absolute and relative.
+  selection, static and adaptive, regular and inverted; the same frames
+  for the other heuristics; beam search with adaptive heuristics; and
+  weighted gains (WRA, Foil gain, Klösgen's), static and adaptive.
 - `seco_learners_comparison` -- CN2, PFoil, PFossil, Pypper and PyLORD
   against JRip and the Java LORD.
 - `representations` -- fit time of the four data representations over

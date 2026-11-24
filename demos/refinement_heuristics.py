@@ -70,7 +70,7 @@ from pyrulearn.experiments.runner import run_cv
 from pyrulearn.experiments.stats import mean_rank, win_counts
 from pyrulearn.heuristics import (
     Correlation, Coverage, CoveredPositives, FBeta, FoilGain, Gain, InformationContent, Inverted, Laplace,
-    LinearCostRates, MEstimate, Precision, Relative, RuleHeuristic, Support, WeightedGain, WRAcc,
+    LinearCostRates, MEstimate, Precision, Adaptive, RuleHeuristic, Support, WeightedGain, WRAcc,
 )
 from pyrulearn.learners.seco import BeamSearch, GainAscentHillClimbing, SeCo, SingleRuleLearner
 from pyrulearn.models import ConceptCascade, ConceptModel
@@ -158,7 +158,7 @@ FRAMES = (("absolute", ""), ("relative", "Relative"), ("absolute inverted", "abs
 def _refiner(kind: str, h: RuleHeuristic, relative_h: Optional[RuleHeuristic] = None) -> RuleHeuristic:
     """`h` refining as `kind`; `relative_h` is the relative heuristic if
     it isn't `Relative(h)` (Foil gain)."""
-    relative = relative_h if relative_h is not None else Relative(h)
+    relative = relative_h if relative_h is not None else Adaptive(h)
     if kind == "absolute":
         return h
     if kind == "relative":
@@ -208,7 +208,7 @@ def _section2_heuristics():
         "F-measure (beta=0.5)": (FBeta(beta=0.5), None, all_frames),
         "Correlation": (Correlation(), None, ("absolute", "relative")),
         "Foil gain": (WeightedGain(CoveredPositives(), InformationContent()), FoilGain(), all_frames),
-        "Laplace": (Laplace(), None, ("absolute", "absolute inverted")),
+        "Laplace": (Laplace(), None, ("absolute", "absolute inverted", "relative inverted")),
     }
 
 
@@ -236,12 +236,12 @@ def _beam_heuristics() -> Dict[str, RuleHeuristic]:
     m = MEstimate(m=M_REFINE)
     return {
         f"m={_m(M_REFINE)}": m,
-        f"Relative(m={_m(M_REFINE)})": Relative(m),
-        f"Inverted(m={_m(M_REFINE)})": Relative(Inverted(m)),
-        f"Relative(Gain(m={_m(M_REFINE)}))": Relative(Gain(m)),
-        f"Relative(Gain(absolute Inverted(m={_m(M_REFINE)})))": Relative(Gain(Inverted(m))),
+        f"Relative(m={_m(M_REFINE)})": Adaptive(m),
+        f"Inverted(m={_m(M_REFINE)})": Adaptive(Inverted(m)),
+        f"Relative(Gain(m={_m(M_REFINE)}))": Adaptive(Gain(m)),
+        f"Relative(Gain(absolute Inverted(m={_m(M_REFINE)})))": Adaptive(Gain(Inverted(m))),
         "WRA": WRAcc(),
-        "Relative(WRA)": Relative(WRAcc()),
+        "Relative(WRA)": Adaptive(WRAcc()),
     }
 
 
@@ -330,7 +330,7 @@ def build_gain_learners(selects) -> List[SeCo]:
             for frame in ("absolute", "relative"):
                 for m_s in selects:
                     learners.append(LabeledSeCo(gain_label(frame, weight_name, base_name, m_s),
-                                                gain if frame == "absolute" else Relative(gain),
+                                                gain if frame == "absolute" else Adaptive(gain),
                                                 selection=MEstimate(m=m_s), random_state=hc.RANDOM_STATE))
     return learners
 
@@ -463,7 +463,8 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
         f"Each heuristic refines in every frame where it differs, with the m-estimate selecting "
         f"(m_s in {{{', '.join(_m(m) for m in selects)}}}); shown is the best selection, "
         "with its m_s. Inverting a symmetric heuristic (WRA, correlation) changes nothing, and "
-        "relativizing one that doesn't depend on the frame (Laplace) neither. The absolute Foil "
+        "relativizing one that doesn't depend on the frame (Laplace) neither -- unless it is inverted, "
+        "as the inverted Laplace estimate depends on it. The absolute Foil "
         "gain is the gain over the universal rule (`WeightedGain(CoveredPositives(), "
         "InformationContent())`), the relative one Foil's own (`FoilGain()`). The m-estimate "
         f"(m_r = {_m(M_REFINE)}) is from section 1.\n\n",

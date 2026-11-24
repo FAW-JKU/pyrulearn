@@ -65,7 +65,7 @@ from pyrulearn.experiments.runner import run_cv
 from pyrulearn.experiments.stats import mean_rank, win_counts
 from pyrulearn.heuristics import (
     Accuracy, Correlation, CoverageDifference, FBeta, Inverted, Laplace, LinearCost, LinearCostRates,
-    MEstimate, Precision, Relative, WRAcc,
+    MEstimate, Precision, Adaptive, WRAcc,
 )
 from pyrulearn.interfaces.weka import WekaJRip
 from pyrulearn.learners.seco import BeamSearch, Pypper, SeCo, SingleRuleLearner
@@ -218,7 +218,7 @@ def build_matrix_variants():
     """The inverted m-estimate with `INVERTED_M` refining, the m-estimate
     with every m of `MATRIX_M` selecting (a row of `refinement_heuristics`'
     matrix, the same learners)."""
-    return [HeuristicSeCo(_matrix_label(True, INVERTED_M, m_select), Relative(Inverted(MEstimate(m=INVERTED_M))),
+    return [HeuristicSeCo(_matrix_label(True, INVERTED_M, m_select), Adaptive(Inverted(MEstimate(m=INVERTED_M))),
                           random_state=RANDOM_STATE, selection=MEstimate(m=m_select))
             for m_select in MATRIX_M]
 
