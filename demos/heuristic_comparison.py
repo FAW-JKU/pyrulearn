@@ -27,11 +27,11 @@ Pypper (both also with ordered class binarization) are included as
 benchmarks. Kloesgen is left out.
 
 A last section adds the inverted m-estimate of Stecher, Janssen &
-Fürnkranz (ECML PKDD 2014) for refinement, `Relative(Inverted(MEstimate(
+Fürnkranz (ECML PKDD 2014) for refinement, `Adaptive(Inverted(MEstimate(
 16)))`, with the m-estimate for every m in `MATRIX_M` selecting the rule
 on the refinement path, as a reference curve. The full study of
-refinement and selection heuristics -- every pair of m, absolute and
-relative, regular and inverted -- is `refinement_heuristics`, which shares
+refinement and selection heuristics -- every pair of m, static and
+adaptive, regular and inverted -- is `refinement_heuristics`, which shares
 this demo's result cache.
 
 Differences from the paper: numeric attributes are discretized by
@@ -206,7 +206,7 @@ def _matrix_label(inverted: bool, m_refine, m_select) -> str:
     learner where the sweep has that m."""
     if not inverted and m_refine == m_select and m_refine in M_SWEEP:
         return f"m-estimate (m={m_refine})"
-    refine = f"Inverted(m={_m_text(m_refine)})" if inverted else f"m={_m_text(m_refine)}"
+    refine = f"Adaptive(Inverted(m={_m_text(m_refine)}))" if inverted else f"m={_m_text(m_refine)}"
     return f"refine {refine}, select m={_m_text(m_select)}"
 
 
@@ -331,7 +331,7 @@ def _inverted_section(results) -> list:
         numeric_only=True)
     lines = [
         "## The inverted m-estimate for refinement\n\n",
-        f"`Relative(Inverted(MEstimate({INVERTED_M})))` refines, after Stecher, Janssen & Fürnkranz "
+        f"`Adaptive(Inverted(MEstimate({INVERTED_M})))` refines, after Stecher, Janssen & Fürnkranz "
         "(ECML PKDD 2014): it judges a refinement from the rule it refines (covering P̂ positives and "
         "N̂ negatives) by the examples it excludes, h(N̂ - n, P̂ - p), and prefers the refinement whose "
         "excluded examples are the purest in negatives (see the "

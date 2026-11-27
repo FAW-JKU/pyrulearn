@@ -15,32 +15,32 @@ run are computed once.
 
 Two operations change a heuristic ``h`` for refinement:
 
-- **relativization** (`Relative(h)`): ``h`` scored among the examples of
+- **adaptation** (`Adaptive(h)`): ``h`` scored among the examples of
   the rule being refined (its parent), whose class distribution is the
   prior -- the parent is the universal rule of the frame;
 - **inversion** (`Inverted(h)`): ``h(N - n, P - p)``, a rule judged by
   the examples it excludes, with the classes exchanged.
 
 Stecher, Janssen & Fürnkranz's inverted heuristics combine both,
-`Relative(Inverted(h))`. Sections:
+`Adaptive(Inverted(h))`. Sections:
 
 1. **m-estimates for refinement and for selection** -- `MEstimate(m_r)`
    refines, `MEstimate(m_s)` selects, for every pair of m in `MATRIX_M`:
-   absolute and relative, regular and inverted (four m x m matrices; the
+   static and adaptive, regular and inverted (four m x m matrices; the
    first two as in the paper's section on inverted heuristics).
-2. **Absolute vs. relative, regular vs. inverted** -- the same 2 x 2 for
+2. **Static vs. adaptive, regular vs. inverted** -- the same 2 x 2 for
    the other heuristics whose scores depend on the frame (WRA, relative
    cost, F-measure, correlation, Foil gain), and Laplace, which doesn't.
-3. **Relative heuristics and m** -- the best selection per m for
+3. **Adaptive heuristics and m** -- the best selection per m for
    refinement, up to m -> infinity (WRA).
 4. **Beam search** -- scores relative to different parents have no
-   common scale: beam width 1 vs. 5, levels (`Relative(h)`) vs.
-   improvements (`Relative(Gain(h))`).
+   common scale: beam width 1 vs. 5, levels (`Adaptive(h)`) vs.
+   improvements (`Adaptive(Gain(h))`).
 5. **Weighted gains** -- ``weight(r) * (base(r) - base(r0))``, the gain
    over the universal rule of the frame (`WeightedGain`), with Klösgen's
    weights ``c^a`` (``c`` the covered examples or positives, ``a`` in 0,
    0.5, 1, 2) and a linear (precision) or logarithmic (information
-   content) base, absolute and relative: WRA and Foil gain are two of
+   content) base, static and adaptive: WRA and Foil gain are two of
    them.
 
 Run: `python demos/refinement_heuristics.py` with no arguments is the
@@ -156,66 +156,66 @@ class LabeledSeCo(SeCo):
 
 # ------------------------------------------------------------ variants ----
 
-#: the four ways to refine by a heuristic, and their label prefixes; the
-#: relative inverted one is `heuristic_comparison`'s "Inverted(...)"
-FRAMES = (("absolute", ""), ("relative", "Relative"), ("absolute inverted", "absolute Inverted"),
-          ("relative inverted", "Inverted"))
+#: the four ways to refine by a heuristic; the adaptive inverted
+#: m-estimate is `heuristic_comparison`'s "Adaptive(Inverted(...))"
+FRAMES = ("static", "adaptive", "static inverted", "adaptive inverted")
 
 
-def _refiner(kind: str, h: RuleHeuristic, relative_h: Optional[RuleHeuristic] = None) -> RuleHeuristic:
-    """`h` refining as `kind`; `relative_h` is the relative heuristic if
-    it isn't `Relative(h)` (Foil gain)."""
-    relative = relative_h if relative_h is not None else Adaptive(h)
-    if kind == "absolute":
+def _refiner(kind: str, h: RuleHeuristic, adaptive_h: Optional[RuleHeuristic] = None) -> RuleHeuristic:
+    """`h` refining as `kind`; `adaptive_h` is the adaptive heuristic if
+    it isn't `Adaptive(h)` (Foil gain)."""
+    adaptive = adaptive_h if adaptive_h is not None else Adaptive(h)
+    if kind == "static":
         return h
-    if kind == "relative":
-        return relative
-    return Inverted(h) if kind == "absolute inverted" else Inverted(relative)
+    if kind == "adaptive":
+        return adaptive
+    return Inverted(h) if kind == "static inverted" else Inverted(adaptive)
 
 
 def _name(kind: str, name: str) -> str:
-    prefix = dict(FRAMES)[kind]
-    return f"{prefix}({name})" if prefix else name
+    """`name` in a learner's label, wrapped as the heuristic is."""
+    return {"static": name, "adaptive": f"Adaptive({name})", "static inverted": f"Inverted({name})",
+            "adaptive inverted": f"Adaptive(Inverted({name}))"}[kind]
 
 
 def matrix_label(kind: str, m_refine, m_select) -> str:
-    """Section 1's learner labels: `heuristic_comparison`'s for the absolute
-    and the relative inverted m-estimate (the same learners)."""
-    if kind == "absolute":
+    """Section 1's learner labels: `heuristic_comparison`'s for the static
+    and the adaptive inverted m-estimate (the same learners)."""
+    if kind == "static":
         return hc._matrix_label(False, m_refine, m_select)
-    if kind == "relative inverted":
+    if kind == "adaptive inverted":
         return hc._matrix_label(True, m_refine, m_select)
     return f"refine {_name(kind, f'm={_m(m_refine)}')}, select m={_m(m_select)}"
 
 
 def build_matrix_learners(ms) -> List[SeCo]:
     learners = []
-    for kind, _ in FRAMES:
+    for kind in FRAMES:
         for m_r in ms:
             for m_s in ms:
                 label = matrix_label(kind, m_r, m_s)
-                if kind == "absolute" and not label.startswith("refine "):
+                if kind == "static" and not label.startswith("refine "):
                     learners.append(HeuristicSeCo(label, MEstimate(m=m_r), random_state=hc.RANDOM_STATE))
                     continue
-                selection = None if kind == "absolute" and m_r == m_s else MEstimate(m=m_s)
+                selection = None if kind == "static" and m_r == m_s else MEstimate(m=m_s)
                 learners.append(HeuristicSeCo(label, _refiner(kind, MEstimate(m=m_r)), random_state=hc.RANDOM_STATE,
                                               selection=selection))
     return learners
 
 
-#: section 2: name -> (absolute heuristic, its relative version or None,
+#: section 2: name -> (static heuristic, its adaptive version or None,
 #: the frames that differ from the others -- inverting a symmetric
-#: heuristic changes nothing, relativizing one that doesn't depend on the
+#: heuristic changes nothing, adapting one that doesn't depend on the
 #: frame neither)
 def _section2_heuristics():
-    all_frames = tuple(kind for kind, _ in FRAMES)
+    all_frames = FRAMES
     return {
-        "WRA": (WRAcc(), None, ("absolute", "relative")),
+        "WRA": (WRAcc(), None, ("static", "adaptive")),
         "relative cost (c_r=0.342)": (LinearCostRates(cost_ratio=hc._cost_ratio(0.342)), None, all_frames),
         "F-measure (beta=0.5)": (FBeta(beta=0.5), None, all_frames),
-        "Correlation": (Correlation(), None, ("absolute", "relative")),
+        "Correlation": (Correlation(), None, ("static", "adaptive")),
         "Foil gain": (WeightedGain(CoveredPositives(), InformationContent()), FoilGain(), all_frames),
-        "Laplace": (Laplace(), None, ("absolute", "absolute inverted", "relative inverted")),
+        "Laplace": (Laplace(), None, ("static", "static inverted", "adaptive inverted")),
     }
 
 
@@ -225,10 +225,10 @@ def section2_label(kind: str, name: str, m_select) -> str:
 
 def build_section2_learners(selects) -> List[SeCo]:
     learners = []
-    for name, (h, relative_h, kinds) in _section2_heuristics().items():
+    for name, (h, adaptive_h, kinds) in _section2_heuristics().items():
         for kind in kinds:
             for m_s in selects:
-                learners.append(LabeledSeCo(section2_label(kind, name, m_s), _refiner(kind, h, relative_h),
+                learners.append(LabeledSeCo(section2_label(kind, name, m_s), _refiner(kind, h, adaptive_h),
                                             selection=MEstimate(m=m_s), random_state=hc.RANDOM_STATE))
     # Foil's own way: climb while the gain is positive, return the rule it ends at
     learners.append(LabeledSeCo("Foil gain", FoilGain(), search=GainAscentHillClimbing(),
@@ -243,12 +243,12 @@ def _beam_heuristics() -> Dict[str, RuleHeuristic]:
     m = MEstimate(m=M_REFINE)
     return {
         f"m={_m(M_REFINE)}": m,
-        f"Relative(m={_m(M_REFINE)})": Adaptive(m),
-        f"Inverted(m={_m(M_REFINE)})": Adaptive(Inverted(m)),
-        f"Relative(Gain(m={_m(M_REFINE)}))": Adaptive(Gain(m)),
-        f"Relative(Gain(absolute Inverted(m={_m(M_REFINE)})))": Adaptive(Gain(Inverted(m))),
+        f"Adaptive(m={_m(M_REFINE)})": Adaptive(m),
+        f"Adaptive(Inverted(m={_m(M_REFINE)}))": Adaptive(Inverted(m)),
+        f"Adaptive(Gain(m={_m(M_REFINE)}))": Adaptive(Gain(m)),
+        f"Adaptive(Gain(Inverted(m={_m(M_REFINE)})))": Adaptive(Gain(Inverted(m))),
         "WRA": WRAcc(),
-        "Relative(WRA)": Adaptive(WRAcc()),
+        "Adaptive(WRA)": Adaptive(WRAcc()),
     }
 
 
@@ -256,12 +256,12 @@ def beam_label(width: int, name: str, m_select) -> str:
     if width == 1:   # sections 1 and 2's learners, where they have them
         if name == f"m={_m(M_REFINE)}":
             return hc._matrix_label(False, M_REFINE, m_select)
-        if name == f"Relative(m={_m(M_REFINE)})":
-            return matrix_label("relative", M_REFINE, m_select)
-        if name == f"Inverted(m={_m(M_REFINE)})":
+        if name == f"Adaptive(m={_m(M_REFINE)})":
+            return matrix_label("adaptive", M_REFINE, m_select)
+        if name == f"Adaptive(Inverted(m={_m(M_REFINE)}))":
             return hc._matrix_label(True, M_REFINE, m_select)
-        if name in ("WRA", "Relative(WRA)"):
-            return section2_label("absolute" if name == "WRA" else "relative", "WRA", m_select)
+        if name in ("WRA", "Adaptive(WRA)"):
+            return section2_label("static" if name == "WRA" else "adaptive", "WRA", m_select)
         return f"refine {name}, select m={_m(m_select)}"
     return f"beam {width}: refine {name}, select m={_m(m_select)}"
 
@@ -298,25 +298,25 @@ def _bases() -> Dict[str, RuleHeuristic]:
 
 def gain_label(frame: str, weight: str, base: str, m_select) -> str:
     gain = f"gain of {base} weighted by {weight}"
-    return f"refine {'Relative(' + gain + ')' if frame == 'relative' else gain}, select m={_m(m_select)}"
+    return f"refine {'Adaptive(' + gain + ')' if frame == 'adaptive' else gain}, select m={_m(m_select)}"
 
 
 #: section 5's paired comparisons: (frame, weight, base) of two gains, named
 GAIN_PAIRS = (
-    (("absolute", "p + n", "precision"), ("absolute", "sqrt(p + n)", "precision"), "WRA vs. a weaker weight"),
-    (("absolute", "p + n", "precision"), ("absolute", "p", "precision"), "WRA vs. weight p"),
-    (("absolute", "p + n", "precision"), ("relative", "p + n", "precision"), "WRA vs. relative WRA"),
-    (("relative", "p + n", "precision"), ("relative", "p^2", "precision"), "relative WRA vs. weight p^2"),
-    (("relative", "p", "information content"), ("relative", "p + n", "information content"),
+    (("static", "p + n", "precision"), ("static", "sqrt(p + n)", "precision"), "WRA vs. a weaker weight"),
+    (("static", "p + n", "precision"), ("static", "p", "precision"), "WRA vs. weight p"),
+    (("static", "p + n", "precision"), ("adaptive", "p + n", "precision"), "WRA vs. adaptive WRA"),
+    (("adaptive", "p + n", "precision"), ("adaptive", "p^2", "precision"), "adaptive WRA vs. weight p^2"),
+    (("adaptive", "p", "information content"), ("adaptive", "p + n", "information content"),
      "Foil gain vs. weight p + n"),
-    (("relative", "p", "information content"), ("relative", "p + n", "precision"), "Foil gain vs. relative WRA"),
-    (("absolute", "p", "information content"), ("absolute", "sqrt(p)", "information content"),
-     "absolute Foil gain vs. weight sqrt(p)"),
-    (("absolute", "p", "information content"), ("relative", "p", "information content"),
-     "absolute vs. relative Foil gain"),
+    (("adaptive", "p", "information content"), ("adaptive", "p + n", "precision"), "Foil gain vs. adaptive WRA"),
+    (("static", "p", "information content"), ("static", "sqrt(p)", "information content"),
+     "static Foil gain vs. weight sqrt(p)"),
+    (("static", "p", "information content"), ("adaptive", "p", "information content"),
+     "static vs. adaptive Foil gain"),
 ) + tuple(((frame, weight, "precision"), (frame, weight, "information content"),
            f"{frame} {weight}: precision vs. information content")
-          for frame in ("absolute", "relative") for weight in ("sqrt(p)", "p", "p^2", "sqrt(p + n)", "p + n",
+          for frame in ("static", "adaptive") for weight in ("sqrt(p)", "p", "p^2", "sqrt(p + n)", "p + n",
                                                                "(p + n)^2"))
 
 
@@ -339,10 +339,10 @@ def build_gain_learners(selects) -> List[SeCo]:
     for weight_name, weight in _weights().items():
         for base_name, base in _bases().items():
             gain = WeightedGain(weight, base)
-            for frame in ("absolute", "relative"):
+            for frame in ("static", "adaptive"):
                 for m_s in selects:
                     learners.append(LabeledSeCo(gain_label(frame, weight_name, base_name, m_s),
-                                                gain if frame == "absolute" else Adaptive(gain),
+                                                gain if frame == "static" else Adaptive(gain),
                                                 selection=MEstimate(m=m_s), random_state=hc.RANDOM_STATE))
     return learners
 
@@ -366,8 +366,8 @@ MATRIX_MEASURES = (("accuracy", "Accuracy", format_accuracy),
                    ("conds_per_rule", "Conditions per rule", format_mean_count),
                    ("n_conditions", "Conditions in the rule set", format_mean_count))
 #: section 1's matrices, in the order the paper's figure script reads them
-MATRIX_TITLES = (("absolute", "Regular m-estimate"), ("relative inverted", "Inverted m-estimate"),
-                 ("relative", "Relative m-estimate"), ("absolute inverted", "Absolute inverted m-estimate"))
+MATRIX_TITLES = (("static", "Regular m-estimate"), ("adaptive inverted", "Adaptive inverted m-estimate"),
+                 ("adaptive", "Adaptive m-estimate"), ("static inverted", "Static inverted m-estimate"))
 
 
 def _means(results) -> pd.DataFrame:
@@ -427,16 +427,16 @@ attributes are discretized per training fold
 {hc.FIT_TIMEOUT:.0f}s, and a fold that times out fails the learner's whole
 cross-validation on that dataset.
 
-A heuristic `h` refines in one of four frames: **absolute** (`h`, judged
-from the origin of the coverage space of the whole data), **relative**
-(`Relative(h)`: among the examples of the rule being refined, its class
-distribution as the prior), **absolute inverted** (`Inverted(h)`:
+A heuristic `h` refines in one of four frames: **static** (`h`, judged
+from the origin of the coverage space of the whole data), **adaptive**
+(`Adaptive(h)`: among the examples of the rule being refined, its class
+distribution as the prior), **static inverted** (`Inverted(h)`:
 `h(N - n, P - p)`, judged by the examples a rule excludes, from the upper
-right corner of the whole coverage space), and **relative inverted**
-(`Relative(Inverted(h))`: `h(N' - n, P' - p)` among the parent's `P'`
+right corner of the whole coverage space), and **adaptive inverted**
+(`Adaptive(Inverted(h))`: `h(N' - n, P' - p)` among the parent's `P'`
 positives and `N'` negatives -- the inverted heuristics of Stecher,
 Janssen & Fürnkranz, ECML PKDD 2014). Scores relative to the parent have
-no common scale across parents: the selection, always absolute, picks the
+no common scale across parents: the selection, always static, picks the
 rule that is returned.
 
 Measures: test accuracy, number of rules and conditions; means across
@@ -457,7 +457,7 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
         return f"{format_accuracy(means.loc[label, 'accuracy'])} ({format_mean_count(means.loc[label, 'n_conditions'])})"
     plots = "refinement_heuristics_plots"
     tag = "_quick" if quick else ""
-    lines = ["# Refinement heuristics: absolute and relative, regular and inverted\n\n",
+    lines = ["# Refinement heuristics: static and adaptive, regular and inverted\n\n",
              render_setup_section(_description(datasets, n_folds, quick))]
 
     # 1. matrices
@@ -465,7 +465,7 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
         "## m-estimates for refinement and for selection\n\n",
         "`MEstimate(m_r)` refines and `MEstimate(m_s)` selects the rule on the refinement path, "
         f"for every pair of m in {{{', '.join(_m(m) for m in ms)}}}, in each of the four frames; the "
-        "diagonal of the regular (absolute) matrix is the plain m-estimate. Rows: m for refinement, "
+        "diagonal of the regular (static) matrix is the plain m-estimate. Rows: m for refinement, "
         "columns: m for selection.\n\n",
         f"![the four matrices, accuracy]({plots}/matrices_accuracy{tag}.png)\n\n",
         f"![the four matrices, conditions per rule]({plots}/matrices_conds_per_rule{tag}.png)\n\n",
@@ -477,22 +477,22 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
 
     # 2. the 2 x 2 per heuristic
     lines += [
-        "## Absolute vs. relative, regular vs. inverted\n\n",
+        "## Static vs. adaptive, regular vs. inverted\n\n",
         f"Each heuristic refines in every frame where it differs, with the m-estimate selecting "
         f"(m_s in {{{', '.join(_m(m) for m in selects)}}}); shown is the best selection, "
         "with its m_s. Inverting a symmetric heuristic (WRA, correlation) changes nothing, and "
-        "relativizing one that doesn't depend on the frame (Laplace) neither -- unless it is inverted, "
-        "as the inverted Laplace estimate depends on it. The absolute Foil "
+        "adapting one that doesn't depend on the frame (Laplace) neither -- unless it is inverted, "
+        "as the inverted Laplace estimate depends on it. The static Foil "
         "gain is the gain over the universal rule (`WeightedGain(CoveredPositives(), "
-        "InformationContent())`), the relative one Foil's own (`FoilGain()`). The m-estimate "
+        "InformationContent())`), the adaptive one Foil's own (`FoilGain()`). The m-estimate "
         f"(m_r = {_m(M_REFINE)}) is from section 1.\n\n",
-        f"![absolute to relative]({plots}/frames{tag}.png)\n\n",
-        "| heuristic | " + " | ".join(kind for kind, _ in FRAMES) + " |\n|---|" + "--:|" * len(FRAMES) + "\n",
+        f"![static to adaptive]({plots}/frames{tag}.png)\n\n",
+        "| heuristic | " + " | ".join(FRAMES) + " |\n|---|" + "--:|" * len(FRAMES) + "\n",
     ]
     rows = dict(_section2_heuristics())
     for name in [f"m-estimate (m={_m(M_REFINE)})"] + list(rows):
         cells = []
-        for kind, _ in FRAMES:
+        for kind in FRAMES:
             if name.startswith("m-estimate"):
                 labels = [matrix_label(kind, M_REFINE, s) for s in selects]
             elif kind in rows[name][2]:
@@ -509,11 +509,11 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
         f"### Fixed selection (m_s = {_m(fixed)})\n\n",
         f"As above, with the m-estimate selecting with m_s = {_m(fixed)} for every heuristic and "
         "frame, so that only the refinement heuristics differ.\n\n",
-        "| heuristic | " + " | ".join(kind for kind, _ in FRAMES) + " |\n|---|" + "--:|" * len(FRAMES) + "\n",
+        "| heuristic | " + " | ".join(FRAMES) + " |\n|---|" + "--:|" * len(FRAMES) + "\n",
     ]
     for name in [f"m-estimate (m={_m(M_REFINE)})"] + list(rows):
         cells = []
-        for kind, _ in FRAMES:
+        for kind in FRAMES:
             if name.startswith("m-estimate"):
                 cells.append(_fixed_cell(matrix_label(kind, M_REFINE, fixed)))
             elif kind in rows[name][2]:
@@ -529,19 +529,19 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
                          f"{l}: {format_accuracy(means.loc[l, 'accuracy'])} with "
                          f"{format_mean_count(means.loc[l, 'n_conditions'])} conditions" for l in foil) + ".\n\n")
 
-    # 3. relative heuristics and m
+    # 3. adaptive heuristics and m
     lines += [
-        "## Relative heuristics and m\n\n",
+        "## Adaptive heuristics and m\n\n",
         "The best selection for each m for refinement, in each frame; m -> infinity is WRA "
-        "(absolute: WRA, relative: relative WRA; inverting it changes nothing).\n\n",
+        "(static: WRA, adaptive: adaptive WRA; inverting it changes nothing).\n\n",
         f"![best accuracy per m for refinement]({plots}/m_refine{tag}.png)\n\n",
-        "| m for refinement | " + " | ".join(kind for kind, _ in FRAMES) + " |\n|---|" + "--:|" * len(FRAMES) + "\n",
+        "| m for refinement | " + " | ".join(FRAMES) + " |\n|---|" + "--:|" * len(FRAMES) + "\n",
     ]
     for m_r in list(ms) + ["inf"]:
         cells = []
-        for kind, _ in FRAMES:
+        for kind in FRAMES:
             if m_r == "inf":
-                frame = "relative" if kind.startswith("relative") else "absolute"
+                frame = "adaptive" if kind.startswith("adaptive") else "static"
                 labels = [section2_label(frame, "WRA", s) for s in selects]
             else:
                 labels = [matrix_label(kind, m_r, s) for s in selects]
@@ -575,19 +575,19 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
     lines += [
         "## Weighted gains\n\n",
         "`WeightedGain(weight, base)`: ``weight(r) * (base(r) - base(r0))``, the gain over the "
-        "universal rule ``r0`` of the frame -- over the root (absolute) or over the parent "
-        "(relative). The weights are Klösgen's family ``c^a``, with ``c`` the covered examples "
+        "universal rule ``r0`` of the frame -- over the root (static) or over the parent "
+        "(adaptive). The weights are Klösgen's family ``c^a``, with ``c`` the covered examples "
         "(`p + n`) or positives (`p`); the base is linear (precision) or logarithmic "
         "(information content). `p + n` and precision is WRA, `p` and information content "
         "Foil gain, `sqrt(p + n)` and precision Klösgen's quality function, weight 1 ranks as "
         "the base itself. Best selection (m_s in "
         f"{{{', '.join(_m(m) for m in beam_selects)}}}).\n\n",
-        "| weight | base | absolute | relative |\n|---|---|--:|--:|\n",
+        "| weight | base | static | adaptive |\n|---|---|--:|--:|\n",
     ]
     for weight in _weights():
         for base in _bases():
             cells = []
-            for frame in ("absolute", "relative"):
+            for frame in ("static", "adaptive"):
                 acc, conds, best = _best_over_selection(
                     means, [gain_label(frame, weight, base, s) for s in beam_selects])
                 cells.append("n/a" if best is None else
@@ -598,11 +598,11 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
     lines += [
         f"### Fixed selection (m_s = {_m(fixed)})\n\n",
         f"As above, with the m-estimate selecting with m_s = {_m(fixed)} for every gain.\n\n",
-        "| weight | base | absolute | relative |\n|---|---|--:|--:|\n",
+        "| weight | base | static | adaptive |\n|---|---|--:|--:|\n",
     ]
     for weight in _weights():
         for base in _bases():
-            cells = [_fixed_cell(gain_label(frame, weight, base, fixed)) for frame in ("absolute", "relative")]
+            cells = [_fixed_cell(gain_label(frame, weight, base, fixed)) for frame in ("static", "adaptive")]
             lines.append(f"| {weight} | {base} | " + " | ".join(cells) + " |\n")
     lines.append("\n")
 
@@ -641,7 +641,7 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
               "frame of section 2 and of the m-estimate.\n\n"]
     chosen = []
     for name in [f"m-estimate (m={_m(M_REFINE)})"] + list(rows):
-        for kind, _ in FRAMES:
+        for kind in FRAMES:
             if name.startswith("m-estimate"):
                 labels = [matrix_label(kind, M_REFINE, s) for s in selects]
             elif kind in rows[name][2]:
@@ -711,13 +711,13 @@ def write_plots(results, quick: bool) -> None:
         fig.savefig(os.path.join(PLOTS_DIR, f"matrices_{measure}{tag}.png"), dpi=100)
         plt.close(fig)
 
-    # absolute -> relative (-> inverted) per heuristic
-    colors = dict(zip((kind for kind, _ in FRAMES), ("tab:blue", "tab:orange", "tab:purple", "tab:green")))
+    # static -> adaptive (-> inverted) per heuristic
+    colors = dict(zip(FRAMES, ("tab:blue", "tab:orange", "tab:purple", "tab:green")))
     fig, ax = plt.subplots(figsize=(9, 6))
     heuristics = dict(_section2_heuristics())
     for name in [f"m-estimate (m={_m(M_REFINE)})"] + list(heuristics):
         points = {}
-        for kind, _ in FRAMES:
+        for kind in FRAMES:
             if name.startswith("m-estimate"):
                 labels = [matrix_label(kind, M_REFINE, s) for s in selects]
             elif kind in heuristics[name][2]:
@@ -727,10 +727,10 @@ def write_plots(results, quick: bool) -> None:
             acc, conds, best = _best_over_selection(means, labels)
             if best is not None:
                 points[kind] = (conds, acc)
-        start = points.get("absolute")
+        start = points.get("static")
         for kind, (conds, acc) in points.items():
             ax.scatter(conds, acc, color=colors[kind], s=30, zorder=3)
-            if start is not None and kind != "absolute":
+            if start is not None and kind != "static":
                 ax.annotate("", (conds, acc), start, arrowprops=dict(arrowstyle="->", color=colors[kind], lw=0.8))
         if start is not None:
             ax.annotate(name, start, xytext=(4, 3), textcoords="offset points", fontsize=7)
@@ -742,7 +742,7 @@ def write_plots(results, quick: bool) -> None:
     ax.yaxis.set_major_formatter(PercentFormatter(1.0))
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3)
-    ax.set_title("from the absolute heuristic to the other frames (best selection)")
+    ax.set_title("from the static heuristic to the other frames (best selection)")
     fig.tight_layout()
     fig.savefig(os.path.join(PLOTS_DIR, f"frames{tag}.png"), dpi=110)
     plt.close(fig)
@@ -750,9 +750,9 @@ def write_plots(results, quick: bool) -> None:
     # best accuracy per m for refinement
     fig, ax = plt.subplots(figsize=(8, 5))
     xs = list(range(len(ms))) + [len(ms) + 0.5]
-    for kind, _ in FRAMES:
+    for kind in FRAMES:
         ys = [_best_over_selection(means, [matrix_label(kind, m_r, s) for s in selects])[0] for m_r in ms]
-        frame = "relative" if kind.startswith("relative") else "absolute"
+        frame = "adaptive" if kind.startswith("adaptive") else "static"
         ys.append(_best_over_selection(means, [section2_label(frame, "WRA", s) for s in selects])[0])
         ax.plot(xs[:-1], ys[:-1], "o-", color=colors[kind], label=kind)
         ax.plot(xs[-2:], ys[-2:], ":", color=colors[kind])
