@@ -88,11 +88,14 @@ QUICK_MATRIX_M = (1, 4, 16)
 M_REFINE = 16                     # m of the m-estimates in sections 2 and 4
 SECTION2_SELECT = MATRIX_M        # the selections of section 2 (every m of the matrix)
 BEAM_SELECT = (4, 8, 16)          # the selections of sections 4 and 5
-#: the selections a "best selection" picks from in sections 2 to 5 and the ranks, so that all
-#: of them compare the refinement heuristics with the same selection (section 1's matrices
-#: show every m; section 2 still runs every m of SECTION2_SELECT)
-REPORT_SELECT = BEAM_SELECT
+#: the selections a "best selection" picks from in sections 2 and 3 and the ranks
+REPORT_SELECT = SECTION2_SELECT
+#: the one selection of the "fixed selection" tables of sections 2 and 5, next to the best
+#: selection: with it, only the refinement heuristics differ (in BEAM_SELECT, so that the
+#: gains have it, too)
+FIXED_SELECT = 8
 QUICK_SELECT = (4, 16)
+QUICK_FIXED_SELECT = 4
 BEAM_WIDTH = 5
 
 N_JOBS = "1"
@@ -445,7 +448,13 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
     ms = QUICK_MATRIX_M if quick else MATRIX_M
     selects = QUICK_SELECT if quick else REPORT_SELECT
     beam_selects = QUICK_SELECT if quick else BEAM_SELECT
+    fixed = QUICK_FIXED_SELECT if quick else FIXED_SELECT
     means = _means(results)
+
+    def _fixed_cell(label: str) -> str:
+        if label not in means.index:
+            return "n/a"
+        return f"{format_accuracy(means.loc[label, 'accuracy'])} ({format_mean_count(means.loc[label, 'n_conditions'])})"
     plots = "refinement_heuristics_plots"
     tag = "_quick" if quick else ""
     lines = ["# Refinement heuristics: absolute and relative, regular and inverted\n\n",
@@ -496,6 +505,23 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
         lines.append(f"| {name} | " + " | ".join(cells) + " |\n")
     lines.append("\nCells: accuracy (conditions in the rule set; the best m for selection). "
                  "--: the same as the frame to its left.\n\n")
+    lines += [
+        f"### Fixed selection (m_s = {_m(fixed)})\n\n",
+        f"As above, with the m-estimate selecting with m_s = {_m(fixed)} for every heuristic and "
+        "frame, so that only the refinement heuristics differ.\n\n",
+        "| heuristic | " + " | ".join(kind for kind, _ in FRAMES) + " |\n|---|" + "--:|" * len(FRAMES) + "\n",
+    ]
+    for name in [f"m-estimate (m={_m(M_REFINE)})"] + list(rows):
+        cells = []
+        for kind, _ in FRAMES:
+            if name.startswith("m-estimate"):
+                cells.append(_fixed_cell(matrix_label(kind, M_REFINE, fixed)))
+            elif kind in rows[name][2]:
+                cells.append(_fixed_cell(section2_label(kind, name, fixed)))
+            else:
+                cells.append("--")
+        lines.append(f"| {name} | " + " | ".join(cells) + " |\n")
+    lines.append("\nCells: accuracy (conditions in the rule set). --: the same as the frame to its left.\n\n")
     foil = [l for l in ("Foil gain", "Foil gain over the root") if l in means.index]
     if foil:
         lines.append("Foil's own search, climbing while the gain is positive and returning the rule it "
@@ -564,30 +590,50 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
             for frame in ("absolute", "relative"):
                 acc, conds, best = _best_over_selection(
                     means, [gain_label(frame, weight, base, s) for s in beam_selects])
-                cells.append("n/a" if best is None else f"{format_accuracy(acc)} ({format_mean_count(conds)})")
+                cells.append("n/a" if best is None else
+                             f"{format_accuracy(acc)} ({format_mean_count(conds)}; m_s={_m_s(best)})")
+            lines.append(f"| {weight} | {base} | " + " | ".join(cells) + " |\n")
+    lines.append("\nCells: accuracy (conditions in the rule set; the best m for selection).\n\n")
+
+    lines += [
+        f"### Fixed selection (m_s = {_m(fixed)})\n\n",
+        f"As above, with the m-estimate selecting with m_s = {_m(fixed)} for every gain.\n\n",
+        "| weight | base | absolute | relative |\n|---|---|--:|--:|\n",
+    ]
+    for weight in _weights():
+        for base in _bases():
+            cells = [_fixed_cell(gain_label(frame, weight, base, fixed)) for frame in ("absolute", "relative")]
             lines.append(f"| {weight} | {base} | " + " | ".join(cells) + " |\n")
     lines.append("\n")
 
-    # significance of the weighted gains' differences
-    lines += [
-        "### Paired comparisons\n\n",
-        "Each gain with its best selection (as above); per dataset the mean accuracy across "
-        "folds; wins/losses of the second over the first, the mean difference, and the "
-        "two-sided Wilcoxon signed-rank test (p) and sign test (sign p) across datasets "
-        f"(not corrected for the {len(GAIN_PAIRS)} tests).\n\n",
-        "| comparison | first | second | datasets | wins/losses | difference | p | sign p |\n"
-        "|---|---|---|--:|--:|--:|--:|--:|\n",
-    ]
-    for first, second, name in GAIN_PAIRS:
-        labels = []
-        for frame, weight, base in (first, second):
-            labels.append(_best_over_selection(means, [gain_label(frame, weight, base, s) for s in beam_selects])[2])
-        if None in labels:
-            continue
-        n, wins, losses, diff, p_value, sign_p = _paired(results, labels[0], labels[1])
-        lines.append(f"| {name} | {labels[0]} | {labels[1]} | {n} | {wins}/{losses} | "
-                     f"{100 * diff:+.2f} | {p_value:.3f} | {sign_p:.3f} |\n")
-    lines.append("\n")
+    # significance of the weighted gains' differences, with the best and with the fixed selection
+    def _best_gain(frame, weight, base):
+        return _best_over_selection(means, [gain_label(frame, weight, base, s) for s in beam_selects])[2]
+
+    def _fixed_gain(frame, weight, base):
+        label = gain_label(frame, weight, base, fixed)
+        return label if label in means.index else None
+
+    for title, what, pick in (("Paired comparisons", "its best selection (as above)", _best_gain),
+                              (f"Paired comparisons, fixed selection (m_s = {_m(fixed)})",
+                               f"the selection m_s = {_m(fixed)}", _fixed_gain)):
+        lines += [
+            f"### {title}\n\n",
+            f"Each gain with {what}; per dataset the mean accuracy across "
+            "folds; wins/losses of the second over the first, the mean difference, and the "
+            "two-sided Wilcoxon signed-rank test (p) and sign test (sign p) across datasets "
+            f"(not corrected for the {len(GAIN_PAIRS)} tests).\n\n",
+            "| comparison | first | second | datasets | wins/losses | difference | p | sign p |\n"
+            "|---|---|---|--:|--:|--:|--:|--:|\n",
+        ]
+        for first, second, name in GAIN_PAIRS:
+            labels = [pick(*first), pick(*second)]
+            if None in labels:
+                continue
+            n, wins, losses, diff, p_value, sign_p = _paired(results, labels[0], labels[1])
+            lines.append(f"| {name} | {labels[0]} | {labels[1]} | {n} | {wins}/{losses} | "
+                         f"{100 * diff:+.2f} | {p_value:.3f} | {sign_p:.3f} |\n")
+        lines.append("\n")
 
     # ranks over the best variants
     lines += ["## Ranks\n\n",
