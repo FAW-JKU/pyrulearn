@@ -22,7 +22,7 @@ The only thing that varies is the heuristic: the paper's standard
 heuristics (Precision, Laplace, Accuracy, WRA, Correlation) and its
 tuned parametrized ones (cost c=0.437, relative cost c_r=0.342,
 F-measure beta=0.5, m-estimate m=22.466), plus an m-estimate sweep
-over m in {2, 4, 8, 16, 32}. Weka's JRip (as in the paper) and our own
+over m in {2, 4, 8, 16, 32, 64}. Weka's JRip (as in the paper) and our own
 Pypper (both also with ordered class binarization) are included as
 benchmarks. Kloesgen is left out.
 
@@ -91,7 +91,7 @@ FIT_TIMEOUT = 600.0  # no stopping criterion -> Precision/Laplace/Accuracy grow 
 LONG_DATASETS = ["letter"]
 LONG_FIT_TIMEOUT = 3600.0
 
-M_SWEEP = (2, 4, 8, 16, 32)
+M_SWEEP = (2, 4, 8, 16, 32, 64)
 PAPER_M = 22.466
 # m for refinement x m for selection (`refinement_heuristics`' matrices);
 # here, the inverted m-estimate with INVERTED_M refines, each m selects
