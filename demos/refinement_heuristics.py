@@ -6,8 +6,8 @@ How a separate-and-conquer learner should judge the refinements of a
 rule: from the origin of the coverage space or from the rule being
 refined, by what a refinement covers or by what it excludes, and how
 the rule on the refinement path is chosen. The covering learner and the
-datasets are those of `heuristic_comparison` (after Janssen &
-Fürnkranz, 2010): greedy top-down refinement until no refinement is
+datasets are those of `heuristic_comparison` (the learner after Janssen &
+Fürnkranz, 2010; by default the 69 datasets of `seco_learners_comparison`): greedy top-down refinement until no refinement is
 left (`BeamSearch(beam_width=1)`), the best rule on the path by a
 selection heuristic, no stopping criterion, no pruning, ordered class
 binarization. It shares that demo's result cache, so the learners both
@@ -48,8 +48,9 @@ Run: `python demos/refinement_heuristics.py` with no arguments is the
 fewer m); its report/plots go to ``refinement_heuristics_quick_*`` and
 are not checked in. `--full` runs `heuristic_comparison`'s datasets
 with its folds and writes the canonical ``refinement_heuristics_report.md``
-(plots in ``refinement_heuristics_plots/``). Needs the `experiments`
-extra.
+(plots in ``refinement_heuristics_plots/``); `--full --paper-datasets`
+runs the paper's datasets instead and writes ``refinement_heuristics_paper_*``.
+Needs the `experiments` extra.
 """
 
 from __future__ import annotations
@@ -62,11 +63,9 @@ import pandas as pd
 
 import heuristic_comparison as hc
 from heuristic_comparison import HeuristicSeCo
-from pyrulearn.data.discretization import TreeDiscretizer
 from pyrulearn.evaluation import RuleStats
 from pyrulearn.experiments.catalog import Catalog
 from pyrulearn.experiments.report import format_accuracy, format_mean_count, render_setup_section
-from pyrulearn.experiments.runner import run_cv
 from pyrulearn.experiments.stats import mean_rank, win_counts
 from pyrulearn.heuristics import (
     Correlation, Coverage, CoveredPositives, FBeta, FoilGain, Gain, InformationContent, Inverted, Laplace,
@@ -78,8 +77,10 @@ from pyrulearn.pruning import ThresholdPrePruning
 from pyrulearn.heuristics import CoverageDifference
 
 HERE = os.path.dirname(__file__)
-REPORT_PATH = os.path.join(HERE, "refinement_heuristics_report.md")
-QUICK_REPORT_PATH = os.path.join(HERE, "refinement_heuristics_quick_report.md")
+def _report_path(quick: bool, paper: bool) -> str:
+    return os.path.join(HERE, f"refinement_heuristics{hc.run_tag(quick, paper)}_report.md")
+
+
 PLOTS_DIR = os.path.join(HERE, "refinement_heuristics_plots")
 CACHE_DIR = hc.CACHE_DIR          # shared: the learners both demos run are computed once
 
@@ -408,24 +409,23 @@ def _best_over_selection(means, labels: Sequence[str]) -> Tuple[float, float, Op
     return means.loc[best, "accuracy"], means.loc[best, "n_conditions"], best
 
 
-def _description(datasets, n_folds: int, quick: bool) -> str:
+def _description(datasets, n_folds: int, quick: bool, paper: bool = False) -> str:
     mode = (f"**Quick run** ({len(datasets)} small datasets, {n_folds}-fold, m in "
             f"{{{', '.join(_m(m) for m in QUICK_MATRIX_M)}}}) -- a fast sanity check. Full run: "
             "`python demos/refinement_heuristics.py --full`.\n\n" if quick else
             f"**Full run** ({len(datasets)} datasets, {n_folds}-fold).\n\n")
     return f"""\
-{mode}The covering learner and the datasets of the
-[heuristic comparison](heuristic_comparison_report.md) (after Janssen &
-Fürnkranz, 2010): greedy top-down refinement until no refinement is left
+{mode}The covering learner of the
+[heuristic comparison](heuristic_comparison{hc.run_tag(quick, paper)}_report.md) (after Janssen &
+Fürnkranz, 2010), on its datasets: {hc.datasets_note(datasets, paper, quick)}: greedy top-down refinement until no refinement is left
 (`BeamSearch(beam_width=1)`, in section 4 also width {BEAM_WIDTH}), the
 best rule on the refinement path by a separate selection heuristic, the
 m-estimate (`SingleRuleLearner(h, selection=MEstimate(m_s))`), no
 stopping criterion and no pruning; covering stops once a new rule covers
 no more positives than negatives; ordered class binarization. Numeric
 attributes are discretized per training fold
-(`TreeDiscretizer(max_intervals={hc.MAX_INTERVALS})`); each fit is capped at
-{hc.FIT_TIMEOUT:.0f}s, and a fold that times out fails the learner's whole
-cross-validation on that dataset.
+(`TreeDiscretizer(max_intervals={hc.MAX_INTERVALS})`). {hc.timeout_note(datasets)}, and a fold
+that times out fails the learner's whole cross-validation on that dataset.
 
 A heuristic `h` refines in one of four frames: **static** (`h`, judged
 from the origin of the coverage space of the whole data), **adaptive**
@@ -444,7 +444,7 @@ every dataset and fold.
 """
 
 
-def write_report(results, datasets, n_folds: int, quick: bool, report_path: str) -> None:
+def write_report(results, datasets, n_folds: int, quick: bool, report_path: str, paper: bool = False) -> None:
     ms = QUICK_MATRIX_M if quick else MATRIX_M
     selects = QUICK_SELECT if quick else REPORT_SELECT
     beam_selects = QUICK_SELECT if quick else BEAM_SELECT
@@ -456,9 +456,9 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
             return "n/a"
         return f"{format_accuracy(means.loc[label, 'accuracy'])} ({format_mean_count(means.loc[label, 'n_conditions'])})"
     plots = "refinement_heuristics_plots"
-    tag = "_quick" if quick else ""
+    tag = hc.run_tag(quick, paper)
     lines = ["# Refinement heuristics: static and adaptive, regular and inverted\n\n",
-             render_setup_section(_description(datasets, n_folds, quick))]
+             render_setup_section(_description(datasets, n_folds, quick, paper))]
 
     # 1. matrices
     lines += [
@@ -669,7 +669,7 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
 
 # -------------------------------------------------------------- plots ----
 
-def write_plots(results, quick: bool) -> None:
+def write_plots(results, quick: bool, paper: bool = False) -> None:
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -678,7 +678,7 @@ def write_plots(results, quick: bool) -> None:
     except ImportError:
         return
     os.makedirs(PLOTS_DIR, exist_ok=True)
-    tag = "_quick" if quick else ""
+    tag = hc.run_tag(quick, paper)
     ms = QUICK_MATRIX_M if quick else MATRIX_M
     selects = QUICK_SELECT if quick else REPORT_SELECT
     means = _means(results)
@@ -769,18 +769,15 @@ def write_plots(results, quick: bool) -> None:
     print(f"Plots  -> {PLOTS_DIR}")
 
 
-def main(full: bool = False) -> None:
+def main(full: bool = False, paper: bool = False) -> None:
     quick = not full
-    spec = hc.QUICK_DATASETS_SPEC if quick else hc.FULL_DATASETS_SPEC
     n_folds = hc.QUICK_FOLDS if quick else hc.N_FOLDS
-    datasets = Catalog.default().parse(spec, random_state=hc.RANDOM_STATE)
+    datasets = Catalog.default().parse(hc.datasets_spec(quick, paper), random_state=hc.RANDOM_STATE)
     learners = build_learners(quick)
     print(f"{len(learners)} learners")
-    results = run_cv(learners, datasets, n_folds=n_folds, fit_timeout=hc.FIT_TIMEOUT,
-                     discretizer=TreeDiscretizer(max_intervals=hc.MAX_INTERVALS), random_state=hc.RANDOM_STATE,
-                     cache_dir=CACHE_DIR, n_jobs=_n_jobs())
-    write_report(results, datasets, n_folds, quick, QUICK_REPORT_PATH if quick else REPORT_PATH)
-    write_plots(results, quick)
+    results = hc.run(learners, datasets, n_folds, CACHE_DIR, _n_jobs())
+    write_report(results, datasets, n_folds, quick, _report_path(quick, paper), paper)
+    write_plots(results, quick, paper)
 
 
 if __name__ == "__main__":
@@ -788,9 +785,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--full", action="store_true", help="the full run (heuristic_comparison's datasets and folds)")
+    parser.add_argument("--paper-datasets", action="store_true",
+                        help="with --full: heuristic_comparison's --paper-datasets instead (report "
+                             "refinement_heuristics_paper_report.md)")
     parser.add_argument("--n-jobs", default="1",
                         help="fits to run at the same time (default 1); capped at the available cores unless "
                              "given as 'N!'")
     args = parser.parse_args()
     N_JOBS = args.n_jobs
-    main(full=args.full)
+    main(full=args.full, paper=args.paper_datasets)

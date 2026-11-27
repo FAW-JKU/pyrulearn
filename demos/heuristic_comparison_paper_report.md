@@ -40,9 +40,9 @@ in the paper; the [last section](#the-inverted-m-estimate-for-refinement)
 adds the inverted m-estimate for refinement, with the m-estimate
 selecting.
 
-![accuracy vs. theory size](heuristic_comparison_plots/heuristic_comparison_tradeoff.png)
+![accuracy vs. theory size](heuristic_comparison_plots/heuristic_comparison_paper_tradeoff.png)
 
-![m-estimate sweep](heuristic_comparison_plots/heuristic_comparison_m_sweep.png)
+![m-estimate sweep](heuristic_comparison_plots/heuristic_comparison_paper_m_sweep.png)
 
 ## Summary by learner (mean across every dataset and fold)
 
@@ -650,7 +650,7 @@ selecting.
 
 ## The inverted m-estimate for refinement
 
-`Adaptive(Inverted(MEstimate(16)))` refines, after Stecher, Janssen & Fürnkranz (ECML PKDD 2014): it judges a refinement from the rule it refines (covering P̂ positives and N̂ negatives) by the examples it excludes, h(N̂ - n, P̂ - p), and prefers the refinement whose excluded examples are the purest in negatives (see the [isometrics](heuristic_isometrics_report.md#inverted-heuristics)). The regular m-estimate selects the rule on the refinement path, with every m below. Every pair of m, and the other frames, are in [refinement_heuristics](refinement_heuristics_report.md).
+`Adaptive(Inverted(MEstimate(16)))` refines, after Stecher, Janssen & Fürnkranz (ECML PKDD 2014): it judges a refinement from the rule it refines (covering P̂ positives and N̂ negatives) by the examples it excludes, h(N̂ - n, P̂ - p), and prefers the refinement whose excluded examples are the purest in negatives (see the [isometrics](heuristic_isometrics_report.md#inverted-heuristics)). The regular m-estimate selects the rule on the refinement path, with every m below. Every pair of m, and the other frames, are in [refinement_heuristics](refinement_heuristics_paper_report.md).
 
 | m for selection | accuracy | n_rules | conds/rule | n_conditions |
 |--:|--:|--:|--:|--:|

@@ -37,17 +37,20 @@ this demo's result cache.
 Differences from the paper: numeric attributes are discretized by
 `build_dataspec` (tree-based, `MAX_INTERVALS` intervals per attribute)
 rather than tested at every midpoint between adjacent values, ties are
-not broken randomly, and the datasets are the subset of the paper's 57
-that are in `pyrulearn.experiments.catalog` (their tuning/validation
-split is not kept).
+not broken randomly, and the datasets are by default the 69 of
+`seco_learners_comparison` (`FULL_DATASETS`), not the paper's. With
+`--paper-datasets`, they are instead the subset of the paper's 57 that
+are in `pyrulearn.experiments.catalog` (`PAPER_DATASETS`; their
+tuning/validation split is not kept).
 
 Run: `python demos/heuristic_comparison.py` with no arguments
 is the **quick** default (`QUICK_DATASETS_SPEC`, `QUICK_FOLDS`); its
 report/plots go to ``heuristic_comparison_quick_*`` and are not
 checked in. `--full` runs all `FULL_DATASETS` with `N_FOLDS` folds and
 writes the canonical ``heuristic_comparison_report.md`` (plots in
-``heuristic_comparison_plots/``). Needs Weka at
-`WEKA_JAR`/`WEKA_JAVA` below, plus the `experiments` extra.
+``heuristic_comparison_plots/``); `--full --paper-datasets` runs
+`PAPER_DATASETS` instead and writes ``heuristic_comparison_paper_*``.
+Needs Weka at `WEKA_JAR`/`WEKA_JAVA` below, plus the `experiments` extra.
 """
 
 from __future__ import annotations
@@ -55,6 +58,8 @@ from __future__ import annotations
 import os
 from typing import Optional
 
+
+import pandas as pd
 
 from pyrulearn.experiments.catalog import Catalog
 from pyrulearn.data.discretization import TreeDiscretizer
@@ -71,6 +76,7 @@ from pyrulearn.interfaces.weka import WekaJRip
 from pyrulearn.learners.seco import BeamSearch, Pypper, SeCo, SingleRuleLearner
 from pyrulearn.models import ConceptCascade, ConceptModel
 from pyrulearn.pruning import ThresholdPrePruning
+from seco_learners_comparison import BINARY_DATASETS, MULTICLASS_DATASETS
 
 # $WEKA_JAR / $WEKA_JAVA win; else this machine's Windows install, else `java` on the PATH
 _WIN_JAVA = r"C:\Program Files\Weka-3-8-7\jre\jre-25.0.2-full\bin\java.exe"
@@ -81,6 +87,9 @@ RANDOM_STATE = 0
 N_FOLDS = 10
 MAX_INTERVALS = 8
 FIT_TIMEOUT = 600.0  # no stopping criterion -> Precision/Laplace/Accuracy grow large theories
+#: the largest dataset, with a longer cap per fit (as in `seco_learners_comparison`)
+LONG_DATASETS = ["letter"]
+LONG_FIT_TIMEOUT = 3600.0
 
 M_SWEEP = (2, 4, 8, 16, 32)
 PAPER_M = 22.466
@@ -89,13 +98,18 @@ PAPER_M = 22.466
 MATRIX_M = (0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32)
 INVERTED_M = 16
 
-# The paper's datasets that are in the catalog (their names -> ours where
+# The default datasets: the 69 of `seco_learners_comparison` (44 two-class,
+# 25 multi-class), shared with most other demos.
+FULL_DATASETS = BINARY_DATASETS + MULTICLASS_DATASETS
+FULL_DATASETS_SPEC = ",".join(FULL_DATASETS)
+
+# --paper-datasets: the paper's datasets that are in the catalog (their names -> ours where
 # they differ: cleveland-heart-disease -> heart-c, credit/credit-a ->
 # credit-approval, horse-colic -> colic, krkp -> kr-vs-kp, lymphography ->
 # lymph, monk1-3 -> monks-problems-1..3, house-votes-84 -> vote,
 # promoters -> molecular-biology_promoters). sick (not the same data as
 # their sick-euthyroid) and titanic (a different version) are left out.
-FULL_DATASETS = [
+PAPER_DATASETS = [
     # from their 27 tuning datasets
     "anneal", "audiology", "breast-cancer", "heart-c", "credit-approval", "glass", "hepatitis",
     "colic", "hypothyroid", "iris", "kr-vs-kp", "lymph", "monks-problems-1", "monks-problems-2",
@@ -105,7 +119,7 @@ FULL_DATASETS = [
     "ionosphere", "primary-tumor", "molecular-biology_promoters", "segment", "solar-flare",
     "sonar", "vehicle", "zoo",
 ]
-FULL_DATASETS_SPEC = ",".join(FULL_DATASETS)
+PAPER_DATASETS_SPEC = ",".join(PAPER_DATASETS)
 
 # Quick run (the no-args default): ten small datasets from the list above,
 # binary and multi-class, 3-fold.
@@ -114,13 +128,7 @@ QUICK_DATASETS_SPEC = ("breast-cancer,hepatitis,heart-c,vote,iris,wine,glass,tic
 QUICK_FOLDS = 3
 
 HERE = os.path.dirname(__file__)
-REPORT_PATH = os.path.join(HERE, "heuristic_comparison_report.md")
 PLOTS_DIR = os.path.join(HERE, "heuristic_comparison_plots")
-TRADEOFF_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_tradeoff.png")
-M_SWEEP_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_m_sweep.png")
-QUICK_REPORT_PATH = os.path.join(HERE, "heuristic_comparison_quick_report.md")
-QUICK_TRADEOFF_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_quick_tradeoff.png")
-QUICK_M_SWEEP_PLOT_PATH = os.path.join(PLOTS_DIR, "heuristic_comparison_quick_m_sweep.png")
 CACHE_DIR = os.path.join(HERE, "_heuristic_comparison_cache")
 
 
@@ -147,6 +155,54 @@ def _concurrency_note() -> str:
 def _cost_ratio(c: float) -> float:
     """The paper's c*p - (1-c)*n ranks rules exactly like p - ((1-c)/c)*n."""
     return (1 - c) / c
+
+
+def run_tag(quick: bool, paper: bool) -> str:
+    """The suffix of a run's report and plot names: none for the canonical
+    full run, ``_quick`` for the quick one, ``_paper`` for the paper's
+    datasets."""
+    return "_quick" if quick else "_paper" if paper else ""
+
+
+def _paths(quick: bool, paper: bool):
+    tag = run_tag(quick, paper)
+    return (os.path.join(HERE, f"heuristic_comparison{tag}_report.md"),
+            os.path.join(PLOTS_DIR, f"heuristic_comparison{tag}_tradeoff.png"),
+            os.path.join(PLOTS_DIR, f"heuristic_comparison{tag}_m_sweep.png"))
+
+
+def datasets_spec(quick: bool, paper: bool) -> str:
+    return QUICK_DATASETS_SPEC if quick else PAPER_DATASETS_SPEC if paper else FULL_DATASETS_SPEC
+
+
+def run(learners, datasets, n_folds: int, cache_dir: str, n_jobs):
+    """`run_cv` with `FIT_TIMEOUT` per fit, `LONG_FIT_TIMEOUT` on
+    `LONG_DATASETS`."""
+    runs = []
+    for group, timeout in (([d for d in datasets if d.name not in LONG_DATASETS], FIT_TIMEOUT),
+                           ([d for d in datasets if d.name in LONG_DATASETS], LONG_FIT_TIMEOUT)):
+        if group:
+            runs.append(run_cv(learners, group, n_folds=n_folds, fit_timeout=timeout,
+                               discretizer=TreeDiscretizer(max_intervals=MAX_INTERVALS),
+                               random_state=RANDOM_STATE, cache_dir=cache_dir, n_jobs=n_jobs))
+    return pd.concat([r for r in runs if len(r)], ignore_index=True)
+
+
+def timeout_note(datasets) -> str:
+    long_ = [d.name for d in datasets if d.name in LONG_DATASETS]
+    return f"Each fit is capped at {FIT_TIMEOUT:.0f}s" + (
+        f" ({LONG_FIT_TIMEOUT:.0f}s for {', '.join(f'`{n}`' for n in long_)})" if long_ else "")
+
+
+def datasets_note(datasets, paper: bool, quick: bool = False) -> str:
+    n_multiclass = sum(1 for d in datasets if d.task == "multiclass")
+    counts = f"{len(datasets) - n_multiclass} binary, {n_multiclass} multi-class"
+    if quick:
+        return f"{len(datasets)} small datasets of the catalog ({counts})"
+    if paper:
+        return f"{len(datasets)} of the paper's datasets that are in `pyrulearn.experiments.catalog` ({counts})"
+    return (f"{len(datasets)} datasets of the catalog ({counts}), those of the "
+            "[separate-and-conquer comparison](seco_learners_comparison_report.md), not the paper's")
 
 
 class HeuristicSeCo(SeCo):
@@ -233,8 +289,7 @@ def build_learners():
 BENCHMARKS = ("Weka:JRip", "Pypper")
 
 
-def _build_description(datasets, n_folds: int, quick: bool) -> str:
-    n_multiclass = sum(1 for d in datasets if d.task == "multiclass")
+def _build_description(datasets, n_folds: int, quick: bool, paper: bool) -> str:
     mode_note = (
         f"**Quick run** ({len(datasets)} small datasets, {n_folds}-fold) -- a fast sanity "
         f"check, the default with no arguments. Full comparison ({len(FULL_DATASETS)} "
@@ -262,12 +317,9 @@ pruning, and both also use ordered class binarization. What each
 heuristic prefers is visualized by its coverage-space isometrics in the
 companion demo, [heuristic_isometrics](heuristic_isometrics_report.md).
 
-Datasets: {len(datasets)} of the paper's datasets that are in
-`pyrulearn.experiments.catalog` ({len(datasets) - n_multiclass} binary,
-{n_multiclass} multi-class). Numeric attributes are discretized per
+Datasets: {datasets_note(datasets, paper, quick)}. Numeric attributes are discretized per
 training fold (`build_dataspec(discretizer=TreeDiscretizer(max_intervals={MAX_INTERVALS}))`) instead
-of the paper's tests at every midpoint. Each fit is capped at
-{FIT_TIMEOUT:.0f}s; a timeout counts as a failure.
+of the paper's tests at every midpoint. {timeout_note(datasets)}; a timeout counts as a failure.
 
 A fold that times out fails the whole cross-validation of that learner on that dataset (`run_cv`'s `stop_on_timeout`): its remaining folds are not run, and all its folds count as failures, so no mean rests on just the folds that finished.
 
@@ -281,7 +333,7 @@ selecting.
 
 
 def write_report(results, datasets, n_folds: int, report_path: str,
-                 tradeoff_plot_path: str, m_sweep_plot_path: str, quick: bool) -> None:
+                 tradeoff_plot_path: str, m_sweep_plot_path: str, quick: bool, paper: bool = False) -> None:
     results = results.copy()
     results["conds_per_rule"] = results["n_conditions"] / results["n_rules"]
     plots_dir = os.path.basename(os.path.dirname(tradeoff_plot_path))
@@ -289,7 +341,7 @@ def write_report(results, datasets, n_folds: int, report_path: str,
     results = results[~results["learner"].map(_is_matrix_only)]
 
     lines = ["# Rule learning heuristics in separate-and-conquer (after Janssen & Fürnkranz)\n\n"]
-    lines.append(render_setup_section(_build_description(datasets, n_folds, quick)))
+    lines.append(render_setup_section(_build_description(datasets, n_folds, quick, paper)))
     lines.append(f"![accuracy vs. theory size]({plots_dir}/{os.path.basename(tradeoff_plot_path)})\n\n")
     lines.append(f"![m-estimate sweep]({plots_dir}/{os.path.basename(m_sweep_plot_path)})\n\n")
 
@@ -317,14 +369,14 @@ def write_report(results, datasets, n_folds: int, report_path: str,
         group_by=["dataset", "learner"], include_overall=False))
     lines.append("\n")
 
-    lines += _inverted_section(all_results)
+    lines += _inverted_section(all_results, run_tag(quick, paper))
 
     with open(report_path, "w", encoding="utf-8") as f:
         f.writelines(lines)
     print(f"Report -> {report_path}")
 
 
-def _inverted_section(results) -> list:
+def _inverted_section(results, tag: str = "") -> list:
     results = results.copy()
     results["conds_per_rule"] = results["n_conditions"] / results["n_rules"]
     means = results.groupby("learner")[["accuracy", "n_rules", "conds_per_rule", "n_conditions"]].mean(
@@ -337,7 +389,7 @@ def _inverted_section(results) -> list:
         "excluded examples are the purest in negatives (see the "
         "[isometrics](heuristic_isometrics_report.md#inverted-heuristics)). The regular m-estimate "
         "selects the rule on the refinement path, with every m below. Every pair of m, and the other "
-        "frames, are in [refinement_heuristics](refinement_heuristics_report.md).\n\n",
+        f"frames, are in [refinement_heuristics](refinement_heuristics{tag}_report.md).\n\n",
         "| m for selection | accuracy | n_rules | conds/rule | n_conditions |\n|--:|--:|--:|--:|--:|\n",
     ]
     for m_select in MATRIX_M:
@@ -414,19 +466,15 @@ def write_plots(results, tradeoff_plot_path: str, m_sweep_plot_path: str) -> Non
     print(f"Plot   -> {m_sweep_plot_path}")
 
 
-def main(datasets_spec: Optional[str] = None) -> None:
-    quick = datasets_spec is None
-    spec = QUICK_DATASETS_SPEC if quick else datasets_spec
+def main(spec: Optional[str] = None, full: bool = False, paper: bool = False) -> None:
+    quick = not full and spec is None
+    spec = spec or datasets_spec(quick, paper)
     n_folds = QUICK_FOLDS if quick else N_FOLDS
-    report_path = QUICK_REPORT_PATH if quick else REPORT_PATH
-    tradeoff_plot_path = QUICK_TRADEOFF_PLOT_PATH if quick else TRADEOFF_PLOT_PATH
-    m_sweep_plot_path = QUICK_M_SWEEP_PLOT_PATH if quick else M_SWEEP_PLOT_PATH
+    report_path, tradeoff_plot_path, m_sweep_plot_path = _paths(quick, paper)
 
     datasets = Catalog.default().parse(spec, random_state=RANDOM_STATE)
-    results = run_cv(build_learners(), datasets, n_folds=n_folds, fit_timeout=FIT_TIMEOUT,
-                     discretizer=TreeDiscretizer(max_intervals=MAX_INTERVALS), random_state=RANDOM_STATE, cache_dir=CACHE_DIR,
-                     n_jobs=_n_jobs())
-    write_report(results, datasets, n_folds, report_path, tradeoff_plot_path, m_sweep_plot_path, quick)
+    results = run(build_learners(), datasets, n_folds, CACHE_DIR, _n_jobs())
+    write_report(results, datasets, n_folds, report_path, tradeoff_plot_path, m_sweep_plot_path, quick, paper)
     write_plots(results, tradeoff_plot_path, m_sweep_plot_path)
 
 
@@ -437,6 +485,9 @@ if __name__ == "__main__":
     parser.add_argument("--full", action="store_true",
                         help=f"run all {len(FULL_DATASETS)} datasets, {N_FOLDS}-fold, instead of "
                              "the quick default")
+    parser.add_argument("--paper-datasets", action="store_true",
+                        help=f"with --full: the {len(PAPER_DATASETS)} datasets of Janssen & Fuernkranz that are "
+                             "in the catalog instead (report heuristic_comparison_paper_report.md)")
     parser.add_argument("--datasets", default=None,
                         help="Catalog.parse() spec for a full-scale run, e.g. 'vote,mushroom'")
     parser.add_argument("--n-jobs", default="1",
@@ -444,4 +495,4 @@ if __name__ == "__main__":
                              "unless given as 'N!'")
     args = parser.parse_args()
     N_JOBS = args.n_jobs
-    main(args.datasets or (FULL_DATASETS_SPEC if args.full else None))
+    main(args.datasets, full=args.full, paper=args.paper_datasets)

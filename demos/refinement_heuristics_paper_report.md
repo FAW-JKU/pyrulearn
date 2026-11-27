@@ -5,7 +5,7 @@
 **Full run** (36 datasets, 10-fold).
 
 The covering learner and the datasets of the
-[heuristic comparison](heuristic_comparison_report.md) (after Janssen &
+[heuristic comparison](heuristic_comparison_paper_report.md) (after Janssen &
 Fürnkranz, 2010): greedy top-down refinement until no refinement is left
 (`BeamSearch(beam_width=1)`, in section 4 also width 5), the
 best rule on the refinement path by a separate selection heuristic, the
@@ -36,9 +36,9 @@ every dataset and fold.
 
 `MEstimate(m_r)` refines and `MEstimate(m_s)` selects the rule on the refinement path, for every pair of m in {0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32}, in each of the four frames; the diagonal of the regular (static) matrix is the plain m-estimate. Rows: m for refinement, columns: m for selection.
 
-![the four matrices, accuracy](refinement_heuristics_plots/matrices_accuracy.png)
+![the four matrices, accuracy](refinement_heuristics_plots/matrices_accuracy_paper.png)
 
-![the four matrices, conditions per rule](refinement_heuristics_plots/matrices_conds_per_rule.png)
+![the four matrices, conditions per rule](refinement_heuristics_plots/matrices_conds_per_rule_paper.png)
 
 ### Accuracy
 
@@ -276,7 +276,7 @@ Static inverted m-estimate for refinement:
 
 Each heuristic refines in every frame where it differs, with the m-estimate selecting (m_s in {0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32}); shown is the best selection, with its m_s. Inverting a symmetric heuristic (WRA, correlation) changes nothing, and adapting one that doesn't depend on the frame (Laplace) neither -- unless it is inverted, as the inverted Laplace estimate depends on it. The static Foil gain is the gain over the universal rule (`WeightedGain(CoveredPositives(), InformationContent())`), the adaptive one Foil's own (`FoilGain()`). The m-estimate (m_r = 16) is from section 1.
 
-![static to adaptive](refinement_heuristics_plots/frames.png)
+![static to adaptive](refinement_heuristics_plots/frames_paper.png)
 
 | heuristic | static | adaptive | static inverted | adaptive inverted |
 |---|--:|--:|--:|--:|
@@ -312,7 +312,7 @@ Foil's own search, climbing while the gain is positive and returning the rule it
 
 The best selection for each m for refinement, in each frame; m -> infinity is WRA (static: WRA, adaptive: adaptive WRA; inverting it changes nothing).
 
-![best accuracy per m for refinement](refinement_heuristics_plots/m_refine.png)
+![best accuracy per m for refinement](refinement_heuristics_plots/m_refine_paper.png)
 
 | m for refinement | static | adaptive | static inverted | adaptive inverted |
 |---|--:|--:|--:|--:|
