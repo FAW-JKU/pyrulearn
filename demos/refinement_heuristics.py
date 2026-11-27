@@ -88,6 +88,10 @@ QUICK_MATRIX_M = (1, 4, 16)
 M_REFINE = 16                     # m of the m-estimates in sections 2 and 4
 SECTION2_SELECT = MATRIX_M        # the selections of section 2 (every m of the matrix)
 BEAM_SELECT = (4, 8, 16)          # the selections of sections 4 and 5
+#: the selections a "best selection" picks from in sections 2 to 5 and the ranks, so that all
+#: of them compare the refinement heuristics with the same selection (section 1's matrices
+#: show every m; section 2 still runs every m of SECTION2_SELECT)
+REPORT_SELECT = BEAM_SELECT
 QUICK_SELECT = (4, 16)
 BEAM_WIDTH = 5
 
@@ -307,19 +311,24 @@ GAIN_PAIRS = (
      "absolute Foil gain vs. weight sqrt(p)"),
     (("absolute", "p", "information content"), ("relative", "p", "information content"),
      "absolute vs. relative Foil gain"),
-)
+) + tuple(((frame, weight, "precision"), (frame, weight, "information content"),
+           f"{frame} {weight}: precision vs. information content")
+          for frame in ("absolute", "relative") for weight in ("sqrt(p)", "p", "p^2", "sqrt(p + n)", "p + n",
+                                                               "(p + n)^2"))
 
 
 def _paired(results, a: str, b: str):
     """Wins and losses of `b` over `a` across datasets (mean accuracy per
-    dataset), and the two-sided Wilcoxon signed-rank test's p-value."""
-    from scipy.stats import wilcoxon
+    dataset), and the two-sided Wilcoxon signed-rank test's and sign test's
+    p-values (ties left out of the sign test)."""
+    from scipy.stats import binomtest, wilcoxon
     means = results[results["learner"].isin([a, b])].groupby(["dataset", "learner"])["accuracy"].mean().unstack()
     means = means.dropna()
     diff = means[b] - means[a]
     wins, losses = int((diff > 1e-12).sum()), int((diff < -1e-12).sum())
     p_value = wilcoxon(means[b], means[a]).pvalue if wins + losses > 0 else 1.0
-    return len(means), wins, losses, float(diff.mean()), p_value
+    sign_p = binomtest(wins, wins + losses).pvalue if wins + losses > 0 else 1.0
+    return len(means), wins, losses, float(diff.mean()), p_value, sign_p
 
 
 def build_gain_learners(selects) -> List[SeCo]:
@@ -434,7 +443,7 @@ every dataset and fold.
 
 def write_report(results, datasets, n_folds: int, quick: bool, report_path: str) -> None:
     ms = QUICK_MATRIX_M if quick else MATRIX_M
-    selects = QUICK_SELECT if quick else SECTION2_SELECT
+    selects = QUICK_SELECT if quick else REPORT_SELECT
     beam_selects = QUICK_SELECT if quick else BEAM_SELECT
     means = _means(results)
     plots = "refinement_heuristics_plots"
@@ -476,7 +485,7 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
         cells = []
         for kind, _ in FRAMES:
             if name.startswith("m-estimate"):
-                labels = [matrix_label(kind, M_REFINE, s) for s in ms]
+                labels = [matrix_label(kind, M_REFINE, s) for s in selects]
             elif kind in rows[name][2]:
                 labels = [section2_label(kind, name, s) for s in selects]
             else:
@@ -509,7 +518,7 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
                 frame = "relative" if kind.startswith("relative") else "absolute"
                 labels = [section2_label(frame, "WRA", s) for s in selects]
             else:
-                labels = [matrix_label(kind, m_r, s) for s in ms]
+                labels = [matrix_label(kind, m_r, s) for s in selects]
             acc, conds, best = _best_over_selection(means, labels)
             cells.append("n/a" if best is None else f"{format_accuracy(acc)} ({format_mean_count(conds)})")
         lines.append(f"| {m_r if m_r == 'inf' else _m(m_r)} | " + " | ".join(cells) + " |\n")
@@ -564,10 +573,10 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
         "### Paired comparisons\n\n",
         "Each gain with its best selection (as above); per dataset the mean accuracy across "
         "folds; wins/losses of the second over the first, the mean difference, and the "
-        "two-sided Wilcoxon signed-rank test across datasets (not corrected for the "
-        f"{len(GAIN_PAIRS)} tests).\n\n",
-        "| comparison | first | second | datasets | wins/losses | difference | p |\n"
-        "|---|---|---|--:|--:|--:|--:|\n",
+        "two-sided Wilcoxon signed-rank test (p) and sign test (sign p) across datasets "
+        f"(not corrected for the {len(GAIN_PAIRS)} tests).\n\n",
+        "| comparison | first | second | datasets | wins/losses | difference | p | sign p |\n"
+        "|---|---|---|--:|--:|--:|--:|--:|\n",
     ]
     for first, second, name in GAIN_PAIRS:
         labels = []
@@ -575,9 +584,9 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
             labels.append(_best_over_selection(means, [gain_label(frame, weight, base, s) for s in beam_selects])[2])
         if None in labels:
             continue
-        n, wins, losses, diff, p_value = _paired(results, labels[0], labels[1])
+        n, wins, losses, diff, p_value, sign_p = _paired(results, labels[0], labels[1])
         lines.append(f"| {name} | {labels[0]} | {labels[1]} | {n} | {wins}/{losses} | "
-                     f"{100 * diff:+.2f} | {p_value:.3f} |\n")
+                     f"{100 * diff:+.2f} | {p_value:.3f} | {sign_p:.3f} |\n")
     lines.append("\n")
 
     # ranks over the best variants
@@ -588,7 +597,7 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str)
     for name in [f"m-estimate (m={_m(M_REFINE)})"] + list(rows):
         for kind, _ in FRAMES:
             if name.startswith("m-estimate"):
-                labels = [matrix_label(kind, M_REFINE, s) for s in ms]
+                labels = [matrix_label(kind, M_REFINE, s) for s in selects]
             elif kind in rows[name][2]:
                 labels = [section2_label(kind, name, s) for s in selects]
             else:
@@ -625,7 +634,7 @@ def write_plots(results, quick: bool) -> None:
     os.makedirs(PLOTS_DIR, exist_ok=True)
     tag = "_quick" if quick else ""
     ms = QUICK_MATRIX_M if quick else MATRIX_M
-    selects = QUICK_SELECT if quick else SECTION2_SELECT
+    selects = QUICK_SELECT if quick else REPORT_SELECT
     means = _means(results)
 
     for measure, cmap, label, text in (("accuracy", "RdYlGn", "mean test accuracy", lambda v: f"{100 * v:.2f}"),
@@ -664,7 +673,7 @@ def write_plots(results, quick: bool) -> None:
         points = {}
         for kind, _ in FRAMES:
             if name.startswith("m-estimate"):
-                labels = [matrix_label(kind, M_REFINE, s) for s in ms]
+                labels = [matrix_label(kind, M_REFINE, s) for s in selects]
             elif kind in heuristics[name][2]:
                 labels = [section2_label(kind, name, s) for s in selects]
             else:
@@ -696,7 +705,7 @@ def write_plots(results, quick: bool) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
     xs = list(range(len(ms))) + [len(ms) + 0.5]
     for kind, _ in FRAMES:
-        ys = [_best_over_selection(means, [matrix_label(kind, m_r, s) for s in ms])[0] for m_r in ms]
+        ys = [_best_over_selection(means, [matrix_label(kind, m_r, s) for s in selects])[0] for m_r in ms]
         frame = "relative" if kind.startswith("relative") else "absolute"
         ys.append(_best_over_selection(means, [section2_label(frame, "WRA", s) for s in selects])[0])
         ax.plot(xs[:-1], ys[:-1], "o-", color=colors[kind], label=kind)
