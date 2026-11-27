@@ -1,4 +1,4 @@
-# Refinement heuristics: absolute and relative, regular and inverted
+# Refinement heuristics: static and adaptive, regular and inverted
 
 ## Setup
 
@@ -17,16 +17,16 @@ attributes are discretized per training fold
 600s, and a fold that times out fails the learner's whole
 cross-validation on that dataset.
 
-A heuristic `h` refines in one of four frames: **absolute** (`h`, judged
-from the origin of the coverage space of the whole data), **relative**
-(`Relative(h)`: among the examples of the rule being refined, its class
-distribution as the prior), **absolute inverted** (`Inverted(h)`:
+A heuristic `h` refines in one of four frames: **static** (`h`, judged
+from the origin of the coverage space of the whole data), **adaptive**
+(`Adaptive(h)`: among the examples of the rule being refined, its class
+distribution as the prior), **static inverted** (`Inverted(h)`:
 `h(N - n, P - p)`, judged by the examples a rule excludes, from the upper
-right corner of the whole coverage space), and **relative inverted**
-(`Relative(Inverted(h))`: `h(N' - n, P' - p)` among the parent's `P'`
+right corner of the whole coverage space), and **adaptive inverted**
+(`Adaptive(Inverted(h))`: `h(N' - n, P' - p)` among the parent's `P'`
 positives and `N'` negatives -- the inverted heuristics of Stecher,
 Janssen & Fürnkranz, ECML PKDD 2014). Scores relative to the parent have
-no common scale across parents: the selection, always absolute, picks the
+no common scale across parents: the selection, always static, picks the
 rule that is returned.
 
 Measures: test accuracy, number of rules and conditions; means across
@@ -34,7 +34,7 @@ every dataset and fold.
 
 ## m-estimates for refinement and for selection
 
-`MEstimate(m_r)` refines and `MEstimate(m_s)` selects the rule on the refinement path, for every pair of m in {0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32}, in each of the four frames; the diagonal of the regular (absolute) matrix is the plain m-estimate. Rows: m for refinement, columns: m for selection.
+`MEstimate(m_r)` refines and `MEstimate(m_s)` selects the rule on the refinement path, for every pair of m in {0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32}, in each of the four frames; the diagonal of the regular (static) matrix is the plain m-estimate. Rows: m for refinement, columns: m for selection.
 
 ![the four matrices, accuracy](refinement_heuristics_plots/matrices_accuracy.png)
 
@@ -56,7 +56,7 @@ Regular m-estimate for refinement:
 | m=16 | 83.22% | 83.22% | 83.24% | 83.25% | 83.25% | 83.71% | 83.74% | 83.82% | 82.08% |
 | m=32 | 83.03% | 83.03% | 83.04% | 83.17% | 83.04% | 83.44% | 83.41% | 83.58% | 83.36% |
 
-Inverted m-estimate for refinement:
+Adaptive inverted m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -70,7 +70,7 @@ Inverted m-estimate for refinement:
 | m=16 | 83.71% | 83.71% | 83.74% | 83.72% | 83.75% | 84.20% | 84.18% | 84.04% | 83.20% |
 | m=32 | 83.53% | 83.54% | 83.52% | 83.61% | 83.67% | 84.14% | 84.18% | 83.85% | 83.04% |
 
-Relative m-estimate for refinement:
+Adaptive m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -84,7 +84,7 @@ Relative m-estimate for refinement:
 | m=16 | 83.22% | 83.22% | 83.22% | 83.30% | 83.18% | 83.16% | 82.96% | 82.83% | 81.69% |
 | m=32 | 83.24% | 83.25% | 83.24% | 83.22% | 83.50% | 83.90% | 83.78% | 83.11% | 82.92% |
 
-Absolute inverted m-estimate for refinement:
+Static inverted m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -114,7 +114,7 @@ Regular m-estimate for refinement:
 | m=16 | 26.1 | 26.1 | 25.8 | 25.3 | 24.0 | 20.8 | 18.6 | 17.2 | 11.0 |
 | m=32 | 24.7 | 24.6 | 24.4 | 23.7 | 22.3 | 18.6 | 16.2 | 14.3 | 12.9 |
 
-Inverted m-estimate for refinement:
+Adaptive inverted m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -128,7 +128,7 @@ Inverted m-estimate for refinement:
 | m=16 | 23.3 | 23.2 | 22.9 | 22.4 | 20.7 | 16.4 | 13.1 | 10.0 | 7.9 |
 | m=32 | 23.8 | 23.7 | 23.4 | 22.9 | 21.2 | 16.7 | 13.2 | 10.0 | 7.9 |
 
-Relative m-estimate for refinement:
+Adaptive m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -142,7 +142,7 @@ Relative m-estimate for refinement:
 | m=16 | 32.0 | 31.9 | 31.6 | 30.9 | 28.6 | 22.8 | 17.5 | 12.9 | 8.6 |
 | m=32 | 29.4 | 29.4 | 29.1 | 28.4 | 26.4 | 21.0 | 16.4 | 12.7 | 10.0 |
 
-Absolute inverted m-estimate for refinement:
+Static inverted m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -172,7 +172,7 @@ Regular m-estimate for refinement:
 | m=16 | 4.6 | 4.6 | 4.6 | 4.6 | 4.5 | 4.2 | 3.7 | 3.3 | 2.9 |
 | m=32 | 6.0 | 6.0 | 6.0 | 5.9 | 5.8 | 5.5 | 5.0 | 4.2 | 3.6 |
 
-Inverted m-estimate for refinement:
+Adaptive inverted m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -186,7 +186,7 @@ Inverted m-estimate for refinement:
 | m=16 | 6.0 | 6.0 | 6.0 | 6.0 | 6.0 | 5.8 | 5.6 | 5.2 | 4.8 |
 | m=32 | 5.5 | 5.5 | 5.5 | 5.4 | 5.4 | 5.2 | 5.0 | 4.6 | 4.3 |
 
-Relative m-estimate for refinement:
+Adaptive m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -200,7 +200,7 @@ Relative m-estimate for refinement:
 | m=16 | 3.1 | 3.1 | 3.0 | 3.0 | 3.0 | 2.9 | 2.7 | 2.5 | 2.2 |
 | m=32 | 3.2 | 3.2 | 3.2 | 3.2 | 3.2 | 3.0 | 2.8 | 2.7 | 2.5 |
 
-Absolute inverted m-estimate for refinement:
+Static inverted m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -230,7 +230,7 @@ Regular m-estimate for refinement:
 | m=16 | 144.5 | 144.5 | 142.7 | 138.1 | 129.4 | 99.2 | 76.7 | 60.8 | 34.3 |
 | m=32 | 182.3 | 182.1 | 180.7 | 173.3 | 160.1 | 123.3 | 93.0 | 65.5 | 48.4 |
 
-Inverted m-estimate for refinement:
+Adaptive inverted m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -244,7 +244,7 @@ Inverted m-estimate for refinement:
 | m=16 | 173.9 | 173.7 | 171.2 | 167.7 | 154.3 | 113.3 | 85.5 | 57.9 | 39.5 |
 | m=32 | 160.5 | 160.2 | 158.4 | 154.5 | 141.1 | 102.2 | 76.2 | 51.6 | 35.3 |
 
-Relative m-estimate for refinement:
+Adaptive m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -258,7 +258,7 @@ Relative m-estimate for refinement:
 | m=16 | 111.9 | 111.7 | 110.5 | 106.5 | 96.3 | 71.8 | 50.5 | 33.4 | 19.9 |
 | m=32 | 108.5 | 108.2 | 106.9 | 103.7 | 94.1 | 70.0 | 50.4 | 35.6 | 25.3 |
 
-Absolute inverted m-estimate for refinement:
+Static inverted m-estimate for refinement:
 
 | refine \ select | m=0.1 | m=0.2 | m=0.5 | m=1 | m=2 | m=4 | m=8 | m=16 | m=32 |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -272,13 +272,13 @@ Absolute inverted m-estimate for refinement:
 | m=16 | 482.7 | 482.1 | 476.7 | 458.1 | 410.1 | 303.4 | 213.9 | 138.7 | 87.2 |
 | m=32 | 480.2 | 479.6 | 474.4 | 457.5 | 403.6 | 303.6 | 211.9 | 135.5 | 83.7 |
 
-## Absolute vs. relative, regular vs. inverted
+## Static vs. adaptive, regular vs. inverted
 
-Each heuristic refines in every frame where it differs, with the m-estimate selecting (m_s in {0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32}); shown is the best selection, with its m_s. Inverting a symmetric heuristic (WRA, correlation) changes nothing, and relativizing one that doesn't depend on the frame (Laplace) neither -- unless it is inverted, as the inverted Laplace estimate depends on it. The absolute Foil gain is the gain over the universal rule (`WeightedGain(CoveredPositives(), InformationContent())`), the relative one Foil's own (`FoilGain()`). The m-estimate (m_r = 16) is from section 1.
+Each heuristic refines in every frame where it differs, with the m-estimate selecting (m_s in {0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32}); shown is the best selection, with its m_s. Inverting a symmetric heuristic (WRA, correlation) changes nothing, and adapting one that doesn't depend on the frame (Laplace) neither -- unless it is inverted, as the inverted Laplace estimate depends on it. The static Foil gain is the gain over the universal rule (`WeightedGain(CoveredPositives(), InformationContent())`), the adaptive one Foil's own (`FoilGain()`). The m-estimate (m_r = 16) is from section 1.
 
-![absolute to relative](refinement_heuristics_plots/frames.png)
+![static to adaptive](refinement_heuristics_plots/frames.png)
 
-| heuristic | absolute | relative | absolute inverted | relative inverted |
+| heuristic | static | adaptive | static inverted | adaptive inverted |
 |---|--:|--:|--:|--:|
 | m-estimate (m=16) | 83.82% (60.8; m_s=16) | 83.30% (106.5; m_s=1) | 82.85% (303.4; m_s=4) | 84.20% (113.3; m_s=4) |
 | WRA | 83.28% (247.4; m_s=4) | 84.26% (55.8; m_s=8) | -- | -- |
@@ -294,7 +294,7 @@ Cells: accuracy (conditions in the rule set; the best m for selection). --: the 
 
 As above, with the m-estimate selecting with m_s = 8 for every heuristic and frame, so that only the refinement heuristics differ.
 
-| heuristic | absolute | relative | absolute inverted | relative inverted |
+| heuristic | static | adaptive | static inverted | adaptive inverted |
 |---|--:|--:|--:|--:|
 | m-estimate (m=16) | 83.74% (76.7) | 82.96% (50.5) | 82.68% (213.9) | 84.18% (85.5) |
 | WRA | 83.10% (172.7) | 84.26% (55.8) | -- | -- |
@@ -308,13 +308,13 @@ Cells: accuracy (conditions in the rule set). --: the same as the frame to its l
 
 Foil's own search, climbing while the gain is positive and returning the rule it ends at (`GainAscentHillClimbing`, no selection): Foil gain: 83.69% with 107.7 conditions; Foil gain over the root: 81.68% with 22.7 conditions.
 
-## Relative heuristics and m
+## Adaptive heuristics and m
 
-The best selection for each m for refinement, in each frame; m -> infinity is WRA (absolute: WRA, relative: relative WRA; inverting it changes nothing).
+The best selection for each m for refinement, in each frame; m -> infinity is WRA (static: WRA, adaptive: adaptive WRA; inverting it changes nothing).
 
 ![best accuracy per m for refinement](refinement_heuristics_plots/m_refine.png)
 
-| m for refinement | absolute | relative | absolute inverted | relative inverted |
+| m for refinement | static | adaptive | static inverted | adaptive inverted |
 |---|--:|--:|--:|--:|
 | 0.1 | 81.74% (129.2) | 81.73% (128.5) | 82.51% (214.2) | 83.59% (173.0) |
 | 0.2 | 81.84% (129.0) | 81.76% (128.9) | 82.51% (214.2) | 83.63% (172.2) |
@@ -336,30 +336,30 @@ Beam width 1 vs. 5, the m-estimate selecting (m_s in {4, 8, 16}). A beam ranks t
 | m=16 | 4 | 83.71% (99.2) | 83.71% (91.8) |
 | m=16 | 8 | 83.74% (76.7) | 83.87% (71.1) |
 | m=16 | 16 | 83.82% (60.8) | 84.08% (55.5) |
-| Relative(m=16) | 4 | 83.16% (71.8) | 83.60% (60.2) |
-| Relative(m=16) | 8 | 82.96% (50.5) | 83.50% (42.0) |
-| Relative(m=16) | 16 | 82.83% (33.4) | 83.01% (28.4) |
-| Inverted(m=16) | 4 | 84.20% (113.3) | 83.64% (133.7) |
-| Inverted(m=16) | 8 | 84.18% (85.5) | 83.66% (101.5) |
-| Inverted(m=16) | 16 | 84.04% (57.9) | 83.63% (70.9) |
-| Relative(Gain(m=16)) | 4 | 83.16% (71.8) | 83.68% (71.1) |
-| Relative(Gain(m=16)) | 8 | 82.96% (50.5) | 83.88% (54.8) |
-| Relative(Gain(m=16)) | 16 | 82.83% (33.4) | 84.03% (38.0) |
-| Relative(Gain(absolute Inverted(m=16))) | 4 | 84.20% (113.3) | 83.70% (104.0) |
-| Relative(Gain(absolute Inverted(m=16))) | 8 | 84.18% (85.5) | 84.02% (82.4) |
-| Relative(Gain(absolute Inverted(m=16))) | 16 | 84.04% (57.9) | 83.83% (58.3) |
+| Adaptive(m=16) | 4 | 83.16% (71.8) | 83.60% (60.2) |
+| Adaptive(m=16) | 8 | 82.96% (50.5) | 83.50% (42.0) |
+| Adaptive(m=16) | 16 | 82.83% (33.4) | 83.01% (28.4) |
+| Adaptive(Inverted(m=16)) | 4 | 84.20% (113.3) | 83.64% (133.7) |
+| Adaptive(Inverted(m=16)) | 8 | 84.18% (85.5) | 83.66% (101.5) |
+| Adaptive(Inverted(m=16)) | 16 | 84.04% (57.9) | 83.63% (70.9) |
+| Adaptive(Gain(m=16)) | 4 | 83.16% (71.8) | 83.68% (71.1) |
+| Adaptive(Gain(m=16)) | 8 | 82.96% (50.5) | 83.88% (54.8) |
+| Adaptive(Gain(m=16)) | 16 | 82.83% (33.4) | 84.03% (38.0) |
+| Adaptive(Gain(Inverted(m=16))) | 4 | 84.20% (113.3) | 83.70% (104.0) |
+| Adaptive(Gain(Inverted(m=16))) | 8 | 84.18% (85.5) | 84.02% (82.4) |
+| Adaptive(Gain(Inverted(m=16))) | 16 | 84.04% (57.9) | 83.83% (58.3) |
 | WRA | 4 | 83.28% (247.4) | 83.62% (261.0) |
 | WRA | 8 | 83.10% (172.7) | 83.47% (186.8) |
 | WRA | 16 | 82.76% (107.3) | 82.99% (118.0) |
-| Relative(WRA) | 4 | 84.06% (75.9) | 84.08% (70.1) |
-| Relative(WRA) | 8 | 84.26% (55.8) | 84.20% (55.2) |
-| Relative(WRA) | 16 | 83.65% (37.3) | 84.51% (39.9) |
+| Adaptive(WRA) | 4 | 84.06% (75.9) | 84.08% (70.1) |
+| Adaptive(WRA) | 8 | 84.26% (55.8) | 84.20% (55.2) |
+| Adaptive(WRA) | 16 | 83.65% (37.3) | 84.51% (39.9) |
 
 ## Weighted gains
 
-`WeightedGain(weight, base)`: ``weight(r) * (base(r) - base(r0))``, the gain over the universal rule ``r0`` of the frame -- over the root (absolute) or over the parent (relative). The weights are Klösgen's family ``c^a``, with ``c`` the covered examples (`p + n`) or positives (`p`); the base is linear (precision) or logarithmic (information content). `p + n` and precision is WRA, `p` and information content Foil gain, `sqrt(p + n)` and precision Klösgen's quality function, weight 1 ranks as the base itself. Best selection (m_s in {4, 8, 16}).
+`WeightedGain(weight, base)`: ``weight(r) * (base(r) - base(r0))``, the gain over the universal rule ``r0`` of the frame -- over the root (static) or over the parent (adaptive). The weights are Klösgen's family ``c^a``, with ``c`` the covered examples (`p + n`) or positives (`p`); the base is linear (precision) or logarithmic (information content). `p + n` and precision is WRA, `p` and information content Foil gain, `sqrt(p + n)` and precision Klösgen's quality function, weight 1 ranks as the base itself. Best selection (m_s in {4, 8, 16}).
 
-| weight | base | absolute | relative |
+| weight | base | static | adaptive |
 |---|---|--:|--:|
 | 1 | precision | 80.26% (41.7; m_s=4) | 80.26% (41.7; m_s=4) |
 | 1 | information content | 80.26% (41.7; m_s=4) | 80.26% (41.7; m_s=4) |
@@ -382,7 +382,7 @@ Cells: accuracy (conditions in the rule set; the best m for selection).
 
 As above, with the m-estimate selecting with m_s = 8 for every gain.
 
-| weight | base | absolute | relative |
+| weight | base | static | adaptive |
 |---|---|--:|--:|
 | 1 | precision | 80.18% (24.2) | 80.18% (24.2) |
 | 1 | information content | 80.18% (24.2) | 80.18% (24.2) |
@@ -407,24 +407,24 @@ Each gain with its best selection (as above); per dataset the mean accuracy acro
 |---|---|---|--:|--:|--:|--:|--:|
 | WRA vs. a weaker weight | refine gain of precision weighted by p + n, select m=4 | refine gain of precision weighted by sqrt(p + n), select m=4 | 36 | 20/12 | +0.63 | 0.217 | 0.215 |
 | WRA vs. weight p | refine gain of precision weighted by p + n, select m=4 | refine gain of precision weighted by p, select m=8 | 36 | 21/13 | +0.65 | 0.130 | 0.229 |
-| WRA vs. relative WRA | refine gain of precision weighted by p + n, select m=4 | refine Relative(gain of precision weighted by p + n), select m=8 | 36 | 25/10 | +1.01 | 0.023 | 0.017 |
-| relative WRA vs. weight p^2 | refine Relative(gain of precision weighted by p + n), select m=8 | refine Relative(gain of precision weighted by p^2), select m=8 | 36 | 16/18 | +0.01 | 0.713 | 0.864 |
-| Foil gain vs. weight p + n | refine Relative(gain of information content weighted by p), select m=8 | refine Relative(gain of information content weighted by p + n), select m=4 | 36 | 13/21 | +0.20 | 0.898 | 0.229 |
-| Foil gain vs. relative WRA | refine Relative(gain of information content weighted by p), select m=8 | refine Relative(gain of precision weighted by p + n), select m=8 | 36 | 18/11 | +0.20 | 0.239 | 0.265 |
-| absolute Foil gain vs. weight sqrt(p) | refine gain of information content weighted by p, select m=4 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 23/11 | +0.73 | 0.026 | 0.058 |
-| absolute vs. relative Foil gain | refine gain of information content weighted by p, select m=4 | refine Relative(gain of information content weighted by p), select m=8 | 36 | 22/10 | +0.78 | 0.096 | 0.050 |
-| absolute sqrt(p): precision vs. information content | refine gain of precision weighted by sqrt(p), select m=4 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 14/18 | +0.29 | 0.955 | 0.597 |
-| absolute p: precision vs. information content | refine gain of precision weighted by p, select m=8 | refine gain of information content weighted by p, select m=4 | 36 | 12/22 | -0.62 | 0.028 | 0.121 |
-| absolute p^2: precision vs. information content | refine gain of precision weighted by p^2, select m=4 | refine gain of information content weighted by p^2, select m=4 | 36 | 16/14 | -0.33 | 0.688 | 0.856 |
-| absolute sqrt(p + n): precision vs. information content | refine gain of precision weighted by sqrt(p + n), select m=4 | refine gain of information content weighted by sqrt(p + n), select m=4 | 36 | 12/22 | -0.44 | 0.191 | 0.121 |
-| absolute p + n: precision vs. information content | refine gain of precision weighted by p + n, select m=4 | refine gain of information content weighted by p + n, select m=4 | 36 | 13/21 | -0.93 | 0.185 | 0.229 |
-| absolute (p + n)^2: precision vs. information content | refine gain of precision weighted by (p + n)^2, select m=4 | refine gain of information content weighted by (p + n)^2, select m=4 | 36 | 12/18 | -0.12 | 0.491 | 0.362 |
-| relative sqrt(p): precision vs. information content | refine Relative(gain of precision weighted by sqrt(p)), select m=4 | refine Relative(gain of information content weighted by sqrt(p)), select m=4 | 36 | 19/12 | +0.59 | 0.196 | 0.281 |
-| relative p: precision vs. information content | refine Relative(gain of precision weighted by p), select m=4 | refine Relative(gain of information content weighted by p), select m=8 | 36 | 16/17 | -0.12 | 0.662 | 1.000 |
-| relative p^2: precision vs. information content | refine Relative(gain of precision weighted by p^2), select m=8 | refine Relative(gain of information content weighted by p^2), select m=8 | 36 | 12/20 | -0.34 | 0.079 | 0.215 |
-| relative sqrt(p + n): precision vs. information content | refine Relative(gain of precision weighted by sqrt(p + n)), select m=4 | refine Relative(gain of information content weighted by sqrt(p + n)), select m=4 | 36 | 18/13 | +0.04 | 0.969 | 0.473 |
-| relative p + n: precision vs. information content | refine Relative(gain of precision weighted by p + n), select m=8 | refine Relative(gain of information content weighted by p + n), select m=4 | 36 | 12/23 | -0.01 | 0.350 | 0.090 |
-| relative (p + n)^2: precision vs. information content | refine Relative(gain of precision weighted by (p + n)^2), select m=16 | refine Relative(gain of information content weighted by (p + n)^2), select m=4 | 36 | 17/15 | -0.31 | 0.751 | 0.860 |
+| WRA vs. adaptive WRA | refine gain of precision weighted by p + n, select m=4 | refine Adaptive(gain of precision weighted by p + n), select m=8 | 36 | 25/10 | +1.01 | 0.023 | 0.017 |
+| adaptive WRA vs. weight p^2 | refine Adaptive(gain of precision weighted by p + n), select m=8 | refine Adaptive(gain of precision weighted by p^2), select m=8 | 36 | 16/18 | +0.01 | 0.713 | 0.864 |
+| Foil gain vs. weight p + n | refine Adaptive(gain of information content weighted by p), select m=8 | refine Adaptive(gain of information content weighted by p + n), select m=4 | 36 | 13/21 | +0.20 | 0.898 | 0.229 |
+| Foil gain vs. adaptive WRA | refine Adaptive(gain of information content weighted by p), select m=8 | refine Adaptive(gain of precision weighted by p + n), select m=8 | 36 | 18/11 | +0.20 | 0.239 | 0.265 |
+| static Foil gain vs. weight sqrt(p) | refine gain of information content weighted by p, select m=4 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 23/11 | +0.73 | 0.026 | 0.058 |
+| static vs. adaptive Foil gain | refine gain of information content weighted by p, select m=4 | refine Adaptive(gain of information content weighted by p), select m=8 | 36 | 22/10 | +0.78 | 0.096 | 0.050 |
+| static sqrt(p): precision vs. information content | refine gain of precision weighted by sqrt(p), select m=4 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 14/18 | +0.29 | 0.955 | 0.597 |
+| static p: precision vs. information content | refine gain of precision weighted by p, select m=8 | refine gain of information content weighted by p, select m=4 | 36 | 12/22 | -0.62 | 0.028 | 0.121 |
+| static p^2: precision vs. information content | refine gain of precision weighted by p^2, select m=4 | refine gain of information content weighted by p^2, select m=4 | 36 | 16/14 | -0.33 | 0.688 | 0.856 |
+| static sqrt(p + n): precision vs. information content | refine gain of precision weighted by sqrt(p + n), select m=4 | refine gain of information content weighted by sqrt(p + n), select m=4 | 36 | 12/22 | -0.44 | 0.191 | 0.121 |
+| static p + n: precision vs. information content | refine gain of precision weighted by p + n, select m=4 | refine gain of information content weighted by p + n, select m=4 | 36 | 13/21 | -0.93 | 0.185 | 0.229 |
+| static (p + n)^2: precision vs. information content | refine gain of precision weighted by (p + n)^2, select m=4 | refine gain of information content weighted by (p + n)^2, select m=4 | 36 | 12/18 | -0.12 | 0.491 | 0.362 |
+| adaptive sqrt(p): precision vs. information content | refine Adaptive(gain of precision weighted by sqrt(p)), select m=4 | refine Adaptive(gain of information content weighted by sqrt(p)), select m=4 | 36 | 19/12 | +0.59 | 0.196 | 0.281 |
+| adaptive p: precision vs. information content | refine Adaptive(gain of precision weighted by p), select m=4 | refine Adaptive(gain of information content weighted by p), select m=8 | 36 | 16/17 | -0.12 | 0.662 | 1.000 |
+| adaptive p^2: precision vs. information content | refine Adaptive(gain of precision weighted by p^2), select m=8 | refine Adaptive(gain of information content weighted by p^2), select m=8 | 36 | 12/20 | -0.34 | 0.079 | 0.215 |
+| adaptive sqrt(p + n): precision vs. information content | refine Adaptive(gain of precision weighted by sqrt(p + n)), select m=4 | refine Adaptive(gain of information content weighted by sqrt(p + n)), select m=4 | 36 | 18/13 | +0.04 | 0.969 | 0.473 |
+| adaptive p + n: precision vs. information content | refine Adaptive(gain of precision weighted by p + n), select m=8 | refine Adaptive(gain of information content weighted by p + n), select m=4 | 36 | 12/23 | -0.01 | 0.350 | 0.090 |
+| adaptive (p + n)^2: precision vs. information content | refine Adaptive(gain of precision weighted by (p + n)^2), select m=16 | refine Adaptive(gain of information content weighted by (p + n)^2), select m=4 | 36 | 17/15 | -0.31 | 0.751 | 0.860 |
 
 ### Paired comparisons, fixed selection (m_s = 8)
 
@@ -434,24 +434,24 @@ Each gain with the selection m_s = 8; per dataset the mean accuracy across folds
 |---|---|---|--:|--:|--:|--:|--:|
 | WRA vs. a weaker weight | refine gain of precision weighted by p + n, select m=8 | refine gain of precision weighted by sqrt(p + n), select m=8 | 36 | 19/15 | +0.69 | 0.407 | 0.608 |
 | WRA vs. weight p | refine gain of precision weighted by p + n, select m=8 | refine gain of precision weighted by p, select m=8 | 36 | 20/14 | +0.79 | 0.096 | 0.392 |
-| WRA vs. relative WRA | refine gain of precision weighted by p + n, select m=8 | refine Relative(gain of precision weighted by p + n), select m=8 | 36 | 23/10 | +1.15 | 0.033 | 0.035 |
-| relative WRA vs. weight p^2 | refine Relative(gain of precision weighted by p + n), select m=8 | refine Relative(gain of precision weighted by p^2), select m=8 | 36 | 16/18 | +0.01 | 0.713 | 0.864 |
-| Foil gain vs. weight p + n | refine Relative(gain of information content weighted by p), select m=8 | refine Relative(gain of information content weighted by p + n), select m=8 | 36 | 10/23 | -0.48 | 0.081 | 0.035 |
-| Foil gain vs. relative WRA | refine Relative(gain of information content weighted by p), select m=8 | refine Relative(gain of precision weighted by p + n), select m=8 | 36 | 18/11 | +0.20 | 0.239 | 0.265 |
-| absolute Foil gain vs. weight sqrt(p) | refine gain of information content weighted by p, select m=8 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 27/7 | +0.93 | 0.001 | 0.001 |
-| absolute vs. relative Foil gain | refine gain of information content weighted by p, select m=8 | refine Relative(gain of information content weighted by p), select m=8 | 36 | 24/8 | +0.98 | 0.011 | 0.007 |
-| absolute sqrt(p): precision vs. information content | refine gain of precision weighted by sqrt(p), select m=8 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 19/13 | +0.44 | 0.550 | 0.377 |
-| absolute p: precision vs. information content | refine gain of precision weighted by p, select m=8 | refine gain of information content weighted by p, select m=8 | 36 | 7/26 | -0.82 | 0.003 | 0.001 |
-| absolute p^2: precision vs. information content | refine gain of precision weighted by p^2, select m=8 | refine gain of information content weighted by p^2, select m=8 | 36 | 14/17 | -0.44 | 0.290 | 0.720 |
-| absolute sqrt(p + n): precision vs. information content | refine gain of precision weighted by sqrt(p + n), select m=8 | refine gain of information content weighted by sqrt(p + n), select m=8 | 36 | 14/19 | -0.55 | 0.098 | 0.487 |
-| absolute p + n: precision vs. information content | refine gain of precision weighted by p + n, select m=8 | refine gain of information content weighted by p + n, select m=8 | 36 | 13/22 | -0.94 | 0.049 | 0.175 |
-| absolute (p + n)^2: precision vs. information content | refine gain of precision weighted by (p + n)^2, select m=8 | refine gain of information content weighted by (p + n)^2, select m=8 | 36 | 12/20 | -0.62 | 0.112 | 0.215 |
-| relative sqrt(p): precision vs. information content | refine Relative(gain of precision weighted by sqrt(p)), select m=8 | refine Relative(gain of information content weighted by sqrt(p)), select m=8 | 36 | 18/12 | +0.46 | 0.465 | 0.362 |
-| relative p: precision vs. information content | refine Relative(gain of precision weighted by p), select m=8 | refine Relative(gain of information content weighted by p), select m=8 | 36 | 17/16 | +0.09 | 0.837 | 1.000 |
-| relative p^2: precision vs. information content | refine Relative(gain of precision weighted by p^2), select m=8 | refine Relative(gain of information content weighted by p^2), select m=8 | 36 | 12/20 | -0.34 | 0.079 | 0.215 |
-| relative sqrt(p + n): precision vs. information content | refine Relative(gain of precision weighted by sqrt(p + n)), select m=8 | refine Relative(gain of information content weighted by sqrt(p + n)), select m=8 | 36 | 17/16 | +0.48 | 0.503 | 1.000 |
-| relative p + n: precision vs. information content | refine Relative(gain of precision weighted by p + n), select m=8 | refine Relative(gain of information content weighted by p + n), select m=8 | 36 | 12/22 | -0.69 | 0.029 | 0.121 |
-| relative (p + n)^2: precision vs. information content | refine Relative(gain of precision weighted by (p + n)^2), select m=8 | refine Relative(gain of information content weighted by (p + n)^2), select m=8 | 36 | 11/18 | -0.52 | 0.074 | 0.265 |
+| WRA vs. adaptive WRA | refine gain of precision weighted by p + n, select m=8 | refine Adaptive(gain of precision weighted by p + n), select m=8 | 36 | 23/10 | +1.15 | 0.033 | 0.035 |
+| adaptive WRA vs. weight p^2 | refine Adaptive(gain of precision weighted by p + n), select m=8 | refine Adaptive(gain of precision weighted by p^2), select m=8 | 36 | 16/18 | +0.01 | 0.713 | 0.864 |
+| Foil gain vs. weight p + n | refine Adaptive(gain of information content weighted by p), select m=8 | refine Adaptive(gain of information content weighted by p + n), select m=8 | 36 | 10/23 | -0.48 | 0.081 | 0.035 |
+| Foil gain vs. adaptive WRA | refine Adaptive(gain of information content weighted by p), select m=8 | refine Adaptive(gain of precision weighted by p + n), select m=8 | 36 | 18/11 | +0.20 | 0.239 | 0.265 |
+| static Foil gain vs. weight sqrt(p) | refine gain of information content weighted by p, select m=8 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 27/7 | +0.93 | 0.001 | 0.001 |
+| static vs. adaptive Foil gain | refine gain of information content weighted by p, select m=8 | refine Adaptive(gain of information content weighted by p), select m=8 | 36 | 24/8 | +0.98 | 0.011 | 0.007 |
+| static sqrt(p): precision vs. information content | refine gain of precision weighted by sqrt(p), select m=8 | refine gain of information content weighted by sqrt(p), select m=8 | 36 | 19/13 | +0.44 | 0.550 | 0.377 |
+| static p: precision vs. information content | refine gain of precision weighted by p, select m=8 | refine gain of information content weighted by p, select m=8 | 36 | 7/26 | -0.82 | 0.003 | 0.001 |
+| static p^2: precision vs. information content | refine gain of precision weighted by p^2, select m=8 | refine gain of information content weighted by p^2, select m=8 | 36 | 14/17 | -0.44 | 0.290 | 0.720 |
+| static sqrt(p + n): precision vs. information content | refine gain of precision weighted by sqrt(p + n), select m=8 | refine gain of information content weighted by sqrt(p + n), select m=8 | 36 | 14/19 | -0.55 | 0.098 | 0.487 |
+| static p + n: precision vs. information content | refine gain of precision weighted by p + n, select m=8 | refine gain of information content weighted by p + n, select m=8 | 36 | 13/22 | -0.94 | 0.049 | 0.175 |
+| static (p + n)^2: precision vs. information content | refine gain of precision weighted by (p + n)^2, select m=8 | refine gain of information content weighted by (p + n)^2, select m=8 | 36 | 12/20 | -0.62 | 0.112 | 0.215 |
+| adaptive sqrt(p): precision vs. information content | refine Adaptive(gain of precision weighted by sqrt(p)), select m=8 | refine Adaptive(gain of information content weighted by sqrt(p)), select m=8 | 36 | 18/12 | +0.46 | 0.465 | 0.362 |
+| adaptive p: precision vs. information content | refine Adaptive(gain of precision weighted by p), select m=8 | refine Adaptive(gain of information content weighted by p), select m=8 | 36 | 17/16 | +0.09 | 0.837 | 1.000 |
+| adaptive p^2: precision vs. information content | refine Adaptive(gain of precision weighted by p^2), select m=8 | refine Adaptive(gain of information content weighted by p^2), select m=8 | 36 | 12/20 | -0.34 | 0.079 | 0.215 |
+| adaptive sqrt(p + n): precision vs. information content | refine Adaptive(gain of precision weighted by sqrt(p + n)), select m=8 | refine Adaptive(gain of information content weighted by sqrt(p + n)), select m=8 | 36 | 17/16 | +0.48 | 0.503 | 1.000 |
+| adaptive p + n: precision vs. information content | refine Adaptive(gain of precision weighted by p + n), select m=8 | refine Adaptive(gain of information content weighted by p + n), select m=8 | 36 | 12/22 | -0.69 | 0.029 | 0.121 |
+| adaptive (p + n)^2: precision vs. information content | refine Adaptive(gain of precision weighted by (p + n)^2), select m=8 | refine Adaptive(gain of information content weighted by (p + n)^2), select m=8 | 36 | 11/18 | -0.52 | 0.074 | 0.265 |
 
 ## Ranks
 
@@ -459,28 +459,28 @@ Win counts and mean accuracy ranks across datasets among the best selection of e
 
 | learner | accuracy | wins | mean rank |
 |---|--:|--:|--:|
-| refine Relative(WRA), select m=8 | 84.26% | 3.0 | 8.67 |
-| refine Relative(Correlation), select m=4 | 84.43% | 3.0 | 9.06 |
+| refine Adaptive(WRA), select m=8 | 84.26% | 3.0 | 8.67 |
+| refine Adaptive(Correlation), select m=4 | 84.43% | 3.0 | 9.06 |
 | m-estimate (m=16) | 83.82% | 3.5 | 9.49 |
-| refine Relative(Foil gain), select m=8 | 84.04% | 3.5 | 9.61 |
-| refine Inverted(Foil gain), select m=4 | 84.16% | 2.1 | 10.04 |
+| refine Adaptive(Foil gain), select m=8 | 84.04% | 3.5 | 9.61 |
+| refine Adaptive(Inverted(Foil gain)), select m=4 | 84.16% | 2.1 | 10.04 |
 | refine Correlation, select m=8 | 84.17% | 1.1 | 10.12 |
-| refine Inverted(relative cost (c_r=0.342)), select m=8 | 83.90% | 1.5 | 10.19 |
-| refine Inverted(m=16), select m=4 | 84.20% | 1.6 | 10.21 |
-| refine Relative(relative cost (c_r=0.342)), select m=2 | 83.37% | 2.1 | 10.38 |
-| refine Inverted(Laplace), select m=4 | 83.48% | 1.3 | 12.17 |
-| refine Relative(m=16), select m=1 | 83.30% | 2.0 | 12.53 |
-| refine absolute Inverted(relative cost (c_r=0.342)), select m=16 | 82.44% | 2.0 | 12.56 |
-| refine Relative(F-measure (beta=0.5)), select m=4 | 83.35% | 2.1 | 12.61 |
+| refine Adaptive(Inverted(relative cost (c_r=0.342))), select m=8 | 83.90% | 1.5 | 10.19 |
+| refine Adaptive(Inverted(m=16)), select m=4 | 84.20% | 1.6 | 10.21 |
+| refine Adaptive(relative cost (c_r=0.342)), select m=2 | 83.37% | 2.1 | 10.38 |
+| refine Adaptive(Inverted(Laplace)), select m=4 | 83.48% | 1.3 | 12.17 |
+| refine Adaptive(m=16), select m=1 | 83.30% | 2.0 | 12.53 |
+| refine Inverted(relative cost (c_r=0.342)), select m=16 | 82.44% | 2.0 | 12.56 |
+| refine Adaptive(F-measure (beta=0.5)), select m=4 | 83.35% | 2.1 | 12.61 |
 | refine relative cost (c_r=0.342), select m=4 | 83.14% | 0.1 | 12.90 |
 | refine WRA, select m=4 | 83.28% | 1.8 | 12.97 |
 | refine F-measure (beta=0.5), select m=4 | 83.23% | 0.0 | 12.99 |
 | refine Foil gain, select m=4 | 83.26% | 0.1 | 13.04 |
-| refine absolute Inverted(Foil gain), select m=4 | 83.24% | 0.8 | 13.06 |
-| refine absolute Inverted(m=16), select m=4 | 82.85% | 0.8 | 13.67 |
-| refine absolute Inverted(Laplace), select m=4 | 82.65% | 0.8 | 13.93 |
-| refine Inverted(F-measure (beta=0.5)), select m=2 | 82.90% | 0.0 | 14.15 |
+| refine Inverted(Foil gain), select m=4 | 83.24% | 0.8 | 13.06 |
+| refine Inverted(m=16), select m=4 | 82.85% | 0.8 | 13.67 |
+| refine Inverted(Laplace), select m=4 | 82.65% | 0.8 | 13.93 |
+| refine Adaptive(Inverted(F-measure (beta=0.5))), select m=2 | 82.90% | 0.0 | 14.15 |
 | refine Laplace, select m=0.5 | 81.69% | 1.1 | 15.28 |
-| refine absolute Inverted(F-measure (beta=0.5)), select m=2 | 82.46% | 1.1 | 16.39 |
+| refine Inverted(F-measure (beta=0.5)), select m=2 | 82.46% | 1.1 | 16.39 |
 
 Failed folds: 0.
