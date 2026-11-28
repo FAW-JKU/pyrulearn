@@ -468,6 +468,7 @@ def write_report(results, datasets, n_folds: int, quick: bool, report_path: str,
         "diagonal of the regular (static) matrix is the plain m-estimate. Rows: m for refinement, "
         "columns: m for selection.\n\n",
         f"![the four matrices, accuracy]({plots}/matrices_accuracy{tag}.png)\n\n",
+        f"![the four matrices, number of rules]({plots}/matrices_n_rules{tag}.png)\n\n",
         f"![the four matrices, conditions per rule]({plots}/matrices_conds_per_rule{tag}.png)\n\n",
     ]
     for measure, title, fmt in MATRIX_MEASURES:
@@ -684,6 +685,7 @@ def write_plots(results, quick: bool, paper: bool = False) -> None:
     means = _means(results)
 
     for measure, cmap, label, text in (("accuracy", "RdYlGn", "mean test accuracy", lambda v: f"{100 * v:.2f}"),
+                                       ("n_rules", "YlOrBr", "mean number of rules", lambda v: f"{v:.1f}"),
                                        ("conds_per_rule", "YlOrBr", "mean conditions per rule",
                                         lambda v: f"{v:.1f}")):
         matrices = [(_matrix(means, kind, measure, ms), title) for kind, title in MATRIX_TITLES]

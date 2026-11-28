@@ -37,6 +37,8 @@ every dataset and fold.
 
 ![the four matrices, accuracy](refinement_heuristics_plots/matrices_accuracy.png)
 
+![the four matrices, number of rules](refinement_heuristics_plots/matrices_n_rules.png)
+
 ![the four matrices, conditions per rule](refinement_heuristics_plots/matrices_conds_per_rule.png)
 
 ### Accuracy
