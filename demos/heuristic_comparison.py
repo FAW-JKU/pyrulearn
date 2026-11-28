@@ -59,6 +59,7 @@ import os
 from typing import Optional
 
 
+import numpy as np
 import pandas as pd
 
 from pyrulearn.experiments.catalog import Catalog
@@ -332,6 +333,30 @@ selecting.
 """
 
 
+#: the rule-set sizes; summarized across datasets by a geometric mean (`summary_means`)
+COMPLEXITY_COLUMNS = ("n_rules", "n_conditions", "conds_per_rule")
+#: the shift of that geometric mean: exp(mean(log(x + 1))) - 1, so that an empty rule set (0) is defined
+GEO_SHIFT = 1.0
+GEO_NOTE = ("rule-set sizes (rules, conditions, conditions per rule) are the shifted geometric mean, "
+            f"exp(mean(log(x + {GEO_SHIFT:g}))) - {GEO_SHIFT:g}, over the datasets of their mean over the "
+            "folds, so that the large datasets don't dominate; accuracy and fit time are the arithmetic "
+            "mean over every dataset and fold")
+
+
+def summary_means(results, columns) -> pd.DataFrame:
+    """Per learner, one value per column across the datasets: the
+    complexities (`COMPLEXITY_COLUMNS`) as the shifted geometric mean of
+    their per-dataset means (each over the folds), everything else as the
+    mean over every dataset and fold."""
+    columns = list(columns)
+    out = results.groupby("learner")[columns].mean(numeric_only=True)
+    sizes = [c for c in columns if c in COMPLEXITY_COLUMNS]
+    if sizes:
+        per_dataset = results.groupby(["learner", "dataset"])[sizes].mean(numeric_only=True)
+        out[sizes] = np.exp(np.log(per_dataset + GEO_SHIFT).groupby("learner").mean()) - GEO_SHIFT
+    return out
+
+
 def write_report(results, datasets, n_folds: int, report_path: str,
                  tradeoff_plot_path: str, m_sweep_plot_path: str, quick: bool, paper: bool = False) -> None:
     results = results.copy()
@@ -345,11 +370,10 @@ def write_report(results, datasets, n_folds: int, report_path: str,
     lines.append(f"![accuracy vs. theory size]({plots_dir}/{os.path.basename(tradeoff_plot_path)})\n\n")
     lines.append(f"![m-estimate sweep]({plots_dir}/{os.path.basename(m_sweep_plot_path)})\n\n")
 
-    lines.append("## Summary by learner (mean across every dataset and fold)\n\n")
+    lines.append("## Summary by learner (across every dataset and fold)\n\n")
     ranks = mean_rank(results, "accuracy")
     wins = win_counts(results, "accuracy")
-    summary = results.groupby("learner")[
-        ["accuracy", "n_rules", "n_conditions", "conds_per_rule", "fit_time"]].mean(numeric_only=True)
+    summary = summary_means(results, ["accuracy", "n_rules", "n_conditions", "conds_per_rule", "fit_time"])
     failures = results.groupby("learner")["error"].apply(lambda e: e.notna().sum())
     lines.append("| learner | accuracy | n_rules | n_conditions | conds/rule | fit_time (s) | "
                  "wins | mean rank | failures |\n|---|--:|--:|--:|--:|--:|--:|--:|--:|\n")
@@ -361,7 +385,7 @@ def write_report(results, datasets, n_folds: int, report_path: str,
                      f"{ranks[learner]:.2f} | {int(failures.get(learner, 0))} |\n")
     lines.append("\n`wins` -- datasets where a learner's mean accuracy was (tied-for-)best, a tie "
                  "split evenly; `mean rank` -- average accuracy rank across datasets, failures "
-                 "tied for last.\n\n")
+                 f"tied for last. The {GEO_NOTE}.\n\n")
 
     lines.append("## Per-dataset results, per learner (mean across folds)\n\n")
     lines.append(render_results_table(
@@ -379,8 +403,7 @@ def write_report(results, datasets, n_folds: int, report_path: str,
 def _inverted_section(results, tag: str = "") -> list:
     results = results.copy()
     results["conds_per_rule"] = results["n_conditions"] / results["n_rules"]
-    means = results.groupby("learner")[["accuracy", "n_rules", "conds_per_rule", "n_conditions"]].mean(
-        numeric_only=True)
+    means = summary_means(results, ["accuracy", "n_rules", "conds_per_rule", "n_conditions"])
     lines = [
         "## The inverted m-estimate for refinement\n\n",
         f"`Adaptive(Inverted(MEstimate({INVERTED_M})))` refines, after Stecher, Janssen & Fürnkranz "
@@ -401,7 +424,7 @@ def _inverted_section(results, tag: str = "") -> list:
                      f"{format_mean_count(row['n_rules'])} | {format_mean_count(row['conds_per_rule'])} | "
                      f"{format_mean_count(row['n_conditions'])} |\n")
     n_failed = int(results[results["learner"].map(_is_matrix_only)]["error"].notna().sum())
-    lines.append(f"\nFailed folds: {n_failed}.\n\n")
+    lines.append(f"\nFailed folds: {n_failed}. The {GEO_NOTE}.\n\n")
     return lines
 
 
@@ -420,7 +443,7 @@ def write_plots(results, tradeoff_plot_path: str, m_sweep_plot_path: str) -> Non
     except ImportError:
         return
     os.makedirs(os.path.dirname(tradeoff_plot_path), exist_ok=True)
-    all_summary = results.groupby("learner")[["accuracy", "n_conditions"]].mean(numeric_only=True)
+    all_summary = summary_means(results, ["accuracy", "n_conditions"])
     summary = all_summary[[not _is_matrix_only(learner) for learner in all_summary.index]]
 
     fig, ax = plt.subplots(figsize=(8, 6))

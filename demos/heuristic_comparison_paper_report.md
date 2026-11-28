@@ -16,18 +16,15 @@ frequent class first, the largest class as the default rule).
 Heuristics: the paper's standard ones (Precision, Laplace, Accuracy,
 WRA, Correlation), its tuned parametrized ones (cost c=0.437, relative
 cost c_r=0.342, F-measure beta=0.5, m-estimate m=22.466), and an
-m-estimate sweep over m in {2, 4, 8, 16, 32}.
+m-estimate sweep over m in {2, 4, 8, 16, 32, 64}.
 Benchmarks: Weka's JRip and pyrulearn's Pypper, both with their own
 pruning, and both also use ordered class binarization. What each
 heuristic prefers is visualized by its coverage-space isometrics in the
 companion demo, [heuristic_isometrics](heuristic_isometrics_report.md).
 
-Datasets: 36 of the paper's datasets that are in
-`pyrulearn.experiments.catalog` (20 binary,
-16 multi-class). Numeric attributes are discretized per
+Datasets: 36 of the paper's datasets that are in `pyrulearn.experiments.catalog` (20 binary, 16 multi-class). Numeric attributes are discretized per
 training fold (`build_dataspec(discretizer=TreeDiscretizer(max_intervals=8))`) instead
-of the paper's tests at every midpoint. Each fit is capped at
-600s; a timeout counts as a failure.
+of the paper's tests at every midpoint. Each fit is capped at 600s; a timeout counts as a failure.
 
 A fold that times out fails the whole cross-validation of that learner on that dataset (`run_cv`'s `stop_on_timeout`): its remaining folds are not run, and all its folds count as failures, so no mean rests on just the folds that finished.
 
@@ -44,28 +41,29 @@ selecting.
 
 ![m-estimate sweep](heuristic_comparison_plots/heuristic_comparison_paper_m_sweep.png)
 
-## Summary by learner (mean across every dataset and fold)
+## Summary by learner (across every dataset and fold)
 
 | learner | accuracy | n_rules | n_conditions | conds/rule | fit_time (s) | wins | mean rank | failures |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|
-| m-estimate (m=16) | 83.82% | 17.2 | 60.8 | 3.3 | 0.07 | 6.3 | 6.40 | 0 |
-| m-estimate (m=8) | 83.42% | 22.4 | 77.3 | 3.1 | 0.08 | 1.1 | 7.88 | 0 |
-| Pypper | 83.36% | 7.1 | 19.0 | 2.4 | 0.08 | 4.7 | 6.62 | 0 |
-| m-estimate (m=32) | 83.36% | 12.9 | 48.4 | 3.6 | 0.07 | 2.3 | 6.72 | 0 |
-| m-estimate (m=22.466) | 83.17% | 14.9 | 54.4 | 3.4 | 0.07 | 1.3 | 7.42 | 0 |
-| m-estimate (m=4) | 82.92% | 28.2 | 91.9 | 3.0 | 0.08 | 1.4 | 8.08 | 0 |
-| Weka:JRip | 82.67% | 7.7 | 20.3 | 2.4 | 0.59 | 6.2 | 7.65 | 0 |
-| Correlation | 82.65% | 14.4 | 52.1 | 3.3 | 0.05 | 4.1 | 8.31 | 0 |
-| m-estimate (m=2) | 82.62% | 35.6 | 115.3 | 2.9 | 0.08 | 1.4 | 8.24 | 0 |
-| relative cost (c_r=0.342) | 82.30% | 9.6 | 35.3 | 3.3 | 0.05 | 0.5 | 8.88 | 0 |
-| F-measure (beta=0.5) | 81.77% | 19.5 | 61.5 | 2.9 | 0.07 | 1.1 | 9.22 | 0 |
-| Laplace | 81.67% | 43.6 | 134.0 | 2.7 | 0.08 | 0.4 | 10.43 | 0 |
-| Precision | 81.53% | 68.0 | 205.5 | 2.7 | 0.13 | 1.1 | 10.57 | 0 |
-| cost (c=0.437) | 81.40% | 44.4 | 143.1 | 2.6 | 0.09 | 1.1 | 9.93 | 0 |
-| Accuracy | 81.14% | 39.1 | 126.2 | 2.6 | 0.09 | 0.1 | 10.18 | 0 |
-| WRA | 80.51% | 4.7 | 16.2 | 3.2 | 0.04 | 3.0 | 9.47 | 0 |
+| m-estimate (m=16) | 83.82% | 12.7 | 38.7 | 3.1 | 0.07 | 6.3 | 6.81 | 0 |
+| m-estimate (m=8) | 83.42% | 16.1 | 47.3 | 3.0 | 0.08 | 0.1 | 8.38 | 0 |
+| Pypper | 83.36% | 5.0 | 11.5 | 2.3 | 0.08 | 4.7 | 7.00 | 0 |
+| m-estimate (m=32) | 83.36% | 9.6 | 31.3 | 3.4 | 0.07 | 2.3 | 7.12 | 0 |
+| m-estimate (m=22.466) | 83.17% | 11.0 | 34.7 | 3.2 | 0.07 | 1.3 | 7.82 | 0 |
+| m-estimate (m=64) | 83.11% | 7.3 | 24.2 | 3.4 | 0.06 | 2.1 | 8.21 | 0 |
+| m-estimate (m=4) | 82.92% | 20.0 | 56.0 | 2.8 | 0.08 | 1.4 | 8.68 | 0 |
+| Weka:JRip | 82.67% | 5.6 | 12.9 | 2.3 | 0.59 | 5.2 | 8.07 | 0 |
+| Correlation | 82.65% | 10.1 | 30.1 | 3.1 | 0.05 | 4.1 | 8.89 | 0 |
+| m-estimate (m=2) | 82.62% | 24.4 | 65.9 | 2.7 | 0.08 | 1.4 | 8.86 | 0 |
+| relative cost (c_r=0.342) | 82.30% | 7.2 | 21.8 | 3.1 | 0.05 | 0.5 | 9.50 | 0 |
+| F-measure (beta=0.5) | 81.77% | 13.2 | 36.1 | 2.8 | 0.07 | 1.1 | 9.86 | 0 |
+| Laplace | 81.67% | 29.0 | 74.6 | 2.6 | 0.08 | 0.4 | 11.08 | 0 |
+| Precision | 81.53% | 45.1 | 115.0 | 2.6 | 0.13 | 1.1 | 11.22 | 0 |
+| cost (c=0.437) | 81.40% | 23.3 | 58.6 | 2.5 | 0.09 | 1.1 | 10.56 | 0 |
+| Accuracy | 81.14% | 20.4 | 50.7 | 2.5 | 0.09 | 0.1 | 10.86 | 0 |
+| WRA | 80.51% | 3.3 | 9.4 | 3.0 | 0.04 | 3.0 | 10.08 | 0 |
 
-`wins` -- datasets where a learner's mean accuracy was (tied-for-)best, a tie split evenly; `mean rank` -- average accuracy rank across datasets, failures tied for last.
+`wins` -- datasets where a learner's mean accuracy was (tied-for-)best, a tie split evenly; `mean rank` -- average accuracy rank across datasets, failures tied for last. The rule-set sizes (rules, conditions, conditions per rule) are the shifted geometric mean, exp(mean(log(x + 1))) - 1, over the datasets of their mean over the folds, so that the large datasets don't dominate; accuracy and fit time are the arithmetic mean over every dataset and fold.
 
 ## Per-dataset results, per learner (mean across folds)
 
@@ -85,6 +83,7 @@ selecting.
 | anneal | m-estimate (m=22.466) | 95.99% | 13.0 | 2.0 | 26.0 | 0.056 |
 | anneal | m-estimate (m=32) | 94.65% | 11.8 | 1.7 | 20.1 | 0.052 |
 | anneal | m-estimate (m=4) | 97.66% | 20.3 | 2.3 | 46.1 | 0.070 |
+| anneal | m-estimate (m=64) | 93.20% | 10.3 | 1.7 | 17.8 | 0.031 |
 | anneal | m-estimate (m=8) | 96.66% | 18.1 | 2.1 | 37.7 | 0.066 |
 | anneal | relative cost (c_r=0.342) | 93.09% | 8.0 | 2.1 | 16.5 | 0.034 |
 | audiology | Accuracy | 80.99% | 40.4 | 2.1 | 85.1 | 0.067 |
@@ -101,6 +100,7 @@ selecting.
 | audiology | m-estimate (m=22.466) | 83.62% | 29.1 | 2.3 | 68.0 | 0.060 |
 | audiology | m-estimate (m=32) | 84.98% | 27.7 | 2.3 | 63.9 | 0.077 |
 | audiology | m-estimate (m=4) | 79.66% | 39.0 | 2.1 | 82.7 | 0.052 |
+| audiology | m-estimate (m=64) | 84.55% | 25.9 | 2.4 | 61.6 | 0.128 |
 | audiology | m-estimate (m=8) | 80.55% | 34.9 | 2.2 | 75.4 | 0.053 |
 | audiology | relative cost (c_r=0.342) | 82.75% | 24.3 | 2.6 | 62.1 | 0.088 |
 | balance-scale | Accuracy | 77.61% | 65.6 | 3.7 | 240.8 | 0.106 |
@@ -117,6 +117,7 @@ selecting.
 | balance-scale | m-estimate (m=22.466) | 79.83% | 11.1 | 3.0 | 33.1 | 0.031 |
 | balance-scale | m-estimate (m=32) | 80.94% | 8.4 | 2.9 | 25.1 | 0.030 |
 | balance-scale | m-estimate (m=4) | 77.26% | 27.8 | 3.2 | 89.8 | 0.056 |
+| balance-scale | m-estimate (m=64) | 77.26% | 5.8 | 2.6 | 15.3 | 0.016 |
 | balance-scale | m-estimate (m=8) | 76.64% | 21.8 | 3.3 | 71.1 | 0.051 |
 | balance-scale | relative cost (c_r=0.342) | 76.62% | 4.9 | 2.5 | 12.2 | 0.014 |
 | breast-cancer | Accuracy | 72.38% | 10.9 | 2.4 | 27.2 | 0.026 |
@@ -133,6 +134,7 @@ selecting.
 | breast-cancer | m-estimate (m=22.466) | 63.24% | 8.9 | 4.9 | 43.1 | 0.059 |
 | breast-cancer | m-estimate (m=32) | 66.48% | 6.5 | 5.6 | 35.6 | 0.049 |
 | breast-cancer | m-estimate (m=4) | 67.84% | 21.9 | 3.2 | 70.0 | 0.057 |
+| breast-cancer | m-estimate (m=64) | 65.02% | 3.8 | 5.8 | 21.6 | 0.024 |
 | breast-cancer | m-estimate (m=8) | 67.78% | 15.8 | 4.3 | 68.2 | 0.072 |
 | breast-cancer | relative cost (c_r=0.342) | 66.79% | 10.7 | 3.8 | 38.7 | 0.049 |
 | breast-w | Accuracy | 95.71% | 8.9 | 1.7 | 14.9 | 0.020 |
@@ -149,6 +151,7 @@ selecting.
 | breast-w | m-estimate (m=22.466) | 96.00% | 6.0 | 3.7 | 22.3 | 0.031 |
 | breast-w | m-estimate (m=32) | 96.28% | 5.5 | 3.9 | 21.5 | 0.035 |
 | breast-w | m-estimate (m=4) | 94.85% | 13.0 | 2.1 | 26.7 | 0.023 |
+| breast-w | m-estimate (m=64) | 95.28% | 4.6 | 4.8 | 22.0 | 0.038 |
 | breast-w | m-estimate (m=8) | 94.99% | 9.2 | 2.8 | 25.5 | 0.024 |
 | breast-w | relative cost (c_r=0.342) | 94.13% | 3.0 | 2.0 | 5.9 | 0.021 |
 | colic | Accuracy | 80.18% | 24.7 | 2.5 | 61.0 | 0.034 |
@@ -165,6 +168,7 @@ selecting.
 | colic | m-estimate (m=22.466) | 80.46% | 8.5 | 4.2 | 35.3 | 0.035 |
 | colic | m-estimate (m=32) | 81.55% | 7.0 | 4.4 | 30.2 | 0.038 |
 | colic | m-estimate (m=4) | 77.21% | 22.8 | 3.2 | 72.7 | 0.041 |
+| colic | m-estimate (m=64) | 82.64% | 4.5 | 4.8 | 21.2 | 0.025 |
 | colic | m-estimate (m=8) | 74.47% | 13.8 | 3.7 | 50.4 | 0.042 |
 | colic | relative cost (c_r=0.342) | 83.18% | 5.4 | 3.9 | 21.4 | 0.024 |
 | credit-approval | Accuracy | 82.32% | 17.7 | 2.3 | 44.3 | 0.037 |
@@ -181,6 +185,7 @@ selecting.
 | credit-approval | m-estimate (m=22.466) | 83.33% | 9.1 | 5.5 | 49.5 | 0.071 |
 | credit-approval | m-estimate (m=32) | 83.62% | 7.6 | 5.2 | 39.5 | 0.060 |
 | credit-approval | m-estimate (m=4) | 82.46% | 37.2 | 3.5 | 130.5 | 0.083 |
+| credit-approval | m-estimate (m=64) | 83.91% | 3.9 | 6.3 | 24.5 | 0.037 |
 | credit-approval | m-estimate (m=8) | 81.59% | 24.8 | 4.1 | 101.0 | 0.091 |
 | credit-approval | relative cost (c_r=0.342) | 85.36% | 2.4 | 4.2 | 9.8 | 0.024 |
 | credit-g | Accuracy | 68.00% | 139.8 | 3.3 | 458.2 | 0.327 |
@@ -197,6 +202,7 @@ selecting.
 | credit-g | m-estimate (m=22.466) | 67.00% | 37.0 | 6.1 | 225.8 | 0.232 |
 | credit-g | m-estimate (m=32) | 68.10% | 29.9 | 7.0 | 208.7 | 0.248 |
 | credit-g | m-estimate (m=4) | 68.30% | 78.9 | 3.7 | 288.7 | 0.194 |
+| credit-g | m-estimate (m=64) | 68.80% | 15.9 | 8.7 | 136.1 | 0.135 |
 | credit-g | m-estimate (m=8) | 67.00% | 61.4 | 4.3 | 263.0 | 0.194 |
 | credit-g | relative cost (c_r=0.342) | 67.70% | 19.8 | 6.5 | 129.7 | 0.161 |
 | diabetes | Accuracy | 74.48% | 23.1 | 2.7 | 64.4 | 0.056 |
@@ -213,6 +219,7 @@ selecting.
 | diabetes | m-estimate (m=22.466) | 72.79% | 10.3 | 5.0 | 52.4 | 0.062 |
 | diabetes | m-estimate (m=32) | 73.56% | 8.6 | 5.1 | 44.4 | 0.051 |
 | diabetes | m-estimate (m=4) | 71.22% | 38.4 | 4.4 | 172.1 | 0.118 |
+| diabetes | m-estimate (m=64) | 72.26% | 3.9 | 4.2 | 16.4 | 0.039 |
 | diabetes | m-estimate (m=8) | 73.70% | 24.5 | 4.7 | 115.7 | 0.104 |
 | diabetes | relative cost (c_r=0.342) | 73.84% | 6.7 | 3.5 | 23.4 | 0.034 |
 | glass | Accuracy | 64.05% | 27.0 | 2.7 | 73.2 | 0.063 |
@@ -229,6 +236,7 @@ selecting.
 | glass | m-estimate (m=22.466) | 65.04% | 14.9 | 3.4 | 51.0 | 0.074 |
 | glass | m-estimate (m=32) | 64.52% | 12.3 | 3.6 | 44.2 | 0.074 |
 | glass | m-estimate (m=4) | 67.40% | 25.4 | 2.9 | 74.7 | 0.068 |
+| glass | m-estimate (m=64) | 65.54% | 10.0 | 4.1 | 40.6 | 0.047 |
 | glass | m-estimate (m=8) | 70.13% | 22.6 | 3.1 | 70.9 | 0.070 |
 | glass | relative cost (c_r=0.342) | 68.27% | 13.6 | 3.5 | 47.3 | 0.070 |
 | hayes-roth | Accuracy | 76.25% | 6.6 | 1.5 | 10.1 | 0.012 |
@@ -245,6 +253,7 @@ selecting.
 | hayes-roth | m-estimate (m=22.466) | 83.75% | 6.8 | 1.6 | 10.9 | 0.014 |
 | hayes-roth | m-estimate (m=32) | 83.75% | 6.6 | 1.6 | 10.3 | 0.014 |
 | hayes-roth | m-estimate (m=4) | 85.62% | 7.9 | 1.8 | 14.0 | 0.016 |
+| hayes-roth | m-estimate (m=64) | 86.88% | 6.5 | 1.6 | 10.3 | 0.010 |
 | hayes-roth | m-estimate (m=8) | 86.25% | 7.6 | 1.7 | 12.8 | 0.014 |
 | hayes-roth | relative cost (c_r=0.342) | 84.38% | 6.8 | 1.6 | 10.6 | 0.014 |
 | heart-c | Accuracy | 71.63% | 22.4 | 2.9 | 65.9 | 0.050 |
@@ -261,6 +270,7 @@ selecting.
 | heart-c | m-estimate (m=22.466) | 76.32% | 9.6 | 4.1 | 40.7 | 0.047 |
 | heart-c | m-estimate (m=32) | 76.97% | 8.8 | 4.3 | 38.1 | 0.042 |
 | heart-c | m-estimate (m=4) | 78.24% | 21.3 | 3.3 | 69.2 | 0.054 |
+| heart-c | m-estimate (m=64) | 75.63% | 4.4 | 4.3 | 19.0 | 0.021 |
 | heart-c | m-estimate (m=8) | 76.29% | 16.6 | 3.8 | 63.3 | 0.055 |
 | heart-c | relative cost (c_r=0.342) | 74.92% | 6.6 | 3.6 | 23.5 | 0.038 |
 | heart-h | Accuracy | 76.53% | 20.1 | 2.8 | 58.2 | 0.040 |
@@ -277,6 +287,7 @@ selecting.
 | heart-h | m-estimate (m=22.466) | 75.48% | 7.2 | 4.2 | 28.7 | 0.036 |
 | heart-h | m-estimate (m=32) | 77.89% | 5.3 | 5.5 | 28.3 | 0.036 |
 | heart-h | m-estimate (m=4) | 74.46% | 18.4 | 3.2 | 59.8 | 0.049 |
+| heart-h | m-estimate (m=64) | 74.51% | 2.7 | 4.4 | 13.1 | 0.020 |
 | heart-h | m-estimate (m=8) | 76.86% | 13.3 | 3.8 | 50.3 | 0.051 |
 | heart-h | relative cost (c_r=0.342) | 77.90% | 4.3 | 4.0 | 16.1 | 0.025 |
 | heart-statlog | Accuracy | 73.33% | 18.2 | 2.8 | 50.0 | 0.027 |
@@ -293,6 +304,7 @@ selecting.
 | heart-statlog | m-estimate (m=22.466) | 74.81% | 8.8 | 3.9 | 34.5 | 0.031 |
 | heart-statlog | m-estimate (m=32) | 78.89% | 7.5 | 4.2 | 32.1 | 0.031 |
 | heart-statlog | m-estimate (m=4) | 77.41% | 19.5 | 3.2 | 61.8 | 0.033 |
+| heart-statlog | m-estimate (m=64) | 76.67% | 5.2 | 4.1 | 21.4 | 0.019 |
 | heart-statlog | m-estimate (m=8) | 80.00% | 15.3 | 3.5 | 53.5 | 0.036 |
 | heart-statlog | relative cost (c_r=0.342) | 75.56% | 8.3 | 3.7 | 31.1 | 0.028 |
 | hepatitis | Accuracy | 75.75% | 11.7 | 2.4 | 28.7 | 0.022 |
@@ -309,6 +321,7 @@ selecting.
 | hepatitis | m-estimate (m=22.466) | 78.38% | 5.4 | 3.1 | 16.8 | 0.019 |
 | hepatitis | m-estimate (m=32) | 78.25% | 4.4 | 3.1 | 13.9 | 0.017 |
 | hepatitis | m-estimate (m=4) | 76.42% | 8.1 | 2.7 | 21.6 | 0.018 |
+| hepatitis | m-estimate (m=64) | 77.67% | 3.3 | 3.7 | 12.0 | 0.009 |
 | hepatitis | m-estimate (m=8) | 78.33% | 6.2 | 2.8 | 17.7 | 0.020 |
 | hepatitis | relative cost (c_r=0.342) | 78.33% | 3.6 | 3.2 | 11.8 | 0.014 |
 | hypothyroid | Accuracy | 98.99% | 13.4 | 2.7 | 35.7 | 0.084 |
@@ -325,6 +338,7 @@ selecting.
 | hypothyroid | m-estimate (m=22.466) | 99.05% | 10.5 | 3.8 | 40.2 | 0.102 |
 | hypothyroid | m-estimate (m=32) | 98.91% | 8.3 | 3.8 | 31.4 | 0.091 |
 | hypothyroid | m-estimate (m=4) | 98.86% | 18.8 | 3.8 | 71.0 | 0.113 |
+| hypothyroid | m-estimate (m=64) | 98.99% | 6.3 | 3.8 | 23.8 | 0.055 |
 | hypothyroid | m-estimate (m=8) | 98.81% | 14.1 | 3.8 | 52.9 | 0.113 |
 | hypothyroid | relative cost (c_r=0.342) | 99.20% | 3.8 | 3.3 | 12.5 | 0.057 |
 | ionosphere | Accuracy | 86.33% | 14.1 | 1.7 | 24.4 | 0.035 |
@@ -341,6 +355,7 @@ selecting.
 | ionosphere | m-estimate (m=22.466) | 90.31% | 9.2 | 2.2 | 20.7 | 0.057 |
 | ionosphere | m-estimate (m=32) | 89.17% | 7.6 | 3.5 | 24.6 | 0.071 |
 | ionosphere | m-estimate (m=4) | 92.02% | 12.8 | 1.8 | 22.6 | 0.027 |
+| ionosphere | m-estimate (m=64) | 87.47% | 5.5 | 2.8 | 17.2 | 0.063 |
 | ionosphere | m-estimate (m=8) | 92.30% | 11.2 | 1.9 | 20.9 | 0.025 |
 | ionosphere | relative cost (c_r=0.342) | 87.18% | 4.6 | 2.3 | 11.8 | 0.069 |
 | iris | Accuracy | 92.00% | 4.4 | 2.1 | 9.1 | 0.005 |
@@ -357,6 +372,7 @@ selecting.
 | iris | m-estimate (m=22.466) | 92.67% | 3.7 | 2.2 | 8.0 | 0.008 |
 | iris | m-estimate (m=32) | 92.67% | 3.7 | 2.1 | 7.9 | 0.009 |
 | iris | m-estimate (m=4) | 92.67% | 5.1 | 2.2 | 11.1 | 0.006 |
+| iris | m-estimate (m=64) | 93.33% | 3.3 | 2.0 | 6.8 | 0.008 |
 | iris | m-estimate (m=8) | 92.00% | 3.8 | 2.0 | 7.7 | 0.008 |
 | iris | relative cost (c_r=0.342) | 92.67% | 3.7 | 2.2 | 8.0 | 0.007 |
 | kr-vs-kp | Accuracy | 96.93% | 41.2 | 4.7 | 192.3 | 0.149 |
@@ -373,6 +389,7 @@ selecting.
 | kr-vs-kp | m-estimate (m=22.466) | 99.44% | 20.0 | 3.2 | 64.6 | 0.075 |
 | kr-vs-kp | m-estimate (m=32) | 99.47% | 17.6 | 3.8 | 67.6 | 0.079 |
 | kr-vs-kp | m-estimate (m=4) | 99.31% | 29.5 | 3.3 | 98.8 | 0.093 |
+| kr-vs-kp | m-estimate (m=64) | 98.94% | 11.7 | 3.0 | 35.6 | 0.065 |
 | kr-vs-kp | m-estimate (m=8) | 99.34% | 26.7 | 3.6 | 95.9 | 0.093 |
 | kr-vs-kp | relative cost (c_r=0.342) | 95.21% | 6.0 | 3.3 | 20.0 | 0.033 |
 | lymph | Accuracy | 80.24% | 12.7 | 2.1 | 27.1 | 0.023 |
@@ -389,6 +406,7 @@ selecting.
 | lymph | m-estimate (m=22.466) | 78.48% | 8.5 | 2.7 | 22.5 | 0.026 |
 | lymph | m-estimate (m=32) | 79.81% | 7.7 | 2.9 | 22.2 | 0.028 |
 | lymph | m-estimate (m=4) | 80.48% | 13.0 | 2.2 | 29.2 | 0.023 |
+| lymph | m-estimate (m=64) | 81.71% | 5.9 | 3.2 | 19.1 | 0.025 |
 | lymph | m-estimate (m=8) | 78.43% | 10.1 | 2.5 | 25.2 | 0.021 |
 | lymph | relative cost (c_r=0.342) | 83.05% | 6.5 | 2.9 | 18.8 | 0.023 |
 | molecular-biology_promoters | Accuracy | 83.36% | 4.1 | 2.4 | 9.7 | 0.010 |
@@ -405,6 +423,7 @@ selecting.
 | molecular-biology_promoters | m-estimate (m=22.466) | 82.27% | 3.7 | 3.0 | 10.6 | 0.009 |
 | molecular-biology_promoters | m-estimate (m=32) | 84.09% | 3.6 | 3.1 | 10.6 | 0.009 |
 | molecular-biology_promoters | m-estimate (m=4) | 83.09% | 5.3 | 2.2 | 11.5 | 0.011 |
+| molecular-biology_promoters | m-estimate (m=64) | 81.18% | 2.9 | 3.4 | 9.3 | 0.013 |
 | molecular-biology_promoters | m-estimate (m=8) | 79.27% | 4.6 | 2.4 | 10.7 | 0.010 |
 | molecular-biology_promoters | relative cost (c_r=0.342) | 80.18% | 3.0 | 3.3 | 9.5 | 0.011 |
 | monks-problems-1 | Accuracy | 80.45% | 1.6 | 1.1 | 2.2 | 0.004 |
@@ -421,6 +440,7 @@ selecting.
 | monks-problems-1 | m-estimate (m=22.466) | 92.48% | 5.4 | 3.6 | 19.0 | 0.015 |
 | monks-problems-1 | m-estimate (m=32) | 88.17% | 3.8 | 3.0 | 11.6 | 0.011 |
 | monks-problems-1 | m-estimate (m=4) | 100.00% | 11.0 | 3.1 | 36.0 | 0.024 |
+| monks-problems-1 | m-estimate (m=64) | 89.76% | 3.6 | 2.8 | 9.9 | 0.007 |
 | monks-problems-1 | m-estimate (m=8) | 98.75% | 10.2 | 3.1 | 34.4 | 0.024 |
 | monks-problems-1 | relative cost (c_r=0.342) | 88.87% | 5.0 | 2.8 | 14.8 | 0.012 |
 | monks-problems-2 | Accuracy | 65.89% | 90.3 | 5.7 | 513.5 | 0.154 |
@@ -437,6 +457,7 @@ selecting.
 | monks-problems-2 | m-estimate (m=22.466) | 77.05% | 11.8 | 5.9 | 69.8 | 0.028 |
 | monks-problems-2 | m-estimate (m=32) | 80.37% | 9.3 | 6.0 | 55.6 | 0.026 |
 | monks-problems-2 | m-estimate (m=4) | 74.88% | 34.6 | 6.0 | 207.4 | 0.073 |
+| monks-problems-2 | m-estimate (m=64) | 75.40% | 6.8 | 5.9 | 40.2 | 0.017 |
 | monks-problems-2 | m-estimate (m=8) | 81.21% | 21.8 | 6.1 | 132.1 | 0.050 |
 | monks-problems-2 | relative cost (c_r=0.342) | 64.58% | 18.0 | 5.4 | 97.1 | 0.038 |
 | monks-problems-3 | Accuracy | 95.86% | 2.3 | 1.4 | 3.6 | 0.005 |
@@ -453,6 +474,7 @@ selecting.
 | monks-problems-3 | m-estimate (m=22.466) | 98.92% | 3.0 | 1.7 | 5.0 | 0.006 |
 | monks-problems-3 | m-estimate (m=32) | 98.92% | 3.0 | 1.7 | 5.0 | 0.006 |
 | monks-problems-3 | m-estimate (m=4) | 98.38% | 4.5 | 2.0 | 9.3 | 0.008 |
+| monks-problems-3 | m-estimate (m=64) | 97.83% | 2.7 | 1.5 | 4.1 | 0.007 |
 | monks-problems-3 | m-estimate (m=8) | 98.56% | 3.2 | 1.8 | 6.0 | 0.006 |
 | monks-problems-3 | relative cost (c_r=0.342) | 96.40% | 2.0 | 1.0 | 2.0 | 0.004 |
 | mushroom | Accuracy | 100.00% | 7.8 | 1.7 | 13.6 | 0.076 |
@@ -469,6 +491,7 @@ selecting.
 | mushroom | m-estimate (m=22.466) | 100.00% | 10.9 | 1.2 | 12.9 | 0.095 |
 | mushroom | m-estimate (m=32) | 100.00% | 10.9 | 1.2 | 12.9 | 0.098 |
 | mushroom | m-estimate (m=4) | 100.00% | 10.9 | 1.2 | 12.9 | 0.090 |
+| mushroom | m-estimate (m=64) | 100.00% | 10.9 | 1.2 | 12.9 | 0.055 |
 | mushroom | m-estimate (m=8) | 100.00% | 10.9 | 1.2 | 12.9 | 0.090 |
 | mushroom | relative cost (c_r=0.342) | 99.89% | 4.0 | 3.0 | 12.1 | 0.072 |
 | primary-tumor | Accuracy | 33.90% | 73.3 | 3.6 | 264.2 | 0.175 |
@@ -485,6 +508,7 @@ selecting.
 | primary-tumor | m-estimate (m=22.466) | 43.97% | 34.6 | 4.4 | 151.8 | 0.154 |
 | primary-tumor | m-estimate (m=32) | 41.31% | 28.3 | 4.5 | 127.0 | 0.131 |
 | primary-tumor | m-estimate (m=4) | 36.58% | 62.8 | 4.3 | 269.5 | 0.200 |
+| primary-tumor | m-estimate (m=64) | 43.07% | 18.8 | 4.6 | 86.3 | 0.168 |
 | primary-tumor | m-estimate (m=8) | 41.02% | 49.1 | 4.4 | 215.5 | 0.190 |
 | primary-tumor | relative cost (c_r=0.342) | 43.09% | 20.3 | 4.2 | 84.8 | 0.104 |
 | segment | Accuracy | 90.30% | 164.4 | 3.4 | 560.3 | 0.480 |
@@ -501,6 +525,7 @@ selecting.
 | segment | m-estimate (m=22.466) | 94.29% | 35.9 | 3.7 | 132.9 | 0.246 |
 | segment | m-estimate (m=32) | 94.03% | 31.5 | 3.6 | 114.4 | 0.233 |
 | segment | m-estimate (m=4) | 93.94% | 57.9 | 3.5 | 203.4 | 0.229 |
+| segment | m-estimate (m=64) | 93.51% | 25.8 | 3.7 | 95.7 | 0.171 |
 | segment | m-estimate (m=8) | 93.72% | 49.4 | 3.7 | 181.8 | 0.238 |
 | segment | relative cost (c_r=0.342) | 91.65% | 17.9 | 3.5 | 63.7 | 0.207 |
 | solar-flare | Accuracy | 74.20% | 20.2 | 2.3 | 47.9 | 0.075 |
@@ -517,6 +542,7 @@ selecting.
 | solar-flare | m-estimate (m=22.466) | 73.27% | 9.4 | 3.7 | 34.5 | 0.103 |
 | solar-flare | m-estimate (m=32) | 73.64% | 7.3 | 4.0 | 29.8 | 0.083 |
 | solar-flare | m-estimate (m=4) | 72.70% | 28.0 | 4.0 | 112.9 | 0.151 |
+| solar-flare | m-estimate (m=64) | 72.61% | 6.0 | 4.0 | 25.3 | 0.048 |
 | solar-flare | m-estimate (m=8) | 73.17% | 19.9 | 3.6 | 70.8 | 0.129 |
 | solar-flare | relative cost (c_r=0.342) | 72.99% | 3.0 | 1.9 | 5.8 | 0.043 |
 | sonar | Accuracy | 72.62% | 14.8 | 2.1 | 31.4 | 0.061 |
@@ -533,6 +559,7 @@ selecting.
 | sonar | m-estimate (m=22.466) | 73.00% | 7.8 | 2.8 | 21.7 | 0.028 |
 | sonar | m-estimate (m=32) | 68.79% | 6.3 | 3.4 | 20.9 | 0.040 |
 | sonar | m-estimate (m=4) | 65.31% | 14.0 | 1.9 | 26.4 | 0.038 |
+| sonar | m-estimate (m=64) | 75.43% | 5.6 | 3.9 | 21.4 | 0.054 |
 | sonar | m-estimate (m=8) | 75.00% | 11.4 | 2.2 | 24.5 | 0.035 |
 | sonar | relative cost (c_r=0.342) | 74.57% | 5.8 | 5.1 | 29.5 | 0.046 |
 | soybean | Accuracy | 90.05% | 55.0 | 2.3 | 124.3 | 0.103 |
@@ -549,6 +576,7 @@ selecting.
 | soybean | m-estimate (m=22.466) | 92.84% | 34.9 | 2.1 | 73.9 | 0.084 |
 | soybean | m-estimate (m=32) | 92.11% | 32.9 | 2.2 | 71.4 | 0.086 |
 | soybean | m-estimate (m=4) | 91.96% | 47.8 | 2.3 | 108.7 | 0.080 |
+| soybean | m-estimate (m=64) | 92.11% | 29.8 | 2.4 | 70.5 | 0.085 |
 | soybean | m-estimate (m=8) | 90.93% | 42.7 | 2.2 | 95.6 | 0.085 |
 | soybean | relative cost (c_r=0.342) | 93.27% | 26.4 | 2.4 | 64.7 | 0.078 |
 | tic-tac-toe | Accuracy | 87.48% | 76.8 | 4.2 | 320.9 | 0.170 |
@@ -565,6 +593,7 @@ selecting.
 | tic-tac-toe | m-estimate (m=22.466) | 97.60% | 10.2 | 3.3 | 34.8 | 0.025 |
 | tic-tac-toe | m-estimate (m=32) | 97.50% | 9.9 | 3.3 | 33.0 | 0.026 |
 | tic-tac-toe | m-estimate (m=4) | 96.97% | 15.0 | 3.9 | 59.2 | 0.036 |
+| tic-tac-toe | m-estimate (m=64) | 98.23% | 8.3 | 3.1 | 25.5 | 0.030 |
 | tic-tac-toe | m-estimate (m=8) | 96.66% | 13.5 | 3.7 | 49.5 | 0.034 |
 | tic-tac-toe | relative cost (c_r=0.342) | 92.48% | 8.1 | 3.1 | 25.2 | 0.021 |
 | vehicle | Accuracy | 66.79% | 157.3 | 3.2 | 499.2 | 0.384 |
@@ -581,6 +610,7 @@ selecting.
 | vehicle | m-estimate (m=22.466) | 69.87% | 31.3 | 5.5 | 174.1 | 0.375 |
 | vehicle | m-estimate (m=32) | 69.51% | 24.6 | 5.6 | 137.7 | 0.325 |
 | vehicle | m-estimate (m=4) | 71.52% | 81.2 | 3.4 | 278.1 | 0.291 |
+| vehicle | m-estimate (m=64) | 72.36% | 19.5 | 5.7 | 111.2 | 0.247 |
 | vehicle | m-estimate (m=8) | 70.35% | 60.1 | 4.5 | 272.6 | 0.393 |
 | vehicle | relative cost (c_r=0.342) | 70.70% | 16.8 | 5.5 | 93.5 | 0.241 |
 | vote | Accuracy | 94.50% | 3.7 | 2.9 | 10.7 | 0.010 |
@@ -597,6 +627,7 @@ selecting.
 | vote | m-estimate (m=22.466) | 94.95% | 4.9 | 3.3 | 16.3 | 0.014 |
 | vote | m-estimate (m=32) | 94.73% | 4.9 | 3.3 | 16.0 | 0.014 |
 | vote | m-estimate (m=4) | 93.80% | 6.5 | 3.8 | 24.6 | 0.022 |
+| vote | m-estimate (m=64) | 94.04% | 4.7 | 3.1 | 14.5 | 0.018 |
 | vote | m-estimate (m=8) | 94.03% | 5.1 | 3.4 | 17.4 | 0.018 |
 | vote | relative cost (c_r=0.342) | 93.81% | 2.9 | 3.2 | 9.2 | 0.010 |
 | vowel | Accuracy | 80.10% | 181.8 | 2.8 | 508.3 | 0.294 |
@@ -613,6 +644,7 @@ selecting.
 | vowel | m-estimate (m=22.466) | 81.21% | 82.7 | 3.4 | 282.3 | 0.248 |
 | vowel | m-estimate (m=32) | 79.80% | 72.4 | 3.6 | 261.8 | 0.247 |
 | vowel | m-estimate (m=4) | 82.02% | 142.5 | 2.9 | 406.2 | 0.249 |
+| vowel | m-estimate (m=64) | 79.19% | 60.1 | 4.2 | 250.4 | 0.371 |
 | vowel | m-estimate (m=8) | 81.11% | 117.3 | 3.0 | 350.5 | 0.238 |
 | vowel | relative cost (c_r=0.342) | 72.12% | 45.9 | 4.4 | 202.9 | 0.234 |
 | wine | Accuracy | 95.00% | 4.2 | 2.0 | 8.4 | 0.009 |
@@ -629,6 +661,7 @@ selecting.
 | wine | m-estimate (m=22.466) | 94.38% | 5.1 | 1.8 | 9.3 | 0.009 |
 | wine | m-estimate (m=32) | 94.38% | 4.9 | 1.8 | 9.0 | 0.009 |
 | wine | m-estimate (m=4) | 91.63% | 6.2 | 1.7 | 10.7 | 0.011 |
+| wine | m-estimate (m=64) | 93.82% | 4.1 | 2.0 | 8.4 | 0.009 |
 | wine | m-estimate (m=8) | 94.38% | 5.9 | 1.7 | 10.3 | 0.011 |
 | wine | relative cost (c_r=0.342) | 94.97% | 4.0 | 2.0 | 8.2 | 0.009 |
 | zoo | Accuracy | 92.00% | 9.8 | 2.3 | 22.8 | 0.017 |
@@ -645,6 +678,7 @@ selecting.
 | zoo | m-estimate (m=22.466) | 92.00% | 7.7 | 2.2 | 16.7 | 0.013 |
 | zoo | m-estimate (m=32) | 93.00% | 7.5 | 2.2 | 16.2 | 0.013 |
 | zoo | m-estimate (m=4) | 93.00% | 8.5 | 2.3 | 19.2 | 0.015 |
+| zoo | m-estimate (m=64) | 93.00% | 7.4 | 2.2 | 16.0 | 0.008 |
 | zoo | m-estimate (m=8) | 93.00% | 8.3 | 2.2 | 18.6 | 0.015 |
 | zoo | relative cost (c_r=0.342) | 93.00% | 7.9 | 2.2 | 17.3 | 0.013 |
 
@@ -654,15 +688,15 @@ selecting.
 
 | m for selection | accuracy | n_rules | conds/rule | n_conditions |
 |--:|--:|--:|--:|--:|
-| m=0.1 | 83.71% | 23.3 | 6.0 | 173.9 |
-| m=0.2 | 83.71% | 23.2 | 6.0 | 173.7 |
-| m=0.5 | 83.74% | 22.9 | 6.0 | 171.2 |
-| m=1 | 83.72% | 22.4 | 6.0 | 167.7 |
-| m=2 | 83.75% | 20.7 | 6.0 | 154.3 |
-| m=4 | 84.20% | 16.4 | 5.8 | 113.3 |
-| m=8 | 84.18% | 13.1 | 5.6 | 85.5 |
-| m=16 | 84.04% | 10.0 | 5.2 | 57.9 |
-| m=32 | 83.20% | 7.9 | 4.8 | 39.5 |
+| m=0.1 | 83.71% | 16.2 | 5.5 | 86.0 |
+| m=0.2 | 83.71% | 16.2 | 5.5 | 85.9 |
+| m=0.5 | 83.74% | 16.1 | 5.5 | 85.3 |
+| m=1 | 83.72% | 15.8 | 5.5 | 83.8 |
+| m=2 | 83.75% | 14.9 | 5.5 | 78.7 |
+| m=4 | 84.20% | 12.4 | 5.3 | 63.5 |
+| m=8 | 84.18% | 10.3 | 5.1 | 51.0 |
+| m=16 | 84.04% | 7.9 | 4.7 | 36.2 |
+| m=32 | 83.20% | 6.2 | 4.4 | 26.4 |
 
-Failed folds: 0.
+Failed folds: 0. The rule-set sizes (rules, conditions, conditions per rule) are the shifted geometric mean, exp(mean(log(x + 1))) - 1, over the datasets of their mean over the folds, so that the large datasets don't dominate; accuracy and fit time are the arithmetic mean over every dataset and fold.
 

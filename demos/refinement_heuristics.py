@@ -372,11 +372,12 @@ MATRIX_TITLES = (("static", "Regular m-estimate"), ("adaptive inverted", "Adapti
 
 
 def _means(results) -> pd.DataFrame:
-    """Means across every dataset and fold; conditions per rule as in
-    `heuristic_comparison`, the mean of each fold's ratio."""
+    """Per learner across the datasets, as in `heuristic_comparison`
+    (`hc.summary_means`): accuracy the mean over every dataset and fold,
+    the rule-set sizes the shifted geometric mean over the datasets;
+    conditions per rule from each fold's ratio."""
     results = results.assign(conds_per_rule=results["n_conditions"] / results["n_rules"])
-    return results.groupby("learner")[["accuracy", "n_rules", "n_conditions", "conds_per_rule"]].mean(
-        numeric_only=True)
+    return hc.summary_means(results, ["accuracy", "n_rules", "n_conditions", "conds_per_rule"])
 
 
 def _matrix(means, kind: str, measure: str, ms) -> pd.DataFrame:
@@ -439,8 +440,11 @@ Janssen & Fürnkranz, ECML PKDD 2014). Scores relative to the parent have
 no common scale across parents: the selection, always static, picks the
 rule that is returned.
 
-Measures: test accuracy, number of rules and conditions; means across
-every dataset and fold.
+Measures: test accuracy, number of rules and conditions. Accuracy is the
+mean across every dataset and fold; the rule-set sizes (rules, conditions,
+conditions per rule) are the shifted geometric mean, exp(mean(log(x + 1))) - 1,
+over the datasets of their mean over the folds, so that the large datasets
+don't dominate.
 """
 
 

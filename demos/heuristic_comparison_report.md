@@ -41,29 +41,29 @@ selecting.
 
 ![m-estimate sweep](heuristic_comparison_plots/heuristic_comparison_m_sweep.png)
 
-## Summary by learner (mean across every dataset and fold)
+## Summary by learner (across every dataset and fold)
 
 | learner | accuracy | n_rules | n_conditions | conds/rule | fit_time (s) | wins | mean rank | failures |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|
-| Pypper | 83.29% | 13.1 | 56.1 | 3.0 | 0.32 | 5.2 | 6.06 | 0 |
-| Weka:JRip | 83.08% | 14.9 | 65.4 | 3.0 | 3.73 | 18.7 | 5.96 | 0 |
-| m-estimate (m=16) | 82.96% | 42.6 | 218.4 | 4.1 | 0.43 | 9.3 | 7.58 | 0 |
-| m-estimate (m=32) | 82.94% | 29.4 | 162.6 | 4.7 | 0.37 | 3.3 | 6.94 | 0 |
-| m-estimate (m=64) | 82.91% | 19.8 | 114.5 | 5.1 | 0.30 | 6.1 | 7.57 | 0 |
-| m-estimate (m=22.466) | 82.81% | 35.8 | 190.9 | 4.4 | 0.40 | 2.3 | 7.54 | 0 |
-| m-estimate (m=8) | 82.66% | 60.4 | 290.8 | 3.8 | 0.46 | 0.6 | 8.52 | 0 |
-| m-estimate (m=4) | 82.27% | 78.5 | 358.9 | 3.5 | 0.50 | 3.2 | 9.14 | 0 |
-| Correlation | 82.09% | 23.8 | 135.3 | 4.2 | 0.23 | 4.1 | 8.74 | 0 |
-| m-estimate (m=2) | 81.96% | 99.3 | 441.7 | 3.4 | 0.58 | 1.7 | 9.58 | 0 |
-| F-measure (beta=0.5) | 81.75% | 35.9 | 162.9 | 4.0 | 0.32 | 2.1 | 9.46 | 0 |
-| relative cost (c_r=0.342) | 81.34% | 14.4 | 64.4 | 3.9 | 0.17 | 2.5 | 9.70 | 0 |
-| Laplace | 81.21% | 126.1 | 533.9 | 3.1 | 0.70 | 0.7 | 11.04 | 0 |
-| Precision | 80.90% | 212.2 | 878.7 | 3.1 | 1.17 | 1.3 | 11.72 | 0 |
-| Accuracy | 80.29% | 139.3 | 568.8 | 3.0 | 0.85 | 0.1 | 11.33 | 0 |
-| cost (c=0.437) | 80.18% | 157.5 | 637.2 | 3.0 | 0.91 | 2.1 | 11.53 | 0 |
-| WRA | 79.52% | 4.3 | 20.6 | 4.4 | 0.09 | 6.0 | 10.57 | 0 |
+| Pypper | 83.29% | 5.9 | 16.2 | 2.8 | 0.32 | 5.2 | 6.06 | 0 |
+| Weka:JRip | 83.08% | 6.7 | 18.4 | 2.8 | 3.73 | 18.7 | 5.96 | 0 |
+| m-estimate (m=16) | 82.96% | 17.1 | 63.6 | 3.9 | 0.43 | 9.3 | 7.58 | 0 |
+| m-estimate (m=32) | 82.94% | 12.0 | 48.1 | 4.3 | 0.37 | 3.3 | 6.94 | 0 |
+| m-estimate (m=64) | 82.91% | 8.4 | 35.0 | 4.5 | 0.30 | 6.1 | 7.57 | 0 |
+| m-estimate (m=22.466) | 82.81% | 14.3 | 55.0 | 4.0 | 0.40 | 2.3 | 7.54 | 0 |
+| m-estimate (m=8) | 82.66% | 23.4 | 81.0 | 3.6 | 0.46 | 0.6 | 8.52 | 0 |
+| m-estimate (m=4) | 82.27% | 30.1 | 98.4 | 3.4 | 0.50 | 3.2 | 9.14 | 0 |
+| Correlation | 82.09% | 9.9 | 36.1 | 3.9 | 0.23 | 4.1 | 8.74 | 0 |
+| m-estimate (m=2) | 81.96% | 37.1 | 115.9 | 3.2 | 0.58 | 1.7 | 9.58 | 0 |
+| F-measure (beta=0.5) | 81.75% | 14.0 | 47.5 | 3.7 | 0.32 | 2.1 | 9.46 | 0 |
+| relative cost (c_r=0.342) | 81.34% | 6.6 | 21.5 | 3.7 | 0.17 | 2.5 | 9.70 | 0 |
+| Laplace | 81.21% | 43.5 | 128.0 | 3.0 | 0.70 | 0.7 | 11.04 | 0 |
+| Precision | 80.90% | 68.8 | 201.2 | 3.0 | 1.17 | 1.3 | 11.72 | 0 |
+| Accuracy | 80.29% | 30.8 | 85.8 | 2.9 | 0.85 | 0.1 | 11.33 | 0 |
+| cost (c=0.437) | 80.18% | 35.0 | 97.4 | 2.8 | 0.91 | 2.1 | 11.53 | 0 |
+| WRA | 79.52% | 2.6 | 8.4 | 3.8 | 0.09 | 6.0 | 10.57 | 0 |
 
-`wins` -- datasets where a learner's mean accuracy was (tied-for-)best, a tie split evenly; `mean rank` -- average accuracy rank across datasets, failures tied for last.
+`wins` -- datasets where a learner's mean accuracy was (tied-for-)best, a tie split evenly; `mean rank` -- average accuracy rank across datasets, failures tied for last. The rule-set sizes (rules, conditions, conditions per rule) are the shifted geometric mean, exp(mean(log(x + 1))) - 1, over the datasets of their mean over the folds, so that the large datasets don't dominate; accuracy and fit time are the arithmetic mean over every dataset and fold.
 
 ## Per-dataset results, per learner (mean across folds)
 
@@ -1249,15 +1249,15 @@ selecting.
 
 | m for selection | accuracy | n_rules | conds/rule | n_conditions |
 |--:|--:|--:|--:|--:|
-| m=0.1 | 82.86% | 54.7 | 9.3 | 881.7 |
-| m=0.2 | 82.87% | 54.5 | 9.3 | 878.9 |
-| m=0.5 | 82.89% | 53.6 | 9.3 | 868.7 |
-| m=1 | 82.89% | 52.2 | 9.3 | 846.1 |
-| m=2 | 82.91% | 48.1 | 9.3 | 784.0 |
-| m=4 | 83.16% | 38.7 | 9.1 | 630.0 |
-| m=8 | 83.33% | 28.3 | 8.8 | 439.4 |
-| m=16 | 83.32% | 18.9 | 8.2 | 272.9 |
-| m=32 | 82.99% | 13.0 | 7.6 | 163.5 |
+| m=0.1 | 82.86% | 25.5 | 7.9 | 194.2 |
+| m=0.2 | 82.87% | 25.4 | 7.9 | 193.6 |
+| m=0.5 | 82.89% | 25.0 | 7.9 | 190.4 |
+| m=1 | 82.89% | 24.4 | 7.9 | 185.0 |
+| m=2 | 82.91% | 22.5 | 7.8 | 170.0 |
+| m=4 | 83.16% | 18.2 | 7.7 | 134.7 |
+| m=8 | 83.33% | 14.1 | 7.4 | 100.8 |
+| m=16 | 83.32% | 10.0 | 7.0 | 66.3 |
+| m=32 | 82.99% | 7.2 | 6.4 | 43.8 |
 
-Failed folds: 0.
+Failed folds: 0. The rule-set sizes (rules, conditions, conditions per rule) are the shifted geometric mean, exp(mean(log(x + 1))) - 1, over the datasets of their mean over the folds, so that the large datasets don't dominate; accuracy and fit time are the arithmetic mean over every dataset and fold.
 
